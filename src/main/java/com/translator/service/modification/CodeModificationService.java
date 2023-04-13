@@ -1,0 +1,20 @@
+package com.translator.service.modification;
+
+import com.translator.model.api.translator.modification.*;
+import com.translator.model.modification.FileModificationSuggestionModificationRecord;
+
+public interface CodeModificationService {
+    DesktopCodeModificationResponseResource getModifiedCode(DesktopCodeModificationRequestResource desktopCodeModificationRequestResource);
+
+    FileModificationSuggestionModificationRecord getModifiedCodeModification(DesktopCodeModificationRequestResource desktopCodeModificationRequestResource);
+
+    DesktopCodeModificationResponseResource getFixedCode(DesktopCodeModificationRequestResource desktopCodeModificationRequestResource);
+
+    FileModificationSuggestionModificationRecord getModifiedCodeFix(DesktopCodeModificationRequestResource desktopCodeModificationRequestResource);
+
+    DesktopCodeCreationResponseResource getCreatedCode(DesktopCodeCreationRequestResource desktopCodeCreationRequestResource);
+
+    FileModificationSuggestionModificationRecord getModifiedCodeCreation(DesktopCodeCreationRequestResource desktopCodeCreationRequestResource);
+
+    DesktopCodeTranslationResponseResource getTranslatedCode(DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource);
+}

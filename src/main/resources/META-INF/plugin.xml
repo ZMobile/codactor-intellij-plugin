@@ -1,0 +1,46 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.codactor.codactor-intellij-plugin</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>Codactor</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="h.zante2011@gmail.com" url="https://www.codactor.com">Codactor</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[
+    This is the Intellij plugin for Codactor: your personal AI coding assistant.
+  ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="com.translator.listener.ProjectManagerListenerImpl"/>
+        <projectService serviceImplementation="com.translator.CodactorInjector"/>
+        <toolWindow
+                id="Codactor"
+                anchor="bottom"
+                icon="AllIcons.Debugger.Console"
+                factoryClass="com.translator.view.factory.CodactorToolWindowFactory"/>
+        <toolWindow
+                id="Modification Queue"
+                anchor="right"
+                icon="AllIcons.Debugger.Console"
+                factoryClass="com.translator.view.factory.ModificationQueueToolWindowFactory"/>
+        <toolWindow
+                id="Inquiries"
+                anchor="right"
+                icon="AllIcons.Debugger.Console"
+                factoryClass="com.translator.view.factory.InquiryToolWindowFactory"/>
+        <postStartupActivity implementation="com.translator.listener.MyStartupActivity"/>
+    </extensions>
+</idea-plugin>
