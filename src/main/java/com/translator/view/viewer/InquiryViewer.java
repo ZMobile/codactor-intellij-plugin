@@ -1,5 +1,14 @@
 package com.translator.view.viewer;
 
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.editor.markup.EffectType;
+import com.intellij.openapi.editor.markup.HighlighterLayer;
+import com.intellij.openapi.editor.markup.HighlighterTargetArea;
+import com.intellij.openapi.editor.markup.TextAttributes;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
@@ -12,6 +21,7 @@ import com.translator.service.constructor.CodeFileGeneratorService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.view.menu.TextAreaWindow;
+import com.translator.view.panel.FixedHeightPanel;
 import com.translator.view.renderer.InquiryChatRenderer;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
@@ -20,6 +30,7 @@ import com.translator.view.window.FileChooserWindow;
 import com.translator.worker.LimitedSwingWorker;
 import com.translator.worker.LimitedSwingWorkerExecutor;
 import com.intellij.ui.components.JBTextArea;
+import org.jetbrains.annotations.NotNull;
 
 
 import javax.swing.*;
@@ -40,6 +51,7 @@ import java.util.stream.Collectors;
  * @author zantehays
  */
 public class InquiryViewer extends JPanel {
+    private Project project;
     private Inquiry inquiry = null;
     private InquiryDao inquiryDao;
     private JList<InquiryChatViewer> jList1;
@@ -68,23 +80,22 @@ public class InquiryViewer extends JPanel {
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
     private HistoricalModificationListViewer historicalModificationListViewer;
     private InquiryListViewer inquiryListViewer;
-    private LimitedSwingWorkerExecutor inquiryTaskExecutor;
     private JBTextArea promptInput;
     private int selectedChat;
 
-    public InquiryViewer(OpenAiApiKeyService openAiApiKeyService,
+    public InquiryViewer(Project project,
+                         OpenAiApiKeyService openAiApiKeyService,
                          OpenAiModelService openAiModelService,
                          CodactorToolWindowService codactorToolWindowService,
                          CodeFileGeneratorService codeFileGeneratorService,
-                         InquiryDao inquiryDao,
-                         LimitedSwingWorkerExecutor inquiryTaskExecutor) {
+                         InquiryDao inquiryDao) {
+        this.project = project;
         this.openAiApiKeyService = openAiApiKeyService;
         this.openAiModelService = openAiModelService;
         this.codactorToolWindowService = codactorToolWindowService;
         this.codeFileGeneratorService = codeFileGeneratorService;
         this.textAreaHeightCalculatorService = new TextAreaHeightCalculatorServiceImpl();
         this.inquiryDao = inquiryDao;
-        this.inquiryTaskExecutor = inquiryTaskExecutor;
         this.historicalModificationListViewer = null;
         this.inquiryListViewer = null;
         this.inquiry = new Inquiry(null, null, null, null, null, null, null, null, null, null);
@@ -98,7 +109,7 @@ public class InquiryViewer extends JPanel {
         jList1.setModel(new DefaultListModel<>());
         jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jList1.setCellRenderer(new InquiryChatRenderer());
-        listSelectionListener = new ListSelectionListener() {
+        /*listSelectionListener = new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
@@ -107,27 +118,42 @@ public class InquiryViewer extends JPanel {
                         return;
                     }
                     selectedChat = selectedIndex;
-                    InquiryChatViewer selectedInquiryChatViewer = jList1.getModel().getElementAt(selectedIndex);
-                    JBTextArea selectedJBTextArea = (JBTextArea) selectedInquiryChatViewer.getComponents()[1];
-                    Color highlightColor = Color.decode("#7FFFD4");
-                    //Highlight the whole text are
-                    try {
-                        selectedJBTextArea.getHighlighter().addHighlight(0, selectedJBTextArea.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
-                    } catch (BadLocationException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                    for (int i = 0; i < jList1.getModel().getSize(); i++) {
-                        if (i == selectedChat) {
-                            continue;
+                    Color highlightColor = Color.decode("#009688");
+                        for (int i = 0; i < jList1.getModel().getSize(); i++) {
+                            InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(i);
+                            if (i == selectedIndex) {
+                                for (Component component : inquiryChatViewer.getComponents()) {
+                                    if (component instanceof JBTextArea) {
+                                        JBTextArea selectedJBTextArea = (JBTextArea) component;
+                                        //Highlight the whole text are
+                                        try {
+                                            selectedJBTextArea.getHighlighter().addHighlight(0, selectedJBTextArea.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
+                                        } catch (BadLocationException ex) {
+                                            throw new RuntimeException(ex);
+                                        }
+                                    } else if (component instanceof FixedHeightPanel) {
+                                        FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                                        Editor editor = fixedHeightPanel.getEditor();
+                                        editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                                    }
+                                }
+                                continue;
+                            }
+                            for (Component component : inquiryChatViewer.getComponents()) {
+                                if (component instanceof JBTextArea) {
+                                    JBTextArea jBTextArea = (JBTextArea) component;
+                                    jBTextArea.getHighlighter().removeAllHighlights();
+                                } else if (component instanceof FixedHeightPanel) {
+                                    FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                                    Editor editor = fixedHeightPanel.getEditor();
+                                    editor.getMarkupModel().removeAllHighlighters();
+                                }
+                            }
                         }
-                        InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(i);
-                        JBTextArea jBTextArea = (JBTextArea) inquiryChatViewer.getComponents()[1];
-                        jBTextArea.getHighlighter().removeAllHighlights();
-                    }
                 }
             }
         };
-        jList1.addListSelectionListener(listSelectionListener);
+        jList1.addListSelectionListener(listSelectionListener);*/
         jList1.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -149,7 +175,8 @@ public class InquiryViewer extends JPanel {
                 InquiryChatViewer inquiryChatViewer = null;
                 if (e.getButton() == MouseEvent.BUTTON3) {
                     inquiryChatViewer = jList1.getModel().getElementAt(jList1.locationToIndex(e.getPoint()));
-                    jList1.setSelectedIndex(jList1.locationToIndex(e.getPoint()));
+                    int selectedIndex = jList1.locationToIndex(e.getPoint());
+                    jList1.setSelectedIndex(selectedIndex);
                     InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
                     if (inquiryChat == null || inquiryChat.getFrom().equalsIgnoreCase("assistant") || jList1.locationToIndex(e.getPoint()) == 0) {
                         editItem.setEnabled(false);
@@ -181,8 +208,27 @@ public class InquiryViewer extends JPanel {
                     inquiryChatViewer = jList1.getModel().getElementAt(selectedChat);
                 }
                 if (e.getClickCount() == 2) {
-                    JBTextArea jBTextArea = (JBTextArea) inquiryChatViewer.getComponents()[1];
-                    TextAreaWindow textAreaWindow = new TextAreaWindow(jBTextArea.getText());
+                    //Component component = inquiryChatViewer.getComponentAt(e.getPoint());
+                    StringBuilder text = new StringBuilder();
+                    boolean firstComponentCopied = false;
+                    for (int i = 0; i < inquiryChatViewer.getComponents().length; i++) {
+                        Component component1 = inquiryChatViewer.getComponents()[i];
+                        if (firstComponentCopied) {
+                            text.append("\n");
+                            text.append("\n");
+                        }
+                        if (component1 instanceof JBTextArea) {
+                            JBTextArea jBTextArea = (JBTextArea) component1;
+                            text.append(jBTextArea.getText());
+                            firstComponentCopied = true;
+                        } else if (component1 instanceof FixedHeightPanel) {
+                            FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
+                            Editor editor = fixedHeightPanel.getEditor();
+                            text.append(editor.getDocument().getText());
+                            firstComponentCopied = true;
+                        }
+                    }
+                    TextAreaWindow textAreaWindow = new TextAreaWindow(text.toString());
                 }
             }
         });
@@ -284,6 +330,7 @@ public class InquiryViewer extends JPanel {
                 askInquiryQuestion(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), "What does this code do?");
             }
         });
+
 
         jButton2 = new JButton();
         //String userHome = System.getProperty("user.home");
@@ -507,6 +554,7 @@ public class InquiryViewer extends JPanel {
         if (inquiry.getBeforeCode() == null && inquiry.getSubjectRecordId() != null) {
             inquiry.setBeforeCode("");
         }
+        int totalHeight = 0;
         if (inquiry.getDescription() != null) {
             String text = inquiry.getModificationType() + ": " + inquiry.getDescription().trim();
             InquiryChatViewer descriptionViewer = new InquiryChatViewer(text, "User", InquiryChatType.INSTIGATOR_PROMPT);
@@ -517,7 +565,7 @@ public class InquiryViewer extends JPanel {
                 model.addElement(beforeViewer);
             }
             if (inquiry.getAfterCode() != null) {
-                String afterCodeText = "```" + inquiry.getSubjectCode().trim() + "```";
+                String afterCodeText = "```" + inquiry.getAfterCode().trim() + "```";
                 InquiryChatViewer afterViewer = new InquiryChatViewer(afterCodeText, "After", InquiryChatType.CODE_SNIPPET);
                 model.addElement(afterViewer);
             }
@@ -559,6 +607,24 @@ public class InquiryViewer extends JPanel {
                 //InquiryViewer.this.componentResized(model);
             }
         };
+        for (int i = 0; i < model.size(); i++) {
+            InquiryChatViewer chatViewer = model.getElementAt(i);
+            //chatViewer.setSize(Integer.MAX_VALUE, chatViewer.getHeight());
+            JBTextArea chatDisplay = (JBTextArea) chatViewer.getComponent(1);
+            int newHeight = 0;
+            int newWidth = getWidth();
+            if (chatViewer.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
+            } else {
+                newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+            }
+            Dimension preferredSize = new Dimension(newWidth, newHeight);
+            chatDisplay.setPreferredSize(preferredSize);
+            chatDisplay.setMaximumSize(preferredSize);
+            chatDisplay.setSize(preferredSize);
+            totalHeight += newHeight + chatViewer.getComponent(0).getHeight();
+        }
+        jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, totalHeight));
         jList1.getParent().addComponentListener(componentListener);
         jList1.setModel(model);
         JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
@@ -604,9 +670,9 @@ public class InquiryViewer extends JPanel {
         InquiryChat temporaryChat = new InquiryChat(null, null, null, null, "User", question);
         inquiry.getChats().add(temporaryChat);
         updateInquiryContents(inquiry);
-        LimitedSwingWorker worker = new LimitedSwingWorker(inquiryTaskExecutor) {
+        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "My Background Task", true) {
             @Override
-            protected Void doInBackground() {
+            public void run(@NotNull ProgressIndicator indicator) {
                 setLoadingChat(true);
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 Inquiry inquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
@@ -615,10 +681,10 @@ public class InquiryViewer extends JPanel {
                     componentResized((DefaultListModel<InquiryChatViewer>) jList1.getModel());
                 }
                 setLoadingChat(false);
-                return null;
             }
         };
-        worker.execute();
+
+        ProgressManager.getInstance().run(backgroundTask);
     }
 
 
@@ -627,9 +693,9 @@ public class InquiryViewer extends JPanel {
         InquiryChat temporaryChat = new InquiryChat(null, null, null, null, "User", question);
         inquiry.getChats().add(temporaryChat);
         updateInquiryContents(inquiry);
-        LimitedSwingWorker worker = new LimitedSwingWorker(inquiryTaskExecutor) {
+        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "My Background Task", true) {
             @Override
-            protected Void doInBackground() {
+            public void run(@NotNull ProgressIndicator indicator) {
                 setLoadingChat(true);
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 Inquiry inquiry = inquiryDao.createInquiry(subjectRecordId, recordType, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
@@ -638,10 +704,10 @@ public class InquiryViewer extends JPanel {
                     componentResized((DefaultListModel<InquiryChatViewer>) jList1.getModel());
                 }
                 setLoadingChat(false);
-                return null;
             }
         };
-        worker.execute();
+
+        ProgressManager.getInstance().run(backgroundTask);
     }
 
     private void askContinuedQuestion(String previousInquiryChatId, String question) {
@@ -650,9 +716,9 @@ public class InquiryViewer extends JPanel {
         findAlternatesForInquiryChat(inquiry.getChats(), inquiryChat);
         inquiry.getChats().add(inquiryChat);
         updateInquiryContents(inquiry);
-        LimitedSwingWorker worker = new LimitedSwingWorker(inquiryTaskExecutor) {
+        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "My Background Task", true) {
             @Override
-            protected Void doInBackground() {
+            public void run(@NotNull ProgressIndicator indicator) {
                 setLoadingChat(true);
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
@@ -661,10 +727,10 @@ public class InquiryViewer extends JPanel {
                 updateInquiryContents(inquiry);
                 componentResized((DefaultListModel<InquiryChatViewer>) jList1.getModel());
                 setLoadingChat(false);
-                return null;
             }
         };
-        worker.execute();
+
+        ProgressManager.getInstance().run(backgroundTask);
     }
 
     private void editQuestion(String inquiryChatId, String newQuestion) {

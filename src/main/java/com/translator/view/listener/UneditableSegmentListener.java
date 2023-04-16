@@ -12,26 +12,24 @@ import javax.swing.event.UndoableEditListener;
 import javax.swing.text.AbstractDocument;
 
 public class UneditableSegmentListener implements UndoableEditListener {
-    private JBTextArea textArea;
     private String fileModificationId;
     private int previousStartIndex;
     private int previousEndIndex;
     private FileModificationTrackerService fileModificationTrackerService;
     private boolean modificationSuggestionModification;
 
-    public UneditableSegmentListener(String fileModificationId, FileModificationTrackerService fileModificationTrackerService, JBTextArea textArea, boolean modificationSuggestionModification) {
-        this.textArea = textArea;
+    public UneditableSegmentListener(String fileModificationId, FileModificationTrackerService fileModificationTrackerService, boolean modificationSuggestionModification) {
         this.fileModificationId = fileModificationId;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.modificationSuggestionModification = modificationSuggestionModification;
         if (modificationSuggestionModification) {
             FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationTrackerService.getModificationSuggestionModification(fileModificationId);
-            previousStartIndex = fileModificationSuggestionModification.getStartIndex();
-            previousEndIndex = fileModificationSuggestionModification.getEndIndex();
+            previousStartIndex = fileModificationSuggestionModification.getRangeMarker().getStartOffset();
+            previousEndIndex = fileModificationSuggestionModification.getRangeMarker().getEndOffset();
         } else {
             FileModification fileModification = fileModificationTrackerService.getModification(fileModificationId);
-            previousStartIndex = fileModification.getStartIndex();
-            previousEndIndex = fileModification.getEndIndex();
+            previousStartIndex = fileModification.getRangeMarker().getStartOffset();
+            previousEndIndex = fileModification.getRangeMarker().getEndOffset();
         }
     }
 
@@ -41,24 +39,24 @@ public class UneditableSegmentListener implements UndoableEditListener {
         int offset = event.getOffset();
         int length = event.getLength();
         boolean textAdded = event.getType().equals(DocumentEvent.EventType.INSERT);
-            //Check if the offset and length of the edit is within the uneditable segment
+        //Check if the offset and length of the edit is within the uneditable segment
         int startIndex;
         int endIndex;
         if (modificationSuggestionModification) {
             FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationTrackerService.getModificationSuggestionModification(fileModificationId);
-            startIndex = fileModificationSuggestionModification.getStartIndex();
-            endIndex = fileModificationSuggestionModification.getEndIndex();
+            startIndex = fileModificationSuggestionModification.getRangeMarker().getStartOffset();
+            endIndex = fileModificationSuggestionModification.getRangeMarker().getEndOffset();
             } else {
             FileModification fileModification = fileModificationTrackerService.getModification(fileModificationId);
-            startIndex = fileModification.getStartIndex();
-            endIndex = fileModification.getEndIndex();
+            startIndex = fileModification.getRangeMarker().getStartOffset();
+            endIndex = fileModification.getRangeMarker().getEndOffset();
         }
         int startIndexOfReference = textAdded ? startIndex : previousStartIndex;
         int endIndexOfReference = textAdded ? endIndex : previousEndIndex;
         if (((offset > startIndexOfReference && offset + length <= endIndexOfReference)
                 || (offset <= startIndexOfReference && offset + length > startIndexOfReference)
                 || (offset <= endIndexOfReference && offset + length > endIndexOfReference))) {
-            JOptionPane.showMessageDialog(textArea, "This segment is uneditable", "Error",
+            JOptionPane.showMessageDialog(null, "This segment is uneditable", "Error",
                     JOptionPane.ERROR_MESSAGE);
             e.getEdit().undo();
         }

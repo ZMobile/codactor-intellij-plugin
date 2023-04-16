@@ -10,6 +10,7 @@ import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.FileModification;
+import com.translator.model.modification.FileModificationSuggestion;
 import com.translator.view.factory.ProvisionalModificationCustomizerFactory;
 import com.translator.view.renderer.CodeSnippetRenderer;
 import com.translator.service.ui.tool.CodactorToolWindowService;
@@ -153,8 +154,8 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         }
         DefaultListModel<CodeSnippetViewer> model = new DefaultListModel<>();
         //for (int i = 0; i < numFileModifications; i++) {
-            JBTextArea display = new JBTextArea(fileModification.getModificationOptions().get(0).getSuggestedCode());
-            CodeSnippetViewer viewer = new CodeSnippetViewer(display);
+            FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
+            CodeSnippetViewer viewer = new CodeSnippetViewer(fileModificationSuggestion.getSuggestedCode());
             //if (i == 0) {
                 viewer.setBackground(JBColor.GREEN);
             //} else {

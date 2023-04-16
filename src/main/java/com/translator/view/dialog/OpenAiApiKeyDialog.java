@@ -4,6 +4,7 @@ import com.intellij.ui.components.JBTextArea;
 import com.translator.service.openai.OpenAiApiKeyService;
 
 
+import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;

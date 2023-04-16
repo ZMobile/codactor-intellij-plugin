@@ -1,78 +1,108 @@
 package com.translator.service.modification.tracking.listener;
 
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.model.modification.FileModification;
+import com.translator.model.modification.FileModificationSuggestion;
 import com.translator.model.modification.FileModificationSuggestionModification;
-import com.translator.model.modification.FileModificationSuggestionModificationTracker;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
-import com.translator.view.listener.UneditableSegmentListener;
-import com.intellij.ui.components.JBTextArea;
 
 import javax.inject.Inject;
-import javax.swing.event.UndoableEditListener;
-import javax.swing.text.Document;
 import java.util.HashMap;
 import java.util.Map;
 
 public class UneditableSegmentListenerServiceImpl implements UneditableSegmentListenerService {
     private FileModificationTrackerService fileModificationTrackerService;
-    private Map<String, JBTextArea> displayMap;
-    private Map<String, UndoableEditListener> uneditableFileModificationSegmentListenerMap;
-    private Map<String, UndoableEditListener> uneditableFileModificationSuggestionSegmentListenerMap;
-
+    private Map<String, CompositeUneditableSegmentFilter> fileModificationCompositeFilterMap;
+    private Map<String, CompositeUneditableSegmentFilter> fileModificationSuggestionCompositeFilterMap;
     @Inject
-    public UneditableSegmentListenerServiceImpl(FileModificationTrackerService fileModificationTrackerService,
-                                                Map<String, JBTextArea> displayMap) {
+    public UneditableSegmentListenerServiceImpl(FileModificationTrackerService fileModificationTrackerService) {
         this.fileModificationTrackerService = fileModificationTrackerService;
-        this.displayMap = displayMap;
-        this.uneditableFileModificationSegmentListenerMap = new HashMap<>();
-        this.uneditableFileModificationSuggestionSegmentListenerMap = new HashMap<>();
+        this.fileModificationCompositeFilterMap = new HashMap<>();
+        this.fileModificationSuggestionCompositeFilterMap = new HashMap<>();
     }
 
     @Override
     public void addUneditableFileModificationSegmentListener(String modificationId) {
-        if (uneditableFileModificationSegmentListenerMap.containsKey(modificationId)) {
-            return;
-        }
         FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
-        JBTextArea display = displayMap.get(fileModification.getFilePath());
-        Document document = display.getDocument();
-        UndoableEditListener undoableEditListener = new UneditableSegmentListener(modificationId, fileModificationTrackerService, display, false);
-        document.addUndoableEditListener(undoableEditListener);
-        uneditableFileModificationSegmentListenerMap.put(modificationId, undoableEditListener);
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(fileModification.getFilePath());
+        if (virtualFile != null) {
+            Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
+
+            if (document != null) {
+                int startOffset = fileModification.getRangeMarker().getStartOffset();
+                int endOffset = fileModification.getRangeMarker().getEndOffset();
+                UneditableSegmentFilter filter = new UneditableSegmentFilter(startOffset, endOffset);
+
+                String filePath = fileModification.getFilePath();
+                CompositeUneditableSegmentFilter compositeFilter = fileModificationCompositeFilterMap.get(filePath);
+                if (compositeFilter == null) {
+                    compositeFilter = new CompositeUneditableSegmentFilter();
+                    fileModificationCompositeFilterMap.put(filePath, compositeFilter);
+                    document.addDocumentListener(compositeFilter);
+                }
+
+                compositeFilter.addUneditableSegmentFilter(filter);
+            }
+        }
     }
 
     @Override
     public void removeUneditableFileModificationSegmentListener(String modificationId) {
-        /*FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
-        JBTextArea display = displayMap.get(fileModification.getFilePath());
-        Document document = display.getDocument();
-        UndoableEditListener undoableEditListener = uneditableFileModificationSegmentListenerMap.get(modificationId);
-        document.removeUndoableEditListener(undoableEditListener);
-        uneditableFileModificationSegmentListenerMap.remove(modificationId);*/
+        FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(fileModification.getFilePath());
+        if (virtualFile != null) {
+            Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
+
+            if (document != null) {
+                String filePath = fileModification.getFilePath();
+                CompositeUneditableSegmentFilter compositeFilter = fileModificationCompositeFilterMap.get(filePath);
+
+                if (compositeFilter != null) {
+                    int startOffset = fileModification.getRangeMarker().getStartOffset();
+                    int endOffset = fileModification.getRangeMarker().getEndOffset();
+                    UneditableSegmentFilter filter = new UneditableSegmentFilter(startOffset, endOffset);
+                    compositeFilter.removeUneditableSegmentFilter(filter);
+                }
+            }
+        }
     }
 
     @Override
     public void addUneditableFileModificationSuggestionModificationSegmentListener(String modificationSuggestionModificationId) {
-        /*if (uneditableFileModificationSuggestionSegmentListenerMap.containsKey(modificationSuggestionModificationId)) {
-            return;
-        }
         FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationTrackerService.getModificationSuggestionModification(modificationSuggestionModificationId);
-        FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = fileModificationTrackerService.getModificationSuggestionModificationTracker(fileModificationSuggestionModification.getSuggestionId());
-        //JBTextArea display = fileModificationSuggestionModificationTracker.getDisplay();
-        //Document document = display.getDocument();
-        UndoableEditListener undoableEditListener = new UneditableSegmentListener(modificationSuggestionModificationId, fileModificationTrackerService, display, true);
-        document.addUndoableEditListener(undoableEditListener);
-        uneditableFileModificationSuggestionSegmentListenerMap.put(modificationSuggestionModificationId, undoableEditListener);*/
+        FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(fileModificationSuggestionModification.getSuggestionId());
+        Document document = fileModificationSuggestion.getSuggestedCode().getDocument();
+        int startOffset = fileModificationSuggestionModification.getRangeMarker().getStartOffset();
+        int endOffset = fileModificationSuggestionModification.getRangeMarker().getEndOffset();
+        UneditableSegmentFilter filter = new UneditableSegmentFilter(startOffset, endOffset);
+
+        String suggestionId = fileModificationSuggestionModification.getSuggestionId();
+        CompositeUneditableSegmentFilter compositeFilter = fileModificationSuggestionCompositeFilterMap.get(suggestionId);
+        if (compositeFilter == null) {
+            compositeFilter = new CompositeUneditableSegmentFilter();
+            fileModificationSuggestionCompositeFilterMap.put(suggestionId, compositeFilter);
+            document.addDocumentListener(compositeFilter);
+        }
+        compositeFilter.addUneditableSegmentFilter(filter);
     }
 
     @Override
     public void removeUneditableFileModificationSuggestionModificationSegmentListener(String modificationSuggestionModificationId) {
-        /*FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationTrackerService.getModificationSuggestionModification(modificationSuggestionModificationId);
-        FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = fileModificationTrackerService.getModificationSuggestionModificationTracker(fileModificationSuggestionModification.getSuggestionId());
-        //JBTextArea display = fileModificationSuggestionModificationTracker.getDisplay();
-        //Document document = display.getDocument();
-        UndoableEditListener undoableEditListener = uneditableFileModificationSuggestionSegmentListenerMap.get(modificationSuggestionModificationId);
-        document.removeUndoableEditListener(undoableEditListener);
-        uneditableFileModificationSuggestionSegmentListenerMap.remove(modificationSuggestionModificationId);*/
+        FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationTrackerService.getModificationSuggestionModification(modificationSuggestionModificationId);
+        FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(fileModificationSuggestionModification.getSuggestionId());
+        Document document = fileModificationSuggestion.getSuggestedCode().getDocument();
+
+        String suggestionId = fileModificationSuggestionModification.getSuggestionId();
+        CompositeUneditableSegmentFilter compositeFilter = fileModificationSuggestionCompositeFilterMap.get(suggestionId);
+
+        if (compositeFilter != null) {
+            int startOffset = fileModificationSuggestionModification.getRangeMarker().getStartOffset();
+            int endOffset = fileModificationSuggestionModification.getRangeMarker().getEndOffset();
+            UneditableSegmentFilter filter = new UneditableSegmentFilter(startOffset, endOffset);
+            compositeFilter.removeUneditableSegmentFilter(filter);
+        }
     }
 }

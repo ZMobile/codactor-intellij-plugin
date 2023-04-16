@@ -9,12 +9,17 @@ import com.intellij.openapi.project.Project;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.CodeTranslatorServiceConfig;
+import com.translator.service.code.CodeSnippetExtractorService;
 import com.translator.service.constructor.CodeFileGeneratorService;
+import com.translator.service.context.PromptContextService;
+import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
 import com.translator.service.file.FileOpenerService;
+import com.translator.service.file.SelectedFileFetcherService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.file.FileReaderService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
+import com.translator.view.console.CodactorConsole;
 import com.translator.view.factory.PromptContextBuilderFactory;
 import com.translator.view.factory.ProvisionalModificationCustomizerFactory;
 import com.translator.view.viewer.ModificationQueueViewer;
@@ -33,15 +38,9 @@ public class CodeTranslatorViewConfig extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new CodeTranslatorServiceConfig());
+        install(new CodeTranslatorServiceConfig(project));
         install(new FactoryModuleBuilder().build(ProvisionalModificationCustomizerFactory.class));
         install(new FactoryModuleBuilder().build(PromptContextBuilderFactory.class));
-    }
-
-    @Singleton
-    @Provides
-    public Project project() {
-        return project;
     }
 
     @Singleton
@@ -53,39 +52,48 @@ public class CodeTranslatorViewConfig extends AbstractModule {
 
     @Singleton
     @Provides
-    InquiryViewer inquiryViewer(OpenAiApiKeyService openAiApiKeyService,
-                                          OpenAiModelService openAiModelService,
-                                          CodactorToolWindowService codactorToolWindowService,
-                                          CodeFileGeneratorService codeFileGeneratorService,
-                                          InquiryDao inquiryDao,
-                                          @Named("inquiryTaskExecutor")LimitedSwingWorkerExecutor inquiryTaskExecutor) {
-        return new InquiryViewer(openAiApiKeyService, openAiModelService, codactorToolWindowService, codeFileGeneratorService, inquiryDao, inquiryTaskExecutor);
+    InquiryViewer inquiryViewer(Project project,
+                                OpenAiApiKeyService openAiApiKeyService,
+                                OpenAiModelService openAiModelService,
+                                CodactorToolWindowService codactorToolWindowService,
+                                CodeFileGeneratorService codeFileGeneratorService,
+                                InquiryDao inquiryDao) {
+        return new InquiryViewer(project, openAiApiKeyService, openAiModelService, codactorToolWindowService, codeFileGeneratorService, inquiryDao);
     }
 
     @Singleton
     @Provides
     public InquiryListViewer inquiryListViewer(InquiryViewer inquiryViewer,
                                                CodactorToolWindowService codactorToolWindowService,
-                                               InquiryDao inquiryDao,
-                                               @Named("historyFetchingTaskExecutor") LimitedSwingWorkerExecutor historyFetchingTaskExecutor) {
-        return new InquiryListViewer(inquiryViewer, codactorToolWindowService, inquiryDao, historyFetchingTaskExecutor);
+                                               InquiryDao inquiryDao) {
+        return new InquiryListViewer(inquiryViewer, codactorToolWindowService, inquiryDao);
     }
 
     @Singleton
     @Provides
     public HistoricalModificationListViewer historicalModificationListViewer(InquiryViewer inquiryViewer,
                                                                              CodactorToolWindowService codactorToolWindowService,
-                                                                             CodeModificationHistoryDao codeModificationHistoryDao,
-                                                                             @Named("historyFetchingTaskExecutor") LimitedSwingWorkerExecutor historyFetchingTaskExecutor) {
-        return new HistoricalModificationListViewer(inquiryViewer, codactorToolWindowService, codeModificationHistoryDao, historyFetchingTaskExecutor);
+                                                                             CodeModificationHistoryDao codeModificationHistoryDao) {
+        return new HistoricalModificationListViewer(inquiryViewer, codactorToolWindowService, codeModificationHistoryDao);
     }
 
     @Singleton
     @Provides
-    public ModificationQueueViewer ModificationQueueViewerToolWindow(ProvisionalModificationViewer provisionalModificationViewer,
-                                                                     CodactorToolWindowService codactorToolWindowService,
-                                                                     FileReaderService fileReaderService,
-                                                                     FileOpenerService fileOpenerService) {
-        return new ModificationQueueViewer(provisionalModificationViewer, codactorToolWindowService, fileReaderService, fileOpenerService);
+    public ModificationQueueViewer ModificationQueueViewer(Project project,
+                                                           ProvisionalModificationViewer provisionalModificationViewer,
+                                                           CodactorToolWindowService codactorToolWindowService,
+                                                           FileReaderService fileReaderService,
+                                                           FileOpenerService fileOpenerService) {
+        return new ModificationQueueViewer(project, provisionalModificationViewer, codactorToolWindowService, fileReaderService, fileOpenerService);
+    }
+
+    @Singleton
+    @Provides
+    public CodactorConsole codactorConsole(Project project,
+                                           PromptContextService promptContextService,
+                                           SelectedFileFetcherService selectedFileFetcherService,
+                                           CodeSnippetExtractorService codeSnippetExtractorService,
+                                           AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory) {
+        return new CodactorConsole(project, promptContextService, selectedFileFetcherService, codeSnippetExtractorService, automaticCodeModificationServiceFactory);
     }
 }

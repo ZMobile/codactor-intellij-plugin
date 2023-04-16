@@ -1,6 +1,8 @@
 package com.translator.view.viewer;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.inquiry.Inquiry;
@@ -26,18 +28,15 @@ public class InquiryListViewer extends JPanel {
     private HistoricalModificationListViewer historicalModificationListViewer;
     private CodactorToolWindowService codactorToolWindowService;
     private InquiryDao inquiryDao;
-    private LimitedSwingWorkerExecutor historyFetchingTaskExecutor;
     private JPanel parentComponent = this;
 
     public InquiryListViewer(InquiryViewer inquiryViewer,
                              CodactorToolWindowService codactorToolWindowService,
-                             InquiryDao inquiryDao,
-                             LimitedSwingWorkerExecutor historyFetchingTaskExecutor) {
+                             InquiryDao inquiryDao) {
         this.inquiryViewer = inquiryViewer;
         this.historicalModificationListViewer = null;
         this.codactorToolWindowService = codactorToolWindowService;
         this.inquiryDao = inquiryDao;
-        this.historyFetchingTaskExecutor = historyFetchingTaskExecutor;
         initComponents();
     }
 
@@ -99,20 +98,16 @@ public class InquiryListViewer extends JPanel {
     }
 
     public void updateInquiryList() {
-        LimitedSwingWorker worker = new LimitedSwingWorker(historyFetchingTaskExecutor) {
-            @Override
-            protected Void doInBackground() {
-                List<Inquiry> inquiries = inquiryDao.getRecentInquiries();
-                if (inquiries != null) {
-                    updateInquiryList(inquiries);
-                } else {
-                    JOptionPane.showMessageDialog(parentComponent, "Failed to load inquiry history", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-                return null;
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            List<Inquiry> inquiries = inquiryDao.getRecentInquiries();
+            if (inquiries != null) {
+                updateInquiryList(inquiries);
+            } else {
+                JOptionPane.showMessageDialog(parentComponent, "Failed to load inquiry history", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
-        };
-        worker.execute();
+            return null;
+        });
     }
 
     public void updateInquiryList(List<Inquiry> inquiries) {

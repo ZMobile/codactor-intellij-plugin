@@ -20,7 +20,7 @@ import java.awt.event.ComponentEvent;
 public class InquiryToolWindowFactory implements ToolWindowFactory {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        Injector injector = CodactorInjector.getInstance(project).getInjector();
+        Injector injector = CodactorInjector.getInstance().getInjector(project);
         InquiryViewer inquiryViewer = injector.getInstance(InquiryViewer.class);
         InquiryListViewer inquiryListViewer = injector.getInstance(InquiryListViewer.class);
         inquiryViewer.setInquiryListViewer(inquiryListViewer);

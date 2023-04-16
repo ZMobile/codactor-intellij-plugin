@@ -56,8 +56,8 @@ public class JTreeHighlighterServiceImpl implements JTreeHighlighterService {
                                     selectionColor = Color.GREEN;
                                     nonSelectionColor = Color.GREEN;
                                 } else {
-                                    selectionColor = Color.decode("#7FFFD4");
-                                    nonSelectionColor = Color.decode("#7FFFD4");
+                                    selectionColor = Color.decode("#009688");
+                                    nonSelectionColor = Color.decode("#009688");
                                 }
                             }
                         }

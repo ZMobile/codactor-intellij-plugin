@@ -1,5 +1,6 @@
 package com.translator.view.viewer.context;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.model.api.translator.history.DesktopCodeModificationHistoryResponseResource;
@@ -26,7 +27,6 @@ public class HistoricalContextModificationListViewer extends JPanel {
     private JButton previousModificationsLabel;
     private JButton addButton;
     private CodeModificationHistoryDao codeModificationHistoryDao;
-    private LimitedSwingWorkerExecutor historyFetchingTaskExecutor;
     private HistoricalContextObjectViewer historicalContextObjectViewer;
     private HistoricalContextObjectListViewer historicalContextObjectListViewer;
     private HistoricalContextInquiryListViewer historicalContextInquiryListViewer;
@@ -34,11 +34,9 @@ public class HistoricalContextModificationListViewer extends JPanel {
 
     public HistoricalContextModificationListViewer(HistoricalContextObjectViewer historicalContextObjectViewer,
                                                     HistoricalContextObjectListViewer historicalContextObjectListViewer,
-                                                   CodeModificationHistoryDao codeModificationHistoryDao,
-                                                   LimitedSwingWorkerExecutor historyFetchingTaskExecutor) {
+                                                   CodeModificationHistoryDao codeModificationHistoryDao) {
         this.historicalContextObjectViewer = historicalContextObjectViewer;
         this.codeModificationHistoryDao = codeModificationHistoryDao;
-        this.historyFetchingTaskExecutor = historyFetchingTaskExecutor;
         updateModificationList();
         initComponents();
         this.historicalContextObjectListViewer = historicalContextObjectListViewer;
@@ -141,20 +139,15 @@ public class HistoricalContextModificationListViewer extends JPanel {
     }
 
     public void updateModificationList() {
-        LimitedSwingWorker worker = new LimitedSwingWorker(historyFetchingTaskExecutor) {
-            @Override
-            protected Void doInBackground() {
-                DesktopCodeModificationHistoryResponseResource modifications = codeModificationHistoryDao.getRecentModifications();
-                if (modifications != null) {
-                    updateModificationList(modifications.getModificationHistory());
-                } else {
-                    JOptionPane.showMessageDialog(parentComponent, "Failed to load modification history", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-                return null;
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            DesktopCodeModificationHistoryResponseResource modifications = codeModificationHistoryDao.getRecentModifications();
+            if (modifications != null) {
+                updateModificationList(modifications.getModificationHistory());
+            } else {
+                JOptionPane.showMessageDialog(parentComponent, "Failed to load modification history", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
-        };
-        worker.execute();
+        });
     }
 
     public void updateModificationList(List<HistoricalContextModificationDataHolder> fileModifications) {

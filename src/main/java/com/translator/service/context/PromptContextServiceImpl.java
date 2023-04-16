@@ -13,7 +13,8 @@ public class PromptContextServiceImpl implements PromptContextService {
     @Inject
     public PromptContextServiceImpl() {
         this.context = null;
-        //updateStatusLabel();
+        this.statusLabel = new JLabel();
+        updateStatusLabel();
     }
 
     @Override

@@ -1,8 +1,6 @@
 package com.translator.service.modification.tracking;
 
 import com.translator.model.modification.*;
-import com.translator.service.modification.tracking.listener.DocumentListenerService;
-import com.translator.service.modification.tracking.listener.UneditableSegmentListenerService;
 import com.translator.service.ui.ModificationQueueListButtonService;
 import com.translator.view.viewer.ModificationQueueViewer;
 
@@ -63,11 +61,7 @@ public interface FileModificationTrackerService {
 
     Color getModificationQueueListButtonColor();
 
-    DocumentListenerService getDocumentListenerService();
-
-    UneditableSegmentListenerService getUneditableSegmentListenerService();
-
-    void setModificationQueueListButtonService(ModificationQueueListButtonService modificationQueueListButtonService);
+   void setModificationQueueListButtonService(ModificationQueueListButtonService modificationQueueListButtonService);
 
     void setModificationQueueViewer(ModificationQueueViewer modificationQueueViewer);
 }

@@ -32,16 +32,14 @@ public class PromptContextBuilder extends javax.swing.JFrame {
      * Creates new form PromptContextBuilder
      */
     @Inject
-    public PromptContextBuilder(@Named("extensionToSyntaxMap") Map<String, String> extensionToSyntaxMap,
-                                ContextQueryDao contextQueryDao,
+    public PromptContextBuilder(ContextQueryDao contextQueryDao,
                                 InquiryDao inquiryDao,
                                 CodeModificationHistoryDao codeModificationHistoryDao,
-                                @Named("historyFetchingTaskExecutor") LimitedSwingWorkerExecutor historyFetchingTaskExecutor,
                                 @Assisted PromptContextService promptContextService) {
-        this.historicalContextObjectViewer = new HistoricalContextObjectViewer(extensionToSyntaxMap, contextQueryDao, historyFetchingTaskExecutor);
+        this.historicalContextObjectViewer = new HistoricalContextObjectViewer(contextQueryDao);
         this.historicalContextObjectListViewer = new HistoricalContextObjectListViewer(historicalContextObjectViewer);
-        this.historicalContextModificationListViewer = new HistoricalContextModificationListViewer(historicalContextObjectViewer, historicalContextObjectListViewer, codeModificationHistoryDao, historyFetchingTaskExecutor);
-        this.historicalContextInquiryListViewer = new HistoricalContextInquiryListViewer(inquiryDao, historicalContextObjectViewer, historicalContextObjectListViewer, historyFetchingTaskExecutor);
+        this.historicalContextModificationListViewer = new HistoricalContextModificationListViewer(historicalContextObjectViewer, historicalContextObjectListViewer, codeModificationHistoryDao);
+        this.historicalContextInquiryListViewer = new HistoricalContextInquiryListViewer(inquiryDao, historicalContextObjectViewer, historicalContextObjectListViewer);
         this.historicalContextModificationListViewer.setHistoricalContextInquiryListViewer(historicalContextInquiryListViewer);
         this.historicalContextInquiryListViewer.setHistoricalContextModificationListViewer(historicalContextModificationListViewer);
         this.historicalContextObjectListViewer.setHistoricalContextModificationListViewer(historicalContextModificationListViewer);
@@ -49,7 +47,7 @@ public class PromptContextBuilder extends javax.swing.JFrame {
         this.historicalContextObjectViewer.setHistoricalContextModificationListViewer(historicalContextModificationListViewer);
         this.historicalContextObjectViewer.setHistoricalContextInquiryListViewer(historicalContextInquiryListViewer);
         this.historicalContextObjectViewer.setHistoricalContextObjectListViewer(historicalContextObjectListViewer);
-        this.historicalContextObjectListChatViewer = new HistoricalContextObjectListChatViewer(extensionToSyntaxMap, contextQueryDao, historyFetchingTaskExecutor, historicalContextObjectListViewer);
+        this.historicalContextObjectListChatViewer = new HistoricalContextObjectListChatViewer(contextQueryDao, historicalContextObjectListViewer);
         this.historicalContextObjectListViewer.setHistoricalContextObjectListChatViewer(historicalContextObjectListChatViewer);
         if (promptContextService.getPromptContext() != null) {
             this.historicalContextObjectListViewer.updateContextObjectList(promptContextService.getPromptContext());

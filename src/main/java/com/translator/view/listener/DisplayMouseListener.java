@@ -43,10 +43,10 @@ public class DisplayMouseListener extends MouseAdapter {
         FileModificationTracker fileModificationTracker = fileModificationTrackerService.getActiveModificationFiles().get(filePath);
         if (fileModificationTracker != null) {
             for (FileModification fileModification : fileModificationTracker.getModifications()) {
-                if (offset >= fileModification.getStartIndex() && offset <= fileModification.getEndIndex()) {
+                if (offset >= fileModification.getRangeMarker().getStartOffset() && offset <= fileModification.getRangeMarker().getEndOffset()) {
                     if (fileModification.isDone()) {
                         provisionalModificationViewer.updateModificationList(fileModification);
-                        //codactorToolWindowService.openProvisionalModificationViewerToolWindow();
+                        codactorToolWindowService.openProvisionalModificationViewerToolWindow();
                     } else {
                         //codactorToolWindowService.openModificationQueueViewerToolWindow();
                     }

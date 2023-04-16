@@ -35,16 +35,14 @@ public class TabKeyListener implements KeyListener {
                 return;
             }
             for (FileModification fileModification : fileModificationTracker.getModifications()) {
-                int minCaretPosition = fileModification.getStartIndex();
-                int maxCaretPosition = fileModification.getEndIndex();
+                int minCaretPosition = fileModification.getRangeMarker().getStartOffset();
+                int maxCaretPosition = fileModification.getRangeMarker().getEndOffset();
                 if (caretPosition >= minCaretPosition && caretPosition <= maxCaretPosition) {
-                    fileModificationTrackerService.getUneditableSegmentListenerService().removeUneditableFileModificationSegmentListener(fileModification.getId());
-                    fileModificationTrackerService.getDocumentListenerService().removeDocumentListener(filePath);
-                    fileModificationTrackerService.implementModificationUpdate(fileModification.getId(), fileModification.getModificationOptions().get(0).getSuggestedCode().trim());
+                    fileModificationTrackerService.implementModificationUpdate(fileModification.getId(), fileModification.getModificationOptions().get(0).getSuggestedCode().getDocument().getText().trim());
                     //if (codactorToolWindowService.getRightComponent() instanceof ProvisionalModificationViewer) {
                         //codactorToolWindowService.closeModificationQueueViewerToolWindow();
                     //}
-                    fileModificationTrackerService.getDocumentListenerService().insertDocumentListener(filePath);
+
                     break;
                 }
             }

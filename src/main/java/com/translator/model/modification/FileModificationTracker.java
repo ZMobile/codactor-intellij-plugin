@@ -1,31 +1,36 @@
 package com.translator.model.modification;
 
 
-import com.translator.service.modification.tracking.listener.DocumentListenerService;
-import com.translator.service.modification.tracking.listener.UneditableSegmentListenerService;
+import com.intellij.openapi.editor.RangeMarker;
+import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBTextArea;
+import com.translator.service.code.CodeSnippetExtractorService;
+import com.translator.service.code.RangeReplaceService;
+import com.translator.service.modification.tracking.CodeRangeTrackerService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class FileModificationTracker {
-    private Map<String, JBTextArea> displayMap;
-    private final Map<String, String> extensionToSyntaxMap;
-    private final Map<String, String> languageToSyntaxMap;
-    private final DocumentListenerService documentListenerService;
-    private final UneditableSegmentListenerService uneditableSegmentListenerService;
+    private Project project;
     private final String filePath;
     private final List<FileModification> modifications;
     private final List<FileModificationUpdate> fileModificationUpdateQueue;
+    private final CodeSnippetExtractorService codeSnippetExtractorService;
+    private final RangeReplaceService rangeReplaceService;
+    private final CodeRangeTrackerService codeRangeTrackerService;
 
-    public FileModificationTracker(Map<String, JBTextArea> displayMap, Map<String, String> extensionToSyntaxMap, Map<String, String> languageToSyntaxMap, DocumentListenerService documentListenerService, UneditableSegmentListenerService uneditableSegmentListenerService, String filePath, JBTextArea display) {
-        this.displayMap = displayMap;
-        this.extensionToSyntaxMap = extensionToSyntaxMap;
-        this.languageToSyntaxMap = languageToSyntaxMap;
-        this.documentListenerService = documentListenerService;
-        this.uneditableSegmentListenerService = uneditableSegmentListenerService;
+    public FileModificationTracker(Project project,
+                                   String filePath,
+                                   CodeSnippetExtractorService codeSnippetExtractorService,
+                                   RangeReplaceService rangeReplaceService,
+                                   CodeRangeTrackerService codeRangeTrackerService) {
+        this.project = project;
         this.filePath = filePath;
+        this.codeSnippetExtractorService = codeSnippetExtractorService;
+        this.rangeReplaceService = rangeReplaceService;
+        this.codeRangeTrackerService = codeRangeTrackerService;
         this.modifications = new ArrayList<>();
         this.fileModificationUpdateQueue = new ArrayList<>();
     }
@@ -47,17 +52,18 @@ public class FileModificationTracker {
 
 
     public String addModification(int startIndex, int endIndex, ModificationType modificationType) {
-        JBTextArea display = displayMap.get(filePath);
-        String beforeText = display.getText().substring(startIndex, endIndex);
+        String beforeText = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
+        RangeMarker rangeMarker = codeRangeTrackerService.createRangeMarker(filePath, startIndex, endIndex);
         for (FileModification m : modifications) {
-            // Check if the proposed modification would overlap with any existing modifications in this tracker
-            if ((startIndex <= m.getStartIndex() && endIndex >= m.getStartIndex()) || (startIndex <= m.getEndIndex() && endIndex >= m.getEndIndex())) {
-                return null;
+            RangeMarker existingRangeMarker = m.getRangeMarker();
+            if (existingRangeMarker != null && existingRangeMarker.isValid()) {
+                if ((startIndex <= existingRangeMarker.getStartOffset() && endIndex >= existingRangeMarker.getStartOffset()) || (startIndex <= existingRangeMarker.getEndOffset() && endIndex >= existingRangeMarker.getEndOffset())) {
+                    return null;
+                }
             }
         }
-        FileModification fileModification = new FileModification(filePath, startIndex, endIndex, beforeText, modificationType);
+        FileModification fileModification = new FileModification(filePath, rangeMarker, beforeText, modificationType);
         modifications.add(fileModification);
-        uneditableSegmentListenerService.addUneditableFileModificationSegmentListener(fileModification.getId());
         return fileModification.getId();
     }
 
@@ -71,7 +77,6 @@ public class FileModificationTracker {
         if (m == null) {
             return;
         }
-        uneditableSegmentListenerService.removeUneditableFileModificationSegmentListener(modificationId);
         modifications.remove(m);
     }
 
@@ -85,57 +90,18 @@ public class FileModificationTracker {
     }
 
 
-    public void updateModifications(int formerStartIndex, int formerEndIndex, String textInserted) {
-        int lengthDifference = textInserted.length() - (formerEndIndex - formerStartIndex);
-        for (FileModification m : modifications) {
-            if (m.getStartIndex() >= formerStartIndex) {
-                m.setStartIndex(m.getStartIndex() + lengthDifference);
-                m.setEndIndex(m.getEndIndex() + lengthDifference);
-            } else if (formerStartIndex >= m.getStartIndex() && formerEndIndex < m.getEndIndex()) {
-                m.setEndIndex(m.getEndIndex() + lengthDifference);
-            }
-        }
-    }
-
-    /*public void undoUpdateModifications() {
-        if (undoStack.empty()) {
-            return;
-        }
-        // Pop the most recent undo action from the stack
-        UndoAction undoAction = undoStack.pop();
-        // Get the former contents of the file
-        String formerContents = undoAction.getFormerContents();
-        // Get the former start index of the modification
-        int formerStartIndex = undoAction.getFormerStartIndex();
-
-        // Get the text inserted into the file
-        String textInserted = undoAction.getTextInserted();
-        // Update the file contents
-        fileContents = formerContents;
-
-        // Update the modifications
-        int lengthDifference = textInserted.length() - (undoAction.getFormerEndIndex() - undoAction.getFormerStartIndex());
-        for (FileModification m : modifications) {
-            if (m.getStartIndex() >= formerStartIndex) {
-                m.setStartIndex(m.getStartIndex() - lengthDifference);
-                m.setEndIndex(m.getEndIndex() - lengthDifference);
-            }
-        }
-    }*/
-
     public void implementModification(String modificationId, String modification) {
-        JBTextArea display = displayMap.get(filePath);
         synchronized (modifications) {
             for (FileModification m : modifications) {
                 if (m.getId().equals(modificationId)) {
-                    documentListenerService.removeDocumentListener(m.getFilePath());
-                    uneditableSegmentListenerService.removeUneditableFileModificationSegmentListener(modificationId);
-                    int formerStartIndex = m.getStartIndex();
-                    int formerEndIndex = m.getEndIndex();
-                    modifications.remove(m);
-                    updateModifications(formerStartIndex, formerEndIndex, modification);
-                    display.replaceRange(modification, formerStartIndex, formerEndIndex);
-                    documentListenerService.insertDocumentListener(m.getFilePath());
+                    RangeMarker rangeMarker = m.getRangeMarker();
+                    if (rangeMarker != null && rangeMarker.isValid()) {
+                        int formerStartIndex = rangeMarker.getStartOffset();
+                        int formerEndIndex = rangeMarker.getEndOffset();
+                        modifications.remove(m);
+                        rangeReplaceService.replaceRange(filePath, formerStartIndex, formerEndIndex, modification);
+                        rangeMarker.dispose(); // Dispose the RangeMarker after it's no longer needed
+                    }
                     break;
                 }
             }
@@ -148,13 +114,7 @@ public class FileModificationTracker {
             fileModification.setModificationRecordId(modificationOptions.get(0).getModificationId());
             List<FileModificationSuggestion> suggestions = new ArrayList<>();
             for (FileModificationSuggestionRecord modificationOption : modificationOptions) {
-                String syntax;
-                //if (modificationOption.getLanguage() == null) {
-                    syntax = extensionToSyntaxMap.get(getFileExtension(filePath).toLowerCase());
-                /*} else {
-                    syntax = languageToSyntaxMap.get(modificationOption.getLanguage().toLowerCase());
-                }*/
-                suggestions.add(new FileModificationSuggestion(modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode(), syntax));
+                suggestions.add(new FileModificationSuggestion(project, modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode()));
             }
             fileModification.setModificationOptions(suggestions);
             fileModification.setDone(true);
@@ -173,24 +133,11 @@ public class FileModificationTracker {
         }
         return null;
     }
-
-    public JBTextArea getDisplay() {
-        return displayMap.get(filePath);
-    }
-
     public String getFileExtension(String filePath) {
         int i = filePath.lastIndexOf('.');
         if (i > 0) {
             return filePath.substring(i + 1);
         }
         return "";
-    }
-
-    public Map<String, JBTextArea> getDisplayMap() {
-        return displayMap;
-    }
-
-    public void setDisplayMap(Map<String, JBTextArea> displayMap) {
-        this.displayMap = displayMap;
     }
 }

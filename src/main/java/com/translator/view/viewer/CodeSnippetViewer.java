@@ -9,28 +9,25 @@ package com.translator.view.viewer;
  * @author zantehays
  */
 
+import com.intellij.openapi.editor.Editor;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBTextArea;
+import com.translator.view.panel.FixedHeightPanel;
 
 
 import javax.swing.*;
 import java.awt.*;
 
-public class CodeSnippetViewer extends JBPanel {
+public class CodeSnippetViewer extends JBPanel<CodeSnippetViewer> {
     private JToolBar jToolBar1;
     private JLabel jLabel1;
-    private JBTextArea jBTextArea1;
+    private Editor editor;
 
-    public CodeSnippetViewer(JBTextArea jBTextArea1) {
-        this.jBTextArea1 = jBTextArea1;
+    public CodeSnippetViewer(Editor editor) {
+        this.editor = editor;
         initComponents();
     }
 
-    public CodeSnippetViewer(JBTextArea jBTextArea1, String header) {
-        this.jBTextArea1 = jBTextArea1;
-        this.jBTextArea1.setText(jBTextArea1.getText().trim());
-        initComponents(header);
-    }
 
     private void initComponents() {
         jToolBar1 = new JToolBar();
@@ -46,7 +43,11 @@ public class CodeSnippetViewer extends JBPanel {
         // Use BorderLayout to add the JBScrollPane to the center of the panel
         setLayout(new BorderLayout());
         add(jToolBar1, BorderLayout.NORTH);
-        add(jBTextArea1, BorderLayout.CENTER);
+        editor.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, editor.getComponent().getPreferredSize().height));
+        FixedHeightPanel fixedHeightPanel = new FixedHeightPanel(editor);
+        fixedHeightPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        fixedHeightPanel.add(editor.getComponent());
+        add(fixedHeightPanel, BorderLayout.CENTER);
     }
 
     private void initComponents(String header) {
@@ -63,11 +64,15 @@ public class CodeSnippetViewer extends JBPanel {
         // Use BorderLayout to add the JBScrollPane to the center of the panel
         setLayout(new BorderLayout());
         add(jToolBar1, BorderLayout.NORTH);
-        add(jBTextArea1, BorderLayout.CENTER);
+        editor.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, editor.getComponent().getPreferredSize().height));
+        FixedHeightPanel fixedHeightPanel = new FixedHeightPanel(editor);
+        fixedHeightPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        fixedHeightPanel.add(editor.getComponent());
+        add(fixedHeightPanel, BorderLayout.CENTER);
     }
 
-    public void setTextArea(JBTextArea jBTextArea1) {
-        this.jBTextArea1 = jBTextArea1;
+    public void setEditor(Editor editor) {
+        this.editor = editor;
     }
 
     public JToolBar getToolBar() {
@@ -75,7 +80,7 @@ public class CodeSnippetViewer extends JBPanel {
     }
 
     public String getText() {
-        return jBTextArea1.getText();
+        return editor.getDocument().getText();
     }
 
     public void setToolbarBackground(Color color) {

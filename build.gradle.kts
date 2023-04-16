@@ -9,6 +9,9 @@ version = "1.0-SNAPSHOT"
 repositories {
     mavenCentral()
 }
+dependencies {
+    implementation("io.github.kju2.languagedetector:language-detector:1.0.5")
+}
 
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
@@ -41,6 +44,7 @@ tasks {
     dependencies {
         implementation("com.google.inject:guice:5.1.0")
         implementation("com.google.inject.extensions:guice-assistedinject:5.1.0")
+        implementation("com.norconex.language:langdetect:1.3.0")
     }
 
     publishPlugin {

@@ -14,6 +14,8 @@ import com.intellij.ui.JBColor;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.inquiry.InquiryChatType;
 import com.intellij.ui.components.JBTextArea;
+import com.translator.service.code.CodeToFileTypeTransformerService;
+import com.translator.service.code.CodeToFileTypeTransformerServiceImpl;
 import com.translator.view.panel.FixedHeightPanel;
 
 import javax.swing.*;
@@ -30,13 +32,16 @@ import java.util.regex.Pattern;
 public class InquiryChatViewer extends JPanel {
     private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile("```(.*?)```", Pattern.DOTALL);
 
-
     private InquiryChat inquiryChat;
     private InquiryChatType inquiryChatType;
     private JToolBar jToolBar1;
     private JLabel jLabel1;
+    private String message;
+    private CodeToFileTypeTransformerService codeToFileTypeTransformerService;
 
     public InquiryChatViewer(String message, String headerString, InquiryChatType inquiryChatType) {
+        this.codeToFileTypeTransformerService = new CodeToFileTypeTransformerServiceImpl();
+        this.message = message;
         this.inquiryChat = new InquiryChat(null, null, null, null, headerString, message, inquiryChatType);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -141,14 +146,14 @@ public class InquiryChatViewer extends JPanel {
 
     private FixedHeightPanel createCodeEditor(String code) {
         EditorFactory editorFactory = EditorFactory.getInstance();
-        FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension("java");
+        FileType fileType = codeToFileTypeTransformerService.convert(code);
         Document document = editorFactory.createDocument(code);
         Editor editor = editorFactory.createEditor(document, null);
         EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
         ((EditorEx) editor).setHighlighter(editorHighlighter);
         ((EditorEx) editor).setViewer(true);
         editor.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, editor.getComponent().getPreferredSize().height));
-        FixedHeightPanel fixedHeightPanel = new FixedHeightPanel(editor.getLineHeight() * getLineCount(code));
+        FixedHeightPanel fixedHeightPanel = new FixedHeightPanel(editor);
         fixedHeightPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         fixedHeightPanel.add(editor.getComponent());
         return fixedHeightPanel;

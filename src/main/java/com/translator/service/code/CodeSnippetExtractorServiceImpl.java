@@ -1,0 +1,84 @@
+package com.translator.service.code;
+
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.SelectionModel;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+
+import javax.inject.Inject;
+import java.util.Arrays;
+
+public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorService {
+    private final Project project;
+
+    @Inject
+    public CodeSnippetExtractorService codeSnippetExtractorService;
+
+    @Inject
+    public CodeSnippetExtractorServiceImpl(Project project) {
+        this.project = project;
+    }
+
+    public String getSnippet(String filePath, int startIndex, int endIndex) {
+        // Convert the file path to a VirtualFile instance
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+
+        if (virtualFile != null) {
+            // Get the Document instance corresponding to the VirtualFile
+            Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
+
+            if (document != null) {
+                // Retrieve the text from the document using the start and end indices
+                return document.getText(new TextRange(startIndex, endIndex));
+            }
+        }
+
+        return null;
+    }
+
+    public String getAllText(String filePath) {
+        // Convert the file path to a VirtualFile instance
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+
+        if (virtualFile != null) {
+            // Get the Document instance corresponding to the VirtualFile
+            Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
+
+            if (document != null) {
+                // Retrieve the entire text from the document
+                return document.getText();
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public SelectionModel getSelectedText(String filePath) {
+        FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+        VirtualFile[] selectedFiles = fileEditorManager.getSelectedFiles();
+
+        VirtualFile virtualFile = Arrays.stream(selectedFiles)
+                .filter(file -> file.getPath().equals(filePath))
+                .findFirst()
+                .orElseThrow();
+
+        // Get the Editor instance for the selected file
+        Editor editor = fileEditorManager.getSelectedTextEditor();
+
+        if (editor != null) {
+            // Get the SelectionModel and the selected text
+
+            // Do something with the selected text
+            return editor.getSelectionModel();
+        } else {
+            System.out.println("Editor not found");
+            return null;
+        }
+    }
+}

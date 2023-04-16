@@ -4,31 +4,34 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.components.ProjectComponent;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
+import com.translator.dao.CodeTranslatorDaoConfig;
+import com.translator.service.CodeTranslatorServiceConfig;
 import com.translator.view.CodeTranslatorViewConfig;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class CodactorInjector {
+    private final Map<Project, Injector> projectToInjectorMap;
 
-    private final Project project;
-    private final Injector injector;
-
-    public static CodactorInjector getInstance(Project project) {
-        return project.getService(CodactorInjector.class);
+    public static CodactorInjector getInstance() {
+        return ServiceManager.getService(CodactorInjector.class);
     }
 
-    public CodactorInjector(Project project) {
-        this.project = project;
-
-        // Create Guice injector and configure it with your modules
-        injector = Guice.createInjector(new CodeTranslatorViewConfig(project));
+    public CodactorInjector() {
+        this.projectToInjectorMap = new HashMap<>();
     }
 
-    public Injector getInjector() {
-        return injector;
-    }
-
-    public Project getProject() {
-        return project;
+    public Injector getInjector(Project project) {
+        if (projectToInjectorMap.containsKey(project)) {
+            return projectToInjectorMap.get(project);
+        } else {
+            Injector injector = Guice.createInjector(new CodeTranslatorViewConfig(project));
+            projectToInjectorMap.put(project, injector);
+            return injector;
+        }
     }
 }

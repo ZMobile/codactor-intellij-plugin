@@ -1,5 +1,6 @@
 package com.translator.view.viewer.context;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.model.history.HistoricalContextObjectHolder;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 
 public class HistoricalContextObjectViewer extends JPanel {
-    private Map<String, String> extensionToSyntaxMap;
     private HistoricalContextObjectHolder historicalContextObjectHolder;
     private ContextQueryDao contextQueryDao;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
@@ -43,16 +43,11 @@ public class HistoricalContextObjectViewer extends JPanel {
     private HistoricalContextModificationListViewer historicalContextModificationListViewer;
     private HistoricalContextInquiryListViewer historicalContextInquiryListViewer;
     private HistoricalContextObjectListViewer historicalContextObjectListViewer;
-    private LimitedSwingWorkerExecutor historyFetchingTaskExecutor;
     private int selectedChat;
 
-    public HistoricalContextObjectViewer(Map<String, String> extensionToSyntaxMap,
-                         ContextQueryDao contextQueryDao,
-                         LimitedSwingWorkerExecutor historyFetchingTaskExecutor) {
+    public HistoricalContextObjectViewer(ContextQueryDao contextQueryDao) {
         this.textAreaHeightCalculatorService = new TextAreaHeightCalculatorServiceImpl();
-        this.extensionToSyntaxMap = extensionToSyntaxMap;
         this.contextQueryDao = contextQueryDao;
-        this.historyFetchingTaskExecutor = historyFetchingTaskExecutor;
         this.historicalContextObjectHolder = null;
         this.selectedChat = -1;
         initComponents();
@@ -78,7 +73,7 @@ public class HistoricalContextObjectViewer extends JPanel {
                     InquiryChatViewer selectedInquiryChatViewer = jList1.getModel().getElementAt(selectedIndex);
                     selectedInquiryChatViewer.setBackground(Color.GREEN);
                     JBTextArea selectedJBTextArea = (JBTextArea) selectedInquiryChatViewer.getComponents()[1];
-                    Color highlightColor = Color.decode("#7FFFD4");
+                    Color highlightColor = Color.decode("#009688");
                     //Highlight the whole text are
                     try {
                         selectedJBTextArea.getHighlighter().addHighlight(0, selectedJBTextArea.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
@@ -257,27 +252,23 @@ public class HistoricalContextObjectViewer extends JPanel {
 
     public void updateHistoricalContextObjectHolder(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {
         HistoricalContextObjectHolder newHistoricalContextObjectHolder = new HistoricalContextObjectHolder(historicalContextObjectDataHolder);
-        LimitedSwingWorker worker = new LimitedSwingWorker(historyFetchingTaskExecutor) {
-            @Override
-            protected Void doInBackground() {
-                HistoricalContextObjectHolder response = contextQueryDao.queryHistoricalContextObject(newHistoricalContextObjectHolder);
-                if (response != null) {
-                    historicalContextObjectHolder = response;
-                    if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.INQUIRY) {
-                        updateChatContents(historicalContextObjectHolder.getHistoricalContextInquiryHolder().getRequestedChats());
-                    } else if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
-                        updateChatContents(historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRequestedChats());
-                    }
-                    JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-                    vertical.setValue(vertical.getMaximum());
-                } else {
-                    JOptionPane.showMessageDialog(null, "Unable to load context object", "Error",
-                            JOptionPane.ERROR_MESSAGE);
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            HistoricalContextObjectHolder response = contextQueryDao.queryHistoricalContextObject(newHistoricalContextObjectHolder);
+            if (response != null) {
+                historicalContextObjectHolder = response;
+                if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.INQUIRY) {
+                    updateChatContents(historicalContextObjectHolder.getHistoricalContextInquiryHolder().getRequestedChats());
+                } else if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
+                    updateChatContents(historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRequestedChats());
                 }
-                return null;
+                JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
+                vertical.setValue(vertical.getMaximum());
+            } else {
+                JOptionPane.showMessageDialog(null, "Unable to load context object", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
-        };
-        worker.execute();
+            return null;
+        });
     }
 
     public String getFileExtension(String filePath) {

@@ -94,9 +94,9 @@ public class HistoricalContextObjectHolderRenderer extends JPanel implements Lis
             leftLabelTwo.setText("");
             labelThree.setText("");
             if (isSelected) {
-                setBackground(Color.decode("#CC99FF").darker());
+                setBackground(Color.decode("#AA00FF").darker());
             } else {
-                setBackground(Color.decode("#CC99FF"));
+                setBackground(Color.decode("#AA00FF"));
             }
         }
 
@@ -104,7 +104,7 @@ public class HistoricalContextObjectHolderRenderer extends JPanel implements Lis
         //String statusText = value.isDone() ? "(Done)" : "(Queued)";
         //statusLabel.setText(statusText);
 
-        //setBackground(value.isDone() ? Color.GREEN : Color.decode("#7FFFD4"));
+        //setBackground(value.isDone() ? Color.GREEN : Color.decode("#009688"));
 
         return this;
     }

@@ -28,10 +28,12 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
     private Project project;
 
     @Inject
-    public ModificationQueueViewer(ProvisionalModificationViewer provisionalModificationViewer,
+    public ModificationQueueViewer(Project project,
+                                   ProvisionalModificationViewer provisionalModificationViewer,
                                    CodactorToolWindowService codactorToolWindowService,
                                    FileReaderService fileReaderService,
                                    FileOpenerService fileOpenerService) {
+        this.project = project;
         this.provisionalModificationViewer = provisionalModificationViewer;
         this.codactorToolWindowService = codactorToolWindowService;
         this.fileReaderService = fileReaderService;
@@ -74,10 +76,10 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                         provisionalModificationViewer.updateModificationList(fileModification);
 
                         // Replace the content of the tool window with an instance of CodeSnippetListViewer
-                        //ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+                        // ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
                         codactorToolWindowService.openProvisionalModificationViewerToolWindow();
                     }
-                    fileOpenerService.openFileInEditor(project, fileModification.getFilePath(), fileModification.getStartIndex());
+                    fileOpenerService.openFileInEditor(project, fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset());
                 }
             }
         });

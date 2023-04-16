@@ -1,5 +1,7 @@
 package com.translator.model.modification;
 
+import com.intellij.openapi.editor.RangeMarker;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -8,18 +10,16 @@ public class FileModification {
     private final String myId;
     private String modificationRecordId;
     private String filePath;
-    private int startIndex;
-    private int endIndex;
+    private RangeMarker rangeMarker;
     private String beforeText;
     private ModificationType modificationType;
     private List<FileModificationSuggestion> modificationOptions;
     private boolean done;
 
-    public FileModification(String filePath, int startIndex, int endIndex, String beforeText, ModificationType modificationType) {
+    public FileModification(String filePath, RangeMarker rangeMarker, String beforeText, ModificationType modificationType) {
         this.filePath = filePath;
         this.myId = UUID.randomUUID().toString();
-        this.startIndex = startIndex;
-        this.endIndex = endIndex;
+        this.rangeMarker = rangeMarker;
         this.beforeText = beforeText;
         this.modificationType = modificationType;
         this.modificationOptions = new ArrayList<>();
@@ -46,20 +46,12 @@ public class FileModification {
         this.filePath = filePath;
     }
 
-    public int getStartIndex() {
-        return startIndex;
+    public RangeMarker getRangeMarker() {
+        return rangeMarker;
     }
 
-    public void setStartIndex(int startIndex) {
-        this.startIndex = startIndex;
-    }
-
-    public int getEndIndex() {
-        return endIndex;
-    }
-
-    public void setEndIndex(int endIndex) {
-        this.endIndex = endIndex;
+    public void setRangeMarker(RangeMarker rangeMarker) {
+        this.rangeMarker = rangeMarker;
     }
 
     public String getBeforeText() {
@@ -101,15 +93,5 @@ public class FileModification {
 
     public void setDone(boolean done) {
         this.done = done;
-    }
-
-    public void shiftUp(int shift) {
-        startIndex -= shift;
-        endIndex -= shift;
-    }
-
-    public void shiftDown(int shift) {
-        startIndex += shift;
-        endIndex += shift;
     }
 }

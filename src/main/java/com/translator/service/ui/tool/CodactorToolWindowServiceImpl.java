@@ -40,16 +40,18 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
     public void openModificationQueueViewerToolWindow() {
         ToolWindow toolWindow = toolWindowService.getToolWindow(modificationQueueViewerToolWindowId);
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-        Content content = contentFactory.createContent(modificationQueueViewer, "", false);
+        Content content = contentFactory.createContent(modificationQueueViewer, "Modification Queue", false);
         toolWindow.getContentManager().addContent(content);
+        toolWindow.getContentManager().setSelectedContent(content);
         toolWindowService.openToolWindow(modificationQueueViewerToolWindowId);
     }
 
     public void openProvisionalModificationViewerToolWindow() {
         ToolWindow toolWindow = toolWindowService.getToolWindow(modificationQueueViewerToolWindowId);
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-        Content content = contentFactory.createContent(provisionalModificationViewer, "", false);
+        Content content = contentFactory.createContent(provisionalModificationViewer, "Provisional Modification", false);
         toolWindow.getContentManager().addContent(content);
+        toolWindow.getContentManager().setSelectedContent(content);
         toolWindowService.openToolWindow(modificationQueueViewerToolWindowId);
     }
 
@@ -61,8 +63,10 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
     public void openInquiryViewerToolWindow() {
         ToolWindow toolWindow = toolWindowService.getToolWindow(inquiryViewerToolWindowId);
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-        Content content = contentFactory.createContent(inquiryViewer, "", false);
+        Content content = contentFactory.createContent(inquiryViewer, "Inquiry", false);
         toolWindow.getContentManager().addContent(content);
+        toolWindow.getContentManager().setSelectedContent(content);
+        inquiryViewer.componentResized();
         toolWindowService.openToolWindow(inquiryViewerToolWindowId);
     }
 
@@ -78,8 +82,9 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
     public void openHistoricalModificationListViewerToolWindow() {
         ToolWindow toolWindow = toolWindowService.getToolWindow(inquiryViewerToolWindowId);
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-        Content content = contentFactory.createContent(historicalModificationListViewer, "", false);
+        Content content = contentFactory.createContent(historicalModificationListViewer, "Inquiry Builder", false);
         toolWindow.getContentManager().addContent(content);
+        toolWindow.getContentManager().setSelectedContent(content);
         toolWindowService.openToolWindow(inquiryViewerToolWindowId);
     }
 

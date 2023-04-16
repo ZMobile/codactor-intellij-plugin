@@ -24,8 +24,8 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="com.translator.CodactorInjector"/>
         <projectService serviceImplementation="com.translator.listener.ProjectManagerListenerImpl"/>
-        <projectService serviceImplementation="com.translator.CodactorInjector"/>
         <toolWindow
                 id="Codactor"
                 anchor="bottom"

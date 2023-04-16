@@ -1,5 +1,6 @@
 package com.translator.view.viewer.context;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.model.history.HistoricalContextInquiryHolder;
@@ -37,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 
 public class HistoricalContextObjectListChatViewer extends JPanel {
-    private Map<String, String> extensionToSyntaxMap;
     private List<HistoricalContextObjectHolder> historicalContextObjectHolderList;
     private ContextQueryDao contextQueryDao;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
@@ -49,17 +49,12 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
     private JButton contextChatViewerLabel;
     private JButton cancelButton;
     private JButton saveChangesButton;
-    private LimitedSwingWorkerExecutor historyFetchingTaskExecutor;
     private int selectedChat;
 
-    public HistoricalContextObjectListChatViewer(Map<String, String> extensionToSyntaxMap,
-                                                 ContextQueryDao contextQueryDao,
-                                                 LimitedSwingWorkerExecutor historyFetchingTaskExecutor,
+    public HistoricalContextObjectListChatViewer(ContextQueryDao contextQueryDao,
                                                  HistoricalContextObjectListViewer historicalContextObjectListViewer) {
         this.textAreaHeightCalculatorService = new TextAreaHeightCalculatorServiceImpl();
-        this.extensionToSyntaxMap = extensionToSyntaxMap;
         this.contextQueryDao = contextQueryDao;
-        this.historyFetchingTaskExecutor = historyFetchingTaskExecutor;
         this.selectedChat = -1;
         this.historicalContextObjectHolderList = new ArrayList<>();
         this.historicalContextObjectListViewer = historicalContextObjectListViewer;
@@ -85,7 +80,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                     InquiryChatViewer selectedInquiryChatViewer = jList1.getModel().getElementAt(selectedIndex);
                     selectedInquiryChatViewer.setBackground(Color.GREEN);
                     JBTextArea selectedJBTextArea = (JBTextArea) selectedInquiryChatViewer.getComponents()[1];
-                    Color highlightColor = Color.decode("#7FFFD4");
+                    Color highlightColor = Color.decode("#009688");
                     //Highlight the whole text are
                     try {
                         selectedJBTextArea.getHighlighter().addHighlight(0, selectedJBTextArea.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
@@ -251,21 +246,17 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
             HistoricalContextObjectHolder historicalContextObjectHolder = new HistoricalContextObjectHolder(historicalContextObjectDataHolder);
             newistoricalContextObjectHolderList.add(historicalContextObjectHolder);
         }
-        LimitedSwingWorker worker = new LimitedSwingWorker(historyFetchingTaskExecutor) {
-            @Override
-            protected Void doInBackground() {
-                List<HistoricalContextObjectHolder> response = contextQueryDao.queryHistoricalContextObjects(newistoricalContextObjectHolderList);
-                if (response != null) {
-                    historicalContextObjectHolderList.addAll(response);
-                    updateChatContentsWithContextInstalled();
-                } else {
-                    JOptionPane.showMessageDialog(null, "Unable to load context objects", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-                return null;
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            List<HistoricalContextObjectHolder> response = contextQueryDao.queryHistoricalContextObjects(newistoricalContextObjectHolderList);
+            if (response != null) {
+                historicalContextObjectHolderList.addAll(response);
+                updateChatContentsWithContextInstalled();
+            } else {
+                JOptionPane.showMessageDialog(null, "Unable to load context objects", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
-        };
-        worker.execute();
+            return null;
+        });
     }
 
     private HistoricalContextObjectHolder getHistoricalContextObjectHolder(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {
@@ -364,21 +355,18 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
 
     public void addContextObject(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {
         HistoricalContextObjectHolder historicalContextObjectHolder = new HistoricalContextObjectHolder(historicalContextObjectDataHolder);
-        LimitedSwingWorker worker = new LimitedSwingWorker(historyFetchingTaskExecutor) {
-            @Override
-            protected Void doInBackground() {
-                HistoricalContextObjectHolder response = contextQueryDao.queryHistoricalContextObject(historicalContextObjectHolder);
-                if (response != null) {
-                    historicalContextObjectHolderList.add(response);
-                    updateChatContentsWithContextInstalled();
-                } else {
-                    JOptionPane.showMessageDialog(null, "Unable to load context object", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-                return null;
+
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            HistoricalContextObjectHolder response = contextQueryDao.queryHistoricalContextObject(historicalContextObjectHolder);
+            if (response != null) {
+                historicalContextObjectHolderList.add(response);
+                updateChatContentsWithContextInstalled();
+            } else {
+                JOptionPane.showMessageDialog(null, "Unable to load context object", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
-        };
-        worker.execute();
+            return null;
+        });
     }
 
     public void removeContextObject(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {

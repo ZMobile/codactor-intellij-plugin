@@ -1,15 +1,19 @@
 package com.translator.listener;
 
+import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManagerListener;
 import com.translator.CodactorInjector;
+import com.translator.dao.CodeTranslatorDaoConfig;
+import com.translator.service.CodeTranslatorServiceConfig;
 import com.translator.service.constructor.CodeFileGeneratorService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.ui.ModificationQueueListButtonService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.service.ui.tool.ToolWindowService;
+import com.translator.view.CodeTranslatorViewConfig;
 import com.translator.view.action.DoubleControlAction;
 import com.translator.view.viewer.HistoricalModificationListViewer;
 import com.translator.view.viewer.InquiryListViewer;
@@ -23,7 +27,7 @@ public class ProjectManagerListenerImpl implements ProjectManagerListener {
 
     @Override
     public void projectOpened(@NotNull Project project) {
-        Injector injector = CodactorInjector.getInstance(project).getInjector();
+        Injector injector = CodactorInjector.getInstance().getInjector(project);
 
         // Get the action manager instance
         ActionManager actionManager = ActionManager.getInstance();
@@ -46,16 +50,6 @@ public class ProjectManagerListenerImpl implements ProjectManagerListener {
         fileModificationTrackerService.setModificationQueueListButtonService(modificationQueueListButtonService);
         //promptContextService.setStatusLabel(jLabel2);
 
-        InquiryViewer inquiryViewer = injector.getInstance(InquiryViewer.class);
-        InquiryListViewer inquiryListViewer = injector.getInstance(InquiryListViewer.class);
-        HistoricalModificationListViewer historicalModificationListViewer = injector.getInstance(HistoricalModificationListViewer.class);
-        ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
-
-        fileModificationTrackerService.setModificationQueueViewer(modificationQueueViewer);
-        //inquiryViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
-        //inquiryViewer.setInquiryListViewer(inquiryListViewer);
-        //historicalModificationListViewer.setInquiryListViewer(inquiryListViewer);
-        //inquiryListViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
     }
 
     @Override

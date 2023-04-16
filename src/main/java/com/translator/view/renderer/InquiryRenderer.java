@@ -1,5 +1,6 @@
 package com.translator.view.renderer;
 
+import com.intellij.ui.JBColor;
 import com.translator.model.inquiry.Inquiry;
 import com.translator.service.line.LineCounterService;
 import com.translator.service.line.LineCounterServiceImpl;
@@ -71,13 +72,12 @@ public class InquiryRenderer extends JPanel implements ListCellRenderer<Inquiry>
             inquiryLabel.setText("General Inquiry (Creation timestamp UTC): " + value.getCreationTimestamp().toString());
         }
         lineRangeLabel.setText("");
-        setBackground(Color.decode("#CC99FF"));
-
+        setBackground(Color.decode("#AA00FF"));
 
         //String statusText = value.isDone() ? "(Done)" : "(Queued)";
         //statusLabel.setText(statusText);
 
-        //setBackground(value.isDone() ? Color.GREEN : Color.decode("#7FFFD4"));
+        //setBackground(value.isDone() ? Color.GREEN : Color.decode("#009688"));
 
         return this;
     }

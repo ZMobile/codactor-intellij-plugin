@@ -1,5 +1,9 @@
 package com.translator.service.constructor;
 
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
+import com.intellij.openapi.project.Project;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.api.translator.modification.DesktopCodeCreationRequestResource;
 import com.translator.model.api.translator.modification.DesktopCodeCreationResponseResource;
@@ -18,6 +22,7 @@ import com.translator.service.openai.OpenAiModelService;
 import com.translator.view.dialog.OpenAiApiKeyDialog;
 import com.translator.worker.LimitedSwingWorker;
 import com.translator.worker.LimitedSwingWorkerExecutor;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -28,32 +33,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
+    private final Project project;
     private final InquiryDao inquiryDao;
     private final CodeModificationService codeModificationService;
     private final FileModificationTrackerService fileModificationTrackerService;
     private final OpenAiApiKeyService openAiApiKeyService;
     private final OpenAiModelService openAiModelService;
     private final FileCreatorService fileCreatorService;
-    private final LimitedSwingWorkerExecutor inquiryTaskExecutor;
-    private final LimitedSwingWorkerExecutor aiTaskExecutor;
 
     @Inject
-    public CodeFileGeneratorServiceImpl(InquiryDao inquiryDao,
+    public CodeFileGeneratorServiceImpl(Project project,
+                                        InquiryDao inquiryDao,
                                         CodeModificationService codeModificationService,
                                         FileModificationTrackerService fileModificationTrackerService,
                                         OpenAiApiKeyService openAiApiKeyService,
                                         OpenAiModelService openAiModelService,
-                                        FileCreatorService fileCreatorService,
-                                        LimitedSwingWorkerExecutor inquiryTaskExecutor,
-                                        LimitedSwingWorkerExecutor aiTaskExecutor) {
+                                        FileCreatorService fileCreatorService) {
+        this.project = project;
         this.inquiryDao = inquiryDao;
         this.codeModificationService = codeModificationService;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.openAiApiKeyService = openAiApiKeyService;
         this.openAiModelService = openAiModelService;
         this.fileCreatorService = fileCreatorService;
-        this.inquiryTaskExecutor = inquiryTaskExecutor;
-        this.aiTaskExecutor = aiTaskExecutor;
     }
 
     @Override
@@ -66,9 +68,9 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
         }
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(inquiry.getId(), language, fileExtension, filePath);
-        LimitedSwingWorker worker = new LimitedSwingWorker(inquiryTaskExecutor) {
+        Task.Backgroundable outerTask = new Task.Backgroundable(project, "Outer Task", true) {
             @Override
-            protected Void doInBackground() {
+            public void run(@NotNull ProgressIndicator outerIndicator) {
                 Inquiry newInquiry;
                 String question = "What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
@@ -96,9 +98,9 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                                 String modificationId = fileModificationTrackerService.addModification(file.getAbsolutePath(), 0, 0, ModificationType.CREATE);
                                 Inquiry finalNewInquiry = newInquiry;
                                 int finalI = i;
-                                LimitedSwingWorker worker2 = new LimitedSwingWorker(aiTaskExecutor) {
+                                Task.Backgroundable subTask1 = new Task.Backgroundable(project, "Subtask " + i, false) {
                                     @Override
-                                    protected Void doInBackground() {
+                                    public void run(@NotNull ProgressIndicator indicator) {
                                         int fileNumber = finalI + 1;
                                         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
                                         List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
@@ -126,10 +128,9 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                                             }
                                             fileModificationTrackerService.removeModification(modificationId);
                                         }
-                                        return null;
                                     }
                                 };
-                                worker2.execute();
+                                ProgressManager.getInstance().runProcessWithProgressAsynchronously(subTask1, outerIndicator);
                                 try {
                                     Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
                                 } catch (InterruptedException e) {
@@ -141,10 +142,10 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                     }
                 }
                 fileModificationTrackerService.removeMultiFileModification(multiFileModificationId);
-                return null;
             }
         };
-        worker.execute();
+
+        ProgressManager.getInstance().run(outerTask);
     }
 
     @Override
@@ -157,9 +158,9 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
         }
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(inquiry.getId(), language, fileExtension, filePath);
-        LimitedSwingWorker worker = new LimitedSwingWorker(inquiryTaskExecutor) {
+        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Task", true) {
             @Override
-            protected Void doInBackground() {
+            public void run(@NotNull ProgressIndicator indicator) {
                 Inquiry newInquiry;
                 String question = "What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
@@ -248,10 +249,10 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                     }
                 }
                 fileModificationTrackerService.removeMultiFileModification(multiFileModificationId);
-                return null;
             }
         };
-        worker.execute();
+
+        ProgressManager.getInstance().run(backgroundTask);
     }
 
     @Override
@@ -264,9 +265,9 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
         }
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(description, language, fileExtension, filePath);
-        LimitedSwingWorker worker = new LimitedSwingWorker(inquiryTaskExecutor) {
+        Task.Backgroundable outerTask = new Task.Backgroundable(project, "Outer Task", true) {
             @Override
-            protected Void doInBackground() {
+            public void run(@NotNull ProgressIndicator outerIndicator) {
                 String question = "I need to create a potentially multi-file " + language + " program with the following description: \"" + description + "\".  What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
                 Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
@@ -300,9 +301,9 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                                 String modificationId = fileModificationTrackerService.addModification(filePath, 0, 0, ModificationType.CREATE);
                                 Inquiry finalNewInquiry = newInquiry;
                                 int finalI = i;
-                                LimitedSwingWorker worker2 = new LimitedSwingWorker(aiTaskExecutor) {
+                                Task.Backgroundable subTask1 = new Task.Backgroundable(project, "Subtask " + i, false) {
                                     @Override
-                                    protected Void doInBackground() {
+                                    public void run(@NotNull ProgressIndicator indicator) {
                                         int fileNumber = finalI + 1;
                                         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
                                         List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
@@ -330,10 +331,11 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                                             }
                                             fileModificationTrackerService.removeModification(modificationId);
                                         }
-                                        return null;
                                     }
                                 };
-                                worker2.execute();
+
+                                ProgressManager.getInstance().runProcessWithProgressAsynchronously(subTask1, outerIndicator);
+
                                 try {
                                     Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
                                 } catch (InterruptedException e) {
@@ -345,10 +347,10 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                     }
                 }
                 fileModificationTrackerService.removeMultiFileModification(multiFileModificationId);
-                return null;
             }
         };
-        worker.execute();
+
+        ProgressManager.getInstance().run(outerTask);
     }
 
     @Override
@@ -361,9 +363,9 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
         }
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(description, language, fileExtension, filePath);
-        LimitedSwingWorker worker = new LimitedSwingWorker(inquiryTaskExecutor) {
+        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "My Background Task", true) {
             @Override
-            protected Void doInBackground() {
+            public void run(@NotNull ProgressIndicator indicator) {
                 String question = "I need to create a potentially multi-file " + language + " program with the following description: \"" + description + "\".  What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
                 Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
@@ -447,61 +449,9 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                     }
                 }
                 fileModificationTrackerService.removeMultiFileModification(multiFileModificationId);
-                return null;
             }
         };
-        worker.execute();
-    }
 
-    private void generateFiles(List<File> files, List<HistoricalContextObjectHolder> priorContext) {
-        /*for (int i = 0; i < newFiles.size(); i++) {
-            File file = newFiles.get(i);
-            if (file != null) {
-                String filePath = file.getAbsolutePath();
-                if (!filePath.contains(".")) {
-                    filePath = file.getName();
-                }
-                String modificationId = fileModificationTrackerService.addModification(filePath, 0, 0, ModificationType.CREATE);
-                int fileNumber = i + 1;
-                fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
-                List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-                HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat1.getId(), null, true, null);
-                HistoricalContextObjectHolder priorContextObject = new HistoricalContextObjectHolder(inquiryContext);
-                priorContext.add(priorContextObject);
-                for (String completedSuggestionId : completedSuggestionIds) {
-                    HistoricalContextModificationHolder modificationContext = new HistoricalContextModificationHolder(completedSuggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
-                    HistoricalContextObjectHolder priorContextObject2 = new HistoricalContextObjectHolder(modificationContext);
-                    priorContext.add(priorContextObject2);
-                }
-                String description = "The " + language + " code for " + file.getName();
-                DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
-                if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                    fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
-                    //write the contents to the file with printWriter:
-                    try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                        out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                    completedSuggestionIds.add(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getId());
-                } else {
-                    if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                        OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        openAiApiKeyDialog.setVisible(true);
-                    } else {
-                        JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                    fileModificationTrackerService.removeModification(modificationId);
-                }
-                try {
-                    Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
-                } catch (InterruptedException e) {
-                    // Handle the interruption
-                    e.printStackTrace();
-                }
-            }
-        }*/
+        ProgressManager.getInstance().run(backgroundTask);
     }
 }

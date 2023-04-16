@@ -74,18 +74,18 @@ public class QueuedModificationObjectRenderer extends JPanel implements ListCell
         if (value.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
             FileModificationSuggestionModification fileModificationSuggestionModification = value.getFileModificationSuggestionModification();
             filePathLabel.setText("File: (SUB) " + fileModificationSuggestionModification.getFilePath());
-            lineRangeText = "Index: " + fileModificationSuggestionModification.getStartIndex() + " - " + fileModificationSuggestionModification.getEndIndex();
+            lineRangeText = "Index: " + fileModificationSuggestionModification.getRangeMarker().getStartOffset() + " - " + fileModificationSuggestionModification.getRangeMarker().getEndOffset();
             statusText = "(Queued)";
-            setBackground(Color.decode("#7FFFD4"));
+            setBackground(Color.decode("#009688"));
         } else if (value.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION) {
             FileModification fileModification = value.getFileModification();
             filePathLabel.setText("File: " + fileModification.getFilePath());
             String fileContent = fileReaderService.readFileContent(project, fileModification.getFilePath());
-            int startLine = lineCounterService.countLines(fileContent, fileModification.getStartIndex());
-            int endLine = lineCounterService.countLines(fileContent, fileModification.getEndIndex());
+            int startLine = lineCounterService.countLines(fileContent, fileModification.getRangeMarker().getStartOffset());
+            int endLine = lineCounterService.countLines(fileContent, fileModification.getRangeMarker().getEndOffset());
             lineRangeText = "Lines: " + startLine + " - " + endLine;
             statusText = fileModification.isDone() ? "(Done)" : "(Queued)";
-            setBackground(fileModification.isDone() ? Color.GREEN : Color.decode("#7FFFD4"));
+            setBackground(fileModification.isDone() ? Color.GREEN : Color.decode("#009688"));
         } else if (value.getQueuedModificationObjectType() == QueuedModificationObjectType.MULTI_FILE_MODIFICATION) {
             MultiFileModification multiFileModification = value.getMultiFileModification();
             lineRangeText = "Multi-File Mod Stage: " + multiFileModification.getStage();

@@ -1,5 +1,8 @@
 package com.translator.view.viewer;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.CodeModificationHistoryDao;
@@ -14,6 +17,7 @@ import com.translator.view.renderer.SeparatorListCellRenderer;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.worker.LimitedSwingWorker;
 import com.translator.worker.LimitedSwingWorkerExecutor;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,18 +36,15 @@ public class HistoricalModificationListViewer extends JPanel {
     private InquiryListViewer inquiryListViewer;
     private CodactorToolWindowService codactorToolWindowService;
     private CodeModificationHistoryDao codeModificationHistoryDao;
-    private LimitedSwingWorkerExecutor historyFetchingTaskExecutor;
     private JPanel parentComponent = this;
 
     public HistoricalModificationListViewer(InquiryViewer inquiryViewer,
                                             CodactorToolWindowService codactorToolWindowService,
-                                            CodeModificationHistoryDao codeModificationHistoryDao,
-                                            LimitedSwingWorkerExecutor historyFetchingTaskExecutor) {
+                                            CodeModificationHistoryDao codeModificationHistoryDao) {
         this.inquiryViewer = inquiryViewer;
         this.inquiryListViewer = null;
         this.codactorToolWindowService = codactorToolWindowService;
         this.codeModificationHistoryDao = codeModificationHistoryDao;
-        this.historyFetchingTaskExecutor = historyFetchingTaskExecutor;
         initComponents();
     }
 
@@ -123,20 +124,16 @@ public class HistoricalModificationListViewer extends JPanel {
         DefaultListModel<HistoricalContextModificationDataHolder> model = new DefaultListModel<>();
         model.addElement(new HistoricalContextModificationDataHolder());
         modificationList.setModel(model);
-        LimitedSwingWorker worker = new LimitedSwingWorker(historyFetchingTaskExecutor) {
-            @Override
-            protected Void doInBackground() {
-                DesktopCodeModificationHistoryResponseResource modifications = codeModificationHistoryDao.getRecentModifications();
-                if (modifications != null) {
-                    updateModificationList(modifications.getModificationHistory());
-                } else {
-                    JOptionPane.showMessageDialog(parentComponent, "Failed to load modification history", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-                return null;
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            DesktopCodeModificationHistoryResponseResource modifications = codeModificationHistoryDao.getRecentModifications();
+            if (modifications != null) {
+                updateModificationList(modifications.getModificationHistory());
+            } else {
+                JOptionPane.showMessageDialog(parentComponent, "Failed to load modification history", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
-        };
-        worker.execute();
+            return null;
+        });
     }
 
     public void updateModificationList(List<HistoricalContextModificationDataHolder> fileModifications) {
