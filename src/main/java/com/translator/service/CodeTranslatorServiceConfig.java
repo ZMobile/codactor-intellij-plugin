@@ -36,7 +36,6 @@ import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.service.ui.tool.CodactorToolWindowServiceImpl;
 import com.translator.service.ui.tool.ToolWindowService;
 import com.translator.service.ui.tool.ToolWindowServiceImpl;
-import com.translator.view.factory.ProvisionalModificationCustomizerFactory;
 
 public class CodeTranslatorServiceConfig extends AbstractModule {
     private Project project;
@@ -68,7 +67,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(CodeHighlighterService.class).to(CodeHighlighterServiceImpl.class);
         bind(CodeSnippetExtractorService.class).to(CodeSnippetExtractorServiceImpl.class);
         bind(CodeRangeTrackerService.class).to(CodeRangeTrackerServiceImpl.class);
-        bind(CodeToFileTypeTransformerService.class).to(CodeToFileTypeTransformerServiceImpl.class);
+        bind(GptToLanguageTransformerService.class).to(GptToLanguageTransformerServiceImpl.class);
         bind(UneditableSegmentListenerService.class).to(UneditableSegmentListenerServiceImpl.class);
         bind(GuardedBlockService.class).to(GuardedBlockServiceImpl.class);
         bind(RangeReplaceService.class).to(RangeReplaceServiceImpl.class);

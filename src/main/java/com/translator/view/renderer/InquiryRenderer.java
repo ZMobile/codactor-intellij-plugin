@@ -77,7 +77,7 @@ public class InquiryRenderer extends JPanel implements ListCellRenderer<Inquiry>
         //String statusText = value.isDone() ? "(Done)" : "(Queued)";
         //statusLabel.setText(statusText);
 
-        //setBackground(value.isDone() ? Color.GREEN : Color.decode("#009688"));
+        //setBackground(value.isDone() ? Color.decode("#228B22") : Color.decode("#009688"));
 
         return this;
     }

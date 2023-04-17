@@ -54,7 +54,7 @@ public class ModificationQueueListButtonServiceImpl implements ModificationQueue
                     hasUnsolvedModifications = true;
                 }
             }
-            return hasUnsolvedModifications ? Color.decode("#009688") : Color.GREEN;
+            return hasUnsolvedModifications ? Color.decode("#009688") : Color.decode("#228B22");
         } else {*/
             return defaultColor;
         //}*/

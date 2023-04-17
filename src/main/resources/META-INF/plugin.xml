@@ -32,7 +32,7 @@
                 icon="AllIcons.Debugger.Console"
                 factoryClass="com.translator.view.factory.CodactorToolWindowFactory"/>
         <toolWindow
-                id="Modification Queue"
+                id="Modifications"
                 anchor="right"
                 icon="AllIcons.Debugger.Console"
                 factoryClass="com.translator.view.factory.ModificationQueueToolWindowFactory"/>

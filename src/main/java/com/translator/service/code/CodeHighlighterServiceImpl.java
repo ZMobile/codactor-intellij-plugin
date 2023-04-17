@@ -55,7 +55,7 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
                 try {
                     Color highlightColor;
                     if (modification.isDone()) {
-                        highlightColor = JBColor.GREEN;
+                        highlightColor = Color.decode("#228B22");
                     } else {
                         highlightColor = Color.decode("#009688");
                     }

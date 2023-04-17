@@ -1,5 +1,6 @@
 package com.translator.view.viewer;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
@@ -9,21 +10,16 @@ import com.intellij.openapi.editor.highlighter.EditorHighlighter;
 import com.intellij.openapi.editor.highlighter.EditorHighlighterFactory;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeManager;
-import com.intellij.ui.Gray;
-import com.intellij.ui.JBColor;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.inquiry.InquiryChatType;
 import com.intellij.ui.components.JBTextArea;
-import com.translator.service.code.CodeToFileTypeTransformerService;
-import com.translator.service.code.CodeToFileTypeTransformerServiceImpl;
+import com.translator.service.code.GptToLanguageTransformerService;
+import com.translator.service.code.GptToLanguageTransformerServiceImpl;
 import com.translator.view.panel.FixedHeightPanel;
 
 import javax.swing.*;
-import javax.swing.text.PlainView;
-import javax.swing.text.View;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -37,12 +33,13 @@ public class InquiryChatViewer extends JPanel {
     private JToolBar jToolBar1;
     private JLabel jLabel1;
     private String message;
-    private CodeToFileTypeTransformerService codeToFileTypeTransformerService;
+    private GptToLanguageTransformerService gptToLanguageTransformerService;
 
     public InquiryChatViewer(String message, String headerString, InquiryChatType inquiryChatType) {
-        this.codeToFileTypeTransformerService = new CodeToFileTypeTransformerServiceImpl();
+        this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
         this.message = message;
-        this.inquiryChat = new InquiryChat(null, null, null, null, headerString, message, inquiryChatType);
+        String likelyCodingLanguage = gptToLanguageTransformerService.convert(message);
+        this.inquiryChat = new InquiryChat(null, null, null, null, headerString, message, likelyCodingLanguage, inquiryChatType);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         jToolBar1 = new JToolBar();
@@ -68,9 +65,13 @@ public class InquiryChatViewer extends JPanel {
         for (Component component : components) {
             addComponent(component, gridy++, 0);
         }
+        if (inquiryChat.getLikelyCodeLanguage() == null) {
+            inquiryChat.setLikelyCodeLanguage(gptToLanguageTransformerService.convert(message));
+        }
     }
 
     public InquiryChatViewer(InquiryChat inquiryChat, String headerString) {
+        this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
         this.inquiryChat = inquiryChat;
         this.inquiryChatType = inquiryChat.getInquiryChatType();
         setLayout(new GridBagLayout());
@@ -97,6 +98,9 @@ public class InquiryChatViewer extends JPanel {
         int gridy = 1;
         for (Component component : components) {
             addComponent(component, gridy++, 0);
+        }
+        if (inquiryChat.getLikelyCodeLanguage() == null) {
+            inquiryChat.setLikelyCodeLanguage(gptToLanguageTransformerService.convert(inquiryChat.getMessage()));
         }
     }
 
@@ -145,18 +149,29 @@ public class InquiryChatViewer extends JPanel {
     }
 
     private FixedHeightPanel createCodeEditor(String code) {
-        EditorFactory editorFactory = EditorFactory.getInstance();
-        FileType fileType = codeToFileTypeTransformerService.convert(code);
-        Document document = editorFactory.createDocument(code);
-        Editor editor = editorFactory.createEditor(document, null);
-        EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
-        ((EditorEx) editor).setHighlighter(editorHighlighter);
-        ((EditorEx) editor).setViewer(true);
-        editor.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, editor.getComponent().getPreferredSize().height));
-        FixedHeightPanel fixedHeightPanel = new FixedHeightPanel(editor);
-        fixedHeightPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        fixedHeightPanel.add(editor.getComponent());
-        return fixedHeightPanel;
+        final FixedHeightPanel[] fixedHeightPanel = new FixedHeightPanel[1];
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            try {
+                EditorFactory editorFactory = EditorFactory.getInstance();
+                if (inquiryChat.getLikelyCodeLanguage() == null) {
+                    inquiryChat.setLikelyCodeLanguage("text");
+                }
+                String extension = gptToLanguageTransformerService.getExtensionFromLanguage(inquiryChat.getLikelyCodeLanguage());
+                FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(extension);
+                Document document = editorFactory.createDocument(code);
+                Editor editor = editorFactory.createEditor(document, null);
+                EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
+                ((EditorEx) editor).setHighlighter(editorHighlighter);
+                ((EditorEx) editor).setViewer(true);
+                editor.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, editor.getComponent().getPreferredSize().height));
+                fixedHeightPanel[0] = new FixedHeightPanel(editor);
+                fixedHeightPanel[0].setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+                fixedHeightPanel[0].add(editor.getComponent());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        return fixedHeightPanel[0];
     }
 
     public int getLineCount(String code) {
@@ -180,7 +195,13 @@ public class InquiryChatViewer extends JPanel {
         gbc.weighty = weighty;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        add(component, gbc);
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            try {
+                add(component, gbc);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public void componentResized() {

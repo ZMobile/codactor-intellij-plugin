@@ -41,7 +41,7 @@ public class JTreeHighlighterServiceImpl implements JTreeHighlighterService {
                 if (value instanceof DefaultMutableTreeNode) {
                     DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
                     String filePath = currentEditingDirectory.getParent() + "/" + getPathString(node.getPath());
-                    setBackground(Color.GREEN);
+                    setBackground(Color.decode("#228B22"));
                     if (((DefaultMutableTreeNode) value).getChildCount() == 0) {
                         for (FileModificationTracker fileModificationTracker : fileModificationTrackerService.getActiveModificationFiles().values()) {
                             if (fileModificationTracker.getFilePath().startsWith(filePath)) {
@@ -53,8 +53,8 @@ public class JTreeHighlighterServiceImpl implements JTreeHighlighterService {
                                     }
                                 }
                                 if (allModificationsDone) {
-                                    selectionColor = Color.GREEN;
-                                    nonSelectionColor = Color.GREEN;
+                                    selectionColor = Color.decode("#228B22");
+                                    nonSelectionColor = Color.decode("#228B22");
                                 } else {
                                     selectionColor = Color.decode("#009688");
                                     nonSelectionColor = Color.decode("#009688");

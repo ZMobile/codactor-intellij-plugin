@@ -28,7 +28,7 @@ public class ModificationQueueToolWindowFactory implements ToolWindowFactory {
         //consoleView.print("Hello, world!\n", ConsoleViewContentType.NORMAL_OUTPUT);
 
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-        Content content = contentFactory.createContent(modificationQueueViewer, "", false);
+        Content content = contentFactory.createContent(modificationQueueViewer, "Queue", false);
         toolWindow.getContentManager().addContent(content);
     }
 }

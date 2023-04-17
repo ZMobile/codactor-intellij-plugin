@@ -85,7 +85,7 @@ public class QueuedModificationObjectRenderer extends JPanel implements ListCell
             int endLine = lineCounterService.countLines(fileContent, fileModification.getRangeMarker().getEndOffset());
             lineRangeText = "Lines: " + startLine + " - " + endLine;
             statusText = fileModification.isDone() ? "(Done)" : "(Queued)";
-            setBackground(fileModification.isDone() ? Color.GREEN : Color.decode("#009688"));
+            setBackground(fileModification.isDone() ? Color.decode("#228B22") : Color.decode("#009688"));
         } else if (value.getQueuedModificationObjectType() == QueuedModificationObjectType.MULTI_FILE_MODIFICATION) {
             MultiFileModification multiFileModification = value.getMultiFileModification();
             lineRangeText = "Multi-File Mod Stage: " + multiFileModification.getStage();

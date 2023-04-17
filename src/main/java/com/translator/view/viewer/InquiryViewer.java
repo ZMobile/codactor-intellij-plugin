@@ -17,6 +17,8 @@ import com.translator.model.inquiry.Inquiry;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.inquiry.InquiryChatType;
 import com.translator.model.modification.RecordType;
+import com.translator.service.code.GptToLanguageTransformerService;
+import com.translator.service.code.GptToLanguageTransformerServiceImpl;
 import com.translator.service.constructor.CodeFileGeneratorService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
@@ -78,6 +80,7 @@ public class InquiryViewer extends JPanel {
     private CodactorToolWindowService codactorToolWindowService;
     private CodeFileGeneratorService codeFileGeneratorService;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
+    private GptToLanguageTransformerService gptToLanguageTransformerService;
     private HistoricalModificationListViewer historicalModificationListViewer;
     private InquiryListViewer inquiryListViewer;
     private JBTextArea promptInput;
@@ -95,6 +98,7 @@ public class InquiryViewer extends JPanel {
         this.codactorToolWindowService = codactorToolWindowService;
         this.codeFileGeneratorService = codeFileGeneratorService;
         this.textAreaHeightCalculatorService = new TextAreaHeightCalculatorServiceImpl();
+        this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
         this.inquiryDao = inquiryDao;
         this.historicalModificationListViewer = null;
         this.inquiryListViewer = null;
@@ -109,7 +113,7 @@ public class InquiryViewer extends JPanel {
         jList1.setModel(new DefaultListModel<>());
         jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jList1.setCellRenderer(new InquiryChatRenderer());
-        /*listSelectionListener = new ListSelectionListener() {
+        listSelectionListener = new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
@@ -118,7 +122,7 @@ public class InquiryViewer extends JPanel {
                         return;
                     }
                     selectedChat = selectedIndex;
-                    Color highlightColor = Color.decode("#009688");
+                    Color highlightColor = Color.decode("#7FFFD4");
                         for (int i = 0; i < jList1.getModel().getSize(); i++) {
                             InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(i);
                             if (i == selectedIndex) {
@@ -153,7 +157,7 @@ public class InquiryViewer extends JPanel {
                 }
             }
         };
-        jList1.addListSelectionListener(listSelectionListener);*/
+        jList1.addListSelectionListener(listSelectionListener);
         jList1.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -320,14 +324,14 @@ public class InquiryViewer extends JPanel {
         whatWasChangedButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                askInquiryQuestion(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), "What was changed in this modification?");
+                askInquiryQuestion(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), "What was changed in this modification?", inquiry.getFilePath());
             }
         });
 
         whatDoesThisDoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                askInquiryQuestion(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), "What does this code do?");
+                askInquiryQuestion(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), "What does this code do?", inquiry.getFilePath());
             }
         });
 
@@ -376,7 +380,7 @@ public class InquiryViewer extends JPanel {
                             .orElseThrow();
                     askContinuedQuestion(previousInquiryChat.getId(), promptInput.getText());
                 } else if (inquiry.getSubjectRecordId() != null){
-                    askInquiryQuestion(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), promptInput.getText());
+                    askInquiryQuestion(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), promptInput.getText(), inquiry.getFilePath());
                 } else {
                     askNewGeneralInquiryQuestion(promptInput.getText());
                 }
@@ -667,7 +671,8 @@ public class InquiryViewer extends JPanel {
     }
 
     private void askNewGeneralInquiryQuestion(String question) {
-        InquiryChat temporaryChat = new InquiryChat(null, null, null, null, "User", question);
+        String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
+        InquiryChat temporaryChat = new InquiryChat(null, null, null, null, "User", question, likelyCodeLanguage);
         inquiry.getChats().add(temporaryChat);
         updateInquiryContents(inquiry);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "My Background Task", true) {
@@ -688,9 +693,10 @@ public class InquiryViewer extends JPanel {
     }
 
 
-    private void askInquiryQuestion(String subjectRecordId, RecordType recordType, String question) {
+    private void askInquiryQuestion(String subjectRecordId, RecordType recordType, String question, String filePath) {
         jToolBar3.setVisible(false);
-        InquiryChat temporaryChat = new InquiryChat(null, null, null, null, "User", question);
+        String likelyCodeLanguage = gptToLanguageTransformerService.getFromFilePath(filePath);
+        InquiryChat temporaryChat = new InquiryChat(null, null, null, null, "User", question, likelyCodeLanguage);
         inquiry.getChats().add(temporaryChat);
         updateInquiryContents(inquiry);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "My Background Task", true) {
@@ -712,7 +718,8 @@ public class InquiryViewer extends JPanel {
 
     private void askContinuedQuestion(String previousInquiryChatId, String question) {
         assert inquiry != null;
-        InquiryChat inquiryChat = new InquiryChat(null, inquiry.getId(), inquiry.getFilePath(), previousInquiryChatId, "User", question);
+        String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
+        InquiryChat inquiryChat = new InquiryChat(null, inquiry.getId(), inquiry.getFilePath(), previousInquiryChatId, "User", question, likelyCodeLanguage);
         findAlternatesForInquiryChat(inquiry.getChats(), inquiryChat);
         inquiry.getChats().add(inquiryChat);
         updateInquiryContents(inquiry);

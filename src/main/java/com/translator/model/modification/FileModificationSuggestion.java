@@ -10,15 +10,9 @@ import com.intellij.openapi.editor.highlighter.EditorHighlighter;
 import com.intellij.openapi.editor.highlighter.EditorHighlighterFactory;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeManager;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.components.JBTextArea;
-import com.translator.service.code.CodeToFileTypeTransformerService;
-import com.translator.service.code.CodeToFileTypeTransformerServiceImpl;
-
-import java.util.Objects;
+import com.translator.service.code.GptToLanguageTransformerService;
+import com.translator.service.code.GptToLanguageTransformerServiceImpl;
 
 public class FileModificationSuggestion {
     private final Project project;
@@ -34,9 +28,14 @@ public class FileModificationSuggestion {
         this.modificationId = modificationId;
         ApplicationManager.getApplication().invokeAndWait(() -> {
             try {
-                CodeToFileTypeTransformerService codeToFileTypeTransformerService = new CodeToFileTypeTransformerServiceImpl();
+                GptToLanguageTransformerService gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
+                String language = gptToLanguageTransformerService.getFromFilePath(filePath);
+                String extension = gptToLanguageTransformerService.getExtensionFromLanguage(language);
+                if (extension == null) {
+                    extension = "txt";
+                }
                 EditorFactory editorFactory = EditorFactory.getInstance();
-                FileType fileType = codeToFileTypeTransformerService.convert(suggestedCode);
+                FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(extension);
                 Document document = editorFactory.createDocument(suggestedCode);
                 this.suggestedCode = editorFactory.createEditor(document, null);
                 EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);

@@ -40,7 +40,7 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
     public void openModificationQueueViewerToolWindow() {
         ToolWindow toolWindow = toolWindowService.getToolWindow(modificationQueueViewerToolWindowId);
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-        Content content = contentFactory.createContent(modificationQueueViewer, "Modification Queue", false);
+        Content content = contentFactory.createContent(modificationQueueViewer, "Queue", false);
         toolWindow.getContentManager().addContent(content);
         toolWindow.getContentManager().setSelectedContent(content);
         toolWindowService.openToolWindow(modificationQueueViewerToolWindowId);

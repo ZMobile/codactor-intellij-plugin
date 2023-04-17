@@ -76,9 +76,9 @@ public class HistoricalContextObjectHolderRenderer extends JPanel implements Lis
                 labelThree.setText("Lines: " + lineCounterService.countLines(historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim(), historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim().length()));
             }
             if (isSelected) {
-                setBackground(Color.GREEN.darker());
+                setBackground(Color.decode("#228B22").darker());
             } else {
-                setBackground(Color.GREEN);
+                setBackground(Color.decode("#228B22"));
             }
         } else {
             Inquiry inquiry = value.getHistoricalContextInquiryDataHolder().getInquiry();
@@ -104,7 +104,7 @@ public class HistoricalContextObjectHolderRenderer extends JPanel implements Lis
         //String statusText = value.isDone() ? "(Done)" : "(Queued)";
         //statusLabel.setText(statusText);
 
-        //setBackground(value.isDone() ? Color.GREEN : Color.decode("#009688"));
+        //setBackground(value.isDone() ? Color.decode("#228B22") : Color.decode("#009688"));
 
         return this;
     }

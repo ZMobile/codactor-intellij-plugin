@@ -67,7 +67,6 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         jList1.setModel(new DefaultListModel<>());
         jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jList1.setCellRenderer(new InquiryChatRenderer());
-        jList1.setBackground(Color.LIGHT_GRAY); // Set the background of the JList to grey
         jList1.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -78,7 +77,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                     }
                     selectedChat = selectedIndex;
                     InquiryChatViewer selectedInquiryChatViewer = jList1.getModel().getElementAt(selectedIndex);
-                    selectedInquiryChatViewer.setBackground(Color.GREEN);
+                    selectedInquiryChatViewer.setBackground(Color.decode("#228B22"));
                     JBTextArea selectedJBTextArea = (JBTextArea) selectedInquiryChatViewer.getComponents()[1];
                     Color highlightColor = Color.decode("#009688");
                     //Highlight the whole text are

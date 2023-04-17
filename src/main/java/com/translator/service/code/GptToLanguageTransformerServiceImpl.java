@@ -1,21 +1,13 @@
 package com.translator.service.code;
 
-import com.cybozu.labs.langdetect.Detector;
-import com.cybozu.labs.langdetect.DetectorFactory;
-import com.cybozu.labs.langdetect.LangDetectException;
-import com.intellij.openapi.fileTypes.FileType;
-import com.intellij.openapi.fileTypes.FileTypeManager;
-
-import javax.inject.Inject;
-import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class CodeToFileTypeTransformerServiceImpl implements CodeToFileTypeTransformerService {
+public class GptToLanguageTransformerServiceImpl implements GptToLanguageTransformerService {
     private final Map<String, String> languageToExtensionMap;
 
-    @Inject
-    public CodeToFileTypeTransformerServiceImpl() {
+    public GptToLanguageTransformerServiceImpl() {
         languageToExtensionMap = new HashMap<>();
         languageToExtensionMap.put("java", "java");
         languageToExtensionMap.put("c", "c");
@@ -55,25 +47,56 @@ public class CodeToFileTypeTransformerServiceImpl implements CodeToFileTypeTrans
         languageToExtensionMap.put("sql", "sql");
         languageToExtensionMap.put("tcl", "tcl");
         languageToExtensionMap.put("typescript", "ts");
-        languageToExtensionMap.put("unix_shell", "sh");
-        languageToExtensionMap.put("visual_basic", "vb");
-        languageToExtensionMap.put("windows_batch", "bat");
+        languageToExtensionMap.put("unix shell", "sh");
+        languageToExtensionMap.put("visual basic", "vb");
+        languageToExtensionMap.put("windows batch", "bat");
         languageToExtensionMap.put("xml", "xml");
         languageToExtensionMap.put("yaml", "yaml");
+        languageToExtensionMap.put("text", "txt");
     }
 
     @Override
-    public String detectLanguage(String code) {
+    public String convert(String text) {
+        String[] words = text.split(" ");
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i];
+            String doubleWord = null;
+            if (i + 1 < words.length) {
+                doubleWord = words[i] + " " + words[i + 1];
+            }
+            System.out.println("Test: " + word);
+            System.out.println("Test: " + doubleWord);
+            if (languageToExtensionMap.containsKey(word.trim().toLowerCase()) || (doubleWord != null && languageToExtensionMap.containsValue(doubleWord.trim().toLowerCase()))) {
+                return word.toLowerCase();
+            }
+        }
+        return null;
     }
 
-
-    public FileType convert(String code) {
-        String language = detectLanguage(code);
-
-        String extension = languageToExtensionMap.get(language);
-        if (extension == null) {
-            return null;
+    @Override
+    public String convert(List<String> texts) {
+        for (String text : texts) {
+            String language = convert(text);
+            if (language != null) {
+                return language;
+            }
         }
-        return FileTypeManager.getInstance().getFileTypeByExtension(extension);
+        return null;
+    }
+
+    @Override
+    public String getFromFilePath(String filePath) {
+        String extension = filePath.substring(filePath.indexOf(".") + 1);
+        for (Map.Entry<String, String> entry : languageToExtensionMap.entrySet()) {
+            if (entry.getValue().equals(extension)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String getExtensionFromLanguage(String language) {
+        return languageToExtensionMap.get(language);
     }
 }

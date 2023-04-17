@@ -61,7 +61,6 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         jList1.setModel(new DefaultListModel<>());
         jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jList1.setCellRenderer(new CodeSnippetRenderer());
-        jList1.setBackground(Color.LIGHT_GRAY); // Set the background of the JList to grey
         jList1.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -157,7 +156,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
             CodeSnippetViewer viewer = new CodeSnippetViewer(fileModificationSuggestion.getSuggestedCode());
             //if (i == 0) {
-                viewer.setBackground(JBColor.GREEN);
+                viewer.setBackground(Color.decode("#228B22"));
             //} else {
                 //viewer.setBackground(Color.LIGHT_GRAY);
             //}
@@ -174,7 +173,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             /*if (i != selectedIndex) {
                 //viewer.setBackground(JBColor.LIGHT_GRAY);
             } else {
-                viewer.setBackground(JBColor.GREEN);
+                viewer.setBackground(Color.decode("#228B22"));
             }*/
             model.addElement(viewer);
         }

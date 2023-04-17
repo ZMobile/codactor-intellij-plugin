@@ -16,9 +16,10 @@ public class InquiryChat {
     private String from;
     private String message;
     private InquiryChatType inquiryChatType;
+    private String likelyCodeLanguage;
     private List<String> alternateInquiryChatIds;
 
-    public InquiryChat(String userId, String inquiryId, String filePath, String previousInquiryChatId, String from, String message) {
+    public InquiryChat(String userId, String inquiryId, String filePath, String previousInquiryChatId, String from, String message, String likelyCodeLanguage) {
         this.creationTimestamp = LocalDateTime.now(ZoneOffset.UTC);
         this.modifiedTimestamp = LocalDateTime.now(ZoneOffset.UTC);
         this.myId = null;
@@ -29,9 +30,11 @@ public class InquiryChat {
         this.from = from;
         this.message = message;
         this.inquiryChatType = InquiryChatType.DEFAULT;
+        this.alternateInquiryChatIds = new ArrayList<>();
+        this.likelyCodeLanguage = likelyCodeLanguage;
     }
 
-    public InquiryChat(String userId, String inquiryId, String filePath, String previousInquiryChatId, String from, String message, InquiryChatType inquiryChatType) {
+    public InquiryChat(String userId, String inquiryId, String filePath, String previousInquiryChatId, String from, String message, String likelyCodeLanguage, InquiryChatType inquiryChatType) {
         this.creationTimestamp = LocalDateTime.now(ZoneOffset.UTC);
         this.modifiedTimestamp = LocalDateTime.now(ZoneOffset.UTC);
         this.myId = null;
@@ -43,6 +46,7 @@ public class InquiryChat {
         this.message = message;
         this.inquiryChatType = inquiryChatType;
         this.alternateInquiryChatIds = new ArrayList<>();
+        this.likelyCodeLanguage = likelyCodeLanguage;
     }
 
     public String getId() {
@@ -99,6 +103,14 @@ public class InquiryChat {
 
     public void setInquiryChatType(InquiryChatType inquiryChatType) {
         this.inquiryChatType = inquiryChatType;
+    }
+
+    public String getLikelyCodeLanguage() {
+        return likelyCodeLanguage;
+    }
+
+    public void setLikelyCodeLanguage(String likelyCodeLanguage) {
+        this.likelyCodeLanguage = likelyCodeLanguage;
     }
 
     public List<String> getAlternateInquiryChatIds() {
