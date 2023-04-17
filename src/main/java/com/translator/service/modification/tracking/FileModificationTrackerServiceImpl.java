@@ -167,11 +167,11 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         if (fileModificationTracker == null) {
             return;
         }
+        guardedBlockService.removeFileModificationGuardedBlock(modificationId);
         fileModificationTracker.addModificationUpdate(new FileModificationUpdate(modificationId, modification));
         if (fileModificationTracker.getModifications().isEmpty()) {
             activeModificationFiles.values().remove(fileModificationTracker);
         }
-        guardedBlockService.removeFileModificationGuardedBlock(modificationId);
     }
 
     @Override
@@ -180,11 +180,11 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                 .filter(m -> m.hasModificationSuggestionModification(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId()))
                 .findFirst()
                 .orElseThrow();
+        guardedBlockService.removeFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId());
         fileModificationSuggestionModificationTracker.addModificationUpdate(new FileModificationUpdate(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId(), fileModificationSuggestionModificationRecord.getEditedCode().trim()));
         if (fileModificationSuggestionModificationTracker.getModifications().isEmpty()) {
             activeModificationSuggestionModifications.values().remove(fileModificationSuggestionModificationTracker);
         }
-        guardedBlockService.removeFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId());
     }
 
     @Override
@@ -230,11 +230,11 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                 removeModificationSuggestionModification(fileModificationSuggestionModification.getId());
             }
         }
+        guardedBlockService.removeFileModificationGuardedBlock(modificationId);
         fileModificationTracker.implementModification(modificationId, modification);
         if (fileModificationTracker.getModifications().isEmpty()) {
             activeModificationFiles.values().remove(fileModificationTracker);
         }
-        guardedBlockService.removeFileModificationGuardedBlock(modificationId);
     }
 
     @Override

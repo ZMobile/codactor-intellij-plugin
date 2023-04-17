@@ -64,8 +64,6 @@ public class GptToLanguageTransformerServiceImpl implements GptToLanguageTransfo
             if (i + 1 < words.length) {
                 doubleWord = words[i] + " " + words[i + 1];
             }
-            System.out.println("Test: " + word);
-            System.out.println("Test: " + doubleWord);
             if (languageToExtensionMap.containsKey(word.trim().toLowerCase()) || (doubleWord != null && languageToExtensionMap.containsValue(doubleWord.trim().toLowerCase()))) {
                 return word.toLowerCase();
             }

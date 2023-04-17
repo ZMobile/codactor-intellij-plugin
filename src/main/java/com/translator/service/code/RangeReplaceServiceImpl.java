@@ -1,6 +1,7 @@
 package com.translator.service.code;
 
 import com.google.inject.Inject;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
@@ -32,6 +33,6 @@ public class RangeReplaceServiceImpl implements RangeReplaceService {
         }
 
         // Replace the text range with the replacement string
-        document.replaceString(startOffset, endOffset, replacementString);
+        WriteCommandAction.runWriteCommandAction(project, () -> document.replaceString(startOffset, endOffset, replacementString));
     }
 }

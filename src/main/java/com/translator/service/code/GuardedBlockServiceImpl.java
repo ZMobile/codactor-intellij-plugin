@@ -50,15 +50,16 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
         RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);
         document.createGuardedBlock(startOffset, endOffset);
         guardedBlocks.put(fileModification.getId(), guardedBlock);
-        uneditableSegmentListenerService.addUneditableFileModificationSegmentListener(fileModificationId);
+        //uneditableSegmentListenerService.addUneditableFileModificationSegmentListener(fileModificationId);
     }
 
     public void removeFileModificationGuardedBlock(String fileModificationId) {
+        System.out.println("Removing guarded block for file modification: " + fileModificationId);
         RangeMarker guardedBlock = guardedBlocks.get(fileModificationId);
         if (guardedBlock != null) {
-            guardedBlock.dispose();
             guardedBlocks.remove(fileModificationId);
-            uneditableSegmentListenerService.removeUneditableFileModificationSegmentListener(fileModificationId);
+            guardedBlock.dispose();
+            //uneditableSegmentListenerService.removeUneditableFileModificationSegmentListener(fileModificationId);
         }
     }
 
@@ -71,7 +72,7 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
         RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);
         document.createGuardedBlock(startOffset, endOffset);
         guardedBlocks.put(fileModificationSuggestionModificationId, guardedBlock);
-        uneditableSegmentListenerService.addUneditableFileModificationSuggestionModificationSegmentListener(fileModificationSuggestionModificationId);
+        //uneditableSegmentListenerService.addUneditableFileModificationSuggestionModificationSegmentListener(fileModificationSuggestionModificationId);
     }
 
     public void removeFileModificationSuggestionModificationGuardedBlock(String fileModificationSuggestionModificationId) {
@@ -79,7 +80,7 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
         if (guardedBlock != null) {
             guardedBlock.dispose();
             guardedBlocks.remove(fileModificationSuggestionModificationId);
-            uneditableSegmentListenerService.removeUneditableFileModificationSuggestionModificationSegmentListener(fileModificationSuggestionModificationId);
+            //uneditableSegmentListenerService.removeUneditableFileModificationSuggestionModificationSegmentListener(fileModificationSuggestionModificationId);
         }
     }
 }

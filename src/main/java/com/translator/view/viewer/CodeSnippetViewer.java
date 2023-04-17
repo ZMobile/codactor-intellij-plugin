@@ -30,24 +30,7 @@ public class CodeSnippetViewer extends JBPanel<CodeSnippetViewer> {
 
 
     private void initComponents() {
-        jToolBar1 = new JToolBar();
-        jToolBar1.setFloatable(false);
-        jToolBar1.setBorderPainted(false);
-        jLabel1 = new JLabel();
-
-        jToolBar1.setRollover(true);
-
-        jLabel1.setText("Solution");
-        jToolBar1.add(jLabel1);
-
-        // Use BorderLayout to add the JBScrollPane to the center of the panel
-        setLayout(new BorderLayout());
-        add(jToolBar1, BorderLayout.NORTH);
-        editor.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, editor.getComponent().getPreferredSize().height));
-        FixedHeightPanel fixedHeightPanel = new FixedHeightPanel(editor);
-        fixedHeightPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        fixedHeightPanel.add(editor.getComponent());
-        add(fixedHeightPanel, BorderLayout.CENTER);
+        initComponents("Solution");
     }
 
     private void initComponents(String header) {
@@ -69,6 +52,8 @@ public class CodeSnippetViewer extends JBPanel<CodeSnippetViewer> {
         fixedHeightPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         fixedHeightPanel.add(editor.getComponent());
         add(fixedHeightPanel, BorderLayout.CENTER);
+
+
     }
 
     public void setEditor(Editor editor) {

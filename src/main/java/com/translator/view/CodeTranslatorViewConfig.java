@@ -10,11 +10,13 @@ import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.CodeTranslatorServiceConfig;
 import com.translator.service.code.CodeSnippetExtractorService;
+import com.translator.service.code.RangeReplaceService;
 import com.translator.service.constructor.CodeFileGeneratorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
 import com.translator.service.file.FileOpenerService;
 import com.translator.service.file.SelectedFileFetcherService;
+import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.file.FileReaderService;
@@ -46,8 +48,9 @@ public class CodeTranslatorViewConfig extends AbstractModule {
     @Singleton
     @Provides
     public ProvisionalModificationViewer codeSnippetListViewer(CodactorToolWindowService codactorToolWindowService,
+                                                               FileModificationTrackerService fileModificationTrackerService,
                                                                ProvisionalModificationCustomizerFactory provisionalModificationCustomizerFactory) {
-        return new ProvisionalModificationViewer(codactorToolWindowService, provisionalModificationCustomizerFactory);
+        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationTrackerService, provisionalModificationCustomizerFactory);
     }
 
     @Singleton

@@ -11,6 +11,8 @@ import com.intellij.ui.components.JBScrollPane;
 import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationSuggestion;
+import com.translator.service.code.RangeReplaceService;
+import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.view.factory.ProvisionalModificationCustomizerFactory;
 import com.translator.view.renderer.CodeSnippetRenderer;
 import com.translator.service.ui.tool.CodactorToolWindowService;
@@ -30,12 +32,6 @@ import java.awt.event.ActionListener;
  */
 public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificationViewer> {
 
-    public interface ModificationActionSelectedListener {
-        void onModificationAccepted(String fileModificationId, String modification);
-
-        void onModificationsRejected(String fileModificationId);
-    }
-
     private FileModification fileModification;
     private JList<CodeSnippetViewer> jList1;
     private JToolBar jToolBar2;
@@ -44,15 +40,16 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
     private JButton customizeButton;
     private String fileModificationId;
     private CodactorToolWindowService codactorToolWindowService;
-    private ModificationActionSelectedListener listener;
+    private FileModificationTrackerService fileModificationTrackerService;
     private ProvisionalModificationCustomizerFactory provisionalModificationCustomizerFactory;
 
     @Inject
     public ProvisionalModificationViewer(CodactorToolWindowService codactorToolWindowService,
+                                         FileModificationTrackerService fileModificationTrackerService,
                                          ProvisionalModificationCustomizerFactory provisionalModificationCustomizerFactory) {
         this.codactorToolWindowService = codactorToolWindowService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
         this.provisionalModificationCustomizerFactory = provisionalModificationCustomizerFactory;
-        this.listener = null;
         initComponents();
     }
 
@@ -102,24 +99,23 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         acceptButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (listener != null) {
-                    listener.onModificationAccepted(fileModificationId, jList1.getModel().getElementAt(0).getText());
-                    codactorToolWindowService.closeModificationQueueViewerToolWindow();
-                    updateModificationList(null);
-                }
+                FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
+                fileModificationTrackerService.implementModificationUpdate(fileModificationId, fileModificationSuggestion.getSuggestedCode().getDocument().getText());
+                codactorToolWindowService.closeModificationQueueViewerToolWindow();
+                updateModificationList(null);
             }
         });
+        acceptButton.setEnabled(true);
 
         rejectAllButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (listener != null) {
-                    listener.onModificationsRejected(fileModificationId);
-                    codactorToolWindowService.closeModificationQueueViewerToolWindow();
-                    updateModificationList(null);
-                }
+                fileModificationTrackerService.removeModification(fileModificationId);
+                codactorToolWindowService.closeModificationQueueViewerToolWindow();
+                updateModificationList(null);
             }
         });
+        rejectAllButton.setEnabled(true);
 
         ProvisionalModificationViewer provisionalModificationViewer = this;
         customizeButton.addActionListener(new ActionListener() {
@@ -178,9 +174,5 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             model.addElement(viewer);
         }
         jList1.setModel(model);
-    }
-
-    public void setModificationActionSelectedListener(ModificationActionSelectedListener listener) {
-        this.listener = listener;
     }
 }

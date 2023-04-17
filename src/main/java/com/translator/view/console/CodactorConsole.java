@@ -43,9 +43,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private JBTextArea textArea;
     private JButton button1;
     private JButton button2;
-    private JComboBox<String> comboBox1;
-    private JComboBox<FileItem> comboBox2;
-    private JComboBox<String> comboBox3;
+    private JComboBox<String> modelComboBox;
+    private JComboBox<FileItem> fileComboBox;
+    private JComboBox<String> modificationTypeComboBox;
     private JLabel jLabel1;
     private JButton advancedButton;
     private JLabel hiddenLabel;
@@ -76,25 +76,25 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         button2 = new JButton();
         button2.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/microphone_icon.png"))));
 
-        comboBox1 = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k"});
-        comboBox2 = new ComboBox<>();
+        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k"});
+        fileComboBox = new ComboBox<>();
         VirtualFile[] openFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
-        comboBox2.setVisible(openFiles.length > 1);
+        fileComboBox.setVisible(openFiles.length > 1);
         for (VirtualFile openFile : openFiles) {
-            comboBox2.addItem(new FileItem(openFile.getPath()));
+            fileComboBox.addItem(new FileItem(openFile.getPath()));
         }
-        comboBox3 = new ComboBox<>(new String[]{"Modify", "Fix", "Create", "Create Files", "Inquire", "Modify Selected", "Fix Selected", "Inquire Selected"});
+        modificationTypeComboBox = new ComboBox<>(new String[]{"Modify", "Fix", "Create", "Create Files", "Inquire", "Modify Selected", "Fix Selected", "Inquire Selected"});
         jLabel1 = new JLabel();
         advancedButton = new JButton("(Advanced) Add Context");
         hiddenLabel = new JLabel();
         hiddenLabel.setVisible(false);
         button1.setText("Modify");
         jLabel1.setText(" Implement the following modification(s) to this code file:");
-        /*comboBox1.addItemListener(e -> {
+        /*modelComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                comboBox3.removeAllItems();
+                modificationTypeComboBox.removeAllItems();
                 for (String option : options) {
-                    comboBox3.addItem(option);
+                    modificationTypeComboBox.addItem(option);
                 }
             }
         });*/
@@ -114,10 +114,10 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
                 FileEditorManagerListener.super.fileOpened(source, file);
                 VirtualFile[] openFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
-                comboBox2.setVisible(openFiles.length > 1);
-                comboBox2.removeAllItems();
+                fileComboBox.setVisible(openFiles.length > 1);
+                fileComboBox.removeAllItems();
                 for (VirtualFile openFile : openFiles) {
-                    comboBox2.addItem(new FileItem(openFile.getPath()));
+                    fileComboBox.addItem(new FileItem(openFile.getPath()));
                 }
             }
 
@@ -125,10 +125,10 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
                 FileEditorManagerListener.super.fileClosed(source, file);
                 VirtualFile[] openFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
-                comboBox2.setVisible(openFiles.length > 1);
-                comboBox2.removeAllItems();
+                fileComboBox.setVisible(openFiles.length > 1);
+                fileComboBox.removeAllItems();
                 for (VirtualFile openFile : openFiles) {
-                    comboBox2.addItem(new FileItem(openFile.getPath()));
+                    fileComboBox.addItem(new FileItem(openFile.getPath()));
                 }
             }
 
@@ -136,10 +136,10 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             public void selectionChanged(@NotNull FileEditorManagerEvent event) {
                 FileEditorManagerListener.super.selectionChanged(event);
                 VirtualFile[] openFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
-                comboBox2.setVisible(openFiles.length > 1);
-                comboBox2.removeAllItems();
+                fileComboBox.setVisible(openFiles.length > 1);
+                fileComboBox.removeAllItems();
                 for (VirtualFile openFile : openFiles) {
-                    comboBox2.addItem(new FileItem(openFile.getPath()));
+                    fileComboBox.addItem(new FileItem(openFile.getPath()));
                 }
             }
         };
@@ -150,9 +150,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, fileEditorManagerListener);
 
 
-        comboBox3.addItemListener(e -> {
+        modificationTypeComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                String selected = (String) comboBox3.getSelectedItem();
+                String selected = (String) modificationTypeComboBox.getSelectedItem();
                 updateLabelAndButton(selected);
             }
         });
@@ -179,8 +179,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         JPanel topToolbar = new JPanel();
         topToolbar.setLayout(new BorderLayout());
         JPanel leftToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        leftToolbar.add(comboBox1);
-        leftToolbar.add(comboBox3);
+        leftToolbar.add(modelComboBox);
+        leftToolbar.add(fileComboBox);
+        leftToolbar.add(modificationTypeComboBox);
         leftToolbar.add(jLabel1);
         JPanel rightToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5)); // Set horizontal gap to 0
         rightToolbar.add(hiddenLabel);
@@ -196,15 +197,15 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         button1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                FileItem fileItem = (FileItem) comboBox2.getSelectedItem();
+                FileItem fileItem = (FileItem) fileComboBox.getSelectedItem();
                 assert fileItem != null;
-                assert comboBox3.getSelectedItem() != null;
-                if (comboBox3.getSelectedItem().toString().equals("Modify")) {
+                assert modificationTypeComboBox.getSelectedItem() != null;
+                if (modificationTypeComboBox.getSelectedItem().toString().equals("Modify")) {
                     String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
                         automaticCodeModificationService.getModifiedCode(fileItem.getFilePath(), 0, code.length(), textArea.getText(), ModificationType.MODIFY);
                     }
-                } else if (comboBox3.getSelectedItem().toString().equals("Modify Selected")) {
+                } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Modify Selected")) {
                     SelectionModel selectionModel = codeSnippetExtractorService.getSelectedText(fileItem.getFilePath());
                     String code = null;
                     if (selectionModel != null) {
@@ -213,12 +214,12 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     if (code != null && !code.isEmpty() && !textArea.getText().isEmpty()) {
                         automaticCodeModificationService.getModifiedCode(fileItem.getFilePath(), selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.MODIFY);
                     }
-                } else if (comboBox3.getSelectedItem().toString().equals("Fix")) {
+                } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Fix")) {
                     String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
                         automaticCodeModificationService.getFixedCode(fileItem.getFilePath(), 0, code.length(), textArea.getText(), ModificationType.FIX);
                     }
-                } else if (comboBox3.getSelectedItem().toString().equals("Fix Selected")) {
+                } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Fix Selected")) {
                     SelectionModel selectionModel = codeSnippetExtractorService.getSelectedText(fileItem.getFilePath());
                     String code = null;
                     if (selectionModel != null) {
@@ -227,11 +228,11 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     if (code != null && !code.isEmpty() && !textArea.getText().isEmpty()) {
                         automaticCodeModificationService.getFixedCode(fileItem.getFilePath(), selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.FIX);
                     }
-                } else if (comboBox3.getSelectedItem().toString().equals("Create")) {
+                } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create")) {
                     if (!textArea.getText().isEmpty()) {
                         automaticCodeModificationService.getCreatedCode(fileItem.getFilePath(), 0, 0, textArea.getText());
                     }
-                } else if (comboBox3.getSelectedItem().toString().equals("Create Files")) {
+                } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create Files")) {
                     if (!textArea.getText().isEmpty()) {
                         List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
                         List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
@@ -244,7 +245,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                         //FileChooserWindow fileChooserWindow = new FileChooserWindow(description, priorContext, codeFileGeneratorService);
                         //fileChooserWindow.setVisible(true);
                     }
-                } else if (comboBox3.getSelectedItem().toString().equals("Inquire")) {
+                } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire")) {
                     if (!textArea.getText().isEmpty()) {
                         /*String filePath;
                         if (currentEditingFile == null) {
@@ -279,7 +280,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                         };
                         worker.execute();*/
                     }
-                } else if (comboBox3.getSelectedItem().toString().equals("Inquire Selected")) {
+                } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire Selected")) {
                     /*if (display.getSelectedText() != null && !display.getSelectedText().isEmpty() && !textArea.getText().isEmpty()) {
                         String filePath;
                         if (currentEditingFile == null) {
@@ -314,7 +315,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                         };
                         worker.execute();
                     }*/
-                } else if (comboBox3.getSelectedItem().toString().equals("Translate")) {
+                } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Translate")) {
                     /*if (!display.getText().isEmpty()) {
                         String filePath;
                         if (currentEditingFile == null) {

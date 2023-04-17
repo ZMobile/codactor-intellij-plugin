@@ -75,7 +75,6 @@ public class HistoricalCompletedFileModificationRenderer extends JPanel implemen
             filePathLabel.setText("New General Inquiry");
             modificationTypeLabel.setText("");
             lineRangeLabel.setText("");
-            setBackground(Color.LIGHT_GRAY);
         }
 
         return this;

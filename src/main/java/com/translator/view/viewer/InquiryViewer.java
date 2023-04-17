@@ -122,14 +122,14 @@ public class InquiryViewer extends JPanel {
                         return;
                     }
                     selectedChat = selectedIndex;
-                    Color highlightColor = Color.decode("#7FFFD4");
+                    Color highlightColor = Color.decode("#009688");
                         for (int i = 0; i < jList1.getModel().getSize(); i++) {
                             InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(i);
                             if (i == selectedIndex) {
                                 for (Component component : inquiryChatViewer.getComponents()) {
                                     if (component instanceof JBTextArea) {
                                         JBTextArea selectedJBTextArea = (JBTextArea) component;
-                                        //Highlight the whole text are
+                                        //Highlight the whole text area
                                         try {
                                             selectedJBTextArea.getHighlighter().addHighlight(0, selectedJBTextArea.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
                                         } catch (BadLocationException ex) {

@@ -110,7 +110,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, ModificationType.FIX, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                 DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
-                if (desktopCodeModificationResponseResource.getModificationSuggestions() != null) {
+                if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                     fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getModificationSuggestions());
                     promptContextService.clearPromptContext();
                 } else {
