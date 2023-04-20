@@ -48,7 +48,6 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
         }
 
         RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);
-        document.createGuardedBlock(startOffset, endOffset);
         guardedBlocks.put(fileModification.getId(), guardedBlock);
         //uneditableSegmentListenerService.addUneditableFileModificationSegmentListener(fileModificationId);
     }
@@ -70,7 +69,6 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
         Document document = fileModificationSuggestion.getSuggestedCode().getDocument();
 
         RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);
-        document.createGuardedBlock(startOffset, endOffset);
         guardedBlocks.put(fileModificationSuggestionModificationId, guardedBlock);
         //uneditableSegmentListenerService.addUneditableFileModificationSuggestionModificationSegmentListener(fileModificationSuggestionModificationId);
     }

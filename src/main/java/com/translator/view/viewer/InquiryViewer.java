@@ -20,6 +20,8 @@ import com.translator.model.modification.RecordType;
 import com.translator.service.code.GptToLanguageTransformerService;
 import com.translator.service.code.GptToLanguageTransformerServiceImpl;
 import com.translator.service.constructor.CodeFileGeneratorService;
+import com.translator.service.inquiry.InquiryService;
+import com.translator.service.inquiry.InquiryServiceImpl;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.view.menu.TextAreaWindow;
@@ -54,8 +56,7 @@ import java.util.stream.Collectors;
  */
 public class InquiryViewer extends JPanel {
     private Project project;
-    private Inquiry inquiry = null;
-    private InquiryDao inquiryDao;
+    private Inquiry inquiry;
     private JList<InquiryChatViewer> jList1;
     private ListSelectionListener listSelectionListener;
     private JPanel promptInputPanel;
@@ -75,31 +76,24 @@ public class InquiryViewer extends JPanel {
     private JMenuItem previousChat;
     private JMenuItem nextChat;
     private JMenuItem autoGenerate;
-    private OpenAiApiKeyService openAiApiKeyService;
-    private OpenAiModelService openAiModelService;
     private CodactorToolWindowService codactorToolWindowService;
     private CodeFileGeneratorService codeFileGeneratorService;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
-    private GptToLanguageTransformerService gptToLanguageTransformerService;
+    private InquiryService inquiryService;
     private HistoricalModificationListViewer historicalModificationListViewer;
     private InquiryListViewer inquiryListViewer;
     private JBTextArea promptInput;
     private int selectedChat;
 
     public InquiryViewer(Project project,
-                         OpenAiApiKeyService openAiApiKeyService,
-                         OpenAiModelService openAiModelService,
                          CodactorToolWindowService codactorToolWindowService,
                          CodeFileGeneratorService codeFileGeneratorService,
-                         InquiryDao inquiryDao) {
+                         InquiryService inquiryService) {
         this.project = project;
-        this.openAiApiKeyService = openAiApiKeyService;
-        this.openAiModelService = openAiModelService;
         this.codactorToolWindowService = codactorToolWindowService;
         this.codeFileGeneratorService = codeFileGeneratorService;
         this.textAreaHeightCalculatorService = new TextAreaHeightCalculatorServiceImpl();
-        this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
-        this.inquiryDao = inquiryDao;
+        this.inquiryService = inquiryService;
         this.historicalModificationListViewer = null;
         this.inquiryListViewer = null;
         this.inquiry = new Inquiry(null, null, null, null, null, null, null, null, null, null);
@@ -232,7 +226,7 @@ public class InquiryViewer extends JPanel {
                             firstComponentCopied = true;
                         }
                     }
-                    TextAreaWindow textAreaWindow = new TextAreaWindow(text.toString());
+                    new TextAreaWindow(text.toString());
                 }
             }
         });
@@ -561,24 +555,24 @@ public class InquiryViewer extends JPanel {
         int totalHeight = 0;
         if (inquiry.getDescription() != null) {
             String text = inquiry.getModificationType() + ": " + inquiry.getDescription().trim();
-            InquiryChatViewer descriptionViewer = new InquiryChatViewer(text, "User", InquiryChatType.INSTIGATOR_PROMPT);
+            InquiryChatViewer descriptionViewer = new InquiryChatViewer(inquiry.getFilePath(), text, "User", InquiryChatType.INSTIGATOR_PROMPT);
             model.addElement(descriptionViewer);
             if (inquiry.getBeforeCode() != null) {
                 String beforeCodeText = "```" + inquiry.getBeforeCode().trim() + "```";
-                InquiryChatViewer beforeViewer = new InquiryChatViewer(beforeCodeText, "Before", InquiryChatType.CODE_SNIPPET);
+                InquiryChatViewer beforeViewer = new InquiryChatViewer(inquiry.getFilePath(), beforeCodeText, "Before", InquiryChatType.CODE_SNIPPET);
                 model.addElement(beforeViewer);
             }
             if (inquiry.getAfterCode() != null) {
                 String afterCodeText = "```" + inquiry.getAfterCode().trim() + "```";
-                InquiryChatViewer afterViewer = new InquiryChatViewer(afterCodeText, "After", InquiryChatType.CODE_SNIPPET);
+                InquiryChatViewer afterViewer = new InquiryChatViewer(inquiry.getFilePath(), afterCodeText, "After", InquiryChatType.CODE_SNIPPET);
                 model.addElement(afterViewer);
             }
         } else if (inquiry.getSubjectCode() != null) {
             String subjectCodeText = "```" + inquiry.getSubjectCode().trim() + "```";
-            InquiryChatViewer subjectCodeViewer = new InquiryChatViewer(subjectCodeText, "Code", InquiryChatType.CODE_SNIPPET);
+            InquiryChatViewer subjectCodeViewer = new InquiryChatViewer(inquiry.getFilePath(), subjectCodeText, "Code", InquiryChatType.CODE_SNIPPET);
             model.addElement(subjectCodeViewer);
             String text = inquiry.getInitialQuestion().trim();
-            InquiryChatViewer descriptionViewer = new InquiryChatViewer(text, "User", InquiryChatType.INSTIGATOR_PROMPT);
+            InquiryChatViewer descriptionViewer = new InquiryChatViewer(inquiry.getFilePath(), text, "User", InquiryChatType.INSTIGATOR_PROMPT);
             model.addElement(descriptionViewer);
         }
         List<InquiryChat> finalizedChatList = new ArrayList<>();
@@ -614,25 +608,34 @@ public class InquiryViewer extends JPanel {
         for (int i = 0; i < model.size(); i++) {
             InquiryChatViewer chatViewer = model.getElementAt(i);
             //chatViewer.setSize(Integer.MAX_VALUE, chatViewer.getHeight());
-            JBTextArea chatDisplay = (JBTextArea) chatViewer.getComponent(1);
-            int newHeight = 0;
-            int newWidth = getWidth();
-            if (chatViewer.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
-                newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
-            } else {
-                newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+            System.out.println("Component testo: " + chatViewer.getComponents().length);
+            for (Component component : chatViewer.getComponents()) {
+                if (component instanceof JBTextArea) {
+                    JBTextArea chatDisplay = (JBTextArea) component;
+                    int newHeight = 0;
+                    int newWidth = getWidth();
+                    if (chatViewer.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
+                    } else {
+                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+                    }
+                    Dimension preferredSize = new Dimension(newWidth, newHeight);
+                    chatDisplay.setPreferredSize(preferredSize);
+                    chatDisplay.setMaximumSize(preferredSize);
+                    chatDisplay.setSize(preferredSize);
+                    totalHeight += newHeight + chatViewer.getComponent(0).getHeight();
+                } else if (component instanceof FixedHeightPanel) {
+                    FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                    totalHeight += fixedHeightPanel.getHeight();
+                }
+                totalHeight += chatViewer.getComponent(0).getHeight();
             }
-            Dimension preferredSize = new Dimension(newWidth, newHeight);
-            chatDisplay.setPreferredSize(preferredSize);
-            chatDisplay.setMaximumSize(preferredSize);
-            chatDisplay.setSize(preferredSize);
-            totalHeight += newHeight + chatViewer.getComponent(0).getHeight();
         }
         jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, totalHeight));
         jList1.getParent().addComponentListener(componentListener);
         jList1.setModel(model);
         JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-        vertical.setValue(vertical.getMaximum());
+        vertical.setValue(vertical.getMaximum() - vertical.getVisibleAmount());
     }
 
     public String getFileExtension(String filePath) {
@@ -656,7 +659,7 @@ public class InquiryViewer extends JPanel {
                 .orElse(null);
     }
 
-    private void findAlternatesForInquiryChat(List<InquiryChat> inquiryChats, InquiryChat inquiryChat) {
+    public void findAlternatesForInquiryChat(List<InquiryChat> inquiryChats, InquiryChat inquiryChat) {
         List<InquiryChat> alternateInquiryChats = inquiryChats.stream()
                 .filter(inquiryChatQuery ->
                         (inquiryChatQuery.getPreviousInquiryChatId() != null && inquiryChatQuery.getPreviousInquiryChatId().equals(inquiryChat.getPreviousInquiryChatId()))
@@ -671,73 +674,18 @@ public class InquiryViewer extends JPanel {
     }
 
     private void askNewGeneralInquiryQuestion(String question) {
-        String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
-        InquiryChat temporaryChat = new InquiryChat(null, null, null, null, "User", question, likelyCodeLanguage);
-        inquiry.getChats().add(temporaryChat);
-        updateInquiryContents(inquiry);
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "My Background Task", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                setLoadingChat(true);
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                Inquiry inquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
-                if (inquiry != null) {
-                    updateInquiryContents(inquiry);
-                    componentResized((DefaultListModel<InquiryChatViewer>) jList1.getModel());
-                }
-                setLoadingChat(false);
-            }
-        };
-
-        ProgressManager.getInstance().run(backgroundTask);
+        inquiryService.createGeneralInquiry(question);
     }
 
 
     private void askInquiryQuestion(String subjectRecordId, RecordType recordType, String question, String filePath) {
         jToolBar3.setVisible(false);
-        String likelyCodeLanguage = gptToLanguageTransformerService.getFromFilePath(filePath);
-        InquiryChat temporaryChat = new InquiryChat(null, null, null, null, "User", question, likelyCodeLanguage);
-        inquiry.getChats().add(temporaryChat);
-        updateInquiryContents(inquiry);
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "My Background Task", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                setLoadingChat(true);
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                Inquiry inquiry = inquiryDao.createInquiry(subjectRecordId, recordType, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
-                if (inquiry != null) {
-                    updateInquiryContents(inquiry);
-                    componentResized((DefaultListModel<InquiryChatViewer>) jList1.getModel());
-                }
-                setLoadingChat(false);
-            }
-        };
-
-        ProgressManager.getInstance().run(backgroundTask);
+        inquiryService.createInquiry(subjectRecordId, recordType, question, filePath);
     }
 
     private void askContinuedQuestion(String previousInquiryChatId, String question) {
         assert inquiry != null;
-        String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
-        InquiryChat inquiryChat = new InquiryChat(null, inquiry.getId(), inquiry.getFilePath(), previousInquiryChatId, "User", question, likelyCodeLanguage);
-        findAlternatesForInquiryChat(inquiry.getChats(), inquiryChat);
-        inquiry.getChats().add(inquiryChat);
-        updateInquiryContents(inquiry);
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "My Background Task", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                setLoadingChat(true);
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
-                inquiry.getChats().remove(inquiryChat);
-                inquiry.getChats().addAll(response.getChats());
-                updateInquiryContents(inquiry);
-                componentResized((DefaultListModel<InquiryChatViewer>) jList1.getModel());
-                setLoadingChat(false);
-            }
-        };
-
-        ProgressManager.getInstance().run(backgroundTask);
+        inquiryService.continueInquiry(previousInquiryChatId, question);
     }
 
     private void editQuestion(String inquiryChatId, String newQuestion) {
@@ -765,34 +713,47 @@ public class InquiryViewer extends JPanel {
     }
 
     public void componentResized(DefaultListModel<InquiryChatViewer> previousModel) {
-        DefaultListModel<InquiryChatViewer> newModel = new DefaultListModel<>();
-        int newTotalHeight = 0;
-        for (int i = 0; i < previousModel.size(); i++) {
-            InquiryChatViewer chatViewer = previousModel.getElementAt(i);
-            //chatViewer.setSize(Integer.MAX_VALUE, chatViewer.getHeight());
-            JBTextArea chatDisplay = (JBTextArea) chatViewer.getComponent(1);
-            int newHeight = 0;
-            int newWidth = getWidth();
-            if (chatViewer.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
-                newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
-            } else {
-                newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+        SwingUtilities.invokeLater(() -> {
+            DefaultListModel<InquiryChatViewer> newModel = new DefaultListModel<>();
+            int newTotalHeight = 0;
+            for (int i = 0; i < previousModel.size(); i++) {
+                InquiryChatViewer chatViewer = previousModel.getElementAt(i);
+                for (Component component : chatViewer.getComponents()) {
+                    if (component instanceof JBTextArea) {
+                        JBTextArea chatDisplay = (JBTextArea) component;
+                        int newHeight = 0;
+                        int newWidth = getWidth();
+                        if (chatViewer.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                            newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
+                        } else {
+                            newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+                        }
+                        Dimension preferredSize = new Dimension(newWidth, newHeight);
+                        chatDisplay.setPreferredSize(preferredSize);
+                        chatDisplay.setMaximumSize(preferredSize);
+                        chatDisplay.setSize(preferredSize);
+                        newTotalHeight += newHeight + chatViewer.getComponent(0).getHeight();
+                    } else if (component instanceof FixedHeightPanel) {
+                        FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                        newTotalHeight += fixedHeightPanel.getHeight();
+                    }
+                    newTotalHeight += chatViewer.getComponent(0).getHeight();
+                }
+                newModel.addElement(chatViewer);
             }
-            Dimension preferredSize = new Dimension(newWidth, newHeight);
-            chatDisplay.setPreferredSize(preferredSize);
-            chatDisplay.setMaximumSize(preferredSize);
-            chatDisplay.setSize(preferredSize);
-            newModel.addElement(chatViewer);
-            newTotalHeight += newHeight + chatViewer.getComponent(0).getHeight();
-        }
-        jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, newTotalHeight));
-        jList1.setModel(newModel);
-        jBScrollPane1.setViewportView(jList1);
-        JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-        vertical.setValue(vertical.getMaximum());
+            jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, newTotalHeight));
+            jList1.setModel(newModel);
+            jBScrollPane1.setViewportView(jList1);
+            JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
+            vertical.setValue(vertical.getMaximum());
+        });
     }
 
     public void componentResized() {
         componentResized((DefaultListModel<InquiryChatViewer>) jList1.getModel());
+    }
+
+    public Inquiry getInquiry() {
+        return inquiry;
     }
 }

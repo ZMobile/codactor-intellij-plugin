@@ -182,7 +182,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                         .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, jList1.getHeight(), Short.MAX_VALUE)); // Set size for jList1// Add a gap of 20 between jList1 and JBTextArea
     }
 
-    public void updateChatContents(List<InquiryChat> inquiryChats) {
+    public void updateChatContents(String filePath, List<InquiryChat> inquiryChats) {
         if (inquiryChats == null) {
             jList1.setModel(new DefaultListModel<>());
             return;
@@ -192,15 +192,15 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         for (InquiryChat inquiryChat : inquiryChats) {
             if (inquiryChat.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
                 String codeText = "```" + inquiryChat.getMessage().trim() + "```";
-                InquiryChatViewer codeViewer = new InquiryChatViewer(codeText, inquiryChat.getFrom(), InquiryChatType.CODE_SNIPPET);
+                InquiryChatViewer codeViewer = new InquiryChatViewer(filePath, codeText, inquiryChat.getFrom(), InquiryChatType.CODE_SNIPPET);
                 totalHeight += codeViewer.getHeight();
                 model.addElement(codeViewer);
             } else if (inquiryChat.getInquiryChatType() == InquiryChatType.INSTIGATOR_PROMPT) {
-                InquiryChatViewer descriptionViewer = new InquiryChatViewer(inquiryChat.getMessage().trim(), inquiryChat.getFrom(), InquiryChatType.INSTIGATOR_PROMPT);
+                InquiryChatViewer descriptionViewer = new InquiryChatViewer(filePath, inquiryChat.getMessage().trim(), inquiryChat.getFrom(), InquiryChatType.INSTIGATOR_PROMPT);
                 totalHeight += descriptionViewer.getHeight();
                 model.addElement(descriptionViewer);
             } else {
-                InquiryChatViewer chatViewer = new InquiryChatViewer(inquiryChat.getMessage().trim(), inquiryChat.getFrom(), InquiryChatType.DEFAULT);
+                InquiryChatViewer chatViewer = new InquiryChatViewer(filePath, inquiryChat.getMessage().trim(), inquiryChat.getFrom(), InquiryChatType.DEFAULT);
                 totalHeight += chatViewer.getHeight();
                 model.addElement(chatViewer);
             }
@@ -222,6 +222,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
     private void updateChatContentsWithContextInstalled() {
         JList<HistoricalContextObjectDataHolder> historicalContextObjectDataHolders = historicalContextObjectListViewer.getContextObjectList();
         List<InquiryChat> inquiryChats = new ArrayList<>();
+        String filePath = null;
         for (int i = 0; i < historicalContextObjectDataHolders.getModel().getSize(); i++) {
             HistoricalContextObjectDataHolder historicalContextObjectDataHolder = historicalContextObjectDataHolders.getModel().getElementAt(i);
             HistoricalContextObjectHolder historicalContextObjectHolder = getHistoricalContextObjectHolder(historicalContextObjectDataHolder);
@@ -229,12 +230,18 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                 continue;
             }
             if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
+                if (historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
+                    filePath = historicalContextObjectDataHolder.getHistoricalCompletedModificationDataHolder().getFileModificationSuggestionRecord().getFilePath();
+                } else {
+                    filePath = historicalContextObjectDataHolder.getHistoricalCompletedModificationDataHolder().getFileModificationSuggestionModificationRecord().getFilePath();
+                }
                 inquiryChats.addAll(historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRequestedChats());
             } else {
+                filePath = historicalContextObjectDataHolder.getHistoricalContextInquiryDataHolder().getInquiry().getFilePath();
                 inquiryChats.addAll(historicalContextObjectHolder.getHistoricalContextInquiryHolder().getRequestedChats());
             }
         }
-        updateChatContents(inquiryChats);
+        updateChatContents(filePath, inquiryChats);
     }
 
     public void updateChatContents() {

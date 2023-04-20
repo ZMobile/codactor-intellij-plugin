@@ -35,10 +35,15 @@ public class InquiryChatViewer extends JPanel {
     private String message;
     private GptToLanguageTransformerService gptToLanguageTransformerService;
 
-    public InquiryChatViewer(String message, String headerString, InquiryChatType inquiryChatType) {
+    public InquiryChatViewer(String filePath, String message, String headerString, InquiryChatType inquiryChatType) {
         this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
         this.message = message;
-        String likelyCodingLanguage = gptToLanguageTransformerService.convert(message);
+        String likelyCodingLanguage;
+        if (filePath == null) {
+            likelyCodingLanguage = gptToLanguageTransformerService.convert(message);
+        } else {
+            likelyCodingLanguage = gptToLanguageTransformerService.getFromFilePath(filePath);
+        }
         this.inquiryChat = new InquiryChat(null, null, null, null, headerString, message, likelyCodingLanguage, inquiryChatType);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -93,14 +98,15 @@ public class InquiryChatViewer extends JPanel {
         jLabel1.setText(headerString);
         jToolBar1.add(jLabel1);
         addComponent(jToolBar1, 0, 0);
-
-        List<Component> components = createComponentsFromMessage(inquiryChat.getMessage());
-        int gridy = 1;
-        for (Component component : components) {
-            addComponent(component, gridy++, 0);
-        }
-        if (inquiryChat.getLikelyCodeLanguage() == null) {
-            inquiryChat.setLikelyCodeLanguage(gptToLanguageTransformerService.convert(inquiryChat.getMessage()));
+        if (inquiryChat.getMessage() != null) {
+            List<Component> components = createComponentsFromMessage(inquiryChat.getMessage());
+            int gridy = 1;
+            for (Component component : components) {
+                addComponent(component, gridy++, 0);
+            }
+            if (inquiryChat.getLikelyCodeLanguage() == null) {
+                inquiryChat.setLikelyCodeLanguage(gptToLanguageTransformerService.convert(inquiryChat.getMessage()));
+            }
         }
     }
 
@@ -157,6 +163,10 @@ public class InquiryChatViewer extends JPanel {
                     inquiryChat.setLikelyCodeLanguage("text");
                 }
                 String extension = gptToLanguageTransformerService.getExtensionFromLanguage(inquiryChat.getLikelyCodeLanguage());
+                System.out.println("Extension: " + extension);
+                if (extension == null) {
+                    extension = "txt";
+                }
                 FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(extension);
                 Document document = editorFactory.createDocument(code);
                 Editor editor = editorFactory.createEditor(document, null);

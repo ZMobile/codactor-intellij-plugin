@@ -16,6 +16,8 @@ import com.translator.service.context.PromptContextService;
 import com.translator.service.context.PromptContextServiceImpl;
 import com.translator.service.copy.DirectoryCopierService;
 import com.translator.service.copy.DirectoryCopierServiceImpl;
+import com.translator.service.inquiry.InquiryService;
+import com.translator.service.inquiry.InquiryServiceImpl;
 import com.translator.service.line.LineCounterService;
 import com.translator.service.line.LineCounterServiceImpl;
 import com.translator.service.modification.CodeModificationService;
@@ -71,6 +73,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(UneditableSegmentListenerService.class).to(UneditableSegmentListenerServiceImpl.class);
         bind(GuardedBlockService.class).to(GuardedBlockServiceImpl.class);
         bind(RangeReplaceService.class).to(RangeReplaceServiceImpl.class);
+        bind(InquiryService.class).to(InquiryServiceImpl.class);
     }
 
     @Singleton

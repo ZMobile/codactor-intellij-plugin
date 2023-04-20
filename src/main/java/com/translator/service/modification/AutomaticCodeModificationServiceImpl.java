@@ -70,7 +70,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                 DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
-                if (desktopCodeModificationResponseResource.getModificationSuggestions() != null) {
+                if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                     fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getModificationSuggestions());
                     promptContextService.clearPromptContext();
                 } else {
@@ -149,7 +149,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                 DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
-                if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
+                if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
                     fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions());
                     promptContextService.clearPromptContext();
                 } else {
@@ -189,7 +189,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(filePath, code, newLanguage, newFileType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                 DesktopCodeTranslationResponseResource desktopCodeTranslationResponseResource = codeModificationService.getTranslatedCode(desktopCodeTranslationRequestResource);
-                if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null) {
+                if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null && desktopCodeTranslationResponseResource.getModificationSuggestions().size() > 0) {
                     VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
                     assert virtualFile != null;
                     String fileName = virtualFile.getName();

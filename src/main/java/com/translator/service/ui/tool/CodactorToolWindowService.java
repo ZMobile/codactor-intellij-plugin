@@ -5,6 +5,10 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
+import com.translator.view.viewer.HistoricalModificationListViewer;
+import com.translator.view.viewer.InquiryListViewer;
+import com.translator.view.viewer.InquiryViewer;
+import com.translator.view.viewer.ModificationQueueViewer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,4 +31,13 @@ public interface CodactorToolWindowService {
     void setModificationQueueViewerToolWindowId(String modificationQueueViewerToolWindowId);
 
     void setInquiryViewerToolWindowId(String inquiryViewerToolWindowId);
+
+
+    InquiryViewer getInquiryViewer();
+
+    InquiryListViewer getInquiryListViewer();
+
+    HistoricalModificationListViewer getHistoricalModificationListViewer();
+
+    ModificationQueueViewer getModificationQueueViewer();
 }

@@ -1,5 +1,6 @@
 package com.translator.view.renderer;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.translator.view.viewer.InquiryChatViewer;
 
 import javax.swing.*;
@@ -32,17 +33,19 @@ public class InquiryChatRenderer extends JPanel implements ListCellRenderer<Inqu
     @Override
     public Component getListCellRendererComponent(JList<? extends InquiryChatViewer> list, InquiryChatViewer value, int index, boolean isSelected, boolean cellHasFocus) {
         removeAll();
-        add(value, BorderLayout.CENTER);
-        if (isSelected) {
-            setBackground(list.getSelectionBackground());
-            setForeground(list.getSelectionForeground());
-        } else {
-            setBackground(list.getBackground());
-            setForeground(list.getForeground());
-        }
-        setEnabled(list.isEnabled());
-        setFont(list.getFont());
-        setOpaque(true);
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            add(value, BorderLayout.CENTER);
+            if (isSelected) {
+                setBackground(list.getSelectionBackground());
+                setForeground(list.getSelectionForeground());
+            } else {
+                setBackground(list.getBackground());
+                setForeground(list.getForeground());
+            }
+            setEnabled(list.isEnabled());
+            setFont(list.getFont());
+            setOpaque(true);
+        });
         return this;
     }
 }

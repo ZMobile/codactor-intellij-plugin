@@ -16,6 +16,7 @@ import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
 import com.translator.service.file.FileOpenerService;
 import com.translator.service.file.SelectedFileFetcherService;
+import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
@@ -55,13 +56,11 @@ public class CodeTranslatorViewConfig extends AbstractModule {
 
     @Singleton
     @Provides
-    InquiryViewer inquiryViewer(Project project,
-                                OpenAiApiKeyService openAiApiKeyService,
-                                OpenAiModelService openAiModelService,
+    public InquiryViewer inquiryViewer(Project project,
                                 CodactorToolWindowService codactorToolWindowService,
                                 CodeFileGeneratorService codeFileGeneratorService,
-                                InquiryDao inquiryDao) {
-        return new InquiryViewer(project, openAiApiKeyService, openAiModelService, codactorToolWindowService, codeFileGeneratorService, inquiryDao);
+                                InquiryService inquiryService) {
+        return new InquiryViewer(project, codactorToolWindowService, codeFileGeneratorService, inquiryService);
     }
 
     @Singleton
@@ -94,9 +93,12 @@ public class CodeTranslatorViewConfig extends AbstractModule {
     @Provides
     public CodactorConsole codactorConsole(Project project,
                                            PromptContextService promptContextService,
+                                           CodactorToolWindowService codactorToolWindowService,
                                            SelectedFileFetcherService selectedFileFetcherService,
                                            CodeSnippetExtractorService codeSnippetExtractorService,
-                                           AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory) {
-        return new CodactorConsole(project, promptContextService, selectedFileFetcherService, codeSnippetExtractorService, automaticCodeModificationServiceFactory);
+                                           InquiryService inquiryService,
+                                           AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory,
+                                           PromptContextBuilderFactory promptContextBuilderFactory) {
+        return new CodactorConsole(project, promptContextService, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, automaticCodeModificationServiceFactory, promptContextBuilderFactory);
     }
 }

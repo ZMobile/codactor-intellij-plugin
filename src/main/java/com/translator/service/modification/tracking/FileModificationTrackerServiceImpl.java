@@ -63,7 +63,6 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             /*JOptionPane.showMessageDialog(display, "Can't modify code that is already being modified", "Error",
                     JOptionPane.ERROR_MESSAGE);*/
         }
-        FileModification fileModification = fileModificationTracker.getModification(fileModificationId);
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         guardedBlockService.addFileModificationGuardedBlock(fileModificationId, startIndex, endIndex);
         codeHighlighterService.highlightTextArea(fileModificationTracker);
@@ -168,6 +167,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             return;
         }
         guardedBlockService.removeFileModificationGuardedBlock(modificationId);
+        codeHighlighterService.highlightTextArea(fileModificationTracker);
         fileModificationTracker.addModificationUpdate(new FileModificationUpdate(modificationId, modification));
         if (fileModificationTracker.getModifications().isEmpty()) {
             activeModificationFiles.values().remove(fileModificationTracker);
@@ -181,6 +181,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                 .findFirst()
                 .orElseThrow();
         guardedBlockService.removeFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId());
+        codeHighlighterService.highlightTextArea(fileModificationSuggestionModificationTracker);
         fileModificationSuggestionModificationTracker.addModificationUpdate(new FileModificationUpdate(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId(), fileModificationSuggestionModificationRecord.getEditedCode().trim()));
         if (fileModificationSuggestionModificationTracker.getModifications().isEmpty()) {
             activeModificationSuggestionModifications.values().remove(fileModificationSuggestionModificationTracker);
@@ -231,6 +232,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             }
         }
         guardedBlockService.removeFileModificationGuardedBlock(modificationId);
+        codeHighlighterService.highlightTextArea(fileModificationTracker);
         fileModificationTracker.implementModification(modificationId, modification);
         if (fileModificationTracker.getModifications().isEmpty()) {
             activeModificationFiles.values().remove(fileModificationTracker);

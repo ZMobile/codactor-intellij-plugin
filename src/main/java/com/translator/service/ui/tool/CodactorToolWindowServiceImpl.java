@@ -99,5 +99,25 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
     public void setInquiryViewerToolWindowId(String inquiryViewerToolWindowId) {
         this.inquiryViewerToolWindowId = inquiryViewerToolWindowId;
     }
+
+    @Override
+    public InquiryViewer getInquiryViewer() {
+        return inquiryViewer;
+    }
+
+    @Override
+    public InquiryListViewer getInquiryListViewer() {
+        return inquiryListViewer;
+    }
+
+    @Override
+    public HistoricalModificationListViewer getHistoricalModificationListViewer() {
+        return historicalModificationListViewer;
+    }
+
+    @Override
+    public ModificationQueueViewer getModificationQueueViewer() {
+        return modificationQueueViewer;
+    }
 }
 

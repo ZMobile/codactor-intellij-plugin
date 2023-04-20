@@ -1,5 +1,6 @@
 package com.translator.view.console;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.fileEditor.ex.FileEditorWithProvider;
@@ -12,17 +13,22 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
-import com.translator.listener.OpenFilesListener;
+import com.translator.PromptContextBuilder;
+import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.file.FileItem;
 import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
+import com.translator.model.inquiry.Inquiry;
 import com.translator.model.modification.ModificationType;
 import com.translator.service.code.CodeSnippetExtractorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
 import com.translator.service.file.SelectedFileFetcherService;
+import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.AutomaticCodeModificationService;
-import com.translator.view.window.FileChooserWindow;
+import com.translator.service.ui.tool.CodactorToolWindowService;
+import com.translator.view.factory.PromptContextBuilderFactory;
+import com.translator.view.viewer.InquiryViewer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
@@ -50,22 +56,31 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private JButton advancedButton;
     private JLabel hiddenLabel;
     private PromptContextService promptContextService;
+    private CodactorToolWindowService codactorToolWindowService;
     private SelectedFileFetcherService selectedFileFetcherService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
     private AutomaticCodeModificationService automaticCodeModificationService;
+    private InquiryService inquiryService;
+    private PromptContextBuilderFactory promptContextBuilderFactory;
 
     @Inject
     public CodactorConsole(Project project,
                            PromptContextService promptContextService,
+                           CodactorToolWindowService codactorToolWindowService,
                            SelectedFileFetcherService selectedFileFetcherService,
                            CodeSnippetExtractorService codeSnippetExtractorService,
-                           AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory) {
+                           InquiryService inquiryService,
+                           AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory,
+                           PromptContextBuilderFactory promptContextBuilderFactory) {
         super(new BorderLayout());
         this.project = project;
         this.promptContextService = promptContextService;
+        this.codactorToolWindowService = codactorToolWindowService;
         this.selectedFileFetcherService = selectedFileFetcherService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
+        this.inquiryService = inquiryService;
         this.automaticCodeModificationService = automaticCodeModificationServiceFactory.create(promptContextService);
+        this.promptContextBuilderFactory = promptContextBuilderFactory;
         textArea = new JBTextArea();
         textArea.setBackground(Color.BLACK);
         textArea.setForeground(Color.WHITE);
@@ -86,6 +101,12 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         modificationTypeComboBox = new ComboBox<>(new String[]{"Modify", "Fix", "Create", "Create Files", "Inquire", "Modify Selected", "Fix Selected", "Inquire Selected"});
         jLabel1 = new JLabel();
         advancedButton = new JButton("(Advanced) Add Context");
+        advancedButton.addActionListener(e -> {
+            ApplicationManager.getApplication().invokeLater(() -> {
+                PromptContextBuilder promptContextBuilder = promptContextBuilderFactory.create(promptContextService);
+                promptContextBuilder.show();
+            });
+        });
         hiddenLabel = new JLabel();
         hiddenLabel.setVisible(false);
         button1.setText("Modify");
@@ -247,13 +268,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire")) {
                     if (!textArea.getText().isEmpty()) {
-                        /*String filePath;
-                        if (currentEditingFile == null) {
-                            filePath = null;
-                        } else {
-                            filePath = currentEditingFile.getAbsolutePath();
-                        }
-                        String code = display.getText();
+                        String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                         String question = textArea.getText();
                         List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
                         List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
@@ -262,59 +277,23 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                                 priorContext.add(new HistoricalContextObjectHolder(data));
                             }
                         }
-                        Inquiry temporaryInquiry = new Inquiry(null, filePath, code, question, priorContext);
-                        inquiryViewer.updateInquiryContents(temporaryInquiry);
-                        inquiryViewer.setLoadingChat(true);
-                        splitPaneService.expandRightPanel(1, inquiryViewer);
-                        LimitedSwingWorker worker = new LimitedSwingWorker(aiTaskExecutor) {
-                            @Override
-                            protected Void doInBackground() {
-                                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                                Inquiry inquiry = inquiryDao.createInquiry(filePath, code, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                                inquiryViewer.updateInquiryContents(inquiry);
-                                inquiryViewer.setLoadingChat(false);
-                                splitPaneService.expandRightPanel(1, inquiryViewer);
-                                promptContextService.clearPromptContext();
-                                return null;
-                            }
-                        };
-                        worker.execute();*/
+                        inquiryService.createInquiry(fileItem.getFilePath(), code, question, priorContext);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire Selected")) {
-                    /*if (display.getSelectedText() != null && !display.getSelectedText().isEmpty() && !textArea.getText().isEmpty()) {
-                        String filePath;
-                        if (currentEditingFile == null) {
-                            filePath = null;
-                        } else {
-                            filePath = currentEditingFile.getAbsolutePath();
+                    SelectionModel selectionModel = codeSnippetExtractorService.getSelectedText(fileItem.getFilePath());
+                    String code = null;
+                    if (selectionModel != null) {
+                        code = selectionModel.getSelectedText();
+                    }
+                    String question = textArea.getText();
+                    List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+                    List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
+                    if (priorContextData != null) {
+                        for (HistoricalContextObjectDataHolder data : priorContextData) {
+                            priorContext.add(new HistoricalContextObjectHolder(data));
                         }
-                        String code = display.getSelectedText();
-                        String question = textArea.getText();
-                        List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-                        List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
-                        if (priorContextData != null) {
-                            for (HistoricalContextObjectDataHolder data : priorContextData) {
-                                priorContext.add(new HistoricalContextObjectHolder(data));
-                            }
-                        }
-                        Inquiry temporaryInquiry = new Inquiry(null, filePath, code, question, priorContext);
-                        inquiryViewer.updateInquiryContents(temporaryInquiry);
-                        inquiryViewer.setLoadingChat(true);
-                        splitPaneService.expandRightPanel(1, inquiryViewer);
-                        LimitedSwingWorker worker = new LimitedSwingWorker(aiTaskExecutor) {
-                            @Override
-                            protected Void doInBackground() {
-                                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                                Inquiry inquiry = inquiryDao.createInquiry(filePath, code, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                                inquiryViewer.updateInquiryContents(inquiry);
-                                inquiryViewer.setLoadingChat(false);
-                                splitPaneService.expandRightPanel(1, inquiryViewer);
-                                promptContextService.clearPromptContext();
-                                return null;
-                            }
-                        };
-                        worker.execute();
-                    }*/
+                    }
+                    inquiryService.createInquiry(fileItem.getFilePath(), code, question, priorContext);
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Translate")) {
                     /*if (!display.getText().isEmpty()) {
                         String filePath;
@@ -387,24 +366,32 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         });
 
         button2.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    Robot robot = new Robot();
-                    textArea.requestFocusInWindow();
-                    textArea.setText("");
-                    // Simulate a key press event for the CNTRL key.
-                    robot.keyPress(KeyEvent.VK_CONTROL);
-                    robot.keyRelease(KeyEvent.VK_CONTROL);
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        try {
+            Robot robot = new Robot();
 
-                    // Simulate another key press event for the CNTRL key.
-                    robot.keyPress(KeyEvent.VK_CONTROL);
-                    robot.keyRelease(KeyEvent.VK_CONTROL);
-                } catch (AWTException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
+            textArea.requestFocusInWindow();
+            textArea.setText("");
+
+            // Simulate a key press event for the CNTRL key.
+            robot.keyPress(KeyEvent.VK_CONTROL);
+            robot.keyRelease(KeyEvent.VK_CONTROL);
+
+            // Simulate another key press event for the CNTRL key.
+            robot.keyPress(KeyEvent.VK_CONTROL);
+            robot.keyRelease(KeyEvent.VK_CONTROL);
+
+            // print message to console
+            System.out.println("Wohoo!");
+
+            // indicate end of code execution
+            // with a "Done" message
+        } catch (AWTException ex) {
+            ex.printStackTrace();
+        }
+    }
+});
     }
 
     private void updateLabelAndButton(String selected) {
