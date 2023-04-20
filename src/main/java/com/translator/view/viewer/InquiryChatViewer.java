@@ -213,11 +213,13 @@ public class InquiryChatViewer extends JPanel {
         gbc.weighty = weighty;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        try {
-            add(component, gbc);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            try {
+                add(component, gbc);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public void componentResized() {

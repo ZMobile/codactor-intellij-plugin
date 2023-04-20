@@ -1,6 +1,7 @@
 package com.translator.view.viewer.context;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.model.api.translator.history.DesktopCodeModificationHistoryResponseResource;
@@ -24,7 +25,7 @@ public class HistoricalContextModificationListViewer extends JPanel {
     private JBScrollPane modificationListScrollPane;
     private JToolBar jToolBar2;
     private JToolBar jToolBar3;
-    private JButton previousModificationsLabel;
+    private JBLabel previousModificationsLabel;
     private JButton addButton;
     private CodeModificationHistoryDao codeModificationHistoryDao;
     private HistoricalContextObjectViewer historicalContextObjectViewer;
@@ -47,9 +48,7 @@ public class HistoricalContextModificationListViewer extends JPanel {
         jToolBar2.setFloatable(false);
         jToolBar2.setBorderPainted(false);
 
-        previousModificationsLabel = new JButton("Previous Modifications");
-        previousModificationsLabel.setFocusable(false);
-        previousModificationsLabel.setEnabled(false);
+        previousModificationsLabel = new JBLabel("Previous Modifications");
         previousModificationsLabel.setHorizontalTextPosition(SwingConstants.CENTER);
         previousModificationsLabel.setVerticalTextPosition(SwingConstants.BOTTOM);
         previousModificationsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -60,7 +59,7 @@ public class HistoricalContextModificationListViewer extends JPanel {
         jToolBar3.setBorderPainted(false);
 
         addButton = new JButton("+");
-        addButton.setPreferredSize(new Dimension(50, 22));
+        addButton.setPreferredSize(new Dimension(50, 32));
         addButton.setFocusable(false);
         addButton.setHorizontalTextPosition(SwingConstants.CENTER);
         addButton.setVerticalTextPosition(SwingConstants.BOTTOM);

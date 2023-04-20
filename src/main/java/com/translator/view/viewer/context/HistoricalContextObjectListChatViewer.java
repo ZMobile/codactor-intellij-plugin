@@ -1,6 +1,7 @@
 package com.translator.view.viewer.context;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.model.history.HistoricalContextInquiryHolder;
@@ -14,6 +15,7 @@ import com.translator.model.inquiry.InquiryChatType;
 import com.translator.model.modification.FileModificationSuggestionModificationRecord;
 import com.translator.model.modification.FileModificationSuggestionRecord;
 import com.translator.model.modification.RecordType;
+import com.translator.service.context.PromptContextService;
 import com.translator.view.menu.TextAreaWindow;
 import com.translator.view.panel.FixedHeightPanel;
 import com.translator.view.renderer.InquiryChatRenderer;
@@ -42,22 +44,25 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
     private List<HistoricalContextObjectHolder> historicalContextObjectHolderList;
     private ContextQueryDao contextQueryDao;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
+    private PromptContextService promptContextService;
     private HistoricalContextObjectListViewer historicalContextObjectListViewer;
     private JList<InquiryChatViewer> jList1;
     private JToolBar jToolBar2;
     private JToolBar jToolBar3;
     private JBScrollPane jBScrollPane1;
-    private JButton contextChatViewerLabel;
+    private JBLabel contextChatViewerLabel;
     private JButton cancelButton;
     private JButton saveChangesButton;
     private int selectedChat;
 
     public HistoricalContextObjectListChatViewer(ContextQueryDao contextQueryDao,
+                                                 PromptContextService promptContextService,
                                                  HistoricalContextObjectListViewer historicalContextObjectListViewer) {
         this.textAreaHeightCalculatorService = new TextAreaHeightCalculatorServiceImpl();
         this.contextQueryDao = contextQueryDao;
         this.selectedChat = -1;
         this.historicalContextObjectHolderList = new ArrayList<>();
+        this.promptContextService = promptContextService;
         this.historicalContextObjectListViewer = historicalContextObjectListViewer;
         initComponents();
     }
@@ -133,9 +138,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         jToolBar2.setFloatable(false);
         jToolBar2.setBorderPainted(false);
 
-        contextChatViewerLabel = new JButton("Assembled Context Viewer");
-        contextChatViewerLabel.setEnabled(false);
-        contextChatViewerLabel.setFocusable(false);
+        contextChatViewerLabel = new JBLabel("Assembled Context Viewer");
         contextChatViewerLabel.setHorizontalTextPosition(SwingConstants.CENTER);
         contextChatViewerLabel.setVerticalTextPosition(SwingConstants.BOTTOM);
         contextChatViewerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -145,25 +148,20 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         jToolBar3.setFloatable(false);
         jToolBar3.setBorderPainted(false);
 
-        cancelButton = new JButton(" Cancel ");
-        //cancelButton.setPreferredSize(new Dimension(50, 22));
-        cancelButton.setFocusable(false);
+        cancelButton = new JButton("Cancel");
+        //cancelButton.setPreferredSize(new Dimension(cancelButton.getWidth(), 32));
+        cancelButton.setEnabled(true);
         cancelButton.setHorizontalTextPosition(SwingConstants.CENTER);
         cancelButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         cancelButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         jToolBar3.add(cancelButton);
 
-        saveChangesButton = new JButton(" Apply Changes ");
-        //saveChangesButton.setPreferredSize(new Dimension(50, 22));
-        saveChangesButton.setFocusable(false);
+        saveChangesButton = new JButton("Apply Changes");
+        //saveChangesButton.setPreferredSize(new Dimension(saveChangesButton.getWidth(), 32));
+        saveChangesButton.setEnabled(true);
         saveChangesButton.setHorizontalTextPosition(SwingConstants.CENTER);
         saveChangesButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         saveChangesButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        saveChangesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            }
-        });
         jToolBar3.add(saveChangesButton);
 
         GroupLayout layout = new GroupLayout(this);

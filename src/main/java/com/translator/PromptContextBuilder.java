@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Splitter;
 import com.intellij.ui.JBColor;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
@@ -53,6 +54,7 @@ public class PromptContextBuilder extends JDialog {
 
         this.contextQueryDao = contextQueryDao;
         this.inquiryDao = inquiryDao;
+        this.promptContextService = promptContextService;
         this.historicalContextObjectViewer = new HistoricalContextObjectViewer(contextQueryDao);
         this.historicalContextObjectListViewer = new HistoricalContextObjectListViewer(historicalContextObjectViewer);
         this.historicalContextModificationListViewer = new HistoricalContextModificationListViewer(historicalContextObjectViewer, historicalContextObjectListViewer, codeModificationHistoryDao);
@@ -76,7 +78,7 @@ public class PromptContextBuilder extends JDialog {
         historicalContextObjectViewer.setHistoricalContextModificationListViewer(historicalContextModificationListViewer);
         historicalContextObjectViewer.setHistoricalContextInquiryListViewer(historicalContextInquiryListViewer);
         historicalContextObjectViewer.setHistoricalContextObjectListViewer(historicalContextObjectListViewer);
-        historicalContextObjectListChatViewer = new HistoricalContextObjectListChatViewer(contextQueryDao, historicalContextObjectListViewer);
+        historicalContextObjectListChatViewer = new HistoricalContextObjectListChatViewer(contextQueryDao, promptContextService, historicalContextObjectListViewer);
         historicalContextObjectListViewer.setHistoricalContextObjectListChatViewer(historicalContextObjectListChatViewer);
     }
 
@@ -115,13 +117,6 @@ public class PromptContextBuilder extends JDialog {
         jBList11 = new JBList<>();
         // Create a GroupLayout for the spliter2 panel
         GroupLayout secondarySplitterSeparatingLeftViewerFromHistoryHoldersLayout = new GroupLayout(secondarySplitterSeparatingLeftViewerFromHistoryHolders);
-        this.historicalContextObjectListChatViewer.getCancelButton().addActionListener(e -> {
-            dispose();
-        });
-        this.historicalContextObjectListChatViewer.getSaveChangesButton().addActionListener(e -> {
-            promptContextService.savePromptContext(historicalContextObjectListViewer.getContextObjectArrayList());
-            dispose();
-        });
         jBList3.setModel(new AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
@@ -313,6 +308,15 @@ public class PromptContextBuilder extends JDialog {
         this.inquiryFileModificationSplitter.setSecondComponent(historicalContextInquiryListViewer);
         this.secondarySplitterSeparatingRightViewerFromCompiledContextHolder.setFirstComponent(historicalContextObjectListViewer);
         this.secondarySplitterSeparatingRightViewerFromCompiledContextHolder.setSecondComponent(historicalContextObjectListChatViewer);
+        this.historicalContextObjectListChatViewer.getCancelButton().addActionListener(e -> {
+            dispose();
+        });
+        this.historicalContextObjectListChatViewer.getSaveChangesButton().addActionListener(e -> {
+            System.out.println("Saving changes: " + promptContextService);
+            System.out.println("Saving changes: " + historicalContextObjectListViewer.getContextObjectArrayList());
+            promptContextService.savePromptContext(historicalContextObjectListViewer.getContextObjectArrayList());
+            dispose();
+        });
         setContentPane(mainPanel);
         pack();
     }

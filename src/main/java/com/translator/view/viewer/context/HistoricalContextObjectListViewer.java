@@ -1,5 +1,6 @@
 package com.translator.view.viewer.context;
 
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import com.translator.view.renderer.HistoricalContextObjectHolderRenderer;
@@ -18,7 +19,7 @@ public class HistoricalContextObjectListViewer extends JPanel {
     private JBScrollPane contextObjectListScrollPane;
     private JToolBar jToolBar2;
     private JToolBar jToolBar3;
-    private JButton contextListLabel;
+    private JBLabel contextListLabel;
     private JButton removeButton;
     private HistoricalContextModificationListViewer historicalContextModificationListViewer;
     private HistoricalContextInquiryListViewer historicalContextInquiryListViewer;
@@ -36,26 +37,18 @@ public class HistoricalContextObjectListViewer extends JPanel {
         jToolBar2.setFloatable(false);
         jToolBar2.setBorderPainted(false);
 
-        contextListLabel = new JButton("Assembled Context");
-        contextListLabel.setFocusable(false);
-        contextListLabel.setEnabled(false);
+        contextListLabel = new JBLabel("Assembled Context");
         contextListLabel.setHorizontalTextPosition(SwingConstants.CENTER);
         contextListLabel.setVerticalTextPosition(SwingConstants.BOTTOM);
         contextListLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         jToolBar2.add(contextListLabel);
-
-        contextListLabel.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            }
-        });
 
         jToolBar3= new JToolBar();
         jToolBar3.setFloatable(false);
         jToolBar3.setBorderPainted(false);
 
         removeButton = new JButton("-");
-        removeButton.setPreferredSize(new Dimension(50, 22));
+        removeButton.setPreferredSize(new Dimension(50, 32));
         removeButton.setFocusable(false);
         removeButton.setHorizontalTextPosition(SwingConstants.CENTER);
         removeButton.setVerticalTextPosition(SwingConstants.BOTTOM);

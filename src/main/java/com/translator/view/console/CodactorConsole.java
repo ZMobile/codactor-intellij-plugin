@@ -103,12 +103,14 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         advancedButton = new JButton("(Advanced) Add Context");
         advancedButton.addActionListener(e -> {
             //ApplicationManager.getApplication().invokeLater(() -> {
+                promptContextService.setStatusLabel(hiddenLabel);
                 PromptContextBuilder promptContextBuilder = promptContextBuilderFactory.create(promptContextService);
                 promptContextBuilder.show();
             //});
         });
         hiddenLabel = new JLabel();
         hiddenLabel.setVisible(false);
+
         button1.setText("Modify");
         jLabel1.setText(" Implement the following modification(s) to this code file:");
         /*modelComboBox.addItemListener(e -> {

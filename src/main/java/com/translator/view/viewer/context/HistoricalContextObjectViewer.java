@@ -6,6 +6,7 @@ import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.HighlighterTargetArea;
 import com.intellij.openapi.editor.markup.TextAttributes;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.ContextQueryDao;
@@ -45,7 +46,7 @@ public class HistoricalContextObjectViewer extends JPanel {
     private JToolBar jToolBar2;
     private JToolBar jToolBar3;
     private JBScrollPane jBScrollPane1;
-    private JButton viewerLabel;
+    private JBLabel viewerLabel;
     private JButton addButton;
     private HistoricalContextModificationListViewer historicalContextModificationListViewer;
     private HistoricalContextInquiryListViewer historicalContextInquiryListViewer;
@@ -64,14 +65,7 @@ public class HistoricalContextObjectViewer extends JPanel {
 
         jList1 = new JBList<>();
         //jList1.setMaximumSize(new Dimension(getWidth(), Integer.MAX_VALUE));
-        jList1.setModel(new AbstractListModel<InquiryChatViewer>() {
-            InquiryChatViewer[] strings = { new InquiryChatViewer(new InquiryChat(null, null, null, null, "User", "testo", "java")),
-                    new InquiryChatViewer(new InquiryChat(null, null, null, null, "User", "testo", "java")),
-                            new InquiryChatViewer(new InquiryChat(null, null, null, null, "User",  "testo", "java"))
-            };
-            public int getSize() { return strings.length; }
-            public InquiryChatViewer getElementAt(int i) { return strings[i]; }
-        });
+        jList1.setModel(new DefaultListModel<>());
         jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jList1.setCellRenderer(new InquiryChatRenderer());
         jList1.addListSelectionListener(new ListSelectionListener() {
@@ -153,9 +147,7 @@ public class HistoricalContextObjectViewer extends JPanel {
         jToolBar2.setFloatable(false);
         jToolBar2.setBorderPainted(false);
 
-        viewerLabel = new JButton("Viewer");
-        viewerLabel.setEnabled(false);
-        viewerLabel.setFocusable(false);
+        viewerLabel = new JBLabel("Viewer");
         viewerLabel.setHorizontalTextPosition(SwingConstants.CENTER);
         viewerLabel.setVerticalTextPosition(SwingConstants.BOTTOM);
         viewerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -166,7 +158,7 @@ public class HistoricalContextObjectViewer extends JPanel {
         jToolBar3.setBorderPainted(false);
 
         addButton = new JButton("+");
-        addButton.setPreferredSize(new Dimension(50, 22));
+        addButton.setPreferredSize(new Dimension(50, 32));
         addButton.setFocusable(false);
         addButton.setHorizontalTextPosition(SwingConstants.CENTER);
         addButton.setVerticalTextPosition(SwingConstants.BOTTOM);

@@ -1,6 +1,7 @@
 package com.translator.view.viewer.context;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.history.data.HistoricalContextInquiryDataHolder;
@@ -24,7 +25,7 @@ public class HistoricalContextInquiryListViewer extends JPanel {
     private JBScrollPane inquiryListScrollPane;
     private JToolBar jToolBar2;
     private JToolBar jToolBar3;
-    private JButton previousInquiriesLabel;
+    private JBLabel previousInquiriesLabel;
     private JButton addButton;
     private InquiryDao inquiryDao;
     private HistoricalContextObjectViewer historicalContextObjectViewer;
@@ -47,9 +48,7 @@ public class HistoricalContextInquiryListViewer extends JPanel {
         jToolBar2.setFloatable(false);
         jToolBar2.setBorderPainted(false);
 
-        previousInquiriesLabel = new JButton("Previous Inquiries");
-        previousInquiriesLabel.setFocusable(false);
-        previousInquiriesLabel.setEnabled(false);
+        previousInquiriesLabel = new JBLabel("Previous Inquiries");
         previousInquiriesLabel.setHorizontalTextPosition(SwingConstants.CENTER);
         previousInquiriesLabel.setVerticalTextPosition(SwingConstants.BOTTOM);
         previousInquiriesLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -60,7 +59,7 @@ public class HistoricalContextInquiryListViewer extends JPanel {
         jToolBar3.setBorderPainted(false);
 
         addButton = new JButton("+");
-        addButton.setPreferredSize(new Dimension(50, 22));
+        addButton.setPreferredSize(new Dimension(50, 32));
         addButton.setFocusable(false);
         addButton.setHorizontalTextPosition(SwingConstants.CENTER);
         addButton.setVerticalTextPosition(SwingConstants.BOTTOM);
