@@ -38,6 +38,9 @@ public class InquiryChatViewer extends JPanel {
     public InquiryChatViewer(String filePath, String message, String headerString, InquiryChatType inquiryChatType) {
         this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
         this.message = message;
+        if (inquiryChatType == InquiryChatType.CODE_SNIPPET && !message.startsWith("```")) {
+            this.message = "```" + message.trim() + "```";
+        }
         String likelyCodingLanguage;
         if (filePath == null) {
             likelyCodingLanguage = gptToLanguageTransformerService.convert(message);
@@ -65,14 +68,20 @@ public class InquiryChatViewer extends JPanel {
         jToolBar1.add(jLabel1);
         addComponent(jToolBar1, 0, 0);
 
-        List<Component> components = createComponentsFromMessage(message);
-        int gridy = 1;
-        for (Component component : components) {
-            addComponent(component, gridy++, 0);
-        }
-        if (inquiryChat.getLikelyCodeLanguage() == null) {
-            inquiryChat.setLikelyCodeLanguage(gptToLanguageTransformerService.convert(message));
-        }
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            try {
+                List<Component> components = createComponentsFromMessage(message);
+                int gridy = 1;
+                for (Component component : components) {
+                    addComponent(component, gridy++, 0);
+                }
+                if (inquiryChat.getLikelyCodeLanguage() == null) {
+                    inquiryChat.setLikelyCodeLanguage(gptToLanguageTransformerService.convert(message));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public InquiryChatViewer(InquiryChat inquiryChat, String headerString) {
@@ -80,7 +89,9 @@ public class InquiryChatViewer extends JPanel {
         this.inquiryChat = inquiryChat;
         this.inquiryChatType = inquiryChat.getInquiryChatType();
         setLayout(new GridBagLayout());
-
+        if (inquiryChatType == InquiryChatType.CODE_SNIPPET && !inquiryChat.getMessage().startsWith("```")) {
+            inquiryChat.setMessage("```" + inquiryChat.getMessage().trim() + "```");
+        }
         jToolBar1 = new JToolBar();
         jToolBar1.setFloatable(false);
         jToolBar1.setBorderPainted(false);
@@ -96,8 +107,10 @@ public class InquiryChatViewer extends JPanel {
             headerString += " (" + numerator + "/" + denominator + ")";
         }
         jLabel1.setText(headerString);
+
         jToolBar1.add(jLabel1);
         addComponent(jToolBar1, 0, 0);
+
         if (inquiryChat.getMessage() != null) {
             List<Component> components = createComponentsFromMessage(inquiryChat.getMessage());
             int gridy = 1;
@@ -156,31 +169,26 @@ public class InquiryChatViewer extends JPanel {
 
     private FixedHeightPanel createCodeEditor(String code) {
         final FixedHeightPanel[] fixedHeightPanel = new FixedHeightPanel[1];
+        EditorFactory editorFactory = EditorFactory.getInstance();
+        if (inquiryChat.getLikelyCodeLanguage() == null) {
+            inquiryChat.setLikelyCodeLanguage("text");
+        }
+        String extension = gptToLanguageTransformerService.getExtensionFromLanguage(inquiryChat.getLikelyCodeLanguage());
+        if (extension == null) {
+            extension = "txt";
+        }
+        FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(extension);
         ApplicationManager.getApplication().invokeAndWait(() -> {
-            try {
-                EditorFactory editorFactory = EditorFactory.getInstance();
-                if (inquiryChat.getLikelyCodeLanguage() == null) {
-                    inquiryChat.setLikelyCodeLanguage("text");
-                }
-                String extension = gptToLanguageTransformerService.getExtensionFromLanguage(inquiryChat.getLikelyCodeLanguage());
-                System.out.println("Extension: " + extension);
-                if (extension == null) {
-                    extension = "txt";
-                }
-                FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(extension);
-                Document document = editorFactory.createDocument(code);
-                Editor editor = editorFactory.createEditor(document, null);
-                EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
-                ((EditorEx) editor).setHighlighter(editorHighlighter);
-                ((EditorEx) editor).setViewer(true);
-                editor.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, editor.getComponent().getPreferredSize().height));
-                fixedHeightPanel[0] = new FixedHeightPanel(editor);
-                fixedHeightPanel[0].setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
-                fixedHeightPanel[0].add(editor.getComponent());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+            Document document = editorFactory.createDocument(code);
+        Editor editor = editorFactory.createEditor(document, null);
+        EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
+        ((EditorEx) editor).setHighlighter(editorHighlighter);
+        ((EditorEx) editor).setViewer(true);
+        editor.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, editor.getComponent().getPreferredSize().height));
+        fixedHeightPanel[0] = new FixedHeightPanel(editor);
+        fixedHeightPanel[0].setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        fixedHeightPanel[0].add(editor.getComponent());
+    });
         return fixedHeightPanel[0];
     }
 
@@ -205,13 +213,11 @@ public class InquiryChatViewer extends JPanel {
         gbc.weighty = weighty;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        ApplicationManager.getApplication().invokeAndWait(() -> {
-            try {
-                add(component, gbc);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        try {
+            add(component, gbc);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void componentResized() {

@@ -9,9 +9,11 @@ import com.google.inject.name.Named;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Splitter;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
+import com.intellij.util.ui.JBUI;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.dao.inquiry.InquiryDao;
@@ -28,7 +30,7 @@ import java.util.Map;
  *
  * @author zantehays
  */
-public class PromptContextBuilder extends DialogWrapper {
+public class PromptContextBuilder extends JDialog {
     private ContextQueryDao contextQueryDao;
     private InquiryDao inquiryDao;
     private PromptContextService promptContextService;
@@ -42,12 +44,13 @@ public class PromptContextBuilder extends DialogWrapper {
      * Creates new form PromptContextBuilder
      */
     @Inject
-    public PromptContextBuilder(Project project,
-                                ContextQueryDao contextQueryDao,
+    public PromptContextBuilder(ContextQueryDao contextQueryDao,
                                 InquiryDao inquiryDao,
                                 CodeModificationHistoryDao codeModificationHistoryDao,
                                 @Assisted PromptContextService promptContextService) {
-        super(project);
+        setModal(false);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
         this.contextQueryDao = contextQueryDao;
         this.inquiryDao = inquiryDao;
         this.historicalContextObjectViewer = new HistoricalContextObjectViewer(contextQueryDao);
@@ -63,7 +66,6 @@ public class PromptContextBuilder extends DialogWrapper {
         }
         setTitle("Prompt Context Builder");
         initComponents();
-        init();
     }
 
     private void setDependencies() {
@@ -82,6 +84,8 @@ public class PromptContextBuilder extends DialogWrapper {
         jBScrollPane3 = new JBScrollPane();
         jBList3 = new JBList<>();
         mainPanel = new JBPanel();
+        mainPanel.setBackground(JBColor.background());
+        mainPanel.setBorder(JBUI.Borders.empty());
         mainSplitter = new Splitter();
         leftViewerAndHistoryHolderPanel = new JBPanel();
         secondarySplitterSeparatingLeftViewerFromHistoryHolders = new Splitter();
@@ -309,6 +313,7 @@ public class PromptContextBuilder extends DialogWrapper {
         this.inquiryFileModificationSplitter.setSecondComponent(historicalContextInquiryListViewer);
         this.secondarySplitterSeparatingRightViewerFromCompiledContextHolder.setFirstComponent(historicalContextObjectListViewer);
         this.secondarySplitterSeparatingRightViewerFromCompiledContextHolder.setSecondComponent(historicalContextObjectListChatViewer);
+        setContentPane(mainPanel);
         pack();
     }
 
@@ -319,10 +324,7 @@ public class PromptContextBuilder extends DialogWrapper {
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    @Override
-    protected JComponent createCenterPanel() {
-        return mainPanel;
-    }// </editor-fold>//GEN-END:initComponents
+   // </editor-fold>//GEN-END:initComponents
 
     /**
      * @param args the command line arguments

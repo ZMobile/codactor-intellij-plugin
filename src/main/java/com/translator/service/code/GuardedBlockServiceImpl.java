@@ -53,7 +53,6 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
     }
 
     public void removeFileModificationGuardedBlock(String fileModificationId) {
-        System.out.println("Removing guarded block for file modification: " + fileModificationId);
         RangeMarker guardedBlock = guardedBlocks.get(fileModificationId);
         if (guardedBlock != null) {
             guardedBlocks.remove(fileModificationId);

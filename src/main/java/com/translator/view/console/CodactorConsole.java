@@ -102,10 +102,10 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         jLabel1 = new JLabel();
         advancedButton = new JButton("(Advanced) Add Context");
         advancedButton.addActionListener(e -> {
-            ApplicationManager.getApplication().invokeLater(() -> {
+            //ApplicationManager.getApplication().invokeLater(() -> {
                 PromptContextBuilder promptContextBuilder = promptContextBuilderFactory.create(promptContextService);
                 promptContextBuilder.show();
-            });
+            //});
         });
         hiddenLabel = new JLabel();
         hiddenLabel.setVisible(false);
@@ -381,12 +381,6 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             // Simulate another key press event for the CNTRL key.
             robot.keyPress(KeyEvent.VK_CONTROL);
             robot.keyRelease(KeyEvent.VK_CONTROL);
-
-            // print message to console
-            System.out.println("Wohoo!");
-
-            // indicate end of code execution
-            // with a "Done" message
         } catch (AWTException ex) {
             ex.printStackTrace();
         }

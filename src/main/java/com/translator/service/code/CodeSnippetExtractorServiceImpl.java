@@ -77,7 +77,6 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
             // Do something with the selected text
             return editor.getSelectionModel();
         } else {
-            System.out.println("Editor not found");
             return null;
         }
     }

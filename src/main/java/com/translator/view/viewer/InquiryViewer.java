@@ -608,7 +608,6 @@ public class InquiryViewer extends JPanel {
         for (int i = 0; i < model.size(); i++) {
             InquiryChatViewer chatViewer = model.getElementAt(i);
             //chatViewer.setSize(Integer.MAX_VALUE, chatViewer.getHeight());
-            System.out.println("Component testo: " + chatViewer.getComponents().length);
             for (Component component : chatViewer.getComponents()) {
                 if (component instanceof JBTextArea) {
                     JBTextArea chatDisplay = (JBTextArea) component;
@@ -634,6 +633,7 @@ public class InquiryViewer extends JPanel {
         jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, totalHeight));
         jList1.getParent().addComponentListener(componentListener);
         jList1.setModel(model);
+        jBScrollPane1.setViewportView(jList1);
         JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
         vertical.setValue(vertical.getMaximum() - vertical.getVisibleAmount());
     }

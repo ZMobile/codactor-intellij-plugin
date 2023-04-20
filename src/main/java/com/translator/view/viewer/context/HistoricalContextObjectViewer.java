@@ -1,6 +1,12 @@
 package com.translator.view.viewer.context;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.markup.EffectType;
+import com.intellij.openapi.editor.markup.HighlighterLayer;
+import com.intellij.openapi.editor.markup.HighlighterTargetArea;
+import com.intellij.openapi.editor.markup.TextAttributes;
+import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.model.history.HistoricalContextObjectHolder;
@@ -9,6 +15,7 @@ import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.inquiry.InquiryChatType;
 import com.translator.view.menu.TextAreaWindow;
+import com.translator.view.panel.FixedHeightPanel;
 import com.translator.view.renderer.InquiryChatRenderer;
 import com.translator.view.viewer.InquiryChatViewer;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
@@ -34,7 +41,7 @@ public class HistoricalContextObjectViewer extends JPanel {
     private HistoricalContextObjectHolder historicalContextObjectHolder;
     private ContextQueryDao contextQueryDao;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
-    private JList<InquiryChatViewer> jList1;
+    private JBList<InquiryChatViewer> jList1;
     private JToolBar jToolBar2;
     private JToolBar jToolBar3;
     private JBScrollPane jBScrollPane1;
@@ -55,9 +62,16 @@ public class HistoricalContextObjectViewer extends JPanel {
 
     private void initComponents() {
 
-        jList1 = new JList<>();
+        jList1 = new JBList<>();
         //jList1.setMaximumSize(new Dimension(getWidth(), Integer.MAX_VALUE));
-        jList1.setModel(new DefaultListModel<>());
+        jList1.setModel(new AbstractListModel<InquiryChatViewer>() {
+            InquiryChatViewer[] strings = { new InquiryChatViewer(new InquiryChat(null, null, null, null, "User", "testo", "java")),
+                    new InquiryChatViewer(new InquiryChat(null, null, null, null, "User", "testo", "java")),
+                            new InquiryChatViewer(new InquiryChat(null, null, null, null, "User",  "testo", "java"))
+            };
+            public int getSize() { return strings.length; }
+            public InquiryChatViewer getElementAt(int i) { return strings[i]; }
+        });
         jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jList1.setCellRenderer(new InquiryChatRenderer());
         jList1.addListSelectionListener(new ListSelectionListener() {
@@ -69,24 +83,37 @@ public class HistoricalContextObjectViewer extends JPanel {
                         return;
                     }
                     selectedChat = selectedIndex;
-                    InquiryChatViewer selectedInquiryChatViewer = jList1.getModel().getElementAt(selectedIndex);
-                    selectedInquiryChatViewer.setBackground(Color.decode("#228B22"));
-                    JBTextArea selectedJBTextArea = (JBTextArea) selectedInquiryChatViewer.getComponents()[1];
                     Color highlightColor = Color.decode("#009688");
-                    //Highlight the whole text are
-                    try {
-                        selectedJBTextArea.getHighlighter().addHighlight(0, selectedJBTextArea.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
-                    } catch (BadLocationException ex) {
-                        throw new RuntimeException(ex);
-                    }
                     for (int i = 0; i < jList1.getModel().getSize(); i++) {
-                        if (i == selectedChat) {
+                        InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(i);
+                        if (i == selectedIndex) {
+                            for (Component component : inquiryChatViewer.getComponents()) {
+                                if (component instanceof JBTextArea) {
+                                    JBTextArea selectedJBTextArea = (JBTextArea) component;
+                                    //Highlight the whole text area
+                                    try {
+                                        selectedJBTextArea.getHighlighter().addHighlight(0, selectedJBTextArea.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
+                                    } catch (BadLocationException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
+                                } else if (component instanceof FixedHeightPanel) {
+                                    FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                                    Editor editor = fixedHeightPanel.getEditor();
+                                    editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                                }
+                            }
                             continue;
                         }
-                        InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(i);
-                        JBTextArea jBTextArea = (JBTextArea) inquiryChatViewer.getComponents()[1];
-                        jBTextArea.getHighlighter().removeAllHighlights();
-                        //inquiryChatViewer.revertToDefaultColor();
+                        for (Component component : inquiryChatViewer.getComponents()) {
+                            if (component instanceof JBTextArea) {
+                                JBTextArea jBTextArea = (JBTextArea) component;
+                                jBTextArea.getHighlighter().removeAllHighlights();
+                            } else if (component instanceof FixedHeightPanel) {
+                                FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                                Editor editor = fixedHeightPanel.getEditor();
+                                editor.getMarkupModel().removeAllHighlighters();
+                            }
+                        }
                     }
                 }
             }
@@ -185,46 +212,32 @@ public class HistoricalContextObjectViewer extends JPanel {
         int totalHeight = 0;
         DefaultListModel<InquiryChatViewer> model = new DefaultListModel<>();
         for (InquiryChat inquiryChat : inquiryChats) {
-            if (inquiryChat.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
-                JBTextArea codeDisplay = new JBTextArea(inquiryChat.getMessage().trim());
-                codeDisplay.setEditable(false);
-                //codeDisplay.setSyntaxEditingStyle(extensionToSyntaxMap.get(getFileExtension(inquiryChat.getFilePath())));
-                int height = codeDisplay.getHeight();
-                totalHeight += height;
-                Dimension preferredSize = new Dimension(getPreferredSize().width, height);
-                codeDisplay.setPreferredSize(preferredSize);
-                codeDisplay.setMaximumSize(preferredSize);
-                codeDisplay.setSize(preferredSize);
-                InquiryChatViewer codeViewer = new InquiryChatViewer(inquiryChat);
-                model.addElement(codeViewer);
-            } else if (inquiryChat.getInquiryChatType() == InquiryChatType.INSTIGATOR_PROMPT) {
-                JBTextArea descriptionDisplay = new JBTextArea(inquiryChat.getMessage().trim());
-                descriptionDisplay.setLineWrap(true); // Wrap text to next line
-                descriptionDisplay.setWrapStyleWord(true);
-                descriptionDisplay.setEditable(false);
-                int descriptionHeight = descriptionDisplay.getHeight();//textAreaHeightCalculatorService.calculateDesiredHeight(descriptionDisplay, jBScrollPane1.getWidth() - 20);
-                totalHeight += descriptionHeight;
-                Dimension descriptionPreferredSize = new Dimension(getPreferredSize().width, descriptionHeight);
-                descriptionDisplay.setPreferredSize(descriptionPreferredSize);
-                descriptionDisplay.setMaximumSize(descriptionPreferredSize);
-                descriptionDisplay.setSize(descriptionPreferredSize);
-                InquiryChatViewer descriptionViewer = new InquiryChatViewer(inquiryChat);
-                model.addElement(descriptionViewer);
-            } else {
-                JBTextArea chatDisplay = new JBTextArea(inquiryChat.getMessage().trim());
-                chatDisplay.setLineWrap(true); // Wrap text to next line
-                chatDisplay.setWrapStyleWord(true);
-                chatDisplay.setEditable(false);
-                int height = chatDisplay.getHeight();//textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, jBScrollPane1.getWidth() - 20);
-                totalHeight += height;
-                Dimension preferredSize = new Dimension(getPreferredSize().width, height);
-                chatDisplay.setPreferredSize(preferredSize);
-                chatDisplay.setMaximumSize(preferredSize);
-                chatDisplay.setSize(preferredSize);
-                InquiryChatViewer chatViewer = new InquiryChatViewer(inquiryChat);
-                model.addElement(chatViewer);
+            InquiryChatViewer chatViewer = new InquiryChatViewer(inquiryChat);
+            model.addElement(chatViewer);
+            for (Component component : chatViewer.getComponents()) {
+                if (component instanceof JBTextArea) {
+                    JBTextArea chatDisplay = (JBTextArea) component;
+                    int newHeight = 0;
+                    int newWidth = getWidth();
+                    if (inquiryChat.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
+                    } else {
+                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+                    }
+                    Dimension preferredSize = new Dimension(newWidth, newHeight);
+                    chatDisplay.setPreferredSize(preferredSize);
+                    chatDisplay.setMaximumSize(preferredSize);
+                    chatDisplay.setSize(preferredSize);
+                    totalHeight += newHeight + chatViewer.getComponent(0).getHeight();
+                } else if (component instanceof FixedHeightPanel) {
+                    FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                    totalHeight += fixedHeightPanel.getHeight();
+                }
+                totalHeight += chatViewer.getComponent(0).getHeight();
             }
         }
+        jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, totalHeight));
+        jList1.setModel(model);
         ComponentListener componentListener = new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -232,12 +245,11 @@ public class HistoricalContextObjectViewer extends JPanel {
             }
         };
         jList1.getParent().addComponentListener(componentListener);
-        jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, totalHeight));
-        jList1.setModel(model);
-        jBScrollPane1.setPreferredSize(new Dimension((int)jBScrollPane1.getPreferredSize().getWidth(), jList1.getHeight()));
-        JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-        vertical.setValue(vertical.getMaximum());
+        jBScrollPane1.setViewportView(jList1);
+        //JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
+        //vertical.setValue(vertical.getMaximum() - vertical.getVisibleAmount());
     }
+
     public void updateHistoricalContextObjectHolder(HistoricalContextObjectHolder historicalContextObjectHolder) {
         this.historicalContextObjectHolder = historicalContextObjectHolder;
         if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.INQUIRY) {
@@ -289,26 +301,32 @@ public class HistoricalContextObjectViewer extends JPanel {
         int newTotalHeight = 0;
         for (int i = 0; i < previousModel.size(); i++) {
             InquiryChatViewer chatViewer = previousModel.getElementAt(i);
-            JBTextArea chatDisplay = (JBTextArea) chatViewer.getComponent(1);
-            int newHeight = 0;
-            int newWidth = jBScrollPane1.getWidth() - 20;
-            if (chatViewer.getInquiryChat().getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
-                newHeight += chatDisplay.getHeight() + chatViewer.getComponent(0).getHeight() + 2;
-            } else {
-                newHeight += chatDisplay.getHeight();//textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth);
+            for (Component component : chatViewer.getComponents()) {
+                if (component instanceof JBTextArea) {
+                    JBTextArea chatDisplay = (JBTextArea) component;
+                    int newHeight = 0;
+                    int newWidth = getWidth();
+                    if (chatViewer.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
+                    } else {
+                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+                    }
+                    Dimension preferredSize = new Dimension(newWidth, newHeight);
+                    chatDisplay.setPreferredSize(preferredSize);
+                    chatDisplay.setMaximumSize(preferredSize);
+                    chatDisplay.setSize(preferredSize);
+                    newTotalHeight += newHeight + chatViewer.getComponent(0).getHeight();
+                } else if (component instanceof FixedHeightPanel) {
+                    FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                    newTotalHeight += fixedHeightPanel.getHeight();
+                }
+                newTotalHeight += chatViewer.getComponent(0).getHeight();
             }
-            Dimension preferredSize = new Dimension(newWidth, newHeight);
-            chatDisplay.setPreferredSize(preferredSize);
-            chatDisplay.setMaximumSize(preferredSize);
-            chatDisplay.setSize(preferredSize);
             newModel.addElement(chatViewer);
-            newTotalHeight += newHeight + chatViewer.getComponent(0).getHeight();
         }
         jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, newTotalHeight));
         jList1.setModel(newModel);
-        jBScrollPane1.setPreferredSize(new Dimension((int)jBScrollPane1.getPreferredSize().getWidth(), jList1.getHeight()));
-        JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-        vertical.setValue(vertical.getMaximum());
+        jBScrollPane1.setViewportView(jList1);
     }
 
     public void setHistoricalContextInquiryListViewer(HistoricalContextInquiryListViewer historicalContextInquiryListViewer) {

@@ -163,11 +163,9 @@ public class InquiryDaoImpl implements InquiryDao {
             os.flush();
             os.close();
             int responseCode = con.getResponseCode();
-            System.out.println("Response Code : " + responseCode);
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                System.out.println("Response: " + response);
                 return gson.fromJson(response, Inquiry.class);
             }
         } catch (IOException ex) {
@@ -193,11 +191,9 @@ public class InquiryDaoImpl implements InquiryDao {
             os.flush();
             os.close();
             int responseCode = con.getResponseCode();
-            System.out.println("Response Code : " + responseCode);
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                System.out.println("Response: " + response);
                 return gson.fromJson(response, Inquiry.class);
             }
         } catch (IOException ex) {
