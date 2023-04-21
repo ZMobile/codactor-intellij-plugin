@@ -1,6 +1,5 @@
 package com.translator.view.console;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.fileEditor.ex.FileEditorWithProvider;
@@ -14,11 +13,10 @@ import com.intellij.ui.components.JBTextArea;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import com.translator.PromptContextBuilder;
-import com.translator.dao.inquiry.InquiryDao;
+import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.file.FileItem;
 import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
-import com.translator.model.inquiry.Inquiry;
 import com.translator.model.modification.ModificationType;
 import com.translator.service.code.CodeSnippetExtractorService;
 import com.translator.service.context.PromptContextService;
@@ -28,7 +26,6 @@ import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.AutomaticCodeModificationService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.PromptContextBuilderFactory;
-import com.translator.view.viewer.InquiryViewer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
@@ -98,7 +95,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         for (VirtualFile openFile : openFiles) {
             fileComboBox.addItem(new FileItem(openFile.getPath()));
         }
-        modificationTypeComboBox = new ComboBox<>(new String[]{"Modify", "Fix", "Create", "Create Files", "Inquire", "Modify Selected", "Fix Selected", "Inquire Selected"});
+        modificationTypeComboBox = new ComboBox<>(new String[]{"Modify", "Modify Selected", "Fix", "Fix Selected", "Create", "Create Files", "Inquire", "Inquire Selected"});
         jLabel1 = new JLabel();
         advancedButton = new JButton("(Advanced) Add Context");
         advancedButton.addActionListener(e -> {
@@ -106,6 +103,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                 promptContextService.setStatusLabel(hiddenLabel);
                 PromptContextBuilder promptContextBuilder = promptContextBuilderFactory.create(promptContextService);
                 promptContextBuilder.show();
+            //ProvisionalModificationCustomizer provisionalModificationCustomizer = new ProvisionalModificationCustomizer(project, new ArrayList<>());
+            //provisionalModificationCustomizer.show();
             //});
         });
         hiddenLabel = new JLabel();
@@ -226,6 +225,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                 if (modificationTypeComboBox.getSelectedItem().toString().equals("Modify")) {
                     String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
+                        codactorToolWindowService.openModificationQueueViewerToolWindow();
                         automaticCodeModificationService.getModifiedCode(fileItem.getFilePath(), 0, code.length(), textArea.getText(), ModificationType.MODIFY);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Modify Selected")) {
@@ -235,24 +235,29 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                         code = selectionModel.getSelectedText();
                     }
                     if (code != null && !code.isEmpty() && !textArea.getText().isEmpty()) {
+                        codactorToolWindowService.openModificationQueueViewerToolWindow();
                         automaticCodeModificationService.getModifiedCode(fileItem.getFilePath(), selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.MODIFY);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Fix")) {
                     String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
+                        codactorToolWindowService.openModificationQueueViewerToolWindow();
                         automaticCodeModificationService.getFixedCode(fileItem.getFilePath(), 0, code.length(), textArea.getText(), ModificationType.FIX);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Fix Selected")) {
+                    codactorToolWindowService.openModificationQueueViewerToolWindow();
                     SelectionModel selectionModel = codeSnippetExtractorService.getSelectedText(fileItem.getFilePath());
                     String code = null;
                     if (selectionModel != null) {
                         code = selectionModel.getSelectedText();
                     }
                     if (code != null && !code.isEmpty() && !textArea.getText().isEmpty()) {
+                        codactorToolWindowService.openModificationQueueViewerToolWindow();
                         automaticCodeModificationService.getFixedCode(fileItem.getFilePath(), selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.FIX);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create")) {
                     if (!textArea.getText().isEmpty()) {
+                        codactorToolWindowService.openModificationQueueViewerToolWindow();
                         automaticCodeModificationService.getCreatedCode(fileItem.getFilePath(), 0, 0, textArea.getText());
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create Files")) {
@@ -297,72 +302,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     }
                     inquiryService.createInquiry(fileItem.getFilePath(), code, question, priorContext);
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Translate")) {
-                    /*if (!display.getText().isEmpty()) {
-                        String filePath;
-                        if (currentEditingFile == null) {
-                            filePath = null;
-                        } else {
-                            filePath = currentEditingFile.getAbsolutePath();
-                        }
-                        String code = display.getText();
-                        String newLanguage = languageInputTextField.getText();
-                        String newFileType;
-                        if (fileTypeInputTextField.getText().contains(".")) {
-                            newFileType = fileTypeInputTextField.getText().substring(fileTypeInputTextField.getText().lastIndexOf(".") + 1);
-                        } else {
-                            newFileType = fileTypeInputTextField.getText();
-                        }
-                        String modificationId = fileModificationTrackerService.addModification(filePath, 0, code.length(), ModificationType.TRANSLATE);
-                        LimitedSwingWorker worker = new LimitedSwingWorker(aiTaskExecutor) {
-                            @Override
-                            protected Void doInBackground() {
-                                List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-                                List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
-                                if (priorContextData != null) {
-                                    for (HistoricalContextObjectDataHolder data : priorContextData) {
-                                        priorContext.add(new HistoricalContextObjectHolder(data));
-                                    }
-                                }
-                                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                                DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(filePath, code, newLanguage, newFileType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                                DesktopCodeTranslationResponseResource desktopCodeTranslationResponseResource = codeModificationService.getTranslatedCode(desktopCodeTranslationRequestResource);
-                                if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null) {
-                                    String styleKey = extensionToSyntaxMap.get(newFileType);
-                                    if (styleKey == null) {
-                                        styleKey = SyntaxConstants.SYNTAX_STYLE_NONE;
-                                    }
-                                    JBTextArea newDisplay;
-                                    if (filePath != null) {
-                                        String newFilePath = filePath.substring(0, filePath.lastIndexOf(".")) + "." + newFileType;
-                                        File file = new File(filePath);
-                                        File newFile = new File(newFilePath);
-                                        file.renameTo(newFile);
 
-                                        newDisplay = displayMap.get(filePath);
-                                        displayMap.remove(filePath);
-                                        initializeNewDisplay(newFilePath, newDisplay);
-                                    } else {
-                                        newDisplay = displayMap.get("Untitled");
-                                        initializeNewDisplay("Untitled", newDisplay);
-                                    }
-                                    newDisplay.setSyntaxEditingStyle(styleKey);
-                                    fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeTranslationResponseResource.getModificationSuggestions());
-                                    promptContextService.clearPromptContext();
-                                } else {
-                                    if (desktopCodeTranslationResponseResource.getError().equals("null: null")) {
-                                        OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                                        openAiApiKeyDialog.setVisible(true);
-                                    } else {
-                                        JOptionPane.showMessageDialog(display, desktopCodeTranslationResponseResource.getError(), "Error",
-                                                JOptionPane.ERROR_MESSAGE);
-                                    }
-                                    fileModificationTrackerService.removeModification(modificationId);
-                                }
-                                return null;
-                            }
-                        };
-                        worker.execute();
-                    }*/
                 }
             }
         });

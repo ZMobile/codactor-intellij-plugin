@@ -1,9 +1,9 @@
 package com.translator.view.factory;
 
-import com.google.inject.assistedinject.AssistedInject;
 import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.FileModification;
+import com.translator.model.modification.FileModificationSuggestion;
 
 public interface ProvisionalModificationCustomizerFactory {
-    ProvisionalModificationCustomizer create(FileModification currentEditingFileModification);
+    ProvisionalModificationCustomizer create(FileModificationSuggestion fileModificationSuggestion);
 }

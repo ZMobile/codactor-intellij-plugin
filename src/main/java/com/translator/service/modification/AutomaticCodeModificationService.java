@@ -7,15 +7,15 @@ import com.translator.model.modification.ModificationType;
 public interface AutomaticCodeModificationService {
     void getModifiedCode(String filePath, int startIndex, int endIndex, String modification, ModificationType modificationType);
 
-    void getModifiedCodeModification(DesktopCodeModificationRequestResource desktopCodeModificationRequestResource);
+    void getModifiedCodeModification(String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType);
 
     void getFixedCode(String filePath, int startIndex, int endIndex, String error, ModificationType modificationType);
 
-    void getModifiedCodeFix(DesktopCodeModificationRequestResource desktopCodeModificationRequestResource);
+    void getModifiedCodeFix(String suggestionId, String code, int startIndex, int endIndex, String error, ModificationType modificationType);
 
     void getCreatedCode(String filePath, int startIndex, int endIndex, String description);
 
-    void getModifiedCodeCreation(DesktopCodeCreationRequestResource desktopCodeCreationRequestResource);
+    void getModifiedCodeCreation(String suggestionId, int startIndex, int endIndex, String description);
 
     void getTranslatedCode(String filePath, String newLanguage, String newFileType);
 }

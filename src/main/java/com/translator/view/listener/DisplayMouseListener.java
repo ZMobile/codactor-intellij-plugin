@@ -38,7 +38,7 @@ public class DisplayMouseListener extends MouseAdapter {
     @Override
     public void mouseClicked(MouseEvent e) {
         Point p = e.getPoint();
-        JBTextArea display = displayMap.get(filePath);
+        JBTextArea display = displayMap.get(filePath); //Needs to be the editor instead
         int offset = display.viewToModel(p);
         FileModificationTracker fileModificationTracker = fileModificationTrackerService.getActiveModificationFiles().get(filePath);
         if (fileModificationTracker != null) {
@@ -48,7 +48,7 @@ public class DisplayMouseListener extends MouseAdapter {
                         provisionalModificationViewer.updateModificationList(fileModification);
                         codactorToolWindowService.openProvisionalModificationViewerToolWindow();
                     } else {
-                        //codactorToolWindowService.openModificationQueueViewerToolWindow();
+                        codactorToolWindowService.openModificationQueueViewerToolWindow();
                     }
                     break;
                 }

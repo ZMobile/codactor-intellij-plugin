@@ -80,4 +80,22 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
             return null;
         }
     }
+
+    @Override
+    public String getSnippet(Editor editor, int startIndex, int endIndex) {
+        // Retrieve the text from the document using the start and end indices
+        return editor.getDocument().getText(new TextRange(startIndex, endIndex));
+    }
+
+    @Override
+    public String getAllText(Editor editor) {
+        // Retrieve the entire text from the document
+        return editor.getDocument().getText();
+    }
+
+    @Override
+    public SelectionModel getSelectedText(Editor editor) {
+        // Get the SelectionModel and the selected text
+        return editor.getSelectionModel();
+    }
 }

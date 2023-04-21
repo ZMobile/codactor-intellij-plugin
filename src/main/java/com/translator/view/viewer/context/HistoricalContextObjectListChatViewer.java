@@ -1,6 +1,7 @@
 package com.translator.view.viewer.context;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.ContextQueryDao;
@@ -69,7 +70,6 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
 
     private void initComponents() {
         jList1 = new JList<>();
-        //jList1.setMaximumSize(new Dimension(getWidth(), Integer.MAX_VALUE));
         jList1.setModel(new DefaultListModel<>());
         jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jList1.setCellRenderer(new InquiryChatRenderer());
@@ -83,10 +83,8 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                     }
                     selectedChat = selectedIndex;
                     InquiryChatViewer selectedInquiryChatViewer = jList1.getModel().getElementAt(selectedIndex);
-                    selectedInquiryChatViewer.setBackground(Color.decode("#228B22"));
                     JBTextArea selectedJBTextArea = (JBTextArea) selectedInquiryChatViewer.getComponents()[1];
                     Color highlightColor = Color.decode("#009688");
-                    //Highlight the whole text are
                     try {
                         selectedJBTextArea.getHighlighter().addHighlight(0, selectedJBTextArea.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
                     } catch (BadLocationException ex) {
@@ -126,8 +124,26 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                         return;
                     }
                     InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(selectedChat);
-                    JBTextArea jBTextArea = (JBTextArea) inquiryChatViewer.getComponents()[1];
-                    TextAreaWindow textAreaWindow = new TextAreaWindow(jBTextArea.getText());
+                    StringBuilder text = new StringBuilder();
+                    boolean firstComponentCopied = false;
+                    for (int i = 0; i < inquiryChatViewer.getComponents().length; i++) {
+                        Component component1 = inquiryChatViewer.getComponents()[i];
+                        if (firstComponentCopied) {
+                            text.append("\n");
+                            text.append("\n");
+                        }
+                        if (component1 instanceof JBTextArea) {
+                            JBTextArea jBTextArea = (JBTextArea) component1;
+                            text.append(jBTextArea.getText());
+                            firstComponentCopied = true;
+                        } else if (component1 instanceof FixedHeightPanel) {
+                            FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
+                            Editor editor = fixedHeightPanel.getEditor();
+                            text.append(editor.getDocument().getText());
+                            firstComponentCopied = true;
+                        }
+                    }
+                    new TextAreaWindow(text.toString());
                 }
             }
         });

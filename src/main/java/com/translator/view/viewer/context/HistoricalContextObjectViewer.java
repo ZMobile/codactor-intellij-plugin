@@ -135,8 +135,26 @@ public class HistoricalContextObjectViewer extends JPanel {
                         return;
                     }
                     InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(selectedChat);
-                    JBTextArea jBTextArea = (JBTextArea) inquiryChatViewer.getComponents()[1];
-                    TextAreaWindow textAreaWindow = new TextAreaWindow(jBTextArea.getText());
+                    StringBuilder text = new StringBuilder();
+                    boolean firstComponentCopied = false;
+                    for (int i = 0; i < inquiryChatViewer.getComponents().length; i++) {
+                        Component component1 = inquiryChatViewer.getComponents()[i];
+                        if (firstComponentCopied) {
+                            text.append("\n");
+                            text.append("\n");
+                        }
+                        if (component1 instanceof JBTextArea) {
+                            JBTextArea jBTextArea = (JBTextArea) component1;
+                            text.append(jBTextArea.getText());
+                            firstComponentCopied = true;
+                        } else if (component1 instanceof FixedHeightPanel) {
+                            FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
+                            Editor editor = fixedHeightPanel.getEditor();
+                            text.append(editor.getDocument().getText());
+                            firstComponentCopied = true;
+                        }
+                    }
+                    new TextAreaWindow(text.toString());
                 }
             }
         });
@@ -191,8 +209,8 @@ public class HistoricalContextObjectViewer extends JPanel {
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                                .addComponent(jToolBar2, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
-                                .addComponent(jToolBar3, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
+                                .addComponent(jToolBar2, GroupLayout.PREFERRED_SIZE, 22, GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jToolBar3, GroupLayout.PREFERRED_SIZE, 22, GroupLayout.PREFERRED_SIZE))
                         .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, jList1.getHeight(), Short.MAX_VALUE)); // Set size for jList1// Add a gap of 20 between jList1 and JBTextArea
     }
 

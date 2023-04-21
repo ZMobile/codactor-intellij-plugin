@@ -4,19 +4,15 @@
  */
 package com.translator.view.viewer;
 
-import com.intellij.openapi.project.Project;
-import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationSuggestion;
-import com.translator.service.code.RangeReplaceService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.view.factory.ProvisionalModificationCustomizerFactory;
 import com.translator.view.renderer.CodeSnippetRenderer;
 import com.translator.service.ui.tool.CodactorToolWindowService;
-import com.intellij.ui.components.JBTextArea;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -121,7 +117,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         customizeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ProvisionalModificationCustomizer provisionalModificationCustomizer = provisionalModificationCustomizerFactory.create(fileModification);
+                ProvisionalModificationCustomizer provisionalModificationCustomizer = provisionalModificationCustomizerFactory.create(fileModification.getModificationOptions().get(0));
                 provisionalModificationCustomizer.setVisible(true);
             }
         });

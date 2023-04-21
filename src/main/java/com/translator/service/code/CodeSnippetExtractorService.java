@@ -1,5 +1,6 @@
 package com.translator.service.code;
 
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 
 public interface CodeSnippetExtractorService {
@@ -8,4 +9,10 @@ public interface CodeSnippetExtractorService {
     String getAllText(String filePath);
 
     SelectionModel getSelectedText(String filePath);
+
+    String getSnippet(Editor editor, int startIndex, int endIndex);
+
+    String getAllText(Editor editor);
+
+    SelectionModel getSelectedText(Editor editor);
 }
