@@ -119,6 +119,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             public void actionPerformed(ActionEvent e) {
                 ProvisionalModificationCustomizer provisionalModificationCustomizer = provisionalModificationCustomizerFactory.create(fileModification.getModificationOptions().get(0));
                 provisionalModificationCustomizer.setVisible(true);
+                fileModificationTrackerService.addProvisionalModificationCustomizer(provisionalModificationCustomizer);
             }
         });
 

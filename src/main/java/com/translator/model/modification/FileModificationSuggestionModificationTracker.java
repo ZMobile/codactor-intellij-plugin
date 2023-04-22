@@ -4,6 +4,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.util.TextRange;
+import com.translator.service.code.RangeReplaceService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,11 +13,14 @@ public class FileModificationSuggestionModificationTracker {
     private final FileModificationSuggestion fileModificationSuggestion;
     private final List<FileModificationSuggestionModification> modifications;
     private final List<FileModificationUpdate> fileModificationUpdateQueue;
+    private final RangeReplaceService rangeReplaceService;
 
-    public FileModificationSuggestionModificationTracker(FileModificationSuggestion fileModificationSuggestion) {
+    public FileModificationSuggestionModificationTracker(FileModificationSuggestion fileModificationSuggestion,
+                                                         RangeReplaceService rangeReplaceService) {
         this.fileModificationSuggestion = fileModificationSuggestion;
         this.modifications = new ArrayList<>();
         this.fileModificationUpdateQueue = new ArrayList<>();
+        this.rangeReplaceService = rangeReplaceService;
     }
 
     public FileModificationSuggestion getFileModificationSuggestion() {
@@ -76,11 +80,14 @@ public class FileModificationSuggestionModificationTracker {
         synchronized (modifications) {
             for (FileModificationSuggestionModification m : modifications) {
                 if (m.getId().equals(modificationId)) {
-                    int formerStartIndex = m.getRangeMarker().getStartOffset();
-                    int formerEndIndex = m.getRangeMarker().getEndOffset();
-                    modifications.remove(m);
-                    m.setEditedCode(modification);
-                    break;
+                    RangeMarker rangeMarker = m.getRangeMarker();
+                    if (rangeMarker != null && rangeMarker.isValid()) {
+                        int formerStartIndex = m.getRangeMarker().getStartOffset();
+                        int formerEndIndex = m.getRangeMarker().getEndOffset();
+                        modifications.remove(m);
+                        rangeReplaceService.replaceRange(fileModificationSuggestion.getSuggestedCode(), formerStartIndex, formerEndIndex, modification);
+                        break;
+                    }
                 }
             }
         }

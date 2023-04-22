@@ -92,7 +92,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getModifiedCodeModification(String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType) {
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
-        String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, 0, code.length(), modificationType);
+        String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification Suggestion Modification (" + modificationType + ")", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
@@ -108,7 +108,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeModification(desktopCodeModificationRequestResource);
                 if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
                     fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
-                    fileModificationTrackerService.queueModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
+                    fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
                     promptContextService.clearPromptContext();
                 } else {
                     if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
@@ -163,7 +163,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getModifiedCodeFix(String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType) {
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
-        String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, 0, code.length(), modificationType);
+        String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification Suggestion Modification (" + modificationType + ")", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
@@ -179,7 +179,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeFix(desktopCodeModificationRequestResource);
                 if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
                     fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
-                    fileModificationTrackerService.queueModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
+                    fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
                     promptContextService.clearPromptContext();
                 } else {
                     if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
@@ -197,7 +197,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     }
 
     @Override
-    public void getCreatedCode(String filePath, int startIndex, int endIndex, String description) {
+    public void getCreatedCode(String filePath, String description) {
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, 0, ModificationType.CREATE);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + ModificationType.CREATE + ")", true) {
             @Override
@@ -249,7 +249,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeCreation(desktopCodeCreationRequestResource);
                 if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
                     fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
-                    fileModificationTrackerService.queueModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
+                    fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
                     promptContextService.clearPromptContext();
                 } else {
                     if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {

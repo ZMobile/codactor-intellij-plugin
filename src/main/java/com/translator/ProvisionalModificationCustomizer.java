@@ -53,6 +53,7 @@ public class ProvisionalModificationCustomizer extends JDialog {
     private AutomaticCodeModificationService automaticCodeModificationService;
     private InquiryService inquiryService;
     private PromptContextService promptContextService;
+    private FileModificationTrackerService fileModificationTrackerService;
     private PromptContextBuilderFactory promptContextBuilderFactory;
     private Editor defaultSolution;
     private Editor suggestedSolution;
@@ -75,6 +76,7 @@ public class ProvisionalModificationCustomizer extends JDialog {
         this.codactorToolWindowService = codactorToolWindowService;
         this.inquiryService = inquiryService;
         this.promptContextService = new PromptContextServiceImpl();
+        this.fileModificationTrackerService = fileModificationTrackerService;
         this.automaticCodeModificationService = automaticCodeModificationServiceFactory.create(promptContextService);
         this.promptContextBuilderFactory = promptContextBuilderFactory;
         EditorFactory editorFactory = EditorFactory.getInstance();
@@ -105,7 +107,7 @@ public class ProvisionalModificationCustomizer extends JDialog {
         Splitter verticalSplitter = new Splitter(true, 0.5f);
 
         JBPanel topPanel = new JBPanel(new BorderLayout());
-        JBPanel bottomPanel = new JBPanel();
+        JBPanel bottomPanel = new JBPanel(new BorderLayout());
 
         verticalSplitter.setFirstComponent(topPanel);
         verticalSplitter.setSecondComponent(bottomPanel);
@@ -118,7 +120,12 @@ public class ProvisionalModificationCustomizer extends JDialog {
         ArrayList<Editor> editorList = new ArrayList<>();
         editorList.add(defaultSolution);
         editorList.add(suggestedSolution);
-        JBList<Editor> list = new JBList<>(editorList);
+        JBList<String> list = new JBList<>();
+        list.setModel(new AbstractListModel<String>() {
+            final String[] strings = { "Default", "Suggested" };
+            public int getSize() { return strings.length; }
+            public String getElementAt(int i) { return strings[i]; }
+        });
         list.setCellRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -129,36 +136,30 @@ public class ProvisionalModificationCustomizer extends JDialog {
                 return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             }
         });
-        list.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int selectedIndex = list.getSelectedIndex();
-                if (selectedIndex == -1) {
-                    return;
-                }
-                if (selectedIndex == 0) {
-                    selectedEditor = defaultSolution;
-                } else if (selectedIndex == 1) {
-                    selectedEditor = suggestedSolution;
-                }
-            }
-        });
-        JBScrollPane scrollPane = new JBScrollPane(list);
-        listPanel.add(scrollPane, BorderLayout.CENTER);
-
-        // Panel with an editor
         JBPanel editorPanel = new JBPanel(new BorderLayout());
 
         JPanel toolbarPanel = new JPanel(new HorizontalLayout(5));
         JButton acceptSolutionButton = new JButton("Accept Solution");
+        acceptSolutionButton.addActionListener(e -> {
+            if (selectedEditor == suggestedSolution) {
+                fileModificationTrackerService.implementModificationUpdate(fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getSuggestedCode().getDocument().getText());
+            } else {
+                fileModificationTrackerService.removeModification(fileModificationSuggestion.getModificationId());
+            }
+            dispose();
+        });
         JButton rejectAllChangesButton = new JButton("Reject All Changes");
+        rejectAllChangesButton.addActionListener(e -> {
+            fileModificationTrackerService.removeModification(fileModificationSuggestion.getModificationId());
+            dispose();
+        });
         toolbarPanel.add(acceptSolutionButton);
         toolbarPanel.add(rejectAllChangesButton);
         editorPanel.add(toolbarPanel, BorderLayout.NORTH);
 
         // Add the first editor from the list
         if (!editorList.isEmpty()) {
-            Editor editor = editorList.get(0);
-            EditorSettings editorSettings = editor.getSettings();
+            EditorSettings editorSettings = selectedEditor.getSettings();
             editorSettings.setLineNumbersShown(true);
             editorSettings.setVirtualSpace(false);
             editorSettings.setLineMarkerAreaShown(true);
@@ -166,8 +167,45 @@ public class ProvisionalModificationCustomizer extends JDialog {
             editorSettings.setAdditionalLinesCount(2);
             editorSettings.setAdditionalColumnsCount(3);
 
-            editorPanel.add(editor.getComponent(), BorderLayout.CENTER);
+            editorPanel.add(selectedEditor.getComponent(), BorderLayout.CENTER);
         }
+
+        list.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedIndex = list.getSelectedIndex();
+                if (selectedIndex == -1) {
+                    return;
+                }
+                if (selectedIndex == 0) {
+                    list.setSelectedIndex(0);
+                    selectedEditor = defaultSolution;
+                    editorPanel.add(selectedEditor.getComponent(), BorderLayout.CENTER);
+                } else if (selectedIndex == 1) {
+                    list.setSelectedIndex(1);
+                    selectedEditor = suggestedSolution;
+                }
+                JBPanel newEditorPanel = new JBPanel(new BorderLayout());
+                newEditorPanel.add(toolbarPanel, BorderLayout.NORTH);
+
+                // Add the first editor from the list
+                if (!editorList.isEmpty()) {
+                    EditorSettings editorSettings = selectedEditor.getSettings();
+                    editorSettings.setLineNumbersShown(true);
+                    editorSettings.setVirtualSpace(false);
+                    editorSettings.setLineMarkerAreaShown(true);
+                    editorSettings.setFoldingOutlineShown(true);
+                    editorSettings.setAdditionalLinesCount(2);
+                    editorSettings.setAdditionalColumnsCount(3);
+
+                    newEditorPanel.add(selectedEditor.getComponent(), BorderLayout.CENTER);
+                }
+                topSplitter.setSecondComponent(newEditorPanel);
+            }
+        });
+        JBScrollPane scrollPane = new JBScrollPane(list);
+        listPanel.add(scrollPane, BorderLayout.CENTER);
+
+        // Panel with an editor
 
         topSplitter.setFirstComponent(listPanel);
         topSplitter.setSecondComponent(editorPanel);
@@ -228,9 +266,11 @@ public class ProvisionalModificationCustomizer extends JDialog {
         JPanel topToolbar = new JPanel();
         topToolbar.setLayout(new BorderLayout());
         JPanel leftToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        leftToolbar.add(modelComboBox);
-        leftToolbar.add(modificationTypeComboBox);
-        leftToolbar.add(jLabel1);
+        JPanel comboBoxesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0)); // Set vertical gap to 0
+        comboBoxesPanel.add(modelComboBox);
+        comboBoxesPanel.add(modificationTypeComboBox);
+        comboBoxesPanel.add(jLabel1);
+        leftToolbar.add(comboBoxesPanel);
         JPanel rightToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5)); // Set horizontal gap to 0
         rightToolbar.add(hiddenLabel);
         rightToolbar.add(advancedButton);
@@ -361,44 +401,51 @@ public class ProvisionalModificationCustomizer extends JDialog {
         }
         switch (selected) {
             case "Modify":
-                button1.setVisible(!selectedEditor.equals(defaultSolution));
+                button1.setEnabled(!selectedEditor.equals(defaultSolution));
                 button1.setText("Modify");
                 jLabel1.setText(" Implement the following modification(s) to this code file:");
                 break;
             case "Fix":
-                button1.setVisible(!selectedEditor.equals(defaultSolution));
+                button1.setEnabled(!selectedEditor.equals(defaultSolution));
                 button1.setText("Fix");
                 jLabel1.setText(" Fix the following error/problem in this code file:");
                 break;
             case "Create":
-                button1.setVisible(!selectedEditor.equals(defaultSolution));
+                button1.setEnabled(!selectedEditor.equals(defaultSolution));
                 button1.setText("Create");
                 jLabel1.setText(" Create new code from scratch with the following description:");
                 break;
             case "Create Files":
+                button1.setEnabled(true);
                 button1.setText("Create");
                 jLabel1.setText(" (Experimental) Create multiple code files from the following description:");
                 break;
             case "Inquire":
+                button1.setEnabled(true);
                 button1.setText("Ask");
                 jLabel1.setText(" Ask the following question regarding this code file:");
                 break;
             case "Modify Selected":
-                button1.setVisible(!selectedEditor.equals(defaultSolution));
+                button1.setEnabled(!selectedEditor.equals(defaultSolution));
                 button1.setText("Modify");
                 jLabel1.setText(" Implement the following modification(s) to the selected code:");
                 break;
             case "Fix Selected":
-                button1.setVisible(!selectedEditor.equals(defaultSolution));
+                button1.setEnabled(!selectedEditor.equals(defaultSolution));
                 button1.setText("Fix");
                 jLabel1.setText(" Fix the following error/problem in this selected code:");
                 break;
             case "Inquire Selected":
+                button1.setEnabled(true);
                 button1.setText("Ask");
                 jLabel1.setText(" Ask the following question regarding this selected code:");
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected value: " + selected);
         }
+    }
+
+    public FileModificationSuggestion getFileModificationSuggestion() {
+        return fileModificationSuggestion;
     }
 }

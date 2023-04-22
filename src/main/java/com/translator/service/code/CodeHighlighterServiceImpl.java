@@ -75,19 +75,21 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
         FileModificationSuggestion fileModificationSuggestion = fileModificationSuggestionModificationTracker.getFileModificationSuggestion();
         Editor editor = fileModificationSuggestion.getSuggestedCode();
 
-        removeAllHighlights(editor);
+        ApplicationManager.getApplication().invokeLater(() -> {
+            removeAllHighlights(editor);
 
-        for (FileModificationSuggestionModification modification : fileModificationSuggestionModificationTracker.getModifications()) {
-            int startIndex = modification.getRangeMarker().getStartOffset();
-            int endIndex = modification.getRangeMarker().getEndOffset();
+            for (FileModificationSuggestionModification modification : fileModificationSuggestionModificationTracker.getModifications()) {
+                int startIndex = modification.getRangeMarker().getStartOffset();
+                int endIndex = modification.getRangeMarker().getEndOffset();
 
-            try {
-                Color highlightColor = Color.decode("#009688");
-                addHighlight(editor, startIndex, endIndex, highlightColor);
-            } catch (Exception e) {
-                e.printStackTrace();
+                try {
+                    Color highlightColor = Color.decode("#009688");
+                    addHighlight(editor, startIndex, endIndex, highlightColor);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-        }
+        });
     }
 
     private void removeAllHighlights(Editor editor) {

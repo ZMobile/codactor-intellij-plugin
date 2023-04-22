@@ -18,8 +18,6 @@ public class ModificationQueueToolWindowFactory implements ToolWindowFactory {
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Injector injector = CodactorInjector.getInstance().getInjector(project);
         ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
-        CodactorToolWindowService codactorToolWindowService = injector.getInstance(CodactorToolWindowService.class);
-        codactorToolWindowService.setModificationQueueViewerToolWindowId(toolWindow.getId());
         //modificationQueueViewer.setProject(project);
         //CodactorConsole codactorConsole = new CodactorConsole();
         //ConsoleView consoleView = codactorConsole.getConsoleView();

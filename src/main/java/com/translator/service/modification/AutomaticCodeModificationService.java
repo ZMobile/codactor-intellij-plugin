@@ -13,7 +13,7 @@ public interface AutomaticCodeModificationService {
 
     void getModifiedCodeFix(String suggestionId, String code, int startIndex, int endIndex, String error, ModificationType modificationType);
 
-    void getCreatedCode(String filePath, int startIndex, int endIndex, String description);
+    void getCreatedCode(String filePath, String description);
 
     void getModifiedCodeCreation(String suggestionId, int startIndex, int endIndex, String description);
 

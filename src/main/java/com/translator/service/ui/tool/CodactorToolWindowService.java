@@ -28,11 +28,6 @@ public interface CodactorToolWindowService {
 
     void closeInquiryViewerToolWindow();
 
-    void setModificationQueueViewerToolWindowId(String modificationQueueViewerToolWindowId);
-
-    void setInquiryViewerToolWindowId(String inquiryViewerToolWindowId);
-
-
     InquiryViewer getInquiryViewer();
 
     InquiryListViewer getInquiryListViewer();

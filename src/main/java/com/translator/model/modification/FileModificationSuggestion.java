@@ -40,7 +40,6 @@ public class FileModificationSuggestion {
                 this.suggestedCode = editorFactory.createEditor(document, null);
                 EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
                 ((EditorEx) this.suggestedCode).setHighlighter(editorHighlighter);
-                ((EditorEx) this.suggestedCode).setViewer(true);
             } catch (Exception e) {
                 e.printStackTrace();
             }

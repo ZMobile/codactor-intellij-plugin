@@ -22,4 +22,13 @@ public class SelectedFileFetcherServiceImpl implements SelectedFileFetcherServic
         }
         return null;
     }
+
+    @Override
+    public VirtualFile[] getOpenFiles() {
+        if (project != null) {
+            FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+            return fileEditorManager.getOpenFiles();
+        }
+        return null;
+    }
 }

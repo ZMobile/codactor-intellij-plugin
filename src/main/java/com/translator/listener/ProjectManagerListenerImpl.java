@@ -5,6 +5,8 @@ import com.google.inject.Injector;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManagerListener;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowManager;
 import com.translator.CodactorInjector;
 import com.translator.dao.CodeTranslatorDaoConfig;
 import com.translator.service.CodeTranslatorServiceConfig;
@@ -46,9 +48,19 @@ public class ProjectManagerListenerImpl implements ProjectManagerListener {
         // Your code to execute when a project is opened
         FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
         ModificationQueueListButtonService modificationQueueListButtonService = injector.getInstance(ModificationQueueListButtonService.class);
-
         fileModificationTrackerService.setModificationQueueListButtonService(modificationQueueListButtonService);
+        ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
+
+        fileModificationTrackerService.setModificationQueueViewer(modificationQueueViewer);
         //promptContextService.setStatusLabel(jLabel2);
+        InquiryViewer inquiryViewer = injector.getInstance(InquiryViewer.class);
+        InquiryListViewer inquiryListViewer = injector.getInstance(InquiryListViewer.class);
+        inquiryViewer.setInquiryListViewer(inquiryListViewer);
+        HistoricalModificationListViewer historicalModificationListViewer = injector.getInstance(HistoricalModificationListViewer.class);
+        historicalModificationListViewer.setInquiryListViewer(inquiryListViewer);
+        historicalModificationListViewer.setProject(project);
+        inquiryListViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
+        inquiryViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
 
     }
 

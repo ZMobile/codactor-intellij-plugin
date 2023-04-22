@@ -1,5 +1,7 @@
 package com.translator.view.console;
 
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.fileEditor.ex.FileEditorWithProvider;
@@ -26,6 +28,7 @@ import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.AutomaticCodeModificationService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.PromptContextBuilderFactory;
+import com.translator.view.viewer.ModificationQueueViewer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
@@ -89,11 +92,28 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         button2.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/microphone_icon.png"))));
 
         modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k"});
+        VirtualFile[] selectedFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
+        VirtualFile[] openFiles = selectedFileFetcherService.getOpenFiles();
         fileComboBox = new ComboBox<>();
-        VirtualFile[] openFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
-        fileComboBox.setVisible(openFiles.length > 1);
-        for (VirtualFile openFile : openFiles) {
-            fileComboBox.addItem(new FileItem(openFile.getPath()));
+        fileComboBox.setVisible(
+                (selectedFiles != null && selectedFiles.length > 1)
+                || (openFiles != null && openFiles.length > 1));
+        VirtualFile currentlyOpenFile = getSelectedFile();
+        if (currentlyOpenFile != null) {
+            fileComboBox.addItem(new FileItem(currentlyOpenFile.getPath()));
+            if (selectedFiles.length > 1) {
+                for (VirtualFile selectedFile : selectedFiles) {
+                    if (!selectedFile.equals(currentlyOpenFile)) {
+                        fileComboBox.addItem(new FileItem(selectedFile.getPath()));
+                    }
+                }
+            } else if (openFiles.length > 1) {
+                for (VirtualFile openFile : openFiles) {
+                    if (!openFile.equals(currentlyOpenFile)) {
+                        fileComboBox.addItem(new FileItem(openFile.getPath()));
+                    }
+                }
+            }
         }
         modificationTypeComboBox = new ComboBox<>(new String[]{"Modify", "Modify Selected", "Fix", "Fix Selected", "Create", "Create Files", "Inquire", "Inquire Selected"});
         jLabel1 = new JLabel();
@@ -135,33 +155,82 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             @Override
             public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
                 FileEditorManagerListener.super.fileOpened(source, file);
-                VirtualFile[] openFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
-                fileComboBox.setVisible(openFiles.length > 1);
-                fileComboBox.removeAllItems();
-                for (VirtualFile openFile : openFiles) {
-                    fileComboBox.addItem(new FileItem(openFile.getPath()));
+                VirtualFile[] selectedFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
+                VirtualFile[] openFiles = selectedFileFetcherService.getOpenFiles();
+                fileComboBox.setVisible(
+                        (selectedFiles != null && selectedFiles.length > 1)
+                                || (openFiles != null && openFiles.length > 1));fileComboBox.removeAllItems();
+                VirtualFile currentlyOpenFile = getSelectedFile();
+                if (currentlyOpenFile != null) {
+                    fileComboBox.addItem(new FileItem(currentlyOpenFile.getPath()));
+                    if (selectedFiles.length > 1) {
+                        for (VirtualFile selectedFile : selectedFiles) {
+                            if (!selectedFile.equals(currentlyOpenFile)) {
+                                fileComboBox.addItem(new FileItem(selectedFile.getPath()));
+                            }
+                        }
+                    } else if (openFiles.length > 1) {
+                        for (VirtualFile openFile : openFiles) {
+                            if (!openFile.equals(currentlyOpenFile)) {
+                                fileComboBox.addItem(new FileItem(openFile.getPath()));
+                            }
+                        }
+                    }
                 }
             }
 
             @Override
             public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
                 FileEditorManagerListener.super.fileClosed(source, file);
-                VirtualFile[] openFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
-                fileComboBox.setVisible(openFiles.length > 1);
+                VirtualFile[] selectedFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
+                VirtualFile[] openFiles = selectedFileFetcherService.getOpenFiles();
+                fileComboBox.setVisible(
+                        (selectedFiles != null && selectedFiles.length > 1)
+                                || (openFiles != null && openFiles.length > 1));
                 fileComboBox.removeAllItems();
-                for (VirtualFile openFile : openFiles) {
-                    fileComboBox.addItem(new FileItem(openFile.getPath()));
+                VirtualFile currentlyOpenFile = getSelectedFile();
+                if (currentlyOpenFile != null) {
+                    fileComboBox.addItem(new FileItem(currentlyOpenFile.getPath()));
+                    if (selectedFiles.length > 1) {
+                        for (VirtualFile selectedFile : selectedFiles) {
+                            if (!selectedFile.equals(currentlyOpenFile)) {
+                                fileComboBox.addItem(new FileItem(selectedFile.getPath()));
+                            }
+                        }
+                    } else if (openFiles.length > 1) {
+                        for (VirtualFile openFile : openFiles) {
+                            if (!openFile.equals(currentlyOpenFile)) {
+                                fileComboBox.addItem(new FileItem(openFile.getPath()));
+                            }
+                        }
+                    }
                 }
             }
 
             @Override
             public void selectionChanged(@NotNull FileEditorManagerEvent event) {
                 FileEditorManagerListener.super.selectionChanged(event);
-                VirtualFile[] openFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
-                fileComboBox.setVisible(openFiles.length > 1);
-                fileComboBox.removeAllItems();
-                for (VirtualFile openFile : openFiles) {
-                    fileComboBox.addItem(new FileItem(openFile.getPath()));
+                VirtualFile[] selectedFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
+                VirtualFile[] openFiles = selectedFileFetcherService.getOpenFiles();
+                fileComboBox.setVisible(
+                        (selectedFiles != null && selectedFiles.length > 1)
+                                || (openFiles != null && openFiles.length > 1));fileComboBox.removeAllItems();
+                VirtualFile currentlyOpenFile = getSelectedFile();
+                if (currentlyOpenFile != null) {
+                    fileComboBox.addItem(new FileItem(currentlyOpenFile.getPath()));
+                    if (selectedFiles.length > 1) {
+                        for (VirtualFile selectedFile : selectedFiles) {
+                            if (!selectedFile.equals(currentlyOpenFile)) {
+                                fileComboBox.addItem(new FileItem(selectedFile.getPath()));
+                            }
+                        }
+                    } else if (openFiles.length > 1) {
+                        for (VirtualFile openFile : openFiles) {
+                            if (!openFile.equals(currentlyOpenFile)) {
+                                fileComboBox.addItem(new FileItem(openFile.getPath()));
+                            }
+                        }
+                    }
                 }
             }
         };
@@ -258,7 +327,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create")) {
                     if (!textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        automaticCodeModificationService.getCreatedCode(fileItem.getFilePath(), 0, 0, textArea.getText());
+                        automaticCodeModificationService.getCreatedCode(fileItem.getFilePath(), textArea.getText());
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create Files")) {
                     if (!textArea.getText().isEmpty()) {
@@ -370,5 +439,15 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             default:
                 throw new IllegalArgumentException("Unexpected value: " + selected);
         }
+    }
+
+    private VirtualFile getSelectedFile() {
+        FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+        Editor editor = fileEditorManager.getSelectedTextEditor();
+        if (editor != null) {
+            Document document = editor.getDocument();
+            return FileDocumentManager.getInstance().getFile(document);
+        }
+        return null;
     }
 }

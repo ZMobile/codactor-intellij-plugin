@@ -1,5 +1,6 @@
 package com.translator.service.modification.tracking;
 
+import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.*;
 import com.translator.service.ui.ModificationQueueListButtonService;
 import com.translator.view.viewer.ModificationQueueViewer;
@@ -23,17 +24,9 @@ public interface FileModificationTrackerService {
 
     void setMultiFileModificationStage(String multiFileModificationId, String stage);
 
-    void queueModificationUpdate(String modificationId, String modification);
-
-    void queueModificationSuggestionModificationUpdate(FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord);
-
-    void implementQueuedModificationUpdates();
-
     void implementModificationUpdate(String modificationId, String modification);
 
-    void updateModifications(String filePath, int formerStartIndex, int formerEndIndex, String textInserted);
-
-    void updateModificationSuggestionModifications(String suggestionId, int formerStartIndex, int formerEndIndex, String textInserted);
+    void implementModificationSuggestionModificationUpdate(FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord);
 
     void readyFileModificationUpdate(String modificationId, List<FileModificationSuggestionRecord> modificationOptions);
 
@@ -59,9 +52,9 @@ public interface FileModificationTrackerService {
 
     List<QueuedFileModificationObjectHolder> getQueuedFileModificationObjectHolders();
 
-    Color getModificationQueueListButtonColor();
-
    void setModificationQueueListButtonService(ModificationQueueListButtonService modificationQueueListButtonService);
 
     void setModificationQueueViewer(ModificationQueueViewer modificationQueueViewer);
+
+    void addProvisionalModificationCustomizer(ProvisionalModificationCustomizer provisionalModificationCustomizer);
 }

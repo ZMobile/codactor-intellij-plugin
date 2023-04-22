@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -32,6 +33,12 @@ public class RangeReplaceServiceImpl implements RangeReplaceService {
             throw new IllegalStateException("Could not get document for file: " + filePath);
         }
 
+        // Replace the text range with the replacement string
+        WriteCommandAction.runWriteCommandAction(project, () -> document.replaceString(startOffset, endOffset, replacementString));
+    }
+
+    public void replaceRange(Editor editor, int startOffset, int endOffset, String replacementString) {
+        Document document = editor.getDocument();
         // Replace the text range with the replacement string
         WriteCommandAction.runWriteCommandAction(project, () -> document.replaceString(startOffset, endOffset, replacementString));
     }

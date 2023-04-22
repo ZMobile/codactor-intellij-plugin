@@ -1,6 +1,7 @@
 package com.translator.service.modification.tracking;
 
 import com.intellij.openapi.project.Project;
+import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.*;
 import com.translator.service.code.CodeHighlighterService;
 import com.translator.service.code.CodeSnippetExtractorService;
@@ -18,6 +19,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     private Project project;
     private Map<String, FileModificationTracker> activeModificationFiles;
     private Map<String, FileModificationSuggestionModificationTracker> activeModificationSuggestionModifications;
+    private Map<String, List<ProvisionalModificationCustomizer>> provisionalModificationCustomizerMap;
     private List<MultiFileModification> activeMultiFileModifications;
     private CodeHighlighterService codeHighlighterService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
@@ -39,6 +41,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         this.activeModificationFiles = new HashMap<>();
         this.activeModificationSuggestionModifications = new HashMap<>();
         this.activeMultiFileModifications = new ArrayList<>();
+        this.provisionalModificationCustomizerMap = new HashMap<>();
         this.codeHighlighterService = codeHighlighterService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.codeRangeTrackerService = codeRangeTrackerService;
@@ -76,7 +79,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         if (activeModificationSuggestionModifications.containsKey(suggestionId)) {
             fileModificationSuggestionModificationTracker = activeModificationSuggestionModifications.get(suggestionId);
         } else {
-            fileModificationSuggestionModificationTracker = new FileModificationSuggestionModificationTracker(fileModificationSuggestion);
+            fileModificationSuggestionModificationTracker = new FileModificationSuggestionModificationTracker(fileModificationSuggestion, rangeReplaceService);
             activeModificationSuggestionModifications.put(suggestionId, fileModificationSuggestionModificationTracker);
         }
         String fileModificationSuggestionModificationId = fileModificationSuggestionModificationTracker.addModificationSuggestionModification(newFilePath, startIndex, endIndex, modificationType);
@@ -122,6 +125,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         guardedBlockService.removeFileModificationGuardedBlock(modificationId);
         //jTreeHighlighterService.repaint();
         codeHighlighterService.highlightTextArea(fileModificationTracker);
+        disposeProvisionalModificationCustomizers(fileModification);
     }
 
     public void removeModificationSuggestionModification(String modificationSuggestionModificationId) {
@@ -157,60 +161,6 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
     }
 
-    @Override
-    public void queueModificationUpdate(String modificationId, String modification) {
-        FileModificationTracker fileModificationTracker = activeModificationFiles.values().stream()
-                .filter(m -> m.hasModification(modificationId))
-                .findFirst()
-                .orElse(null);
-        if (fileModificationTracker == null) {
-            return;
-        }
-        guardedBlockService.removeFileModificationGuardedBlock(modificationId);
-        codeHighlighterService.highlightTextArea(fileModificationTracker);
-        fileModificationTracker.addModificationUpdate(new FileModificationUpdate(modificationId, modification));
-        if (fileModificationTracker.getModifications().isEmpty()) {
-            activeModificationFiles.values().remove(fileModificationTracker);
-        }
-    }
-
-    @Override
-    public void queueModificationSuggestionModificationUpdate(FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord) {
-        FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = activeModificationSuggestionModifications.values().stream()
-                .filter(m -> m.hasModificationSuggestionModification(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId()))
-                .findFirst()
-                .orElseThrow();
-        guardedBlockService.removeFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId());
-        codeHighlighterService.highlightTextArea(fileModificationSuggestionModificationTracker);
-        fileModificationSuggestionModificationTracker.addModificationUpdate(new FileModificationUpdate(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId(), fileModificationSuggestionModificationRecord.getEditedCode().trim()));
-        if (fileModificationSuggestionModificationTracker.getModifications().isEmpty()) {
-            activeModificationSuggestionModifications.values().remove(fileModificationSuggestionModificationTracker);
-        }
-    }
-
-    @Override
-    public void implementQueuedModificationUpdates() {
-        if (implementingQueuedModifications) {
-            return;
-        }
-        implementingQueuedModifications = true;
-        for (FileModificationTracker fileModificationTracker : activeModificationFiles.values()) {
-            if (!fileModificationTracker.getFileModificationUpdateQueue().isEmpty()) {
-                fileModificationTracker.processModificationUpdates();
-            }
-        }
-        for (FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker : activeModificationSuggestionModifications.values()) {
-            if (!fileModificationSuggestionModificationTracker.getFileModificationUpdateQueue().isEmpty()) {
-                fileModificationSuggestionModificationTracker.processModificationUpdates();
-            }
-        }
-        if (modificationQueueViewer != null) {
-            modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
-        }
-        if (modificationQueueListButtonService != null) {
-        }
-        implementingQueuedModifications = false;
-    }
 
     @Override
     public void implementModificationUpdate(String modificationId, String modification) {
@@ -237,34 +187,23 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         if (fileModificationTracker.getModifications().isEmpty()) {
             activeModificationFiles.values().remove(fileModificationTracker);
         }
+        disposeProvisionalModificationCustomizers(fileModification);
+        modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
     }
 
     @Override
-    public void updateModifications(String filePath, int formerStartIndex, int formerEndIndex, String textInserted) {
-        String newFilePath;
-        newFilePath = Objects.requireNonNullElse(filePath, "Untitled");
-        FileModificationTracker fileModificationTracker = activeModificationFiles.get(newFilePath);
-        if (fileModificationTracker == null) {
-            return;
-        }
-        //jTreeHighlighterService.repaint();
-        codeHighlighterService.highlightTextArea(fileModificationTracker);
-    }
-
-    @Override
-    public void updateModificationSuggestionModifications(String suggestionId, int formerStartIndex, int formerEndIndex, String textInserted) {
-        FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = activeModificationSuggestionModifications.get(suggestionId);
-        if (fileModificationSuggestionModificationTracker == null) {
-            return;
-        }
-        //jTreeHighlighterService.repaint();
+    public void implementModificationSuggestionModificationUpdate(FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord) {
+        FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = activeModificationSuggestionModifications.values().stream()
+                .filter(m -> m.hasModificationSuggestionModification(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId()))
+                .findFirst()
+                .orElseThrow();
+        guardedBlockService.removeFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId());
         codeHighlighterService.highlightTextArea(fileModificationSuggestionModificationTracker);
-    }
-
-    public void reHighlightTextArea(String filePath) {
-        String newFilePath;
-        newFilePath = Objects.requireNonNullElse(filePath, "Untitled");
-        codeHighlighterService.highlightTextArea(activeModificationFiles.get(newFilePath));
+        fileModificationSuggestionModificationTracker.implementModification(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId(), fileModificationSuggestionModificationRecord.getEditedCode().trim());
+        if (fileModificationSuggestionModificationTracker.getModifications().isEmpty()) {
+            activeModificationSuggestionModifications.values().remove(fileModificationSuggestionModificationTracker);
+        }
+        modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
     }
 
     public Map<String, FileModificationTracker> getActiveModificationFiles() {
@@ -365,16 +304,32 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     }
 
 
-    @Override
-    public Color getModificationQueueListButtonColor() {
-        return modificationQueueListButtonService.getModificationQueueListButtonColor();
-    }
-
     public void setModificationQueueListButtonService(ModificationQueueListButtonService modificationQueueListButtonService) {
         this.modificationQueueListButtonService = modificationQueueListButtonService;
     }
 
     public void setModificationQueueViewer(ModificationQueueViewer modificationQueueViewer) {
         this.modificationQueueViewer = modificationQueueViewer;
+    }
+
+    public void addProvisionalModificationCustomizer(ProvisionalModificationCustomizer provisionalModificationCustomizer) {
+        List<ProvisionalModificationCustomizer> provisionalModificationCustomizerList = provisionalModificationCustomizerMap.get(provisionalModificationCustomizer.getFileModificationSuggestion().getId());
+        if (provisionalModificationCustomizerList == null) {
+            provisionalModificationCustomizerList = new ArrayList<>();
+        }
+        provisionalModificationCustomizerList.add(provisionalModificationCustomizer);
+        provisionalModificationCustomizerMap.put(provisionalModificationCustomizer.getFileModificationSuggestion().getId(), provisionalModificationCustomizerList);
+    }
+
+    private void disposeProvisionalModificationCustomizers(FileModification fileModification) {
+        for (FileModificationSuggestion fileModificationSuggestion : fileModification.getModificationOptions()) {
+            List<ProvisionalModificationCustomizer> provisionalModificationCustomizerList = provisionalModificationCustomizerMap.get(fileModificationSuggestion.getId());
+            if (provisionalModificationCustomizerList != null) {
+                for (ProvisionalModificationCustomizer provisionalModificationCustomizer : provisionalModificationCustomizerList) {
+                    provisionalModificationCustomizer.dispose();
+                }
+            }
+            provisionalModificationCustomizerMap.remove(fileModificationSuggestion.getId());
+        }
     }
 }
