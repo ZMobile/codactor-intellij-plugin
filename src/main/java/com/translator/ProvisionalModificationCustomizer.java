@@ -23,8 +23,7 @@ import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationSuggestion;
 import com.translator.model.modification.ModificationType;
 import com.translator.service.code.CodeSnippetExtractorService;
-import com.translator.service.code.GptToLanguageTransformerService;
-import com.translator.service.constructor.CodeFileGeneratorService;
+import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.context.PromptContextServiceImpl;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
@@ -227,7 +226,7 @@ public class ProvisionalModificationCustomizer extends JDialog {
 
         JLabel hiddenLabel = new JLabel();
         hiddenLabel.setVisible(false);
-        JComboBox<String> modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k"});
+        JComboBox<String> modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
         JComboBox<String> modificationTypeComboBox = new ComboBox<>(new String[]{"Modify", "Modify Selected", "Fix", "Fix Selected", "Create", "Create Files", "Inquire", "Inquire Selected"});
         JLabel jLabel1 = new JLabel();
         JButton advancedButton = new JButton("(Advanced) Add Context");

@@ -4,23 +4,18 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.name.Named;
 import com.intellij.openapi.project.Project;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.CodeTranslatorServiceConfig;
 import com.translator.service.code.CodeSnippetExtractorService;
-import com.translator.service.code.RangeReplaceService;
-import com.translator.service.constructor.CodeFileGeneratorService;
+import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
 import com.translator.service.file.FileOpenerService;
-import com.translator.service.file.RenameFileService;
 import com.translator.service.file.SelectedFileFetcherService;
 import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
-import com.translator.service.openai.OpenAiApiKeyService;
-import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.file.FileReaderService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.console.CodactorConsole;
@@ -29,9 +24,6 @@ import com.translator.view.factory.ProvisionalModificationCustomizerFactory;
 import com.translator.view.viewer.ModificationQueueViewer;
 import com.translator.view.viewer.ProvisionalModificationViewer;
 import com.translator.view.viewer.*;
-import com.translator.worker.LimitedSwingWorkerExecutor;
-
-import java.util.Map;
 
 public class CodeTranslatorViewConfig extends AbstractModule {
     private Project project;

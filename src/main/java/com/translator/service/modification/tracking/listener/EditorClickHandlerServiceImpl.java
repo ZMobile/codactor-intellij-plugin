@@ -1,6 +1,7 @@
 package com.translator.service.modification.tracking.listener;
 
 import com.google.inject.Inject;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
@@ -33,26 +34,36 @@ public class EditorClickHandlerServiceImpl implements EditorClickHandlerService 
 
     @Override
     public void addEditorClickHandler(String filePath) {
+        if (editorClickHandlerMap.containsKey(filePath)) {
+            return;
+        }
+        System.out.println("Testo double mini 1: " + filePath);
         EditorClickHandler editorClickHandler = new EditorClickHandler(fileModificationTrackerService, codactorToolWindowService, filePath);
+        System.out.println("Testo double mini 2");
         VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
         if (virtualFile == null) {
             return;
         }
+        System.out.println("Testo double mini 3: " + virtualFile);
 
         Editor editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
+        System.out.println("Testo double mini 4: editor = " + editor);
         editor.addEditorMouseListener(editorClickHandler);
+        System.out.println("Testo double mini 5");
         editorClickHandlerMap.put(filePath, editorClickHandler);
     }
 
     public void removeEditorClickHandler(String filePath) {
-        EditorClickHandler editorClickHandler = editorClickHandlerMap.get(filePath);
-        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
-        if (virtualFile == null) {
-            return;
-        }
+        if (editorClickHandlerMap.containsKey(filePath)) {
+            EditorClickHandler editorClickHandler = editorClickHandlerMap.get(filePath);
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+            if (virtualFile == null) {
+                return;
+            }
 
-        Editor editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
-        editor.removeEditorMouseListener(editorClickHandler);
-        editorClickHandlerMap.remove(filePath);
+            Editor editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
+            editor.removeEditorMouseListener(editorClickHandler);
+            editorClickHandlerMap.remove(filePath);
+        }
     }
 }

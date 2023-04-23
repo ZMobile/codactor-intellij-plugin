@@ -13,23 +13,19 @@ import com.intellij.ui.components.*;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import com.translator.PromptContextBuilder;
-import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.file.FileItem;
 import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import com.translator.model.modification.ModificationType;
 import com.translator.service.code.CodeSnippetExtractorService;
-import com.translator.service.constructor.CodeFileGeneratorService;
+import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
-import com.translator.service.file.FileCreatorService;
-import com.translator.service.file.RenameFileService;
 import com.translator.service.file.SelectedFileFetcherService;
 import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.AutomaticCodeModificationService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.PromptContextBuilderFactory;
-import com.translator.view.viewer.ModificationQueueViewer;
 import com.translator.view.window.FileChooserWindow;
 import org.jetbrains.annotations.NotNull;
 
@@ -100,7 +96,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         button2 = new JButton();
         button2.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/microphone_icon.png"))));
 
-        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k"});
+        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
         VirtualFile[] selectedFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
         VirtualFile[] openFiles = selectedFileFetcherService.getOpenFiles();
         fileComboBox = new ComboBox<>();

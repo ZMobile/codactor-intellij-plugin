@@ -7,6 +7,7 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.translator.dao.firebase.FirebaseTokenService;
 import com.translator.model.api.translator.modification.*;
 import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
@@ -20,6 +21,7 @@ import com.translator.service.code.CodeSnippetExtractorService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
+import com.translator.view.dialog.LoginDialog;
 import com.translator.view.dialog.OpenAiApiKeyDialog;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,6 +33,7 @@ import java.util.List;
 
 public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModificationService {
     private Project project;
+    private FirebaseTokenService firebaseTokenService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
     private FileModificationTrackerService fileModificationTrackerService;
     private PromptContextService promptContextService;
@@ -40,6 +43,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
 
     @Inject
     public AutomaticCodeModificationServiceImpl(Project project,
+                                                FirebaseTokenService firebaseTokenService,
                                                 CodeSnippetExtractorService codeSnippetExtractorService,
                                                 FileModificationTrackerService fileModificationTrackerService,
                                                 @Assisted PromptContextService promptContextService,
@@ -47,6 +51,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                                                 OpenAiModelService openAiModelService,
                                                 CodeModificationService codeModificationService) {
         this.project = project;
+        this.firebaseTokenService = firebaseTokenService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.promptContextService = promptContextService;
@@ -57,6 +62,12 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
 
     @Override
     public void getModifiedCode(String filePath, int startIndex, int endIndex, String modification, ModificationType modificationType) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
         String modificationId = fileModificationTrackerService.addModification(filePath, startIndex, endIndex, modificationType);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + modificationType + ")", true) {
@@ -78,7 +89,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 } else {
                     if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                         OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        openAiApiKeyDialog.setVisible(true);
+                        //openAiApiKeyDialog.setVisible(true);
                     } else {
                         JOptionPane.showMessageDialog(super.getParentComponent(), desktopCodeModificationResponseResource.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -92,6 +103,12 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
 
     @Override
     public void getModifiedCodeModification(String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification Suggestion Modification (" + modificationType + ")", true) {
@@ -114,7 +131,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 } else {
                     if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
                         OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        openAiApiKeyDialog.setVisible(true);
+                        //openAiApiKeyDialog.setVisible(true);
                     } else {
                         JOptionPane.showMessageDialog(super.getParentComponent(), fileModificationSuggestionModificationRecord.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -128,6 +145,12 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
 
     @Override
     public void getFixedCode(String filePath, int startIndex, int endIndex, String error, ModificationType modificationType) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, code.length(), modificationType);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + modificationType + ")", true) {
@@ -149,7 +172,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 } else {
                     if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                         OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        openAiApiKeyDialog.setVisible(true);
+                        //openAiApiKeyDialog.setVisible(true);
                     } else {
                         JOptionPane.showMessageDialog(super.getParentComponent(), desktopCodeModificationResponseResource.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -163,6 +186,12 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
 
     @Override
     public void getModifiedCodeFix(String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification Suggestion Modification (" + modificationType + ")", true) {
@@ -185,7 +214,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 } else {
                     if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
                         OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        openAiApiKeyDialog.setVisible(true);
+                        //openAiApiKeyDialog.setVisible(true);
                     } else {
                         JOptionPane.showMessageDialog(super.getParentComponent(), fileModificationSuggestionModificationRecord.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -199,6 +228,12 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
 
     @Override
     public void getCreatedCode(String filePath, String description) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, 0, ModificationType.CREATE);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + ModificationType.CREATE + ")", true) {
             @Override
@@ -219,7 +254,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 } else {
                     if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                         OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        openAiApiKeyDialog.setVisible(true);
+                        //openAiApiKeyDialog.setVisible(true);
                     } else {
                         JOptionPane.showMessageDialog(super.getParentComponent(), desktopCodeCreationResponseResource.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -233,6 +268,12 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
 
     @Override
     public void getModifiedCodeCreation(String suggestionId, int startIndex, int endIndex, String description) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, 0, 0, ModificationType.CREATE);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification Suggestion Modification (" + ModificationType.CREATE + ")", true) {
@@ -255,7 +296,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 } else {
                     if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
                         OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        openAiApiKeyDialog.setVisible(true);
+                        //openAiApiKeyDialog.setVisible(true);
                     } else {
                         JOptionPane.showMessageDialog(super.getParentComponent(), fileModificationSuggestionModificationRecord.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -269,6 +310,12 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
 
     @Override
     public void getTranslatedCode(String filePath, String newLanguage, String newFileType) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
         String code = codeSnippetExtractorService.getAllText(filePath);
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, code.length(), ModificationType.TRANSLATE);
         FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
@@ -305,7 +352,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 } else {
                     if (desktopCodeTranslationResponseResource.getError().equals("null: null")) {
                         OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        openAiApiKeyDialog.setVisible(true);
+                        //openAiApiKeyDialog.setVisible(true);
                     } else {
                         JOptionPane.showMessageDialog(super.getParentComponent(), desktopCodeTranslationResponseResource.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);

@@ -1,21 +1,11 @@
 package com.translator.listener;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManagerListener;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowManager;
 import com.translator.CodactorInjector;
-import com.translator.dao.CodeTranslatorDaoConfig;
-import com.translator.service.CodeTranslatorServiceConfig;
-import com.translator.service.constructor.CodeFileGeneratorService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
-import com.translator.service.ui.ModificationQueueListButtonService;
-import com.translator.service.ui.tool.CodactorToolWindowService;
-import com.translator.service.ui.tool.ToolWindowService;
-import com.translator.view.CodeTranslatorViewConfig;
 import com.translator.view.action.DoubleControlAction;
 import com.translator.view.viewer.HistoricalModificationListViewer;
 import com.translator.view.viewer.InquiryListViewer;

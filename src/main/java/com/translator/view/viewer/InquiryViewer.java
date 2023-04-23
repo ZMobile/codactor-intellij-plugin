@@ -1,29 +1,18 @@
 package com.translator.view.viewer;
 
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.HighlighterTargetArea;
 import com.intellij.openapi.editor.markup.TextAttributes;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
-import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.inquiry.Inquiry;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.inquiry.InquiryChatType;
 import com.translator.model.modification.RecordType;
-import com.translator.service.code.GptToLanguageTransformerService;
-import com.translator.service.code.GptToLanguageTransformerServiceImpl;
-import com.translator.service.constructor.CodeFileGeneratorService;
+import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.inquiry.InquiryService;
-import com.translator.service.inquiry.InquiryServiceImpl;
-import com.translator.service.openai.OpenAiApiKeyService;
-import com.translator.service.openai.OpenAiModelService;
 import com.translator.view.menu.TextAreaWindow;
 import com.translator.view.panel.FixedHeightPanel;
 import com.translator.view.renderer.InquiryChatRenderer;
@@ -31,10 +20,7 @@ import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorServiceImpl;
 import com.translator.view.window.FileChooserWindow;
-import com.translator.worker.LimitedSwingWorker;
-import com.translator.worker.LimitedSwingWorkerExecutor;
 import com.intellij.ui.components.JBTextArea;
-import org.jetbrains.annotations.NotNull;
 
 
 import javax.swing.*;

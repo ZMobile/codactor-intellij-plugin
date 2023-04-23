@@ -14,35 +14,32 @@ public class FileCreatorServiceImpl implements FileCreatorService {
 
     public List<File> createFilesFromInput(String directoryPath, String input) {
         List<File> files = new ArrayList<>();
-        List<String> commands = extractCommands(input);
+        List<String> fileNames = extractCommands(input);
 
-
-        commands.forEach(command -> {
-            List<String> fileNames = extractFileNames(command);
-
-            if (directoryPath != null && !fileNames.isEmpty()) {
-                fileNames.forEach(fileName -> {
-                    try {
-                        files.add(createFile(directoryPath, fileName));
-                    } catch (IOException e) {
-                        System.err.println("Error creating file: " + fileName);
-                        e.printStackTrace();
-                    }
-                });
-            }
-        });
+        System.out.println("Big testo 2: " + fileNames.size());
+        if (directoryPath != null && !fileNames.isEmpty()) {
+            fileNames.forEach(fileName -> {
+                try {
+                    System.out.println("Big testo 3: " + fileName);
+                    files.add(createFile(directoryPath, fileName));
+                } catch (IOException e) {
+                    System.err.println("Error creating file: " + fileName);
+                    e.printStackTrace();
+                }
+            });
+        }
+        System.out.println("Big testo 3: " + files);
         return files;
     }
 
+
     private List<String> extractCommands(String input) {
-        Pattern commandPattern = Pattern.compile("```([^`]+)```");
+        Pattern commandPattern = Pattern.compile("touch\\s+([^\\s]+\\.java)");
         Matcher matcher = commandPattern.matcher(input);
 
         List<String> commands = new ArrayList<>();
         while (matcher.find()) {
-            if (matcher.group(1).contains("touch") && matcher.group(1).contains(".")) {
-                commands.add(matcher.group(1));
-            }
+            commands.add(matcher.group(1));
         }
 
         return commands;
@@ -58,12 +55,12 @@ public class FileCreatorServiceImpl implements FileCreatorService {
             List<String> fileNamesList = Arrays.asList(fileNamesGroup.trim().split("\\s+"));
             for (String fileName : fileNamesList) {
                 if (fileName.contains(".") && !fileNames.contains(fileName)) {
-                    File file = new File(fileName);
-                    fileNames.add(file.getName());
+                    //Get the name of the file from the path (i.e. string after last "/")
+                    String fileNameFromPath = fileName.substring(fileName.lastIndexOf("/") + 1);
+                    fileNames.add(fileNameFromPath);
                 }
             }
         }
-
         return fileNames;
     }
 

@@ -1,6 +1,7 @@
 package com.translator.view.dialog;
 
 import com.translator.dao.firebase.FirebaseTokenService;
+import com.translator.service.openai.OpenAiApiKeyService;
 
 import javax.swing.*;
 import java.awt.*;

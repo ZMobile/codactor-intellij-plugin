@@ -1,7 +1,6 @@
 package com.translator.service.modification.tracking;
 
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vcs.FileStatusManager;
 import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.*;
 import com.translator.service.code.CodeHighlighterService;
@@ -60,26 +59,35 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     }
 
     public String addModification(String filePath, int startIndex, int endIndex, ModificationType modificationType) {
+        System.out.println("Testo mini 1: " + filePath);
         String newFilePath = Objects.requireNonNullElse(filePath, "Untitled");
         FileModificationTracker fileModificationTracker;
         if (activeModificationFiles.containsKey(newFilePath)) {
             fileModificationTracker = activeModificationFiles.get(newFilePath);
         } else {
             fileModificationTracker = new FileModificationTracker(project, newFilePath, codeSnippetExtractorService, rangeReplaceService, codeRangeTrackerService);
-            editorClickHandlerService.addEditorClickHandler(newFilePath);
+            System.out.println("Testo mini 2");
             activeModificationFiles.put(newFilePath, fileModificationTracker);
+            System.out.println("Testo mini 3");
+            System.out.println("Testo mini 4");
         }
+        if (modificationType != ModificationType.CREATE) {
+            editorClickHandlerService.addEditorClickHandler(newFilePath);
+        }
+        System.out.println("Testo mini 5");
         String fileModificationId = fileModificationTracker.addModification(startIndex, endIndex, modificationType);
         if (fileModificationId == null) {
             //JBTextArea display = displayMap.get(newFilePath);
             /*JOptionPane.showMessageDialog(display, "Can't modify code that is already being modified", "Error",
                     JOptionPane.ERROR_MESSAGE);*/
         }
+        System.out.println("Testo mini 3");
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
+        System.out.println("Testo mini 4");
         guardedBlockService.addFileModificationGuardedBlock(fileModificationId, startIndex, endIndex);
+        System.out.println("Testo mini 5");
         codeHighlighterService.highlightTextArea(fileModificationTracker);
-        FileStatusManager fileStatusManager = FileStatusManager.getInstance(project);
-        fileStatusManager.fileStatusesChanged();
+        System.out.println("Testo mini 6");
         return fileModificationId;
     }
 
@@ -137,8 +145,6 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         guardedBlockService.removeFileModificationGuardedBlock(modificationId);
         //jTreeHighlighterService.repaint();
         codeHighlighterService.highlightTextArea(fileModificationTracker);
-        FileStatusManager fileStatusManager = FileStatusManager.getInstance(project);
-        fileStatusManager.fileStatusesChanged();
         disposeProvisionalModificationCustomizers(fileModification);
     }
 
@@ -215,8 +221,6 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             String newFileName = fileNameWithoutExtension + newFileType;
             renameFileService.renameFile(fileModification.getFilePath(), newFileName);
         }
-        FileStatusManager fileStatusManager = FileStatusManager.getInstance(project);
-        fileStatusManager.fileStatusesChanged();
     }
 
     @Override

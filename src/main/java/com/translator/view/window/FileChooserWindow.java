@@ -3,7 +3,7 @@ package com.translator.view.window;
 import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.inquiry.Inquiry;
 import com.translator.model.inquiry.InquiryChat;
-import com.translator.service.constructor.CodeFileGeneratorService;
+import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 
 import javax.swing.*;

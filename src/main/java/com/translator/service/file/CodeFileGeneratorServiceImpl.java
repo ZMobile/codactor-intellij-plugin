@@ -1,6 +1,5 @@
-package com.translator.service.constructor;
+package com.translator.service.file;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
@@ -15,7 +14,6 @@ import com.translator.model.inquiry.Inquiry;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.modification.ModificationType;
 import com.translator.model.modification.RecordType;
-import com.translator.service.file.FileCreatorService;
 import com.translator.service.modification.CodeModificationService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.openai.OpenAiApiKeyService;
@@ -92,6 +90,7 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                             mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         }
                         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
+
                         List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat2.getMessage());
                         for (int i = 0; i < newFiles.size(); i++) {
                             File file = newFiles.get(i);
@@ -114,15 +113,14 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                             fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
                                             //write the contents to the file with printWriter:
-                                            try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                                                out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
-                                            } catch (FileNotFoundException e) {
-                                                e.printStackTrace();
-                                            }
+                                           // try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
+                                                //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                            //} catch (FileNotFoundException e) {
+                                                //e.printStackTrace();
+                                            //}
                                         } else {
                                             if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                                                 OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                                                openAiApiKeyDialog.setVisible(true);
                                             } else {
                                                 JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                         JOptionPane.ERROR_MESSAGE);
@@ -222,16 +220,15 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                         fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
                                         //write the contents to the file with printWriter:
-                                        try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                                            out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
-                                        } catch (FileNotFoundException e) {
-                                            e.printStackTrace();
-                                        }
+                                        //try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
+                                            //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                        //} catch (FileNotFoundException e) {
+                                            //e.printStackTrace();
+                                        //}
                                         completedSuggestionIds.add(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getId());
                                     } else {
                                         if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                                             OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                                            openAiApiKeyDialog.setVisible(true);
                                         } else {
                                             JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                     JOptionPane.ERROR_MESSAGE);
@@ -291,6 +288,7 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                             mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         }
                         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
+
                         List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat2.getMessage());
                         for (int i = 0; i < newFiles.size(); i++) {
                             File file = newFiles.get(i);
@@ -314,15 +312,14 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                             fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
                                             //write the contents to the file with printWriter:
-                                            try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                                                out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
-                                            } catch (FileNotFoundException e) {
-                                                e.printStackTrace();
-                                            }
+                                            //try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
+                                                //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                            //} catch (FileNotFoundException e) {
+                                                //e.printStackTrace();
+                                            //}
                                         } else {
                                             if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                                                 OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                                                openAiApiKeyDialog.setVisible(true);
                                             } else {
                                                 JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                         JOptionPane.ERROR_MESSAGE);
@@ -393,40 +390,54 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                         if (newInquiry != null) {
                             InquiryChat mostRecentInquiryChat3 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                             fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
+                            System.out.println("Testo emga 4");
+
                             List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat3.getMessage());
+                            System.out.println("Testo emga 5: " + newFiles.size());
                             List<String> completedSuggestionIds = new ArrayList<>();
                             for (int i = 0; i < newFiles.size(); i++) {
+                                System.out.println("We got this far: " + i + " out of " + newFiles.size());
                                 File file = newFiles.get(i);
                                 if (file != null) {
                                     String newFilePath = file.getAbsolutePath();
+                                    System.out.println("Testo 1");
                                     String modificationId = fileModificationTrackerService.addModification(newFilePath, 0, 0, ModificationType.CREATE);
+                                    System.out.println("Testo 2");
                                     int fileNumber = i + 1;
                                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
+                                    System.out.println("Testo 3");
                                     List<HistoricalContextObjectHolder> priorContext2 = new ArrayList<>();
                                     HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat1.getId(), null, true, null);
                                     HistoricalContextObjectHolder priorContextObject = new HistoricalContextObjectHolder(inquiryContext);
                                     priorContext2.add(priorContextObject);
+                                    System.out.println("Testo 4");
                                     for (String completedSuggestionId : completedSuggestionIds) {
                                         HistoricalContextModificationHolder modificationContext = new HistoricalContextModificationHolder(completedSuggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
                                         HistoricalContextObjectHolder priorContextObject2 = new HistoricalContextObjectHolder(modificationContext);
                                         priorContext2.add(priorContextObject2);
                                     }
+                                    System.out.println("Testo 5");
                                     String description2 = "The complete and comprehensive " + language + " code for " + file.getName();
                                     DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description2, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext2);
                                     DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
+                                    System.out.println("Testo 6");
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
+                                        System.out.println("Testo 7");
                                         fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                        System.out.println("Testo 8");
                                         //write the contents to the file with printWriter:
-                                        try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                                            out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
-                                        } catch (FileNotFoundException e) {
-                                            e.printStackTrace();
-                                        }
+                                        //Check if the file contents are empty first:
+                                        /////
+                                        //try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
+                                            //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                            //System.out.println("Testo 9");
+                                        //} catch (FileNotFoundException e) {
+                                            //e.printStackTrace();
+                                        //}
                                         completedSuggestionIds.add(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getId());
                                     } else {
                                         if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                                             OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                                            openAiApiKeyDialog.setVisible(true);
                                         } else {
                                             JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                     JOptionPane.ERROR_MESSAGE);
