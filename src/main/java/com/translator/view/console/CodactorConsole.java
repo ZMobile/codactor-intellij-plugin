@@ -24,9 +24,10 @@ import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
 import com.translator.service.file.SelectedFileFetcherService;
 import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.AutomaticCodeModificationService;
+import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.PromptContextBuilderFactory;
-import com.translator.view.window.FileChooserWindow;
+import com.translator.view.window.MultiFileGeneratorWindow;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
@@ -64,6 +65,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private AutomaticCodeModificationService automaticCodeModificationService;
     private InquiryService inquiryService;
     private CodeFileGeneratorService codeFileGeneratorService;
+    private OpenAiModelService openAiModelService;
     private PromptContextBuilderFactory promptContextBuilderFactory;
 
     @Inject
@@ -74,6 +76,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            CodeSnippetExtractorService codeSnippetExtractorService,
                            InquiryService inquiryService,
                            CodeFileGeneratorService codeFileGeneratorService,
+                           OpenAiModelService openAiModelService,
                            AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory,
                            PromptContextBuilderFactory promptContextBuilderFactory) {
         super(new BorderLayout());
@@ -84,6 +87,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.inquiryService = inquiryService;
         this.codeFileGeneratorService = codeFileGeneratorService;
+        this.openAiModelService = openAiModelService;
         this.automaticCodeModificationService = automaticCodeModificationServiceFactory.create(promptContextService);
         this.promptContextBuilderFactory = promptContextBuilderFactory;
         textArea = new JBTextArea();
@@ -97,6 +101,13 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         button2.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/microphone_icon.png"))));
 
         modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
+        modelComboBox.addActionListener(e -> {
+            JComboBox<String> cb = (JComboBox<String>) e.getSource();
+            String model = (String) cb.getSelectedItem();
+            if (model != null) {
+                openAiModelService.setSelectedOpenAiModel(model);
+            }
+        });
         VirtualFile[] selectedFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
         VirtualFile[] openFiles = selectedFileFetcherService.getOpenFiles();
         fileComboBox = new ComboBox<>();
@@ -353,8 +364,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                             }
                         }
                         String description = textArea.getText();
-                        FileChooserWindow fileChooserWindow = new FileChooserWindow(description, priorContext, codeFileGeneratorService, codactorToolWindowService);
-                        fileChooserWindow.setVisible(true);
+                        MultiFileGeneratorWindow multiFileGeneratorWindow = new MultiFileGeneratorWindow(description, priorContext, codeFileGeneratorService, codactorToolWindowService);
+                        multiFileGeneratorWindow.setVisible(true);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire")) {
                     if (!textArea.getText().isEmpty()) {

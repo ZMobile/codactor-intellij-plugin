@@ -96,7 +96,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             @Override
             public void actionPerformed(ActionEvent e) {
                 FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
-                fileModificationTrackerService.implementModificationUpdate(fileModificationId, fileModificationSuggestion.getSuggestedCode().getDocument().getText());
+                fileModificationTrackerService.implementModificationUpdate(fileModificationId, fileModificationSuggestion.getSuggestedCode().getDocument().getText(), false);
                 codactorToolWindowService.closeModificationQueueViewerToolWindow();
                 updateModificationList(null);
             }

@@ -111,7 +111,7 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                                         DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                                         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                            fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                            fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim(), true);
                                             //write the contents to the file with printWriter:
                                            // try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                                                 //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
@@ -218,7 +218,7 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                                     DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                                     DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                        fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                        fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim(), true);
                                         //write the contents to the file with printWriter:
                                         //try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                                             //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
@@ -310,7 +310,7 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                                         DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), newDescription, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), newPriorContext);
                                         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                            fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                            fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim(), true);
                                             //write the contents to the file with printWriter:
                                             //try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                                                 //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
@@ -423,7 +423,7 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                                     System.out.println("Testo 6");
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                         System.out.println("Testo 7");
-                                        fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                        fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim(), true);
                                         System.out.println("Testo 8");
                                         //write the contents to the file with printWriter:
                                         //Check if the file contents are empty first:

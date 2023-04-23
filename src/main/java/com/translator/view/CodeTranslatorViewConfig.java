@@ -17,6 +17,7 @@ import com.translator.service.file.SelectedFileFetcherService;
 import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.file.FileReaderService;
+import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.console.CodactorConsole;
 import com.translator.view.factory.PromptContextBuilderFactory;
@@ -91,8 +92,9 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            CodeSnippetExtractorService codeSnippetExtractorService,
                                            InquiryService inquiryService,
                                            CodeFileGeneratorService codeFileGeneratorService,
+                                           OpenAiModelService openAiModelService,
                                            AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory,
                                            PromptContextBuilderFactory promptContextBuilderFactory) {
-        return new CodactorConsole(project, promptContextService, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, codeFileGeneratorService, automaticCodeModificationServiceFactory, promptContextBuilderFactory);
+        return new CodactorConsole(project, promptContextService, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, codeFileGeneratorService, openAiModelService, automaticCodeModificationServiceFactory, promptContextBuilderFactory);
     }
 }

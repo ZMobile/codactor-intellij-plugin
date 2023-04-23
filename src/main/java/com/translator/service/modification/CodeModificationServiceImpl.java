@@ -113,6 +113,7 @@ public class CodeModificationServiceImpl implements CodeModificationService {
 
     @Override
     public DesktopCodeCreationResponseResource getCreatedCode(DesktopCodeCreationRequestResource desktopCodeCreationRequestResource) {
+        System.out.println("Testo open ai: " + desktopCodeCreationRequestResource.getModel());
         /*if (desktopCodeCreationRequestResource.getDescription().length() > 3580) {
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = new DesktopCodeModificationResponseResource();
             desktopCodeModificationResponseResource.setSpecifiedError("Prompt is too long");

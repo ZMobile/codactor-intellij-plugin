@@ -19,7 +19,7 @@ import com.translator.view.renderer.InquiryChatRenderer;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorServiceImpl;
-import com.translator.view.window.FileChooserWindow;
+import com.translator.view.window.MultiFileGeneratorWindow;
 import com.intellij.ui.components.JBTextArea;
 
 
@@ -454,8 +454,8 @@ public class InquiryViewer extends JPanel {
                 if (selectedChat > 0){
                     InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(selectedChat);
                     InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
-                    FileChooserWindow fileChooserWindow = new FileChooserWindow(inquiry, inquiryChat, codeFileGeneratorService, codactorToolWindowService);
-                    fileChooserWindow.setVisible(true);
+                    MultiFileGeneratorWindow multiFileGeneratorWindow = new MultiFileGeneratorWindow(inquiry, inquiryChat, codeFileGeneratorService, codactorToolWindowService);
+                    multiFileGeneratorWindow.setVisible(true);
                 }
             }
         });

@@ -82,8 +82,15 @@ public class QueuedModificationObjectRenderer extends JPanel implements ListCell
             FileModification fileModification = value.getFileModification();
             filePathLabel.setText("File: " + fileModification.getFilePath());
             String fileContent = fileReaderService.readFileContent(project, fileModification.getFilePath());
-            int startLine = lineCounterService.countLines(fileContent, fileModification.getRangeMarker().getStartOffset());
-            int endLine = lineCounterService.countLines(fileContent, fileModification.getRangeMarker().getEndOffset());
+            int startLine;
+            int endLine;
+            if (fileModification.getRangeMarker() == null) {
+                startLine = 0;
+                endLine = 0;
+            } else {
+                startLine = lineCounterService.countLines(fileContent, fileModification.getRangeMarker().getStartOffset());
+                endLine = lineCounterService.countLines(fileContent, fileModification.getRangeMarker().getEndOffset());
+            }
             lineRangeText = "Lines: " + startLine + " - " + endLine;
             statusText = fileModification.isDone() ? "(Done)" : "(Queued)";
             setBackground(fileModification.isDone() ? Color.decode("#228B22") : Color.decode("#009688"));

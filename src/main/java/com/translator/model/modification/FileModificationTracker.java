@@ -43,13 +43,6 @@ public class FileModificationTracker {
         return fileModificationUpdateQueue;
     }
 
-    public void processModificationUpdates() {
-        for (FileModificationUpdate update : fileModificationUpdateQueue) {
-            implementModification(update.getModificationId(), update.getModification());
-        }
-        fileModificationUpdateQueue.clear();
-    }
-
 
     public String addModification(int startIndex, int endIndex, ModificationType modificationType) {
         String beforeText = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
@@ -89,7 +82,7 @@ public class FileModificationTracker {
     }
 
 
-    public void implementModification(String modificationId, String modification) {
+    public void implementModification(String modificationId, String modification, boolean silent) {
         synchronized (modifications) {
             for (FileModification m : modifications) {
                 if (m.getId().equals(modificationId)) {
@@ -98,8 +91,11 @@ public class FileModificationTracker {
                         int formerStartIndex = rangeMarker.getStartOffset();
                         int formerEndIndex = rangeMarker.getEndOffset();
                         modifications.remove(m);
-                        rangeReplaceService.replaceRange(filePath, formerStartIndex, formerEndIndex, modification);
+                        rangeReplaceService.replaceRange(filePath, formerStartIndex, formerEndIndex, modification, silent);
                         rangeMarker.dispose(); // Dispose the RangeMarker after it's no longer needed
+                    } else if (m.getModificationType() == ModificationType.CREATE) {
+                        modifications.remove(m);
+                        rangeReplaceService.replaceRange(filePath, 0, 0, modification, silent);
                     }
                     break;
                 }

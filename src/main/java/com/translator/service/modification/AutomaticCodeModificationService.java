@@ -15,6 +15,8 @@ public interface AutomaticCodeModificationService {
 
     void getCreatedCode(String filePath, String description);
 
+    void createAndImplementCode(String filePath, String description);
+
     void getModifiedCodeCreation(String suggestionId, int startIndex, int endIndex, String description);
 
     void getTranslatedCode(String filePath, String newLanguage, String newFileType);

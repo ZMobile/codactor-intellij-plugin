@@ -49,19 +49,21 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
             removeAllHighlights(editor);
 
             for (FileModification modification : fileModificationTracker.getModifications()) {
-                int startIndex = modification.getRangeMarker().getStartOffset();
-                int endIndex = modification.getRangeMarker().getEndOffset();
+                if (modification.getRangeMarker() != null) {
+                    int startIndex = modification.getRangeMarker().getStartOffset();
+                    int endIndex = modification.getRangeMarker().getEndOffset();
 
-                try {
-                    Color highlightColor;
-                    if (modification.isDone()) {
-                        highlightColor = Color.decode("#228B22");
-                    } else {
-                        highlightColor = Color.decode("#009688");
+                    try {
+                        Color highlightColor;
+                        if (modification.isDone()) {
+                            highlightColor = Color.decode("#228B22");
+                        } else {
+                            highlightColor = Color.decode("#009688");
+                        }
+                        addHighlight(editor, startIndex, endIndex, highlightColor);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    addHighlight(editor, startIndex, endIndex, highlightColor);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
         });

@@ -43,4 +43,20 @@
                 factoryClass="com.translator.view.factory.InquiryToolWindowFactory"/>
         <postStartupActivity implementation="com.translator.listener.MyStartupActivity"/>
     </extensions>
+    <actions>
+        <action id="CustomCreateMultiFile"
+                class="com.translator.view.action.CustomCreateMultiFileAction"
+                text="Create AI Generated Multi-File"
+                description="Describe a set of files to generate them with AI">
+            <add-to-group group-id="NewGroup" anchor="first" />
+        </action>
+    </actions>
+    <actions>
+        <action id="CustomCreateFile"
+                class="com.translator.view.action.CustomCreateFileAction"
+                text="Create AI Generated File"
+                description="Describe a file to generate it with AI">
+            <add-to-group group-id="NewGroup" anchor="first" />
+        </action>
+    </actions>
 </idea-plugin>

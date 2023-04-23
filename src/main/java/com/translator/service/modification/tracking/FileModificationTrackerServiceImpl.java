@@ -182,7 +182,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     }
 
     @Override
-    public void implementModificationUpdate(String modificationId, String modification) {
+    public void implementModificationUpdate(String modificationId, String modification, boolean silent) {
         FileModificationTracker fileModificationTracker = activeModificationFiles.values().stream()
                 .filter(m -> m.hasModification(modificationId))
                 .findFirst()
@@ -201,7 +201,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             }
         }
         guardedBlockService.removeFileModificationGuardedBlock(modificationId);
-        fileModificationTracker.implementModification(modificationId, modification);
+        System.out.println("Creator testo 6");
+        fileModificationTracker.implementModification(modificationId, modification, silent);
         if (fileModificationTracker.getModifications().isEmpty()) {
             activeModificationFiles.values().remove(fileModificationTracker);
             editorClickHandlerService.removeEditorClickHandler(fileModificationTracker.getFilePath());

@@ -38,7 +38,7 @@ public class TabKeyListener implements KeyListener {
                 int minCaretPosition = fileModification.getRangeMarker().getStartOffset();
                 int maxCaretPosition = fileModification.getRangeMarker().getEndOffset();
                 if (caretPosition >= minCaretPosition && caretPosition <= maxCaretPosition) {
-                    fileModificationTrackerService.implementModificationUpdate(fileModification.getId(), fileModification.getModificationOptions().get(0).getSuggestedCode().getDocument().getText().trim());
+                    fileModificationTrackerService.implementModificationUpdate(fileModification.getId(), fileModification.getModificationOptions().get(0).getSuggestedCode().getDocument().getText().trim(), false);
                     //if (codactorToolWindowService.getRightComponent() instanceof ProvisionalModificationViewer) {
                         //codactorToolWindowService.closeModificationQueueViewerToolWindow();
                     //}

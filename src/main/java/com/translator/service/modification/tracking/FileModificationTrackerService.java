@@ -24,7 +24,7 @@ public interface FileModificationTrackerService {
 
     void setMultiFileModificationStage(String multiFileModificationId, String stage);
 
-    void implementModificationUpdate(String modificationId, String modification);
+    void implementModificationUpdate(String modificationId, String modification, boolean silent);
 
     void implementModificationSuggestionModificationUpdate(FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord);
 

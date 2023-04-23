@@ -30,9 +30,10 @@ import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
 import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.AutomaticCodeModificationService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
+import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.PromptContextBuilderFactory;
-import com.translator.view.window.FileChooserWindow;
+import com.translator.view.window.MultiFileGeneratorWindow;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -56,6 +57,7 @@ public class ProvisionalModificationCustomizer extends JDialog {
     private CodeFileGeneratorService codeFileGeneratorService;
     private PromptContextService promptContextService;
     private FileModificationTrackerService fileModificationTrackerService;
+    private OpenAiModelService openAiModelService;
     private PromptContextBuilderFactory promptContextBuilderFactory;
     private Editor defaultSolution;
     private Editor suggestedSolution;
@@ -70,7 +72,8 @@ public class ProvisionalModificationCustomizer extends JDialog {
                                              CodeFileGeneratorService codeFileGeneratorService,
                                              AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory,
                                              PromptContextBuilderFactory promptContextBuilderFactory,
-                                             FileModificationTrackerService fileModificationTrackerService) {
+                                             FileModificationTrackerService fileModificationTrackerService,
+                                             OpenAiModelService openAiModelService) {
         setModal(false);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this.project = project;
@@ -81,6 +84,7 @@ public class ProvisionalModificationCustomizer extends JDialog {
         this.codeFileGeneratorService = codeFileGeneratorService;
         this.promptContextService = new PromptContextServiceImpl();
         this.fileModificationTrackerService = fileModificationTrackerService;
+        this.openAiModelService = openAiModelService;
         this.automaticCodeModificationService = automaticCodeModificationServiceFactory.create(promptContextService);
         this.promptContextBuilderFactory = promptContextBuilderFactory;
         EditorFactory editorFactory = EditorFactory.getInstance();
@@ -146,7 +150,7 @@ public class ProvisionalModificationCustomizer extends JDialog {
         JButton acceptSolutionButton = new JButton("Accept Solution");
         acceptSolutionButton.addActionListener(e -> {
             if (selectedEditor == suggestedSolution) {
-                fileModificationTrackerService.implementModificationUpdate(fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getSuggestedCode().getDocument().getText());
+                fileModificationTrackerService.implementModificationUpdate(fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getSuggestedCode().getDocument().getText(), false);
             } else {
                 fileModificationTrackerService.removeModification(fileModificationSuggestion.getModificationId());
             }
@@ -227,6 +231,13 @@ public class ProvisionalModificationCustomizer extends JDialog {
         JLabel hiddenLabel = new JLabel();
         hiddenLabel.setVisible(false);
         JComboBox<String> modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
+        modelComboBox.addActionListener(e -> {
+            JComboBox<String> cb = (JComboBox<String>) e.getSource();
+            String model = (String) cb.getSelectedItem();
+            if (model != null) {
+                openAiModelService.setSelectedOpenAiModel(model);
+            }
+        });
         JComboBox<String> modificationTypeComboBox = new ComboBox<>(new String[]{"Modify", "Modify Selected", "Fix", "Fix Selected", "Create", "Create Files", "Inquire", "Inquire Selected"});
         JLabel jLabel1 = new JLabel();
         JButton advancedButton = new JButton("(Advanced) Add Context");
@@ -338,8 +349,8 @@ public class ProvisionalModificationCustomizer extends JDialog {
                             }
                         }
                         String description = textArea.getText();
-                        FileChooserWindow fileChooserWindow = new FileChooserWindow(description, priorContext, codeFileGeneratorService, codactorToolWindowService);
-                        fileChooserWindow.setVisible(true);
+                        MultiFileGeneratorWindow multiFileGeneratorWindow = new MultiFileGeneratorWindow(description, priorContext, codeFileGeneratorService, codactorToolWindowService);
+                        multiFileGeneratorWindow.setVisible(true);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire")) {
                     if (!textArea.getText().isEmpty()) {

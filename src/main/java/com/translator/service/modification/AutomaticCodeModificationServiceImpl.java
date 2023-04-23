@@ -267,6 +267,50 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     }
 
     @Override
+    public void createAndImplementCode(String filePath, String description) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
+        System.out.println("Creator testo 1");
+        String modificationId = fileModificationTrackerService.addModification(filePath, 0, 0, ModificationType.CREATE);
+        System.out.println("Creator testo 2");
+        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + ModificationType.CREATE + ")", true) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+                List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
+                if (priorContextData != null) {
+                    for (HistoricalContextObjectDataHolder data : priorContextData) {
+                        priorContext.add(new HistoricalContextObjectHolder(data));
+                    }
+                }
+                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+                DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
+                if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
+                    System.out.println("Creator testo 3");
+                    fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), false);
+                    System.out.println("Creator testo 4");
+                    promptContextService.clearPromptContext();
+                } else {
+                    if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
+                        OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
+                        //openAiApiKeyDialog.setVisible(true);
+                    } else {
+                        JOptionPane.showMessageDialog(super.getParentComponent(), desktopCodeCreationResponseResource.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                    fileModificationTrackerService.removeModification(modificationId);
+                }
+            }
+        };
+        ProgressManager.getInstance().run(backgroundTask);
+    }
+
+    @Override
     public void getModifiedCodeCreation(String suggestionId, int startIndex, int endIndex, String description) {
         if (firebaseTokenService.getFirebaseToken() == null) {
             LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
