@@ -1,6 +1,7 @@
 package com.translator.service.code;
 
 import com.google.inject.Inject;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.editor.Document;
@@ -23,22 +24,39 @@ public class RangeReplaceServiceImpl implements RangeReplaceService {
     }
 
     public void replaceRange(String filePath, int startOffset, int endOffset, String replacementString) {
-        VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl("file://" + filePath);
-        if (virtualFile == null) {
-            throw new IllegalStateException("File not found: " + filePath);
-        }
+        final Document[] documentHolder = new Document[1];
 
-        Document document = PsiDocumentManager.getInstance(project).getDocument(Objects.requireNonNull(PsiManager.getInstance(project).findFile(virtualFile)));
-        if (document == null) {
-            throw new IllegalStateException("Could not get document for file: " + filePath);
+        ApplicationManager.getApplication().runReadAction(() -> {
+            VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl("file://" + filePath);
+            if (virtualFile == null) {
+                throw new IllegalStateException("File not found: " + filePath);
+            }
+
+            Document document = PsiDocumentManager.getInstance(project).getDocument(Objects.requireNonNull(PsiManager.getInstance(project).findFile(virtualFile)));
+            if (document == null) {
+                throw new IllegalStateException("Could not get document for file: " + filePath);
+            }
+
+            documentHolder[0] = document;
+        });
+
+        // Do nothing if the trimmed texts are the same:
+        if (documentHolder[0].getText().substring(startOffset, endOffset).trim().equals(replacementString.trim())) {
+            return;
         }
 
         // Replace the text range with the replacement string
-        WriteCommandAction.runWriteCommandAction(project, () -> document.replaceString(startOffset, endOffset, replacementString));
+        WriteCommandAction.runWriteCommandAction(project, () -> documentHolder[0].replaceString(startOffset, endOffset, replacementString));
     }
+
 
     public void replaceRange(Editor editor, int startOffset, int endOffset, String replacementString) {
         Document document = editor.getDocument();
+
+        // Do nothing if the trimmed texts are the same:
+        if (document.getText().substring(startOffset, endOffset).trim().equals(replacementString.trim())) {
+            return;
+        }
         // Replace the text range with the replacement string
         WriteCommandAction.runWriteCommandAction(project, () -> document.replaceString(startOffset, endOffset, replacementString));
     }

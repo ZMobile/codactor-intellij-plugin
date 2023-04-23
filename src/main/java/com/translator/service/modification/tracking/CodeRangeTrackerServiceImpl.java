@@ -1,14 +1,15 @@
 package com.translator.service.modification.tracking;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.translator.model.modification.FileModification;
 
 import javax.inject.Inject;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class CodeRangeTrackerServiceImpl implements CodeRangeTrackerService {
     private final Project project;
@@ -20,18 +21,20 @@ public class CodeRangeTrackerServiceImpl implements CodeRangeTrackerService {
 
     public RangeMarker createRangeMarker(String filePath, int startIndex, int endIndex) {
         // Convert the file path to a VirtualFile instance
-        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+        AtomicReference<RangeMarker> rangeMarker = new AtomicReference<>();
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
 
-        if (virtualFile != null) {
-            // Get the Document instance corresponding to the VirtualFile
-            Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
+            if (virtualFile != null) {
+                // Get the Document instance corresponding to the VirtualFile
+                Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
 
-            if (document != null) {
-                // Create a RangeMarker for the specified range
-                return document.createRangeMarker(startIndex, endIndex);
+                if (document != null) {
+                    // Create a RangeMarker for the specified range
+                    rangeMarker.set(document.createRangeMarker(startIndex, endIndex));
+                }
             }
-        }
-
-        return null;
+        });
+        return rangeMarker.get();
     }
 }

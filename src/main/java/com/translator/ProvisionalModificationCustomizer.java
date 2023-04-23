@@ -24,6 +24,7 @@ import com.translator.model.modification.FileModificationSuggestion;
 import com.translator.model.modification.ModificationType;
 import com.translator.service.code.CodeSnippetExtractorService;
 import com.translator.service.code.GptToLanguageTransformerService;
+import com.translator.service.constructor.CodeFileGeneratorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.context.PromptContextServiceImpl;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
@@ -32,6 +33,7 @@ import com.translator.service.modification.AutomaticCodeModificationService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.PromptContextBuilderFactory;
+import com.translator.view.window.FileChooserWindow;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -52,6 +54,7 @@ public class ProvisionalModificationCustomizer extends JDialog {
     private CodactorToolWindowService codactorToolWindowService;
     private AutomaticCodeModificationService automaticCodeModificationService;
     private InquiryService inquiryService;
+    private CodeFileGeneratorService codeFileGeneratorService;
     private PromptContextService promptContextService;
     private FileModificationTrackerService fileModificationTrackerService;
     private PromptContextBuilderFactory promptContextBuilderFactory;
@@ -65,6 +68,7 @@ public class ProvisionalModificationCustomizer extends JDialog {
                                              CodeSnippetExtractorService codeSnippetExtractorService,
                                              CodactorToolWindowService codactorToolWindowService,
                                              InquiryService inquiryService,
+                                             CodeFileGeneratorService codeFileGeneratorService,
                                              AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory,
                                              PromptContextBuilderFactory promptContextBuilderFactory,
                                              FileModificationTrackerService fileModificationTrackerService) {
@@ -75,6 +79,7 @@ public class ProvisionalModificationCustomizer extends JDialog {
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.codactorToolWindowService = codactorToolWindowService;
         this.inquiryService = inquiryService;
+        this.codeFileGeneratorService = codeFileGeneratorService;
         this.promptContextService = new PromptContextServiceImpl();
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.automaticCodeModificationService = automaticCodeModificationServiceFactory.create(promptContextService);
@@ -334,8 +339,8 @@ public class ProvisionalModificationCustomizer extends JDialog {
                             }
                         }
                         String description = textArea.getText();
-                        //FileChooserWindow fileChooserWindow = new FileChooserWindow(description, priorContext, codeFileGeneratorService);
-                        //fileChooserWindow.setVisible(true);
+                        FileChooserWindow fileChooserWindow = new FileChooserWindow(description, priorContext, codeFileGeneratorService, codactorToolWindowService);
+                        fileChooserWindow.setVisible(true);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire")) {
                     if (!textArea.getText().isEmpty()) {

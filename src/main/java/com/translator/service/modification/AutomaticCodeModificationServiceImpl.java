@@ -10,6 +10,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.model.api.translator.modification.*;
 import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
+import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationSuggestion;
 import com.translator.model.modification.FileModificationSuggestionModificationRecord;
 import com.translator.model.modification.ModificationType;
@@ -270,7 +271,10 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     public void getTranslatedCode(String filePath, String newLanguage, String newFileType) {
         String code = codeSnippetExtractorService.getAllText(filePath);
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, code.length(), ModificationType.TRANSLATE);
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + ModificationType.CREATE + ")", true) {
+        FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
+        fileModification.setNewLanguage(newLanguage);
+        fileModification.setNewFileType(newFileType);
+        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + ModificationType.TRANSLATE + ")", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
@@ -284,7 +288,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(filePath, code, newLanguage, newFileType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                 DesktopCodeTranslationResponseResource desktopCodeTranslationResponseResource = codeModificationService.getTranslatedCode(desktopCodeTranslationRequestResource);
                 if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null && desktopCodeTranslationResponseResource.getModificationSuggestions().size() > 0) {
-                    VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+                    /*VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
                     assert virtualFile != null;
                     String fileName = virtualFile.getName();
                     int dotIndex = fileName.lastIndexOf('.');
@@ -295,7 +299,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                         } catch (IOException ex) {
                             // Handle the exception if necessary
                         }
-                    }
+                    }*/
                     fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeTranslationResponseResource.getModificationSuggestions());
                     promptContextService.clearPromptContext();
                 } else {

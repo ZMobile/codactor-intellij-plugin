@@ -38,6 +38,7 @@ public interface FileModificationTrackerService {
 
     FileModificationTracker getModificationTracker(String filePath);
 
+
     FileModificationSuggestion getModificationSuggestion(String suggestionId);
 
     FileModificationSuggestionModificationTracker getModificationSuggestionModificationTracker(String suggestionId);
@@ -51,8 +52,6 @@ public interface FileModificationTrackerService {
     //List<FileModification> getAllFileModificationsAndModificationSuggestionModifications();
 
     List<QueuedFileModificationObjectHolder> getQueuedFileModificationObjectHolders();
-
-   void setModificationQueueListButtonService(ModificationQueueListButtonService modificationQueueListButtonService);
 
     void setModificationQueueViewer(ModificationQueueViewer modificationQueueViewer);
 

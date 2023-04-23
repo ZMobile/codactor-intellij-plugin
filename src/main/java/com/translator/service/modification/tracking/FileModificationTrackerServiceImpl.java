@@ -1,17 +1,21 @@
 package com.translator.service.modification.tracking;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vcs.FileStatusManager;
 import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.*;
 import com.translator.service.code.CodeHighlighterService;
 import com.translator.service.code.CodeSnippetExtractorService;
 import com.translator.service.code.GuardedBlockService;
 import com.translator.service.code.RangeReplaceService;
+import com.translator.service.file.RenameFileService;
+import com.translator.service.modification.tracking.listener.EditorClickHandlerService;
 import com.translator.service.ui.ModificationQueueListButtonService;
 import com.translator.view.viewer.ModificationQueueViewer;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.io.File;
 import java.util.List;
 import java.util.*;
 
@@ -26,7 +30,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     private CodeRangeTrackerService codeRangeTrackerService;
     private GuardedBlockService guardedBlockService;
     private RangeReplaceService rangeReplaceService;
-    private ModificationQueueListButtonService modificationQueueListButtonService;
+    private EditorClickHandlerService editorClickHandlerService;
+    private RenameFileService renameFileService;
     private ModificationQueueViewer modificationQueueViewer;
     private boolean implementingQueuedModifications;
 
@@ -36,7 +41,9 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                                               CodeSnippetExtractorService codeSnippetExtractorService,
                                               CodeRangeTrackerService codeRangeTrackerService,
                                               GuardedBlockService guardedBlockService,
-                                              RangeReplaceService rangeReplaceService) {
+                                              RangeReplaceService rangeReplaceService,
+                                              EditorClickHandlerService editorClickHandlerService,
+                                              RenameFileService renameFileService) {
         this.project = project;
         this.activeModificationFiles = new HashMap<>();
         this.activeModificationSuggestionModifications = new HashMap<>();
@@ -47,17 +54,19 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         this.codeRangeTrackerService = codeRangeTrackerService;
         this.guardedBlockService = guardedBlockService;
         this.rangeReplaceService = rangeReplaceService;
+        this.editorClickHandlerService = editorClickHandlerService;
+        this.renameFileService = renameFileService;
         this.implementingQueuedModifications = false;
     }
 
     public String addModification(String filePath, int startIndex, int endIndex, ModificationType modificationType) {
-        String newFilePath;
-        newFilePath = Objects.requireNonNullElse(filePath, "Untitled");
+        String newFilePath = Objects.requireNonNullElse(filePath, "Untitled");
         FileModificationTracker fileModificationTracker;
         if (activeModificationFiles.containsKey(newFilePath)) {
             fileModificationTracker = activeModificationFiles.get(newFilePath);
         } else {
             fileModificationTracker = new FileModificationTracker(project, newFilePath, codeSnippetExtractorService, rangeReplaceService, codeRangeTrackerService);
+            editorClickHandlerService.addEditorClickHandler(newFilePath);
             activeModificationFiles.put(newFilePath, fileModificationTracker);
         }
         String fileModificationId = fileModificationTracker.addModification(startIndex, endIndex, modificationType);
@@ -69,6 +78,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         guardedBlockService.addFileModificationGuardedBlock(fileModificationId, startIndex, endIndex);
         codeHighlighterService.highlightTextArea(fileModificationTracker);
+        FileStatusManager fileStatusManager = FileStatusManager.getInstance(project);
+        fileStatusManager.fileStatusesChanged();
         return fileModificationId;
     }
 
@@ -120,11 +131,14 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         fileModificationTracker.removeModification(modificationId);
         if (fileModificationTracker.getModifications().isEmpty()) {
             activeModificationFiles.values().remove(fileModificationTracker);
+            editorClickHandlerService.removeEditorClickHandler(fileModificationTracker.getFilePath());
         }
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         guardedBlockService.removeFileModificationGuardedBlock(modificationId);
         //jTreeHighlighterService.repaint();
         codeHighlighterService.highlightTextArea(fileModificationTracker);
+        FileStatusManager fileStatusManager = FileStatusManager.getInstance(project);
+        fileStatusManager.fileStatusesChanged();
         disposeProvisionalModificationCustomizers(fileModification);
     }
 
@@ -161,7 +175,6 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
     }
 
-
     @Override
     public void implementModificationUpdate(String modificationId, String modification) {
         FileModificationTracker fileModificationTracker = activeModificationFiles.values().stream()
@@ -182,13 +195,28 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             }
         }
         guardedBlockService.removeFileModificationGuardedBlock(modificationId);
-        codeHighlighterService.highlightTextArea(fileModificationTracker);
         fileModificationTracker.implementModification(modificationId, modification);
         if (fileModificationTracker.getModifications().isEmpty()) {
             activeModificationFiles.values().remove(fileModificationTracker);
+            editorClickHandlerService.removeEditorClickHandler(fileModificationTracker.getFilePath());
         }
+        codeHighlighterService.highlightTextArea(fileModificationTracker);
         disposeProvisionalModificationCustomizers(fileModification);
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
+        if (fileModification.getModificationType() == ModificationType.TRANSLATE) {
+            File file = new File(fileModification.getFilePath());
+            String fileNameWithoutExtension = file.getName().substring(0, file.getName().lastIndexOf('.'));
+            String newFileType;
+            if (fileModification.getNewFileType().startsWith(".")){
+                newFileType = fileModification.getNewFileType();
+            } else {
+                newFileType = "." + fileModification.getNewFileType();
+            }
+            String newFileName = fileNameWithoutExtension + newFileType;
+            renameFileService.renameFile(fileModification.getFilePath(), newFileName);
+        }
+        FileStatusManager fileStatusManager = FileStatusManager.getInstance(project);
+        fileStatusManager.fileStatusesChanged();
     }
 
     @Override
@@ -303,10 +331,6 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         return queuedFileModificationObjectHolders;
     }
 
-
-    public void setModificationQueueListButtonService(ModificationQueueListButtonService modificationQueueListButtonService) {
-        this.modificationQueueListButtonService = modificationQueueListButtonService;
-    }
 
     public void setModificationQueueViewer(ModificationQueueViewer modificationQueueViewer) {
         this.modificationQueueViewer = modificationQueueViewer;

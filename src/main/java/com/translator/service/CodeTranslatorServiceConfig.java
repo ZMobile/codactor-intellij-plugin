@@ -61,6 +61,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(DirectoryCopierService.class).to(DirectoryCopierServiceImpl.class);
         bind(LineCounterService.class).to(LineCounterServiceImpl.class);
         bind(TabKeyListenerService.class).to(TabKeyListenerServiceImpl.class).asEagerSingleton();
+        bind(EditorClickHandlerService.class).to(EditorClickHandlerServiceImpl.class).asEagerSingleton();
         bind(TextAreaHeightCalculatorService.class).to(TextAreaHeightCalculatorServiceImpl.class);
         bind(ModificationQueueListButtonService.class).to(ModificationQueueListButtonServiceImpl.class);
         bind(ToolWindowService.class).to(ToolWindowServiceImpl.class);
@@ -74,6 +75,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(GuardedBlockService.class).to(GuardedBlockServiceImpl.class);
         bind(RangeReplaceService.class).to(RangeReplaceServiceImpl.class);
         bind(InquiryService.class).to(InquiryServiceImpl.class);
+        bind(RenameFileService.class).to(RenameFileServiceImpl.class);
     }
 
     @Singleton
@@ -89,8 +91,10 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                             CodeSnippetExtractorService codeSnippetExtractorService,
                                                                             CodeRangeTrackerService codeRangeTrackerService,
                                                                             GuardedBlockService guardedBlockService,
-                                                                            RangeReplaceService rangeReplaceService) {
-        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService);
+                                                                            RangeReplaceService rangeReplaceService,
+                                                                            EditorClickHandlerService editorClickHandlerService,
+                                                                            RenameFileService renameFileService) {
+        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService);
     }
 
     @Singleton

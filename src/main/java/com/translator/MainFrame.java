@@ -1,4 +1,4 @@
-package com.translator;
+            package com.translator;
 
 /*import org.fife.rsta.ui.CollapsibleSectionPanel;
 import org.fife.rsta.ui.GoToDialog;

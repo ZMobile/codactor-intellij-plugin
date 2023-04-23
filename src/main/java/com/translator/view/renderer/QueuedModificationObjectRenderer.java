@@ -1,6 +1,7 @@
 package com.translator.view.renderer;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.ui.JBColor;
 import com.translator.model.modification.*;
 import com.translator.service.file.FileReaderService;
 import com.translator.service.line.LineCounterService;
@@ -91,7 +92,7 @@ public class QueuedModificationObjectRenderer extends JPanel implements ListCell
             lineRangeText = "Multi-File Mod Stage: " + multiFileModification.getStage();
             statusText = "(Queued)";
             filePathLabel.setText("File: " + multiFileModification.getFilePath());
-            setBackground(Color.ORANGE);
+            setBackground(JBColor.decode("#CC5100"));
         }
         lineRangeLabel.setText(lineRangeText);
         statusLabel.setText(statusText);

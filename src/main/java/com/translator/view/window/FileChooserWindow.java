@@ -4,6 +4,7 @@ import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.inquiry.Inquiry;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.service.constructor.CodeFileGeneratorService;
+import com.translator.service.ui.tool.CodactorToolWindowService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +19,7 @@ public class FileChooserWindow extends JFrame implements ActionListener {
     private Inquiry inquiry;
     private InquiryChat inquiryChat;
     private CodeFileGeneratorService codeFileGeneratorService;
+    private CodactorToolWindowService codactorToolWindowService;
     private JRadioButton defaultPathButton, customPathButton;
     private JToggleButton asyncFileCreationButton, oneAtATimeFileCreationButton;
     private JButton generateButton, cancelButton;
@@ -28,24 +30,28 @@ public class FileChooserWindow extends JFrame implements ActionListener {
 
     public FileChooserWindow(Inquiry inquiry,
                              InquiryChat inquiryChat,
-                             CodeFileGeneratorService codeFileGeneratorService) {
+                             CodeFileGeneratorService codeFileGeneratorService,
+                             CodactorToolWindowService codactorToolWindowService) {
         this.description = null;
         this.priorContext = null;
         this.inquiry = inquiry;
         this.inquiryChat = inquiryChat;
         this.codeFileGeneratorService = codeFileGeneratorService;
+        this.codactorToolWindowService = codactorToolWindowService;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         initUI();
     }
 
     public FileChooserWindow(String description,
                              List<HistoricalContextObjectHolder> priorContext,
-                             CodeFileGeneratorService codeFileGeneratorService) {
+                             CodeFileGeneratorService codeFileGeneratorService,
+                             CodactorToolWindowService codactorToolWindowService) {
         this.description = description;
         this.priorContext = priorContext;
         this.inquiry = null;
         this.inquiryChat = null;
         this.codeFileGeneratorService = codeFileGeneratorService;
+        this.codactorToolWindowService = codactorToolWindowService;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         initUI();
     }
@@ -94,8 +100,32 @@ public class FileChooserWindow extends JFrame implements ActionListener {
 
         // create the file creation mode buttons
         asyncFileCreationButton = new JToggleButton("Asynchronous File Creation (Faster)");
-        asyncFileCreationButton.setSelected(true);
+        asyncFileCreationButton.setSelected(false);
+        asyncFileCreationButton.setEnabled(true);
+        asyncFileCreationButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                asyncFileCreationButton.setEnabled(!asyncFileCreationButton.isSelected());
+                if (asyncFileCreationButton.isSelected()) {
+                    oneAtATimeFileCreationButton.setSelected(false);
+                    oneAtATimeFileCreationButton.setEnabled(true);
+                }
+            }
+        });
+
         oneAtATimeFileCreationButton = new JToggleButton("One-at-a-time File Creation (Reliable)");
+        oneAtATimeFileCreationButton.setSelected(true);
+        oneAtATimeFileCreationButton.setEnabled(false);
+        oneAtATimeFileCreationButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                oneAtATimeFileCreationButton.setEnabled(!oneAtATimeFileCreationButton.isSelected());
+                if (oneAtATimeFileCreationButton.isSelected()) {
+                    asyncFileCreationButton.setSelected(false);
+                    asyncFileCreationButton.setEnabled(true);
+                }
+            }
+        });
 
         fileCreationModeGroup = new ButtonGroup();
         fileCreationModeGroup.add(asyncFileCreationButton);
@@ -192,6 +222,7 @@ public class FileChooserWindow extends JFrame implements ActionListener {
                 // Use the custom directory
                 path = fileChooser.getSelectedFile().getAbsolutePath();
             }
+            codactorToolWindowService.openModificationQueueViewerToolWindow();
             if (inquiry == null) {
                 if (asyncFileCreationButton.isSelected()) {
                     codeFileGeneratorService.generateCodeFiles(description, languageTextField.getText(), fileTypeTextField.getText(), path, priorContext);

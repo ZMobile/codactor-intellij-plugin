@@ -468,7 +468,7 @@ public class InquiryViewer extends JPanel {
                 if (selectedChat > 0){
                     InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(selectedChat);
                     InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
-                    FileChooserWindow fileChooserWindow = new FileChooserWindow(inquiry, inquiryChat, codeFileGeneratorService);
+                    FileChooserWindow fileChooserWindow = new FileChooserWindow(inquiry, inquiryChat, codeFileGeneratorService, codactorToolWindowService);
                     fileChooserWindow.setVisible(true);
                 }
             }
@@ -634,8 +634,6 @@ public class InquiryViewer extends JPanel {
         jList1.getParent().addComponentListener(componentListener);
         jList1.setModel(model);
         jBScrollPane1.setViewportView(jList1);
-        JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-        vertical.setValue(vertical.getMaximum() - vertical.getVisibleAmount());
     }
 
     public String getFileExtension(String filePath) {
@@ -744,8 +742,6 @@ public class InquiryViewer extends JPanel {
             jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, newTotalHeight));
             jList1.setModel(newModel);
             jBScrollPane1.setViewportView(jList1);
-            JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-            vertical.setValue(vertical.getMaximum());
         });
     }
 

@@ -46,7 +46,6 @@ public class PromptContextServiceImpl implements PromptContextService {
         } else {
             statusLabel.setVisible(true);
             if (context.size() == 1) {
-                System.out.println("This gets big calledo");
                 statusLabel.setText("<" + context.size() + " Context Object Added> ");
             } else {
                 statusLabel.setText("<" + context.size() + " Context Objects Added> ");

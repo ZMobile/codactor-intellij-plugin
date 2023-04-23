@@ -68,7 +68,6 @@ public class FileModificationTracker {
     }
 
 
-
    public void removeModification(String modificationId) {
         FileModification m = modifications.stream()
                 .filter(modification -> modification.getId().equals(modificationId))
@@ -114,7 +113,11 @@ public class FileModificationTracker {
             fileModification.setModificationRecordId(modificationOptions.get(0).getModificationId());
             List<FileModificationSuggestion> suggestions = new ArrayList<>();
             for (FileModificationSuggestionRecord modificationOption : modificationOptions) {
-                suggestions.add(new FileModificationSuggestion(project, modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode()));
+                if (fileModification.getModificationType() == ModificationType.TRANSLATE) {
+                    suggestions.add(new FileModificationSuggestion(project, modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode(), fileModification.getNewFileType().trim().toLowerCase()));
+                } else {
+                    suggestions.add(new FileModificationSuggestion(project, modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode()));
+                }
             }
             fileModification.setModificationOptions(suggestions);
             fileModification.setDone(true);

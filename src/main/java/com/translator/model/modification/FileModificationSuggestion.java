@@ -14,6 +14,8 @@ import com.intellij.openapi.project.Project;
 import com.translator.service.code.GptToLanguageTransformerService;
 import com.translator.service.code.GptToLanguageTransformerServiceImpl;
 
+import java.util.Objects;
+
 public class FileModificationSuggestion {
     private final Project project;
     private final String filePath;
@@ -26,7 +28,7 @@ public class FileModificationSuggestion {
         this.myId = id;
         this.filePath = filePath;
         this.modificationId = modificationId;
-        ApplicationManager.getApplication().invokeAndWait(() -> {
+        ApplicationManager.getApplication().invokeLater(() -> {
             try {
                 GptToLanguageTransformerService gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
                 String language = gptToLanguageTransformerService.getFromFilePath(filePath);
@@ -44,7 +46,29 @@ public class FileModificationSuggestion {
                 e.printStackTrace();
             }
         });
-        assert this.suggestedCode != null;
+    }
+
+    public FileModificationSuggestion(Project project, String id, String filePath, String modificationId, String suggestedCode, String extension) {
+        this.project = project;
+        this.myId = id;
+        this.filePath = filePath;
+        this.modificationId = modificationId;
+        ApplicationManager.getApplication().invokeLater(() -> {
+            try {
+                String newExtension = Objects.requireNonNullElse(extension, "txt");
+                if (newExtension.startsWith(".")) {
+                    newExtension = newExtension.substring(1);
+                }
+                EditorFactory editorFactory = EditorFactory.getInstance();
+                FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(newExtension);
+                Document document = editorFactory.createDocument(suggestedCode);
+                this.suggestedCode = editorFactory.createEditor(document, null);
+                EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
+                ((EditorEx) this.suggestedCode).setHighlighter(editorHighlighter);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public String getFilePath() {

@@ -57,8 +57,9 @@ public class FileCreatorServiceImpl implements FileCreatorService {
             String fileNamesGroup = matcher.group(1);
             List<String> fileNamesList = Arrays.asList(fileNamesGroup.trim().split("\\s+"));
             for (String fileName : fileNamesList) {
-                if (fileName.contains(".")) {
-                    fileNames.add(fileName);
+                if (fileName.contains(".") && !fileNames.contains(fileName)) {
+                    File file = new File(fileName);
+                    fileNames.add(file.getName());
                 }
             }
         }

@@ -23,6 +23,9 @@ public class InquiryToolWindowFactory implements ToolWindowFactory {
         Injector injector = CodactorInjector.getInstance().getInjector(project);
         InquiryViewer inquiryViewer = injector.getInstance(InquiryViewer.class);
 
+        InquiryListViewer inquiryListViewer = injector.getInstance(InquiryListViewer.class);
+        inquiryViewer.setInquiryListViewer(inquiryListViewer);
+
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(inquiryViewer, "Inquiry", false);
         toolWindow.getComponent().addComponentListener(new ComponentAdapter() {

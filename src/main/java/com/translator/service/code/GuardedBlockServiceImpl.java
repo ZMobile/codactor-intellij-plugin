@@ -1,5 +1,6 @@
 package com.translator.service.code;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.project.Project;
@@ -37,6 +38,7 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
     public void addFileModificationGuardedBlock(String fileModificationId, int startOffset, int endOffset) {
         FileModification fileModification = fileModificationTrackerService.getModification(fileModificationId);
         String filePath = fileModification.getFilePath();
+        ApplicationManager.getApplication().invokeLater(() -> {
         VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl("file://" + filePath);
         if (virtualFile == null) {
             throw new IllegalStateException("File not found: " + filePath);
@@ -47,16 +49,19 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
             throw new IllegalStateException("Could not get document for file: " + filePath);
         }
 
-        RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);
-        guardedBlocks.put(fileModification.getId(), guardedBlock);
+                    RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);
+                    guardedBlocks.put(fileModification.getId(), guardedBlock);
+        });
         //uneditableSegmentListenerService.addUneditableFileModificationSegmentListener(fileModificationId);
     }
 
     public void removeFileModificationGuardedBlock(String fileModificationId) {
         RangeMarker guardedBlock = guardedBlocks.get(fileModificationId);
         if (guardedBlock != null) {
-            guardedBlocks.remove(fileModificationId);
-            guardedBlock.dispose();
+            ApplicationManager.getApplication().invokeLater(() -> {
+                        guardedBlocks.remove(fileModificationId);
+                        guardedBlock.dispose();
+            });
             //uneditableSegmentListenerService.removeUneditableFileModificationSegmentListener(fileModificationId);
         }
     }

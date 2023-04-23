@@ -14,6 +14,8 @@ public class FileModification {
     private String beforeText;
     private ModificationType modificationType;
     private List<FileModificationSuggestion> modificationOptions;
+    private String newLanguage;
+    private String newFileType;
     private boolean done;
 
     public FileModification(String filePath, RangeMarker rangeMarker, String beforeText, ModificationType modificationType) {
@@ -85,6 +87,22 @@ public class FileModification {
 
     public void setModificationOptions(List<FileModificationSuggestion> modificationOptions) {
         this.modificationOptions = modificationOptions;
+    }
+
+    public String getNewLanguage() {
+        return newLanguage;
+    }
+
+    public void setNewLanguage(String newLanguage) {
+        this.newLanguage = newLanguage;
+    }
+
+    public String getNewFileType() {
+        return newFileType;
+    }
+
+    public void setNewFileType(String newFileType) {
+        this.newFileType = newFileType;
     }
 
     public boolean isDone() {

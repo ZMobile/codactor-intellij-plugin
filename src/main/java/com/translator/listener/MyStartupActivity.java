@@ -13,7 +13,6 @@ public class MyStartupActivity implements StartupActivity {
     public void runActivity(@NotNull Project project) {
         // Get the action manager instance
         ActionManager actionManager = ActionManager.getInstance();
-
         // Get the existing Run Anything action
         AnAction runAnythingAction = actionManager.getAction(RUN_ANYTHING_ACTION_ID);
         if (runAnythingAction != null) {

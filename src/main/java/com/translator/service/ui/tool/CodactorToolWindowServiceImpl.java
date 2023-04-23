@@ -139,5 +139,9 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
     public ModificationQueueViewer getModificationQueueViewer() {
         return modificationQueueViewer;
     }
+
+    public ProvisionalModificationViewer getProvisionalModificationViewer() {
+        return provisionalModificationViewer;
+    }
 }
 

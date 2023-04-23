@@ -47,12 +47,9 @@ public class ProjectManagerListenerImpl implements ProjectManagerListener {
         }
         // Your code to execute when a project is opened
         FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
-        ModificationQueueListButtonService modificationQueueListButtonService = injector.getInstance(ModificationQueueListButtonService.class);
-        fileModificationTrackerService.setModificationQueueListButtonService(modificationQueueListButtonService);
         ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
 
         fileModificationTrackerService.setModificationQueueViewer(modificationQueueViewer);
-        //promptContextService.setStatusLabel(jLabel2);
         InquiryViewer inquiryViewer = injector.getInstance(InquiryViewer.class);
         InquiryListViewer inquiryListViewer = injector.getInstance(InquiryListViewer.class);
         inquiryViewer.setInquiryListViewer(inquiryListViewer);
@@ -61,7 +58,6 @@ public class ProjectManagerListenerImpl implements ProjectManagerListener {
         historicalModificationListViewer.setProject(project);
         inquiryListViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
         inquiryViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
-
     }
 
     @Override

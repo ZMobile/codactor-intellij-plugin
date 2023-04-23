@@ -9,9 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.components.JBPanel;
-import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.components.JBTextArea;
+import com.intellij.ui.components.*;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import com.translator.PromptContextBuilder;
@@ -21,14 +19,18 @@ import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import com.translator.model.modification.ModificationType;
 import com.translator.service.code.CodeSnippetExtractorService;
+import com.translator.service.constructor.CodeFileGeneratorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
+import com.translator.service.file.FileCreatorService;
+import com.translator.service.file.RenameFileService;
 import com.translator.service.file.SelectedFileFetcherService;
 import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.AutomaticCodeModificationService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.PromptContextBuilderFactory;
 import com.translator.view.viewer.ModificationQueueViewer;
+import com.translator.view.window.FileChooserWindow;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
@@ -53,6 +55,10 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private JComboBox<FileItem> fileComboBox;
     private JComboBox<String> modificationTypeComboBox;
     private JLabel jLabel1;
+    JBTextField languageInputTextField;
+    JBLabel jLabel2;
+    JBTextField fileTypeTextField;
+
     private JButton advancedButton;
     private JLabel hiddenLabel;
     private PromptContextService promptContextService;
@@ -61,6 +67,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private CodeSnippetExtractorService codeSnippetExtractorService;
     private AutomaticCodeModificationService automaticCodeModificationService;
     private InquiryService inquiryService;
+    private CodeFileGeneratorService codeFileGeneratorService;
     private PromptContextBuilderFactory promptContextBuilderFactory;
 
     @Inject
@@ -70,6 +77,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            SelectedFileFetcherService selectedFileFetcherService,
                            CodeSnippetExtractorService codeSnippetExtractorService,
                            InquiryService inquiryService,
+                           CodeFileGeneratorService codeFileGeneratorService,
                            AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory,
                            PromptContextBuilderFactory promptContextBuilderFactory) {
         super(new BorderLayout());
@@ -79,6 +87,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.selectedFileFetcherService = selectedFileFetcherService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.inquiryService = inquiryService;
+        this.codeFileGeneratorService = codeFileGeneratorService;
         this.automaticCodeModificationService = automaticCodeModificationServiceFactory.create(promptContextService);
         this.promptContextBuilderFactory = promptContextBuilderFactory;
         textArea = new JBTextArea();
@@ -115,7 +124,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                 }
             }
         }
-        modificationTypeComboBox = new ComboBox<>(new String[]{"Modify", "Modify Selected", "Fix", "Fix Selected", "Create", "Create Files", "Inquire", "Inquire Selected"});
+        modificationTypeComboBox = new ComboBox<>(new String[]{"Modify", "Modify Selected", "Fix", "Fix Selected", "Create", "Create Files", "Inquire", "Inquire Selected", "Translate"});
         jLabel1 = new JLabel();
         advancedButton = new JButton("(Advanced) Add Context");
         advancedButton.addActionListener(e -> {
@@ -274,6 +283,15 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         leftToolbar.add(fileComboBox);
         leftToolbar.add(modificationTypeComboBox);
         leftToolbar.add(jLabel1);
+        languageInputTextField = new JBTextField();
+        languageInputTextField.setVisible(false);
+        leftToolbar.add(languageInputTextField);
+        jLabel2 = new JBLabel(" to file type: ");
+        jLabel2.setVisible(false);
+        leftToolbar.add(jLabel2);
+        fileTypeTextField = new JBTextField();
+        fileTypeTextField.setVisible(false);
+        leftToolbar.add(fileTypeTextField);
         JPanel rightToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5)); // Set horizontal gap to 0
         rightToolbar.add(hiddenLabel);
         rightToolbar.add(advancedButton);
@@ -339,8 +357,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                             }
                         }
                         String description = textArea.getText();
-                        //FileChooserWindow fileChooserWindow = new FileChooserWindow(description, priorContext, codeFileGeneratorService);
-                        //fileChooserWindow.setVisible(true);
+                        FileChooserWindow fileChooserWindow = new FileChooserWindow(description, priorContext, codeFileGeneratorService, codactorToolWindowService);
+                        fileChooserWindow.setVisible(true);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire")) {
                     if (!textArea.getText().isEmpty()) {
@@ -371,7 +389,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     }
                     inquiryService.createInquiry(fileItem.getFilePath(), code, question, priorContext);
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Translate")) {
-
+                    codactorToolWindowService.openModificationQueueViewerToolWindow();
+                    automaticCodeModificationService.getTranslatedCode(fileItem.getFilePath(), languageInputTextField.getText(), fileTypeTextField.getText());
                 }
             }
         });
@@ -407,34 +426,74 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             case "Modify":
                 button1.setText("Modify");
                 jLabel1.setText(" Implement the following modification(s) to this code file:");
+                languageInputTextField.setVisible(false);
+                jLabel2.setVisible(false);
+                fileTypeTextField.setVisible(false);
+                textArea.setVisible(true);
                 break;
             case "Fix":
                 button1.setText("Fix");
                 jLabel1.setText(" Fix the following error/problem in this code file:");
+                languageInputTextField.setVisible(false);
+                jLabel2.setVisible(false);
+                fileTypeTextField.setVisible(false);
+                textArea.setVisible(true);
                 break;
             case "Create":
                 button1.setText("Create");
                 jLabel1.setText(" Create new code from scratch with the following description:");
+                languageInputTextField.setVisible(false);
+                jLabel2.setVisible(false);
+                fileTypeTextField.setVisible(false);
+                textArea.setVisible(true);
                 break;
             case "Create Files":
                 button1.setText("Create");
                 jLabel1.setText(" (Experimental) Create multiple code files from the following description:");
+                languageInputTextField.setVisible(false);
+                jLabel2.setVisible(false);
+                fileTypeTextField.setVisible(false);
+                textArea.setVisible(true);
                 break;
             case "Inquire":
                 button1.setText("Ask");
                 jLabel1.setText(" Ask the following question regarding this code file:");
+                languageInputTextField.setVisible(false);
+                jLabel2.setVisible(false);
+                fileTypeTextField.setVisible(false);
+                textArea.setVisible(true);
                 break;
             case "Modify Selected":
                 button1.setText("Modify");
                 jLabel1.setText(" Implement the following modification(s) to the selected code:");
+                languageInputTextField.setVisible(false);
+                jLabel2.setVisible(false);
+                fileTypeTextField.setVisible(false);
+                textArea.setVisible(true);
                 break;
             case "Fix Selected":
                 button1.setText("Fix");
                 jLabel1.setText(" Fix the following error/problem in this selected code:");
+                languageInputTextField.setVisible(false);
+                jLabel2.setVisible(false);
+                fileTypeTextField.setVisible(false);
+                textArea.setVisible(true);
                 break;
             case "Inquire Selected":
                 button1.setText("Ask");
                 jLabel1.setText(" Ask the following question regarding this selected code:");
+                languageInputTextField.setVisible(false);
+                jLabel2.setVisible(false);
+                fileTypeTextField.setVisible(false);
+                textArea.setVisible(true);
+                break;
+            case "Translate":
+                jLabel1.setText(" to language: ");
+                button1.setText("Translate");
+                languageInputTextField.setVisible(true);
+                jLabel2.setVisible(true);
+                fileTypeTextField.setVisible(true);
+                textArea.setVisible(false);
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected value: " + selected);
