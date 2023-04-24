@@ -50,6 +50,7 @@ public class PromptContextBuilder extends JDialog {
                                 CodeModificationHistoryDao codeModificationHistoryDao,
                                 @Assisted PromptContextService promptContextService) {
         setModal(false);
+        setModalityType(ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         this.contextQueryDao = contextQueryDao;

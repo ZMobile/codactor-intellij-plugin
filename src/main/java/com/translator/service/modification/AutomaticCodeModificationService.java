@@ -1,8 +1,11 @@
 package com.translator.service.modification;
 
 import com.translator.model.api.translator.modification.*;
+import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import com.translator.model.modification.FileModificationSuggestionModificationRecord;
 import com.translator.model.modification.ModificationType;
+
+import java.util.List;
 
 public interface AutomaticCodeModificationService {
     void getModifiedCode(String filePath, int startIndex, int endIndex, String modification, ModificationType modificationType);

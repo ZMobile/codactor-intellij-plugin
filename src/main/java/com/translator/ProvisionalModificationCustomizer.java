@@ -32,8 +32,8 @@ import com.translator.service.modification.AutomaticCodeModificationService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
+import com.translator.view.dialog.MultiFileCreateDialog;
 import com.translator.view.factory.PromptContextBuilderFactory;
-import com.translator.view.window.MultiFileGeneratorWindow;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -348,9 +348,8 @@ public class ProvisionalModificationCustomizer extends JDialog {
                                 priorContext.add(new HistoricalContextObjectHolder(data));
                             }
                         }
-                        String description = textArea.getText();
-                        MultiFileGeneratorWindow multiFileGeneratorWindow = new MultiFileGeneratorWindow(description, priorContext, codeFileGeneratorService, codactorToolWindowService);
-                        multiFileGeneratorWindow.setVisible(true);
+                        MultiFileCreateDialog multiFileCreateDialog = new MultiFileCreateDialog(null, textArea.getText(), openAiModelService, codactorToolWindowService, codeFileGeneratorService, promptContextService, promptContextBuilderFactory);
+                        multiFileCreateDialog.setVisible(true);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire")) {
                     if (!textArea.getText().isEmpty()) {

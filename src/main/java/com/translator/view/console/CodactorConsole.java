@@ -26,8 +26,8 @@ import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.AutomaticCodeModificationService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
+import com.translator.view.dialog.MultiFileCreateDialog;
 import com.translator.view.factory.PromptContextBuilderFactory;
-import com.translator.view.window.MultiFileGeneratorWindow;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
@@ -135,13 +135,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         jLabel1 = new JLabel();
         advancedButton = new JButton("(Advanced) Add Context");
         advancedButton.addActionListener(e -> {
-            //ApplicationManager.getApplication().invokeLater(() -> {
                 promptContextService.setStatusLabel(hiddenLabel);
                 PromptContextBuilder promptContextBuilder = promptContextBuilderFactory.create(promptContextService);
                 promptContextBuilder.show();
-            //ProvisionalModificationCustomizer provisionalModificationCustomizer = new ProvisionalModificationCustomizer(project, new ArrayList<>());
-            //provisionalModificationCustomizer.show();
-            //});
         });
         hiddenLabel = new JLabel();
         hiddenLabel.setVisible(false);
@@ -363,9 +359,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                                 priorContext.add(new HistoricalContextObjectHolder(data));
                             }
                         }
-                        String description = textArea.getText();
-                        MultiFileGeneratorWindow multiFileGeneratorWindow = new MultiFileGeneratorWindow(description, priorContext, codeFileGeneratorService, codactorToolWindowService);
-                        multiFileGeneratorWindow.setVisible(true);
+                        MultiFileCreateDialog multiFileCreateDialog = new MultiFileCreateDialog(null, textArea.getText(), openAiModelService, codactorToolWindowService, codeFileGeneratorService, promptContextService, promptContextBuilderFactory);
+                        multiFileCreateDialog.setVisible(true);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire")) {
                     if (!textArea.getText().isEmpty()) {
@@ -515,5 +510,39 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             return FileDocumentManager.getInstance().getFile(document);
         }
         return null;
+    }
+
+    public void updateModelComboBox() {
+
+// Get the index of the selected element
+        String selectedElement = openAiModelService.getSelectedOpenAiModel();
+        int selectedIndex = -1;
+        for (int i = 0; i < modelComboBox.getItemCount(); i++) {
+            if (selectedElement.equals(modelComboBox.getItemAt(i))) {
+                selectedIndex = i;
+                break;
+            }
+        }
+
+// Check if the selected element is in the combo box
+        if (selectedIndex != -1 && selectedIndex != 0) {
+            // Store the element at position 0
+            String elementAtZero = modelComboBox.getItemAt(0);
+
+            // Remove the selected element from the combo box
+            modelComboBox.removeItemAt(selectedIndex);
+
+            // Insert the selected element at the first position
+            modelComboBox.insertItemAt(selectedElement, 0);
+
+            // Remove the element at position 1 (which was previously at position 0)
+            modelComboBox.removeItemAt(1);
+
+            // Insert the element that was previously at position 0 to the original position of the selected element
+            modelComboBox.insertItemAt(elementAtZero, selectedIndex);
+
+            // Set the selected index to 0
+            modelComboBox.setSelectedIndex(0);
+        }
     }
 }

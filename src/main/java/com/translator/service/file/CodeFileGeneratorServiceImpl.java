@@ -10,6 +10,7 @@ import com.translator.model.api.translator.modification.DesktopCodeCreationRespo
 import com.translator.model.history.HistoricalContextInquiryHolder;
 import com.translator.model.history.HistoricalContextModificationHolder;
 import com.translator.model.history.HistoricalContextObjectHolder;
+import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import com.translator.model.inquiry.Inquiry;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.modification.ModificationType;
@@ -182,7 +183,7 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                     if (newInquiry != null) {
                         InquiryChat mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
-                        String question3 = "Can you provide the terminal commands for creating those " + language + " files in " + filePath + "?";
+                        String question3 = "Can you provide the terminal commands for creating those " + language + " files in " + filePath + "? Can you provide them in the order you specified above?";
                         try {
                             Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
                         } catch (InterruptedException e) {
@@ -254,7 +255,13 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
     }
 
     @Override
-    public void generateCodeFiles(String description, String language, String fileExtension, String filePath, List<HistoricalContextObjectHolder> priorContext) {
+    public void generateCodeFiles(String description, String language, String fileExtension, String filePath, List<HistoricalContextObjectDataHolder> priorContextData) {
+        List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+        if (priorContextData != null) {
+            for (HistoricalContextObjectDataHolder data : priorContextData) {
+                priorContext.add(new HistoricalContextObjectHolder(data));
+            }
+        }
         final String newFileExtension;
         if (fileExtension.startsWith(".")) {
             newFileExtension = fileExtension.substring(1);
@@ -350,7 +357,13 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
     }
 
     @Override
-    public void generateCodeFilesWithConsideration(String description, String language, String fileExtension, String filePath, List<HistoricalContextObjectHolder> priorContext) {
+    public void generateCodeFilesWithConsideration(String description, String language, String fileExtension, String filePath, List<HistoricalContextObjectDataHolder> priorContextData) {
+        List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+        if (priorContextData != null) {
+            for (HistoricalContextObjectDataHolder data : priorContextData) {
+                priorContext.add(new HistoricalContextObjectHolder(data));
+            }
+        }
         final String newFileExtension;
         if (fileExtension.startsWith(".")) {
             newFileExtension = fileExtension.substring(1);
@@ -379,7 +392,7 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                     if (newInquiry != null) {
                         InquiryChat mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
-                        String question3 = "Can you provide the terminal commands for creating those " + language + " files in " + filePath + "?";
+                        String question3 = "Can you provide the terminal commands for creating those " + language + " files in " + filePath + "? Can you provide them in the order you specified above?";
                         try {
                             Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
                         } catch (InterruptedException e) {

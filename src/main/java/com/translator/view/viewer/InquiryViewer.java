@@ -11,15 +11,19 @@ import com.translator.model.inquiry.Inquiry;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.inquiry.InquiryChatType;
 import com.translator.model.modification.RecordType;
+import com.translator.service.context.PromptContextService;
+import com.translator.service.context.PromptContextServiceImpl;
 import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.inquiry.InquiryService;
+import com.translator.service.openai.OpenAiModelService;
+import com.translator.view.dialog.MultiFileCreateDialog;
+import com.translator.view.factory.PromptContextBuilderFactory;
 import com.translator.view.menu.TextAreaWindow;
 import com.translator.view.panel.FixedHeightPanel;
 import com.translator.view.renderer.InquiryChatRenderer;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorServiceImpl;
-import com.translator.view.window.MultiFileGeneratorWindow;
 import com.intellij.ui.components.JBTextArea;
 
 
@@ -66,6 +70,8 @@ public class InquiryViewer extends JPanel {
     private CodeFileGeneratorService codeFileGeneratorService;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
     private InquiryService inquiryService;
+    private OpenAiModelService openAiModelService;
+    private PromptContextBuilderFactory promptContextBuilderFactory;
     private HistoricalModificationListViewer historicalModificationListViewer;
     private InquiryListViewer inquiryListViewer;
     private JBTextArea promptInput;
@@ -74,12 +80,16 @@ public class InquiryViewer extends JPanel {
     public InquiryViewer(Project project,
                          CodactorToolWindowService codactorToolWindowService,
                          CodeFileGeneratorService codeFileGeneratorService,
-                         InquiryService inquiryService) {
+                         InquiryService inquiryService,
+                         OpenAiModelService openAiModelService,
+                         PromptContextBuilderFactory promptContextBuilderFactory) {
         this.project = project;
         this.codactorToolWindowService = codactorToolWindowService;
         this.codeFileGeneratorService = codeFileGeneratorService;
         this.textAreaHeightCalculatorService = new TextAreaHeightCalculatorServiceImpl();
         this.inquiryService = inquiryService;
+        this.openAiModelService = openAiModelService;
+        this.promptContextBuilderFactory = promptContextBuilderFactory;
         this.historicalModificationListViewer = null;
         this.inquiryListViewer = null;
         this.inquiry = new Inquiry(null, null, null, null, null, null, null, null, null, null);
@@ -454,8 +464,8 @@ public class InquiryViewer extends JPanel {
                 if (selectedChat > 0){
                     InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(selectedChat);
                     InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
-                    MultiFileGeneratorWindow multiFileGeneratorWindow = new MultiFileGeneratorWindow(inquiry, inquiryChat, codeFileGeneratorService, codactorToolWindowService);
-                    multiFileGeneratorWindow.setVisible(true);
+                    MultiFileCreateDialog multiFileCreateDialog = new MultiFileCreateDialog(null, inquiryChat.getMessage(), openAiModelService, codactorToolWindowService, codeFileGeneratorService, new PromptContextServiceImpl(), promptContextBuilderFactory);
+                    multiFileCreateDialog.setVisible(true);
                 }
             }
         });

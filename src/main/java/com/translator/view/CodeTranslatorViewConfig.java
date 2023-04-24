@@ -53,8 +53,10 @@ public class CodeTranslatorViewConfig extends AbstractModule {
     public InquiryViewer inquiryViewer(Project project,
                                 CodactorToolWindowService codactorToolWindowService,
                                 CodeFileGeneratorService codeFileGeneratorService,
-                                InquiryService inquiryService) {
-        return new InquiryViewer(project, codactorToolWindowService, codeFileGeneratorService, inquiryService);
+                                InquiryService inquiryService,
+                                       OpenAiModelService openAiModelService,
+                                       PromptContextBuilderFactory promptContextBuilderFactory) {
+        return new InquiryViewer(project, codactorToolWindowService, codeFileGeneratorService, inquiryService, openAiModelService, promptContextBuilderFactory);
     }
 
     @Singleton

@@ -41,7 +41,7 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
         ApplicationManager.getApplication().invokeLater(() -> {
         VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl("file://" + filePath);
         if (virtualFile == null) {
-            throw new IllegalStateException("File not found: " + filePath);
+            return;
         }
 
         Document document = PsiDocumentManager.getInstance(project).getDocument(Objects.requireNonNull(PsiManager.getInstance(project).findFile(virtualFile)));

@@ -6,6 +6,7 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.translator.CodactorInjector;
+import com.translator.view.console.CodactorConsole;
 import com.translator.view.viewer.ModificationQueueViewer;
 import com.translator.view.viewer.ProvisionalModificationViewer;
 import com.translator.view.viewer.HistoricalModificationListViewer;
@@ -19,6 +20,7 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
     private ToolWindowService toolWindowService;
     private String modificationQueueViewerToolWindowId;
     private String inquiryViewerToolWindowId;
+    private CodactorConsole console;
     private ModificationQueueViewer modificationQueueViewer;
     private ProvisionalModificationViewer provisionalModificationViewer;
     private InquiryViewer inquiryViewer;
@@ -142,6 +144,14 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
 
     public ProvisionalModificationViewer getProvisionalModificationViewer() {
         return provisionalModificationViewer;
+    }
+
+    public CodactorConsole getConsole() {
+        return console;
+    }
+
+    public void setConsole(CodactorConsole console) {
+        this.console = console;
     }
 }
 
