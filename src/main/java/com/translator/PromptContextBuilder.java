@@ -5,12 +5,8 @@
 package com.translator;
 
 import com.google.inject.assistedinject.Assisted;
-import com.google.inject.name.Named;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Splitter;
 import com.intellij.ui.JBColor;
-import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
@@ -20,12 +16,10 @@ import com.translator.dao.history.ContextQueryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.context.PromptContextService;
 import com.translator.view.viewer.context.*;
-import com.translator.worker.LimitedSwingWorkerExecutor;
 
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
-import java.util.Map;
 
 /**
  *

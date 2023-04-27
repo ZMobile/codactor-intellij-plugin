@@ -1,10 +1,8 @@
 package com.translator.service.modification.tracking.listener;
 
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.EditorMouseEvent;
 import com.intellij.openapi.editor.event.EditorMouseListener;
-import com.intellij.openapi.project.Project;
 import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationTracker;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
@@ -12,7 +10,6 @@ import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.viewer.ProvisionalModificationViewer;
 
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 public class EditorClickHandler implements EditorMouseListener {
     private FileModificationTrackerService fileModificationTrackerService;

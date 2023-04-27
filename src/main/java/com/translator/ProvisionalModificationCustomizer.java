@@ -23,10 +23,10 @@ import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationSuggestion;
 import com.translator.model.modification.ModificationType;
 import com.translator.service.code.CodeSnippetExtractorService;
-import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.context.PromptContextServiceImpl;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
+import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.AutomaticCodeModificationService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
@@ -37,7 +37,6 @@ import com.translator.view.factory.PromptContextBuilderFactory;
 
 import javax.inject.Inject;
 import javax.swing.*;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

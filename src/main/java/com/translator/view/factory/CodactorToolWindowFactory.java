@@ -8,7 +8,6 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.translator.CodactorInjector;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
-import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.console.CodactorConsole;
 import com.translator.view.viewer.ModificationQueueViewer;

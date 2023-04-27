@@ -10,9 +10,9 @@ import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationSuggestion;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
+import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.ProvisionalModificationCustomizerFactory;
 import com.translator.view.renderer.CodeSnippetRenderer;
-import com.translator.service.ui.tool.CodactorToolWindowService;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -21,13 +21,13 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 /**
  *
  * @author zantehays
  */
 public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificationViewer> {
-
     private FileModification fileModification;
     private JList<CodeSnippetViewer> jList1;
     private JToolBar jToolBar2;
@@ -97,8 +97,22 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             public void actionPerformed(ActionEvent e) {
                 FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
                 fileModificationTrackerService.implementModificationUpdate(fileModificationId, fileModificationSuggestion.getSuggestedCode().getDocument().getText(), false);
-                codactorToolWindowService.closeModificationQueueViewerToolWindow();
-                updateModificationList(null);
+                List<FileModification> modifications = fileModificationTrackerService.getAllFileModifications();
+                boolean anyDone = false;
+                FileModification nextModification = null;
+                for (FileModification modification : modifications) {
+                    if (modification.isDone()) {
+                        anyDone = true;
+                        nextModification = modification;
+                        break;
+                    }
+                }
+                if (anyDone) {
+                    updateModificationList(nextModification);
+                } else {
+                    codactorToolWindowService.closeModificationQueueViewerToolWindow();
+                    updateModificationList(null);
+                }
             }
         });
         acceptButton.setEnabled(true);
@@ -107,8 +121,22 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             @Override
             public void actionPerformed(ActionEvent e) {
                 fileModificationTrackerService.removeModification(fileModificationId);
-                codactorToolWindowService.closeModificationQueueViewerToolWindow();
-                updateModificationList(null);
+                List<FileModification> modifications = fileModificationTrackerService.getAllFileModifications();
+                boolean anyDone = false;
+                FileModification nextModification = null;
+                for (FileModification modification : modifications) {
+                    if (modification.isDone()) {
+                        anyDone = true;
+                        nextModification = modification;
+                        break;
+                    }
+                }
+                if (anyDone) {
+                    updateModificationList(nextModification);
+                } else {
+                    codactorToolWindowService.closeModificationQueueViewerToolWindow();
+                    updateModificationList(null);
+                }
             }
         });
         rejectAllButton.setEnabled(true);

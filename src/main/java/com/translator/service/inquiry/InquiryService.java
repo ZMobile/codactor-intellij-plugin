@@ -1,7 +1,6 @@
 package com.translator.service.inquiry;
 
 import com.translator.model.history.HistoricalContextObjectHolder;
-import com.translator.model.inquiry.Inquiry;
 import com.translator.model.modification.RecordType;
 
 import java.util.List;

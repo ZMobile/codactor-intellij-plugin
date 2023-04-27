@@ -1,7 +1,6 @@
 package com.translator.model.modification;
 
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.util.TextRange;
 import com.translator.service.code.RangeReplaceService;

@@ -1,7 +1,5 @@
 package com.translator.service.code;
 
-import com.intellij.openapi.fileTypes.FileType;
-
 import java.util.List;
 
 public interface GptToLanguageTransformerService {

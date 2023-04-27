@@ -8,8 +8,8 @@ import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
 import org.fife.ui.rtextarea.SearchResult;*/
 
-import javax.swing.*;
-        import java.awt.*;
+            import javax.swing.*;
+            import java.awt.*;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license

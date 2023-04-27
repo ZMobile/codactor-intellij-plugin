@@ -58,5 +58,26 @@
                 description="Describe a file to generate it with AI">
             <add-to-group group-id="NewGroup" anchor="first" />
         </action>
+        <action id="ModifyCodeAction"
+                class="com.translator.view.action.CustomModifyFileAction"
+                text="Modify Code"
+                description="Modify the selected files with AI">
+                <!-- icon="/path/to/your/icon.png"> -->
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="before" relative-to-action="FindUsages" />
+        </action>
+        <action id="FixCodeAction"
+                class="com.translator.view.action.CustomFixFileAction"
+                text="Fix Code"
+                description="Fix the selected files with AI">
+            <!-- icon="/path/to/your/icon.png"> -->
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="before" relative-to-action="FindUsages" />
+        </action>
+        <action id="TranslateCodeAction"
+                class="com.translator.view.action.CustomTranslateFileAction"
+                text="Translate Code"
+                description="Translate the selected files with AI">
+            <!-- icon="/path/to/your/icon.png"> -->
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="before" relative-to-action="FindUsages" />
+        </action>
     </actions>
 </idea-plugin>

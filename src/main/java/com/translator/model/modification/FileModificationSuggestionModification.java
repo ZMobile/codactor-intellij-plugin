@@ -1,9 +1,7 @@
 package com.translator.model.modification;
 
 import com.intellij.openapi.editor.RangeMarker;
-import com.translator.service.modification.tracking.CodeRangeTrackerService;
 
-import java.util.List;
 import java.util.UUID;
 
 public class FileModificationSuggestionModification {
@@ -16,6 +14,7 @@ public class FileModificationSuggestionModification {
     private final String beforeText;
     private final ModificationType modificationType;
     private String editedCode;
+    private boolean error;
 
     public FileModificationSuggestionModification(String filePath,
                                                   String modificationId,
@@ -30,6 +29,7 @@ public class FileModificationSuggestionModification {
         this.rangeMarker = rangeMarker;
         this.beforeText = beforeText;
         this.modificationType = modificationType;
+        this.error = false;
     }
 
     public String getId() {
@@ -87,5 +87,13 @@ public class FileModificationSuggestionModification {
 
     public void setModificationSuggestionModificationRecordId(String modificationSuggestionModificationRecordId) {
         setModificationRecordId(modificationSuggestionModificationRecordId);
+    }
+
+    public boolean isError() {
+        return error;
+    }
+
+    public void setError(boolean error) {
+        this.error = error;
     }
 }

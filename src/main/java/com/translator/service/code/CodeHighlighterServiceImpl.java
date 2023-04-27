@@ -1,21 +1,15 @@
 package com.translator.service.code;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.HighlighterTargetArea;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.editor.markup.TextAttributes;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.JBColor;
 import com.translator.model.modification.*;
-import com.translator.service.modification.tracking.FileModificationTrackerService;
 
 import javax.inject.Inject;
 import java.awt.*;
@@ -55,7 +49,9 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
 
                     try {
                         Color highlightColor;
-                        if (modification.isDone()) {
+                        if (modification.isError()) {
+                            highlightColor = Color.decode("#FF0000");
+                        } else if (modification.isDone()) {
                             highlightColor = Color.decode("#228B22");
                         } else {
                             highlightColor = Color.decode("#009688");
@@ -85,7 +81,12 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
                 int endIndex = modification.getRangeMarker().getEndOffset();
 
                 try {
-                    Color highlightColor = Color.decode("#009688");
+                    Color highlightColor;
+                    if (modification.isError()) {
+                        highlightColor = Color.decode("#FF0000");
+                    } else {
+                        highlightColor = Color.decode("#009688");
+                    }
                     addHighlight(editor, startIndex, endIndex, highlightColor);
                 } catch (Exception e) {
                     e.printStackTrace();

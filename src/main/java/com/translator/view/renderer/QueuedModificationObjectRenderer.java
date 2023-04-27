@@ -6,11 +6,9 @@ import com.translator.model.modification.*;
 import com.translator.service.file.FileReaderService;
 import com.translator.service.line.LineCounterService;
 import com.translator.service.line.LineCounterServiceImpl;
-import com.intellij.ui.components.JBTextArea;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Map;
 
 public class QueuedModificationObjectRenderer extends JPanel implements ListCellRenderer<QueuedFileModificationObjectHolder> {
     private Project project;
@@ -93,7 +91,11 @@ public class QueuedModificationObjectRenderer extends JPanel implements ListCell
             }
             lineRangeText = "Lines: " + startLine + " - " + endLine;
             statusText = fileModification.isDone() ? "(Done)" : "(Queued)";
-            setBackground(fileModification.isDone() ? Color.decode("#228B22") : Color.decode("#009688"));
+            if (fileModification.isError()) {
+                setBackground(Color.decode("#FF0000"));
+            } else {
+                setBackground(fileModification.isDone() ? Color.decode("#228B22") : Color.decode("#009688"));
+            }
         } else if (value.getQueuedModificationObjectType() == QueuedModificationObjectType.MULTI_FILE_MODIFICATION) {
             MultiFileModification multiFileModification = value.getMultiFileModification();
             lineRangeText = "Multi-File Mod Stage: " + multiFileModification.getStage();

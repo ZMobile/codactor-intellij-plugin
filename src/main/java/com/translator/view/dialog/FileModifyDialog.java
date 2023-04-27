@@ -15,7 +15,6 @@ import com.translator.PromptContextBuilder;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticMassCodeModificationServiceFactory;
 import com.translator.service.modification.AutomaticMassCodeModificationService;
-import com.translator.service.modification.AutomaticMassCodeModificationServiceImpl;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.PromptContextBuilderFactory;
@@ -26,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class FileFixDialog extends JDialog {
+public class FileModifyDialog extends JDialog {
     private Project project;
     private CodactorToolWindowService codactorToolWindowService;
     private PromptContextService promptContextService;
@@ -44,13 +43,13 @@ public class FileFixDialog extends JDialog {
     private JButton removeButton;
     private JButton okButton;
 
-    public FileFixDialog(Project project,
-                         CodactorToolWindowService codactorToolWindowService,
-                         PromptContextService promptContextService,
-                         PromptContextBuilderFactory promptContextBuilderFactory,
-                         AutomaticMassCodeModificationServiceFactory automaticMassCodeModificationServiceFactory,
-                         OpenAiModelService openAiModelService,
-                         List<VirtualFile> selectedItems) {
+    public FileModifyDialog(Project project,
+                            CodactorToolWindowService codactorToolWindowService,
+                            PromptContextService promptContextService,
+                            PromptContextBuilderFactory promptContextBuilderFactory,
+                            AutomaticMassCodeModificationServiceFactory automaticMassCodeModificationServiceFactory,
+                            OpenAiModelService openAiModelService,
+                            List<VirtualFile> selectedItems) {
         this.project = project;
         this.codactorToolWindowService = codactorToolWindowService;
         this.promptContextService = promptContextService;
@@ -58,7 +57,7 @@ public class FileFixDialog extends JDialog {
         this.automaticMassCodeModificationService = automaticMassCodeModificationServiceFactory.create(promptContextService);
         this.openAiModelService = openAiModelService;
         setLayout(new BorderLayout());
-        setTitle("Fix Code");
+        setTitle("Modify Code");
 
         listModel = new DefaultListModel<>();
 
@@ -68,7 +67,7 @@ public class FileFixDialog extends JDialog {
         fileList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         fileList.addListSelectionListener(e -> updateSelectedFilesLabel());
 
-        descriptionLabel = new JBLabel("Enter the problem to fix with each of these files:");
+        descriptionLabel = new JBLabel("Enter the changes to perform to each of these files:");
         description = new JBTextArea(5, 20);
 
         hiddenLabel = new JBLabel();
@@ -130,8 +129,8 @@ public class FileFixDialog extends JDialog {
             promptContextBuilder.setVisible(true);
         });
 
-        okButton = new JButton("Fix");
-        okButton.addActionListener(e -> fixFiles());
+        okButton = new JButton("Modify");
+        okButton.addActionListener(e -> modifyFiles());
 
 
         add(northPanel, BorderLayout.NORTH);
@@ -173,15 +172,15 @@ public class FileFixDialog extends JDialog {
 
     private void updateSelectedFilesLabel() {
         if (fileList.getSelectedValuesList().size() == 1) {
-            descriptionLabel.setText("Enter the problem to fix with this file:");
+            descriptionLabel.setText("Enter the changes to perform to this file:");
         } else if (fileList.getSelectedValuesList().isEmpty()) {
-            descriptionLabel.setText("Enter the problem to fix with each file added to this list:");
+            descriptionLabel.setText("Enter the changes to each file added to this list:");
         } else {
-            descriptionLabel.setText("Enter the problem to fix with each of these files:");
+            descriptionLabel.setText("Enter the changes to perform to each of these files:");
         }
     }
 
-    private void fixFiles() {
+    private void modifyFiles() {
         codactorToolWindowService.openModificationQueueViewerToolWindow();
 
         SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
@@ -193,10 +192,10 @@ public class FileFixDialog extends JDialog {
                     selectedFiles.add(filePath);
                 }
                 if (selectedFiles.isEmpty()) {
-                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FileFixDialog.this, "Please select at least one file.", "Error", JOptionPane.ERROR_MESSAGE));
+                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FileModifyDialog.this, "Please select at least one file.", "Error", JOptionPane.ERROR_MESSAGE));
                     return null;
                 }
-                automaticMassCodeModificationService.getFixedCode(selectedFiles, description.getText());
+                automaticMassCodeModificationService.getModifiedCode(selectedFiles, description.getText());
 
                 if (selectedFiles.size() == 1) {
                     // Open the modified file in the editor

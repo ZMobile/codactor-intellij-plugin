@@ -9,8 +9,6 @@ import com.translator.model.history.data.HistoricalContextModificationDataHolder
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import com.translator.view.renderer.HistoricalContextObjectHolderRenderer;
 import com.translator.view.renderer.SeparatorListCellRenderer;
-import com.translator.worker.LimitedSwingWorker;
-import com.translator.worker.LimitedSwingWorkerExecutor;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionListener;

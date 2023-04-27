@@ -7,11 +7,7 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.translator.CodactorInjector;
 import com.translator.view.console.CodactorConsole;
-import com.translator.view.viewer.ModificationQueueViewer;
-import com.translator.view.viewer.ProvisionalModificationViewer;
-import com.translator.view.viewer.HistoricalModificationListViewer;
-import com.translator.view.viewer.InquiryListViewer;
-import com.translator.view.viewer.InquiryViewer;
+import com.translator.view.viewer.*;
 
 import javax.inject.Inject;
 

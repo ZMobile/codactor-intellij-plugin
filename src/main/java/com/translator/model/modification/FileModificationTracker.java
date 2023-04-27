@@ -3,14 +3,12 @@ package com.translator.model.modification;
 
 import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.components.JBTextArea;
 import com.translator.service.code.CodeSnippetExtractorService;
 import com.translator.service.code.RangeReplaceService;
 import com.translator.service.modification.tracking.CodeRangeTrackerService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class FileModificationTracker {
     private Project project;
@@ -138,5 +136,12 @@ public class FileModificationTracker {
             return filePath.substring(i + 1);
         }
         return "";
+    }
+
+    public void errorModification(String modificationId) {
+        FileModification fileModification = getModification(modificationId);
+        if (fileModification != null) {
+            fileModification.setError(true);
+        }
     }
 }

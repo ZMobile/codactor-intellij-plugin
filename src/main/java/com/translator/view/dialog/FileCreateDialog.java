@@ -1,9 +1,6 @@
 package com.translator.view.dialog;
 
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.openapi.ui.DialogWrapper;
-import com.intellij.ui.components.JBTextArea;
-import com.intellij.ui.components.JBTextField;
 import com.translator.PromptContextBuilder;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.openai.OpenAiModelService;
@@ -106,7 +103,7 @@ public class FileCreateDialog extends JDialog {
 
         contentPane.add(createTopPanel(), BorderLayout.NORTH);
         contentPane.add(createMainPanel(), BorderLayout.CENTER);
-        okButton = new JButton("OK");
+        okButton = new JButton("Create File");
         okButton.addActionListener(okActionListener);
 
 

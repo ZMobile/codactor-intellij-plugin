@@ -1,8 +1,8 @@
 package com.translator.dao.history;
 
 import com.google.gson.Gson;
-import com.translator.model.api.translator.history.DesktopCodeModificationHistoryResponseResource;
 import com.translator.dao.firebase.FirebaseTokenService;
+import com.translator.model.api.translator.history.DesktopCodeModificationHistoryResponseResource;
 import org.apache.commons.io.IOUtils;
 
 import javax.inject.Inject;

@@ -9,13 +9,10 @@ import com.translator.service.code.GuardedBlockService;
 import com.translator.service.code.RangeReplaceService;
 import com.translator.service.file.RenameFileService;
 import com.translator.service.modification.tracking.listener.EditorClickHandlerService;
-import com.translator.service.ui.ModificationQueueListButtonService;
 import com.translator.view.viewer.ModificationQueueViewer;
 
 import javax.inject.Inject;
-import java.awt.*;
 import java.io.File;
-import java.util.List;
 import java.util.*;
 
 public class FileModificationTrackerServiceImpl implements FileModificationTrackerService {
@@ -32,7 +29,6 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     private EditorClickHandlerService editorClickHandlerService;
     private RenameFileService renameFileService;
     private ModificationQueueViewer modificationQueueViewer;
-    private boolean implementingQueuedModifications;
 
     @Inject
     public FileModificationTrackerServiceImpl(Project project,
@@ -55,7 +51,6 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         this.rangeReplaceService = rangeReplaceService;
         this.editorClickHandlerService = editorClickHandlerService;
         this.renameFileService = renameFileService;
-        this.implementingQueuedModifications = false;
     }
 
     public String addModification(String filePath, int startIndex, int endIndex, ModificationType modificationType) {
@@ -71,9 +66,6 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             System.out.println("Testo mini 3");
             System.out.println("Testo mini 4");
         }
-        if (modificationType != ModificationType.CREATE) {
-            editorClickHandlerService.addEditorClickHandler(newFilePath);
-        }
         System.out.println("Testo mini 5");
         String fileModificationId = fileModificationTracker.addModification(startIndex, endIndex, modificationType);
         if (fileModificationId == null) {
@@ -81,13 +73,12 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             /*JOptionPane.showMessageDialog(display, "Can't modify code that is already being modified", "Error",
                     JOptionPane.ERROR_MESSAGE);*/
         }
-        System.out.println("Testo mini 3");
+        if (modificationType != ModificationType.CREATE) {
+            editorClickHandlerService.addEditorClickHandler(newFilePath);
+            guardedBlockService.addFileModificationGuardedBlock(fileModificationId, startIndex, endIndex);
+            codeHighlighterService.highlightTextArea(fileModificationTracker);
+        }
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
-        System.out.println("Testo mini 4");
-        guardedBlockService.addFileModificationGuardedBlock(fileModificationId, startIndex, endIndex);
-        System.out.println("Testo mini 5");
-        codeHighlighterService.highlightTextArea(fileModificationTracker);
-        System.out.println("Testo mini 6");
         return fileModificationId;
     }
 
@@ -116,6 +107,13 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
 
     public String addMultiFileModification(String description, String language, String fileExtension, String filePath) {
         MultiFileModification multiFileModification = new MultiFileModification(description, language, fileExtension, filePath);
+        activeMultiFileModifications.add(multiFileModification);
+        modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
+        return multiFileModification.getId();
+    }
+
+    public String addMultiFileModification(String description) {
+        MultiFileModification multiFileModification = new MultiFileModification(description);
         activeMultiFileModifications.add(multiFileModification);
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         return multiFileModification.getId();
@@ -360,5 +358,23 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             }
             provisionalModificationCustomizerMap.remove(fileModificationSuggestion.getId());
         }
+    }
+
+    @Override
+    public void errorFileModification(String modificationId) {
+        FileModification fileModification = getModification(modificationId);
+        if (fileModification == null) {
+            return;
+        }
+        fileModification.setError(true);
+    }
+
+    @Override
+    public void retryFileModification(String modificationId) {
+        FileModification fileModification = getModification(modificationId);
+        if (fileModification == null) {
+            return;
+        }
+        fileModification.setError(false);
     }
 }

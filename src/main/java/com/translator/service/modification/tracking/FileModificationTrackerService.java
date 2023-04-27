@@ -2,10 +2,8 @@ package com.translator.service.modification.tracking;
 
 import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.*;
-import com.translator.service.ui.ModificationQueueListButtonService;
 import com.translator.view.viewer.ModificationQueueViewer;
 
-import java.awt.*;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +13,8 @@ public interface FileModificationTrackerService {
     String addModificationSuggestionModification(String filePath, String suggestionId, int startIndex, int endIndex, ModificationType modificationType);
 
     String addMultiFileModification(String description, String language, String fileExtension, String filePath);
+
+    String addMultiFileModification(String description);
 
     void removeModification(String modificationId);
 
@@ -56,4 +56,8 @@ public interface FileModificationTrackerService {
     void setModificationQueueViewer(ModificationQueueViewer modificationQueueViewer);
 
     void addProvisionalModificationCustomizer(ProvisionalModificationCustomizer provisionalModificationCustomizer);
+
+    void errorFileModification(String modificationId);
+
+    void retryFileModification(String modificationId);
 }

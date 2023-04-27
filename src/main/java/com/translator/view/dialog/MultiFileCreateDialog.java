@@ -5,7 +5,6 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.JBLabel;
@@ -21,14 +20,12 @@ import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.PromptContextBuilderFactory;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 public class MultiFileCreateDialog extends JDialog {
@@ -339,7 +336,7 @@ public class MultiFileCreateDialog extends JDialog {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.insets = new Insets(10, 10, 0, 10);
         mainPanel.add(advancedButton, gbc);
-        okButton = new JButton("OK");
+        okButton = new JButton("Create Files");
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

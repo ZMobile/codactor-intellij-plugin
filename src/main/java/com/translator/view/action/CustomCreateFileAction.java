@@ -4,7 +4,6 @@ import com.google.inject.Injector;
 import com.intellij.ide.actions.CreateElementActionBase;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -116,6 +115,5 @@ public class CustomCreateFileAction extends CreateElementActionBase {
         PsiManager psiManager = PsiManager.getInstance(project);
 
         return psiManager.findFile(newVirtualFile);
-        // You will need to create a custom implementation of the handler to process the description
     }
 }

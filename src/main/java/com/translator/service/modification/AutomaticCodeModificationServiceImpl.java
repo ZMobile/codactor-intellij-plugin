@@ -5,8 +5,6 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.dao.firebase.FirebaseTokenService;
 import com.translator.model.api.translator.modification.*;
 import com.translator.model.history.HistoricalContextObjectHolder;
@@ -15,19 +13,18 @@ import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationSuggestion;
 import com.translator.model.modification.FileModificationSuggestionModificationRecord;
 import com.translator.model.modification.ModificationType;
-import com.translator.service.code.CodeHighlighterService;
-import com.translator.service.context.PromptContextService;
 import com.translator.service.code.CodeSnippetExtractorService;
+import com.translator.service.context.PromptContextService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
+import com.translator.view.dialog.FileModificationErrorDialog;
 import com.translator.view.dialog.LoginDialog;
 import com.translator.view.dialog.OpenAiApiKeyDialog;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import javax.swing.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,14 +84,12 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                     fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getModificationSuggestions());
                     promptContextService.clearPromptContext();
                 } else {
+                    fileModificationTrackerService.errorFileModification(modificationId);
                     if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                        OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        //openAiApiKeyDialog.setVisible(true);
+                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     } else {
-                        JOptionPane.showMessageDialog(super.getParentComponent(), desktopCodeModificationResponseResource.getError(), "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     }
-                    fileModificationTrackerService.removeModification(modificationId);
                 }
             }
         };
@@ -170,14 +165,12 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                     fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getModificationSuggestions());
                     promptContextService.clearPromptContext();
                 } else {
+                    fileModificationTrackerService.errorFileModification(modificationId);
                     if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                        OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        //openAiApiKeyDialog.setVisible(true);
+                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     } else {
-                        JOptionPane.showMessageDialog(super.getParentComponent(), desktopCodeModificationResponseResource.getError(), "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     }
-                    fileModificationTrackerService.removeModification(modificationId);
                 }
             }
         };
@@ -252,14 +245,12 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                     fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions());
                     promptContextService.clearPromptContext();
                 } else {
+                    fileModificationTrackerService.errorFileModification(modificationId);
                     if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                        OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        //openAiApiKeyDialog.setVisible(true);
+                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.CREATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     } else {
-                        JOptionPane.showMessageDialog(super.getParentComponent(), desktopCodeCreationResponseResource.getError(), "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     }
-                    fileModificationTrackerService.removeModification(modificationId);
                 }
             }
         };
@@ -379,29 +370,15 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(filePath, code, newLanguage, newFileType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                 DesktopCodeTranslationResponseResource desktopCodeTranslationResponseResource = codeModificationService.getTranslatedCode(desktopCodeTranslationRequestResource);
                 if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null && desktopCodeTranslationResponseResource.getModificationSuggestions().size() > 0) {
-                    /*VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
-                    assert virtualFile != null;
-                    String fileName = virtualFile.getName();
-                    int dotIndex = fileName.lastIndexOf('.');
-                    if (dotIndex > 0) {
-                        String newFileName = fileName.substring(0, dotIndex) + "." + newFileType;
-                        try {
-                            virtualFile.rename(this, newFileName);
-                        } catch (IOException ex) {
-                            // Handle the exception if necessary
-                        }
-                    }*/
                     fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeTranslationResponseResource.getModificationSuggestions());
                     promptContextService.clearPromptContext();
                 } else {
+                    fileModificationTrackerService.errorFileModification(modificationId);
                     if (desktopCodeTranslationResponseResource.getError().equals("null: null")) {
-                        OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        //openAiApiKeyDialog.setVisible(true);
+                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     } else {
-                        JOptionPane.showMessageDialog(super.getParentComponent(), desktopCodeTranslationResponseResource.getError(), "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeTranslationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     }
-                    fileModificationTrackerService.removeModification(modificationId);
                 }
             }
         };

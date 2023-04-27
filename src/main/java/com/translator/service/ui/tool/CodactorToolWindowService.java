@@ -1,16 +1,7 @@
 package com.translator.service.ui.tool;
 
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.ui.content.Content;
-import com.intellij.ui.content.ContentFactory;
-import com.translator.CodactorInjector;
-import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.view.console.CodactorConsole;
 import com.translator.view.viewer.*;
-
-import javax.swing.*;
-import java.awt.*;
 
 public interface CodactorToolWindowService {
     void openModificationQueueViewerToolWindow();

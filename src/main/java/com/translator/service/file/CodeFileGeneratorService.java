@@ -1,6 +1,5 @@
 package com.translator.service.file;
 
-import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import com.translator.model.inquiry.Inquiry;
 import com.translator.model.inquiry.InquiryChat;

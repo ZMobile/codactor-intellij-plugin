@@ -1,6 +1,5 @@
 package com.translator.service.modification.tracking;
 
-import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.RangeMarker;
 
 public interface CodeRangeTrackerService {

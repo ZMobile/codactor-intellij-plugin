@@ -1,8 +1,6 @@
 package com.translator.view.viewer;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.CodeModificationHistoryDao;
@@ -12,12 +10,9 @@ import com.translator.model.inquiry.Inquiry;
 import com.translator.model.modification.FileModificationSuggestionModificationRecord;
 import com.translator.model.modification.FileModificationSuggestionRecord;
 import com.translator.model.modification.RecordType;
+import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.renderer.HistoricalCompletedFileModificationRenderer;
 import com.translator.view.renderer.SeparatorListCellRenderer;
-import com.translator.service.ui.tool.CodactorToolWindowService;
-import com.translator.worker.LimitedSwingWorker;
-import com.translator.worker.LimitedSwingWorkerExecutor;
-import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;

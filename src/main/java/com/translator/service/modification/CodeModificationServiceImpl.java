@@ -1,11 +1,8 @@
 package com.translator.service.modification;
 
-import com.google.gson.Gson;
 import com.translator.dao.modification.CodeModificationDao;
-import com.translator.dao.modification.CodeModificationDaoImpl;
 import com.translator.model.api.translator.modification.*;
 import com.translator.model.modification.FileModificationSuggestionModificationRecord;
-import com.translator.dao.firebase.FirebaseTokenService;
 
 import javax.inject.Inject;
 

@@ -14,12 +14,10 @@ import com.translator.service.context.PromptContextService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
-import com.translator.view.viewer.InquiryChatViewer;
 import com.translator.view.viewer.InquiryViewer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

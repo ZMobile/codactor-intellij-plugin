@@ -3,7 +3,6 @@ package com.translator.view.listener;
 import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationSuggestionModification;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
-import com.intellij.ui.components.JBTextArea;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

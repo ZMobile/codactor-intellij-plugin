@@ -1,6 +1,5 @@
 package com.translator.view.renderer;
 
-import com.intellij.ui.JBColor;
 import com.translator.model.inquiry.Inquiry;
 import com.translator.service.line.LineCounterService;
 import com.translator.service.line.LineCounterServiceImpl;

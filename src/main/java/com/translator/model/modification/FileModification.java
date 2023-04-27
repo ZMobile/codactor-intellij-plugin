@@ -17,6 +17,7 @@ public class FileModification {
     private String newLanguage;
     private String newFileType;
     private boolean done;
+    private boolean error;
 
     public FileModification(String filePath, RangeMarker rangeMarker, String beforeText, ModificationType modificationType) {
         this.filePath = filePath;
@@ -26,6 +27,7 @@ public class FileModification {
         this.modificationType = modificationType;
         this.modificationOptions = new ArrayList<>();
         this.done = false;
+        this.error = false;
     }
 
     public String getId() {
@@ -111,5 +113,13 @@ public class FileModification {
 
     public void setDone(boolean done) {
         this.done = done;
+    }
+
+    public boolean isError() {
+        return error;
+    }
+
+    public void setError(boolean error) {
+        this.error = error;
     }
 }

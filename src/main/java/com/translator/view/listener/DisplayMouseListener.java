@@ -1,12 +1,12 @@
 package com.translator.view.listener;
 
+import com.intellij.ui.components.JBTextArea;
 import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationTracker;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.viewer.ModificationQueueViewer;
 import com.translator.view.viewer.ProvisionalModificationViewer;
-import com.intellij.ui.components.JBTextArea;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;

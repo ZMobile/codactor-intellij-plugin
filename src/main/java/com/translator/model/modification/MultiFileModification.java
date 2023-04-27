@@ -23,6 +23,13 @@ public class MultiFileModification {
         this.stage = "(0/3)";
     }
 
+    public MultiFileModification(String description) {
+        this.myId = UUID.randomUUID().toString();
+        this.creationTimestamp = LocalDateTime.now(ZoneOffset.UTC);
+        this.description = description;
+        this.stage = "";
+    }
+
     public String getId() {
         return myId;
     }

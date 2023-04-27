@@ -2,12 +2,8 @@ package com.translator;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.intellij.openapi.components.AbstractProjectComponent;
-import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
-import com.translator.dao.CodeTranslatorDaoConfig;
-import com.translator.service.CodeTranslatorServiceConfig;
 import com.translator.view.CodeTranslatorViewConfig;
 
 import java.util.HashMap;

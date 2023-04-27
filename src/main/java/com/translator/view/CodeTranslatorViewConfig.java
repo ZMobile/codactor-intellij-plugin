@@ -9,21 +9,19 @@ import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.CodeTranslatorServiceConfig;
 import com.translator.service.code.CodeSnippetExtractorService;
-import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
+import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.file.FileOpenerService;
+import com.translator.service.file.FileReaderService;
 import com.translator.service.file.SelectedFileFetcherService;
 import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
-import com.translator.service.file.FileReaderService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.console.CodactorConsole;
 import com.translator.view.factory.PromptContextBuilderFactory;
 import com.translator.view.factory.ProvisionalModificationCustomizerFactory;
-import com.translator.view.viewer.ModificationQueueViewer;
-import com.translator.view.viewer.ProvisionalModificationViewer;
 import com.translator.view.viewer.*;
 
 public class CodeTranslatorViewConfig extends AbstractModule {

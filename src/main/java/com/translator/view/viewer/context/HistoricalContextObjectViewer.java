@@ -9,22 +9,19 @@ import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
+import com.intellij.ui.components.JBTextArea;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.history.HistoricalContextObjectType;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.inquiry.InquiryChatType;
+import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
+import com.translator.service.ui.measure.TextAreaHeightCalculatorServiceImpl;
 import com.translator.view.menu.TextAreaWindow;
 import com.translator.view.panel.FixedHeightPanel;
 import com.translator.view.renderer.InquiryChatRenderer;
 import com.translator.view.viewer.InquiryChatViewer;
-import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
-import com.translator.service.ui.measure.TextAreaHeightCalculatorServiceImpl;
-import com.translator.worker.LimitedSwingWorker;
-import com.translator.worker.LimitedSwingWorkerExecutor;
-import com.intellij.ui.components.JBTextArea;
-
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -36,7 +33,6 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
 import java.util.List;
-import java.util.Map;
 
 public class HistoricalContextObjectViewer extends JPanel {
     private HistoricalContextObjectHolder historicalContextObjectHolder;

@@ -1,9 +1,9 @@
 package com.translator.service.modification.tracking.listener;
 
-import com.translator.service.modification.tracking.FileModificationTrackerService;
-import com.translator.view.listener.TabKeyListener;
-import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.intellij.ui.components.JBTextArea;
+import com.translator.service.modification.tracking.FileModificationTrackerService;
+import com.translator.service.ui.tool.CodactorToolWindowService;
+import com.translator.view.listener.TabKeyListener;
 
 import javax.inject.Inject;
 import java.awt.event.KeyListener;

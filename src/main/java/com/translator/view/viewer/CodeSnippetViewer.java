@@ -11,9 +11,7 @@ package com.translator.view.viewer;
 
 import com.intellij.openapi.editor.Editor;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.ui.components.JBTextArea;
 import com.translator.view.panel.FixedHeightPanel;
-
 
 import javax.swing.*;
 import java.awt.*;

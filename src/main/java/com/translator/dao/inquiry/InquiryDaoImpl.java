@@ -1,6 +1,7 @@
 package com.translator.dao.inquiry;
 
 import com.google.gson.Gson;
+import com.translator.dao.firebase.FirebaseTokenService;
 import com.translator.model.api.translator.inquiry.GeneralInquiryCreationRequestResource;
 import com.translator.model.api.translator.inquiry.InquiryContinuationRequestResource;
 import com.translator.model.api.translator.inquiry.InquiryCreationRequestResource;
@@ -8,7 +9,6 @@ import com.translator.model.api.translator.inquiry.InquiryListResponseResource;
 import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.inquiry.Inquiry;
 import com.translator.model.modification.RecordType;
-import com.translator.dao.firebase.FirebaseTokenService;
 import org.apache.commons.io.IOUtils;
 
 import javax.inject.Inject;

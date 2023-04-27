@@ -1,14 +1,10 @@
 package com.translator.service.ui;
 
-import com.translator.model.modification.FileModification;
-import com.translator.model.modification.QueuedFileModificationObjectHolder;
-import com.translator.model.modification.QueuedModificationObjectType;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
 public class ModificationQueueListButtonServiceImpl implements ModificationQueueListButtonService {
     private FileModificationTrackerService fileModificationTrackerService;

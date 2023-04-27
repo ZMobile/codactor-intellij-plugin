@@ -18,9 +18,9 @@ import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import com.translator.model.modification.ModificationType;
 import com.translator.service.code.CodeSnippetExtractorService;
-import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
+import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.file.SelectedFileFetcherService;
 import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.AutomaticCodeModificationService;
@@ -38,10 +38,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.List;
-
-import static org.mozilla.javascript.ScriptRuntime.add;
+import java.util.Objects;
 
 public class CodactorConsole extends JBPanel<CodactorConsole> {
     private Project project;

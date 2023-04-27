@@ -1,9 +1,17 @@
 package com.translator.listener;
 
-import com.intellij.openapi.actionSystem.*;
+import com.google.inject.Injector;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.KeyboardShortcut;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
-import com.translator.view.action.DoubleControlAction;
+import com.translator.CodactorInjector;
+import com.translator.service.modification.tracking.FileModificationTrackerService;
+import com.translator.view.viewer.HistoricalModificationListViewer;
+import com.translator.view.viewer.InquiryListViewer;
+import com.translator.view.viewer.InquiryViewer;
+import com.translator.view.viewer.ModificationQueueViewer;
 import org.jetbrains.annotations.NotNull;
 
 public class MyStartupActivity implements StartupActivity {
@@ -11,6 +19,7 @@ public class MyStartupActivity implements StartupActivity {
 
     @Override
     public void runActivity(@NotNull Project project) {
+        Injector injector = CodactorInjector.getInstance().getInjector(project);
         // Get the action manager instance
         ActionManager actionManager = ActionManager.getInstance();
         // Get the existing Run Anything action
@@ -22,6 +31,18 @@ public class MyStartupActivity implements StartupActivity {
             // Unregister the existing Run Anything action
             actionManager.unregisterAction(RUN_ANYTHING_ACTION_ID);
 
+            FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
+            ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
+
+            fileModificationTrackerService.setModificationQueueViewer(modificationQueueViewer);
+            InquiryViewer inquiryViewer = injector.getInstance(InquiryViewer.class);
+            InquiryListViewer inquiryListViewer = injector.getInstance(InquiryListViewer.class);
+            inquiryViewer.setInquiryListViewer(inquiryListViewer);
+            HistoricalModificationListViewer historicalModificationListViewer = injector.getInstance(HistoricalModificationListViewer.class);
+            historicalModificationListViewer.setInquiryListViewer(inquiryListViewer);
+            historicalModificationListViewer.setProject(project);
+            inquiryListViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
+            inquiryViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
             /*// Register your custom action with the same keyboard shortcut
             DoubleControlAction doubleControlAction = new DoubleControlAction(runAnythingAction);
             actionManager.registerAction(RUN_ANYTHING_ACTION_ID, doubleControlAction);

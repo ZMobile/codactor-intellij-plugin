@@ -1,16 +1,12 @@
 package com.translator.view.viewer;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.project.Project;
-import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.inquiry.Inquiry;
+import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.renderer.InquiryRenderer;
 import com.translator.view.renderer.SeparatorListCellRenderer;
-import com.translator.service.ui.tool.CodactorToolWindowService;
-import com.translator.worker.LimitedSwingWorker;
-import com.translator.worker.LimitedSwingWorkerExecutor;
 
 import javax.swing.*;
 import java.awt.*;

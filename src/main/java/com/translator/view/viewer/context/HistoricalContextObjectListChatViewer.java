@@ -4,6 +4,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
+import com.intellij.ui.components.JBTextArea;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.model.history.HistoricalContextInquiryHolder;
 import com.translator.model.history.HistoricalContextModificationHolder;
@@ -17,16 +18,12 @@ import com.translator.model.modification.FileModificationSuggestionModificationR
 import com.translator.model.modification.FileModificationSuggestionRecord;
 import com.translator.model.modification.RecordType;
 import com.translator.service.context.PromptContextService;
+import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
+import com.translator.service.ui.measure.TextAreaHeightCalculatorServiceImpl;
 import com.translator.view.menu.TextAreaWindow;
 import com.translator.view.panel.FixedHeightPanel;
 import com.translator.view.renderer.InquiryChatRenderer;
 import com.translator.view.viewer.InquiryChatViewer;
-import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
-import com.translator.service.ui.measure.TextAreaHeightCalculatorServiceImpl;
-import com.translator.worker.LimitedSwingWorker;
-import com.translator.worker.LimitedSwingWorkerExecutor;
-import com.intellij.ui.components.JBTextArea;
-
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -39,7 +36,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class HistoricalContextObjectListChatViewer extends JPanel {
     private List<HistoricalContextObjectHolder> historicalContextObjectHolderList;
