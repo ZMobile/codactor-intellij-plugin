@@ -37,6 +37,16 @@ public class CustomTranslateFileAction extends AnAction {
         List<VirtualFile> allFiles = new ArrayList<>();
         for (VirtualFile virtualFile : virtualFiles) {
             if (virtualFile.isDirectory()) {
+                //Make sure none of the files selected already lie inside of this directory:
+                boolean skip = false;
+                for (VirtualFile file : virtualFiles) {
+                    if (!file.getPath().equals(virtualFile.getPath()) && file.getPath().startsWith(virtualFile.getPath())) {
+                        skip = true;
+                    }
+                }
+                if (!skip) {
+                    continue;
+                }
                 collectFiles(virtualFile, allFiles);
             } else {
                 if (!allFiles.contains(virtualFile)) {

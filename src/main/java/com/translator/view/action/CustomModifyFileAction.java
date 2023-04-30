@@ -9,6 +9,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.CodactorInjector;
 import com.translator.service.context.PromptContextServiceImpl;
 import com.translator.service.factory.AutomaticMassCodeModificationServiceFactory;
+import com.translator.service.modification.multi.MultiFileModificationService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.dialog.FileModifyDialog;
@@ -33,6 +34,16 @@ public class CustomModifyFileAction extends AnAction {
         List<VirtualFile> allFiles = new ArrayList<>();
         for (VirtualFile virtualFile : virtualFiles) {
             if (virtualFile.isDirectory()) {
+                //Make sure none of the files selected already lie inside of this directory:
+                boolean skip = false;
+                for (VirtualFile file : virtualFiles) {
+                    if (!file.getPath().equals(virtualFile.getPath()) && file.getPath().startsWith(virtualFile.getPath())) {
+                      skip = true;
+                    }
+                }
+                if (!skip) {
+                    continue;
+                }
                 collectFiles(virtualFile, allFiles);
             } else {
                 if (!allFiles.contains(virtualFile)) {
@@ -45,10 +56,11 @@ public class CustomModifyFileAction extends AnAction {
         CodactorToolWindowService codactorToolWindowService = injector.getInstance(CodactorToolWindowService.class);
         PromptContextBuilderFactory promptContextBuilderFactory = injector.getInstance(PromptContextBuilderFactory.class);
         AutomaticMassCodeModificationServiceFactory automaticMassCodeModificationServiceFactory = injector.getInstance(AutomaticMassCodeModificationServiceFactory.class);
+        MultiFileModificationService multiFileModificationService = injector.getInstance(MultiFileModificationService.class);
         OpenAiModelService openAiModelService = injector.getInstance(OpenAiModelService.class);
 
         // Show the custom dialog and modify the selected files
-        FileModifyDialog fileModifyDialog = new FileModifyDialog(project, codactorToolWindowService, new PromptContextServiceImpl(), promptContextBuilderFactory, automaticMassCodeModificationServiceFactory, openAiModelService, allFiles);
+        FileModifyDialog fileModifyDialog = new FileModifyDialog(project, codactorToolWindowService, new PromptContextServiceImpl(), promptContextBuilderFactory, automaticMassCodeModificationServiceFactory, multiFileModificationService, openAiModelService, allFiles);
         fileModifyDialog.setVisible(true);
     }
 

@@ -1,5 +1,6 @@
 package com.translator.view.viewer;
 
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -34,10 +35,12 @@ public class InquiryChatViewer extends JPanel {
     private JLabel jLabel1;
     private String message;
     private GptToLanguageTransformerService gptToLanguageTransformerService;
+    private List<Editor> editorList;
 
     public InquiryChatViewer(String filePath, String message, String headerString, InquiryChatType inquiryChatType) {
         this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
         this.message = message;
+        this.editorList = new ArrayList<>();
         if (inquiryChatType == InquiryChatType.CODE_SNIPPET && !message.startsWith("```")) {
             this.message = "```" + message.trim() + "```";
         }
@@ -88,6 +91,7 @@ public class InquiryChatViewer extends JPanel {
         this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
         this.inquiryChat = inquiryChat;
         this.inquiryChatType = inquiryChat.getInquiryChatType();
+        this.editorList = new ArrayList<>();
         setLayout(new GridBagLayout());
         if (inquiryChatType == InquiryChatType.CODE_SNIPPET && !inquiryChat.getMessage().startsWith("```")) {
             inquiryChat.setMessage("```" + inquiryChat.getMessage().trim() + "```");
@@ -180,15 +184,16 @@ public class InquiryChatViewer extends JPanel {
         FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(extension);
         ApplicationManager.getApplication().invokeAndWait(() -> {
             Document document = editorFactory.createDocument(code);
-        Editor editor = editorFactory.createEditor(document, null);
-        EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
-        ((EditorEx) editor).setHighlighter(editorHighlighter);
-        ((EditorEx) editor).setViewer(true);
-        editor.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, editor.getComponent().getPreferredSize().height));
-        fixedHeightPanel[0] = new FixedHeightPanel(editor);
-        fixedHeightPanel[0].setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        fixedHeightPanel[0].add(editor.getComponent());
-    });
+            Editor editor = editorFactory.createEditor(document, null);
+            editorList.add(editor);
+            EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
+            ((EditorEx) editor).setHighlighter(editorHighlighter);
+            ((EditorEx) editor).setViewer(true);
+            editor.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, editor.getComponent().getPreferredSize().height));
+            fixedHeightPanel[0] = new FixedHeightPanel(editor);
+            fixedHeightPanel[0].setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            fixedHeightPanel[0].add(editor.getComponent());
+        });
         return fixedHeightPanel[0];
     }
 
@@ -229,6 +234,12 @@ public class InquiryChatViewer extends JPanel {
                 Editor editor = (Editor) fixedHeightPanel.getComponent(0);
                 editor.getComponent().setSize(new Dimension(fixedHeightPanel.getWidth(), fixedHeightPanel.getHeight()));
             }
+        }
+    }
+
+    public void dispose() {
+        for (Editor editor : editorList) {
+            EditorFactory.getInstance().releaseEditor(editor);
         }
     }
 }

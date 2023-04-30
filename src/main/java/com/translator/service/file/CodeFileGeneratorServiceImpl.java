@@ -401,41 +401,30 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
                         if (newInquiry != null) {
                             InquiryChat mostRecentInquiryChat3 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                             fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
-                            System.out.println("Testo emga 4");
 
                             List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat3.getMessage());
-                            System.out.println("Testo emga 5: " + newFiles.size());
                             List<String> completedSuggestionIds = new ArrayList<>();
                             for (int i = 0; i < newFiles.size(); i++) {
-                                System.out.println("We got this far: " + i + " out of " + newFiles.size());
                                 File file = newFiles.get(i);
                                 if (file != null) {
                                     String newFilePath = file.getAbsolutePath();
-                                    System.out.println("Testo 1");
                                     String modificationId = fileModificationTrackerService.addModification(newFilePath, 0, 0, ModificationType.CREATE);
-                                    System.out.println("Testo 2");
                                     int fileNumber = i + 1;
                                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
-                                    System.out.println("Testo 3");
                                     List<HistoricalContextObjectHolder> priorContext2 = new ArrayList<>();
                                     HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat1.getId(), null, true, null);
                                     HistoricalContextObjectHolder priorContextObject = new HistoricalContextObjectHolder(inquiryContext);
                                     priorContext2.add(priorContextObject);
-                                    System.out.println("Testo 4");
                                     for (String completedSuggestionId : completedSuggestionIds) {
                                         HistoricalContextModificationHolder modificationContext = new HistoricalContextModificationHolder(completedSuggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
                                         HistoricalContextObjectHolder priorContextObject2 = new HistoricalContextObjectHolder(modificationContext);
                                         priorContext2.add(priorContextObject2);
                                     }
-                                    System.out.println("Testo 5");
                                     String description2 = "The complete and comprehensive " + language + " code for " + file.getName();
                                     DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description2, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext2);
                                     DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
-                                    System.out.println("Testo 6");
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                        System.out.println("Testo 7");
                                         fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim(), true);
-                                        System.out.println("Testo 8");
                                         //write the contents to the file with printWriter:
                                         //Check if the file contents are empty first:
                                         /////

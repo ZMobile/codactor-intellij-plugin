@@ -1,5 +1,6 @@
 package com.translator.service.modification.tracking;
 
+import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.*;
@@ -54,19 +55,16 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     }
 
     public String addModification(String filePath, int startIndex, int endIndex, ModificationType modificationType) {
-        System.out.println("Testo mini 1: " + filePath);
+        System.out.println("Testo 1");
         String newFilePath = Objects.requireNonNullElse(filePath, "Untitled");
         FileModificationTracker fileModificationTracker;
         if (activeModificationFiles.containsKey(newFilePath)) {
             fileModificationTracker = activeModificationFiles.get(newFilePath);
         } else {
             fileModificationTracker = new FileModificationTracker(project, newFilePath, codeSnippetExtractorService, rangeReplaceService, codeRangeTrackerService);
-            System.out.println("Testo mini 2");
             activeModificationFiles.put(newFilePath, fileModificationTracker);
-            System.out.println("Testo mini 3");
-            System.out.println("Testo mini 4");
         }
-        System.out.println("Testo mini 5");
+        System.out.println("Testo 2");
         String fileModificationId = fileModificationTracker.addModification(startIndex, endIndex, modificationType);
         if (fileModificationId == null) {
             //JBTextArea display = displayMap.get(newFilePath);
@@ -74,7 +72,9 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                     JOptionPane.ERROR_MESSAGE);*/
         }
         if (modificationType != ModificationType.CREATE) {
+            System.out.println("Testo 3");
             editorClickHandlerService.addEditorClickHandler(newFilePath);
+            System.out.println("Testo 4");
             guardedBlockService.addFileModificationGuardedBlock(fileModificationId, startIndex, endIndex);
             codeHighlighterService.highlightTextArea(fileModificationTracker);
         }
@@ -126,6 +126,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                 .orElseThrow();
         FileModification fileModification = fileModificationTracker.getModification(modificationId);
         for (FileModificationSuggestion fileModificationSuggestion : fileModification.getModificationOptions()) {
+            EditorFactory.getInstance().releaseEditor(fileModificationSuggestion.getSuggestedCode());
             FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = getModificationSuggestionModificationTracker(fileModificationSuggestion.getId());
             if (fileModificationSuggestionModificationTracker == null) {
                 continue;
@@ -190,6 +191,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         }
         FileModification fileModification = fileModificationTracker.getModification(modificationId);
         for (FileModificationSuggestion fileModificationSuggestion : fileModification.getModificationOptions()) {
+            EditorFactory.getInstance().releaseEditor(fileModificationSuggestion.getSuggestedCode());
             FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = getModificationSuggestionModificationTracker(fileModificationSuggestion.getId());
             if (fileModificationSuggestionModificationTracker == null) {
                 continue;
@@ -199,7 +201,6 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             }
         }
         guardedBlockService.removeFileModificationGuardedBlock(modificationId);
-        System.out.println("Creator testo 6");
         fileModificationTracker.implementModification(modificationId, modification, silent);
         if (fileModificationTracker.getModifications().isEmpty()) {
             activeModificationFiles.values().remove(fileModificationTracker);
@@ -293,7 +294,10 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         FileModificationTracker fileModificationTracker = activeModificationFiles.values().stream()
                 .filter(m -> m.hasModification(modificationId))
                 .findFirst()
-                .orElseThrow();
+                .orElse(null);
+        if (fileModificationTracker == null) {
+            return;
+        }
         fileModificationTracker.readyFileModificationUpdate(modificationId, modificationOptions);
         codeHighlighterService.highlightTextArea(fileModificationTracker);
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());

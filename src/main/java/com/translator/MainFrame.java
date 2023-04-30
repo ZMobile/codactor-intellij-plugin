@@ -300,7 +300,7 @@ public class MainFrame extends JFrame /*implements SearchListener*/ {
         timer.start();
 
         final TreePath[] currentPath = new TreePath[1]; // initialize with an empty TreePath object
-        jPopupMenu1.addPopupMenuListener(new PopupMenuListener() {
+        JBPopupMenu1.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                 // Get the current path when the popup menu is opened
                 currentPath[0] = currentEditingFileTree.getSelectionPath();;
@@ -319,13 +319,13 @@ public class MainFrame extends JFrame /*implements SearchListener*/ {
 
 
         // Create menu items for copy/paste
-        JMenuItem copyItem = new JMenuItem("Copy");
-        JMenuItem pasteItem = new JMenuItem("Paste");
+        JBMenuItem copyItem = new JBMenuItem("Copy");
+        JBMenuItem pasteItem = new JBMenuItem("Paste");
 
         // Create menu items for rename, create, and delete
-        JMenuItem renameItem = new JMenuItem("Rename");
-        JMenuItem createItem = new JMenuItem("New");
-        JMenuItem deleteItem = new JMenuItem("Delete");
+        JBMenuItem renameItem = new JBMenuItem("Rename");
+        JBMenuItem createItem = new JBMenuItem("New");
+        JBMenuItem deleteItem = new JBMenuItem("Delete");
 
         copyItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -570,11 +570,11 @@ public class MainFrame extends JFrame /*implements SearchListener*/ {
 
 
         // Add the menu items to the popup menu
-        jPopupMenu1.add(createItem);
-        jPopupMenu1.add(renameItem);
-        jPopupMenu1.add(copyItem);
-        jPopupMenu1.add(pasteItem);
-        jPopupMenu1.add(deleteItem);
+        JBPopupMenu1.add(createItem);
+        JBPopupMenu1.add(renameItem);
+        JBPopupMenu1.add(copyItem);
+        JBPopupMenu1.add(pasteItem);
+        JBPopupMenu1.add(deleteItem);
 
 
         promptInput.setCurrentLineHighlightColor(new Color(0, 0, 0, 0));
@@ -1131,7 +1131,7 @@ public class MainFrame extends JFrame /*implements SearchListener*/ {
         jMenu2 = new JMenu();
         jFileChooser1 = new JFileChooser();
         jBTextAreaEditorKit1 = new org.fife.ui.rsyntaxtextarea.JBTextAreaEditorKit();
-        jPopupMenu1 = new JPopupMenu();
+        JBPopupMenu1 = new JBPopupMenu();
         jDialog1 = new JDialog();
         jPanel6 = new JPanel();
         jTextField1 = new JTextField();
@@ -1605,7 +1605,7 @@ public class MainFrame extends JFrame /*implements SearchListener*/ {
                             //TreePath path = currentEditingFileTree.getPathForRow(row);
                             //DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
                             if (e.getButton() == MouseEvent.BUTTON3) {
-                                jPopupMenu1.show(projectNavigator, e.getX(), e.getY());
+                                JBPopupMenu1.show(projectNavigator, e.getX(), e.getY());
                             }
                         }
                     }
@@ -1858,11 +1858,11 @@ public class MainFrame extends JFrame /*implements SearchListener*/ {
 
         JMenuBar mb = new JMenuBar();
         JMenu file = new JMenu("File");
-        file.add(new JMenuItem(new NewAction()));
-        file.add(new JMenuItem(new OpenAction()));
-        file.add(new JMenuItem(new SaveAction()));
+        file.add(new JBMenuItem(new NewAction()));
+        file.add(new JBMenuItem(new OpenAction()));
+        file.add(new JBMenuItem(new SaveAction()));
         file.addSeparator();
-        JMenuItem settings = new JMenuItem("Settings");
+        JBMenuItem settings = new JBMenuItem("Settings");
         settings.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -1873,14 +1873,14 @@ public class MainFrame extends JFrame /*implements SearchListener*/ {
 
         file.add(settings);
         //file.addSeparator();
-        //file.add(new JMenuItem(new MainFrame.SettingsAction()));
+        //file.add(new JBMenuItem(new MainFrame.SettingsAction()));
 
         mb.add(file);
 
         JMenu search = new JMenu("Search");
-        search.add(new JMenuItem(new ShowFindDialogAction()));
-        search.add(new JMenuItem(new ShowReplaceDialogAction()));
-        search.add(new JMenuItem(new GoToLineAction()));
+        search.add(new JBMenuItem(new ShowFindDialogAction()));
+        search.add(new JBMenuItem(new ShowReplaceDialogAction()));
+        search.add(new JBMenuItem(new GoToLineAction()));
 
         mb.add(search);
 
@@ -1891,11 +1891,11 @@ public class MainFrame extends JFrame /*implements SearchListener*/ {
         /*KeyStroke ks = KeyStroke.getKeyStroke(KeyEvent.VK_F, ctrl|shift);
         Action a = csp.addBottomComponent(ks, findToolBar);
         a.putValue(Action.NAME, "Show Find Search Bar");
-        menu.add(new JMenuItem(a));
+        menu.add(new JBMenuItem(a));
         ks = KeyStroke.getKeyStroke(KeyEvent.VK_R, ctrl|shift);
         a = csp.addBottomComponent(ks, replaceToolBar);
         a.putValue(Action.NAME, "Show Replace Search Bar");
-        menu.add(new JMenuItem(a));*
+        menu.add(new JBMenuItem(a));*
 
 
 
@@ -1989,7 +1989,7 @@ public class MainFrame extends JFrame /*implements SearchListener*/ {
     private JPanel jPanel4;
     private JPanel jPanel5;
     private JPanel jPanel6;
-    private JPopupMenu jPopupMenu1;
+    private JBPopupMenu JBPopupMenu1;
     private JBScrollPane jBScrollPane1;
     private JBScrollPane jBScrollPane2;
     private JComboBox<String> jComboBox1;

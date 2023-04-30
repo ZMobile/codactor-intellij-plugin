@@ -28,7 +28,7 @@
     </Component>
     <Component class="org.fife.ui.rsyntaxtextarea.JBTextAreaEditorKit" name="jBTextAreaEditorKit1">
     </Component>
-    <Container class="javax.swing.JPopupMenu" name="jPopupMenu1">
+    <Container class="javax.swing.JBPopupMenu" name="JBPopupMenu1">
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout">
         <Property name="useNullLayout" type="boolean" value="true"/>

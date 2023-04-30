@@ -15,6 +15,7 @@ import com.translator.PromptContextBuilder;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticMassCodeModificationServiceFactory;
 import com.translator.service.modification.AutomaticMassCodeModificationService;
+import com.translator.service.modification.multi.MultiFileModificationService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.PromptContextBuilderFactory;
@@ -31,6 +32,7 @@ public class FileModifyDialog extends JDialog {
     private PromptContextService promptContextService;
     private PromptContextBuilderFactory promptContextBuilderFactory;
     private AutomaticMassCodeModificationService automaticMassCodeModificationService;
+    private MultiFileModificationService multiFileModificationService;
     private OpenAiModelService openAiModelService;
     private JBList<String> fileList;
     private DefaultListModel<String> listModel;
@@ -42,12 +44,15 @@ public class FileModifyDialog extends JDialog {
     private JButton addButton;
     private JButton removeButton;
     private JButton okButton;
+    private JToggleButton applyToEachFileButton;
+    private JToggleButton smartModificationRequestButton;
 
     public FileModifyDialog(Project project,
                             CodactorToolWindowService codactorToolWindowService,
                             PromptContextService promptContextService,
                             PromptContextBuilderFactory promptContextBuilderFactory,
                             AutomaticMassCodeModificationServiceFactory automaticMassCodeModificationServiceFactory,
+                            MultiFileModificationService multiFileModificationService,
                             OpenAiModelService openAiModelService,
                             List<VirtualFile> selectedItems) {
         this.project = project;
@@ -55,6 +60,7 @@ public class FileModifyDialog extends JDialog {
         this.promptContextService = promptContextService;
         this.promptContextBuilderFactory = promptContextBuilderFactory;
         this.automaticMassCodeModificationService = automaticMassCodeModificationServiceFactory.create(promptContextService);
+        this.multiFileModificationService = multiFileModificationService;
         this.openAiModelService = openAiModelService;
         setLayout(new BorderLayout());
         setTitle("Modify Code");
@@ -112,6 +118,43 @@ public class FileModifyDialog extends JDialog {
 
         northPanel.add(new JBScrollPane(fileList), BorderLayout.CENTER);
         northPanel.add(leftPanel, BorderLayout.WEST);
+
+        applyToEachFileButton = new JToggleButton("Apply below mod to each file");
+        applyToEachFileButton.setSelected(true);
+        applyToEachFileButton.setEnabled(false);
+        applyToEachFileButton.addActionListener(e -> {
+            applyToEachFileButton.setEnabled(!applyToEachFileButton.isSelected());
+            if (applyToEachFileButton.isSelected()) {
+                smartModificationRequestButton.setSelected(false);
+                smartModificationRequestButton.setEnabled(true);
+            }
+        });
+
+        smartModificationRequestButton = new JToggleButton("Smart modification request");
+        smartModificationRequestButton.setSelected(false);
+        smartModificationRequestButton.setEnabled(true);
+        smartModificationRequestButton.addActionListener(e -> {
+            smartModificationRequestButton.setEnabled(!smartModificationRequestButton.isSelected());
+            if (smartModificationRequestButton.isSelected()) {
+                applyToEachFileButton.setSelected(false);
+                applyToEachFileButton.setEnabled(true);
+            }
+        });
+
+// Create a panel for the toggle buttons
+        // Create a panel for the toggle buttons
+        JPanel toggleButtonsPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints toggleButtonsConstraints = new GridBagConstraints();
+        toggleButtonsConstraints.gridx = 0;
+        toggleButtonsConstraints.gridy = 0;
+        toggleButtonsConstraints.insets = new Insets(5, 0, 5, 5); // Top, left, bottom, right padding
+        toggleButtonsPanel.add(applyToEachFileButton, toggleButtonsConstraints);
+
+        toggleButtonsConstraints.gridx = 1;
+        toggleButtonsPanel.add(smartModificationRequestButton, toggleButtonsConstraints);
+
+// Modify the northPanel layout
+        northPanel.add(toggleButtonsPanel, BorderLayout.SOUTH);
 
         modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
         modelComboBox.addActionListener(e -> {
@@ -171,12 +214,16 @@ public class FileModifyDialog extends JDialog {
     }
 
     private void updateSelectedFilesLabel() {
-        if (fileList.getSelectedValuesList().size() == 1) {
-            descriptionLabel.setText("Enter the changes to perform to this file:");
-        } else if (fileList.getSelectedValuesList().isEmpty()) {
-            descriptionLabel.setText("Enter the changes to each file added to this list:");
+        if (applyToEachFileButton.isSelected()) {
+            if (fileList.getSelectedValuesList().size() == 1) {
+                descriptionLabel.setText("Enter the changes to perform to this file:");
+            } else if (fileList.getSelectedValuesList().isEmpty()) {
+                descriptionLabel.setText("Enter the changes to each file added to this list:");
+            } else {
+                descriptionLabel.setText("Enter the changes to perform to each of these files:");
+            }
         } else {
-            descriptionLabel.setText("Enter the changes to perform to each of these files:");
+            descriptionLabel.setText("Enter the changes to perform to the files in this list:");
         }
     }
 
@@ -195,7 +242,12 @@ public class FileModifyDialog extends JDialog {
                     SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FileModifyDialog.this, "Please select at least one file.", "Error", JOptionPane.ERROR_MESSAGE));
                     return null;
                 }
-                automaticMassCodeModificationService.getModifiedCode(selectedFiles, description.getText());
+
+                if (applyToEachFileButton.isSelected()) {
+                    automaticMassCodeModificationService.getModifiedCode(selectedFiles, description.getText());
+                } else {
+                    multiFileModificationService.modifyCodeFiles(selectedFiles, description.getText(), promptContextService.getPromptContext());
+                }
 
                 if (selectedFiles.size() == 1) {
                     // Open the modified file in the editor

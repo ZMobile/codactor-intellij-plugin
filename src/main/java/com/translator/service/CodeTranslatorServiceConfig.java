@@ -1,5 +1,6 @@
 package com.translator.service;
 
+import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -21,6 +22,8 @@ import com.translator.service.line.LineCounterService;
 import com.translator.service.line.LineCounterServiceImpl;
 import com.translator.service.modification.CodeModificationService;
 import com.translator.service.modification.CodeModificationServiceImpl;
+import com.translator.service.modification.multi.MultiFileModificationService;
+import com.translator.service.modification.multi.MultiFileModificationServiceImpl;
 import com.translator.service.modification.tracking.CodeRangeTrackerService;
 import com.translator.service.modification.tracking.CodeRangeTrackerServiceImpl;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
@@ -30,6 +33,8 @@ import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiApiKeyServiceImpl;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.openai.OpenAiModelServiceImpl;
+import com.translator.service.task.BackgroundTaskMapperService;
+import com.translator.service.task.BackgroundTaskMapperServiceImpl;
 import com.translator.service.ui.ModificationQueueListButtonService;
 import com.translator.service.ui.ModificationQueueListButtonServiceImpl;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
@@ -77,6 +82,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(RangeReplaceService.class).to(RangeReplaceServiceImpl.class);
         bind(InquiryService.class).to(InquiryServiceImpl.class);
         bind(RenameFileService.class).to(RenameFileServiceImpl.class);
+        bind(BackgroundTaskMapperService.class).to(BackgroundTaskMapperServiceImpl.class).asEagerSingleton();
     }
 
     @Singleton
@@ -108,5 +114,18 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                 OpenAiModelService openAiModelService,
                                                                 FileCreatorService fileCreatorService) {
         return new CodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationService, fileModificationTrackerService, openAiApiKeyService, openAiModelService, fileCreatorService);
+    }
+
+    @Singleton
+    @Provides
+    public MultiFileModificationService multiFileModificationService(Project project,
+                                                                    InquiryDao inquiryDao,
+                                                                    FileModificationTrackerService fileModificationTrackerService,
+                                                                    CodeModificationService codeModificationService,
+                                                                    CodeSnippetExtractorService codeSnippetExtractorService,
+                                                                    OpenAiApiKeyService openAiApiKeyService,
+                                                                    OpenAiModelService openAiModelService,
+                                                                     Gson gson) {
+        return new MultiFileModificationServiceImpl(project, inquiryDao, fileModificationTrackerService, codeModificationService, codeSnippetExtractorService, openAiApiKeyService, openAiModelService, gson);
     }
 }

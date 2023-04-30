@@ -59,7 +59,6 @@ public class MultiFileCreateDialog extends JDialog {
                                  CodeFileGeneratorService codeFileGeneratorService,
                                  PromptContextService promptContextService,
                                  PromptContextBuilderFactory promptContextBuilderFactory) {
-        System.out.println("This gets mega called");
         this.openAiModelService = openAiModelService;
         this.codactorToolWindowService = codactorToolWindowService;
         this.codeFileGeneratorService = codeFileGeneratorService;

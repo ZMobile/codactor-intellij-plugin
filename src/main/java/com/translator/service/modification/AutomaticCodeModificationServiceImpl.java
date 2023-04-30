@@ -18,6 +18,8 @@ import com.translator.service.context.PromptContextService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
+import com.translator.service.task.BackgroundTaskMapperService;
+import com.translator.service.task.CustomBackgroundTask;
 import com.translator.view.dialog.FileModificationErrorDialog;
 import com.translator.view.dialog.LoginDialog;
 import com.translator.view.dialog.OpenAiApiKeyDialog;
@@ -37,6 +39,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     private OpenAiApiKeyService openAiApiKeyService;
     private OpenAiModelService openAiModelService;
     private CodeModificationService codeModificationService;
+    private BackgroundTaskMapperService backgroundTaskMapperService;
 
     @Inject
     public AutomaticCodeModificationServiceImpl(Project project,
@@ -46,7 +49,8 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                                                 @Assisted PromptContextService promptContextService,
                                                 OpenAiApiKeyService openAiApiKeyService,
                                                 OpenAiModelService openAiModelService,
-                                                CodeModificationService codeModificationService) {
+                                                CodeModificationService codeModificationService,
+                                                BackgroundTaskMapperService backgroundTaskMapperService) {
         this.project = project;
         this.firebaseTokenService = firebaseTokenService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
@@ -55,6 +59,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         this.openAiApiKeyService = openAiApiKeyService;
         this.openAiModelService = openAiModelService;
         this.codeModificationService = codeModificationService;
+        this.backgroundTaskMapperService = backgroundTaskMapperService;
     }
 
     @Override
@@ -67,33 +72,33 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
         String modificationId = fileModificationTrackerService.addModification(filePath, startIndex, endIndex, modificationType);
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + modificationType + ")", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-                List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
-                if (priorContextData != null) {
-                    for (HistoricalContextObjectDataHolder data : priorContextData) {
-                        priorContext.add(new HistoricalContextObjectHolder(data));
-                    }
+        Runnable task = () -> {
+            List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+            List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
+            if (priorContextData != null) {
+                for (HistoricalContextObjectDataHolder data : priorContextData) {
+                    priorContext.add(new HistoricalContextObjectHolder(data));
                 }
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
-                if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
-                    fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getModificationSuggestions());
-                    promptContextService.clearPromptContext();
+            }
+            String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
+            if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getModificationSuggestions());
+                promptContextService.clearPromptContext();
+            } else {
+                fileModificationTrackerService.errorFileModification(modificationId);
+                if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                 } else {
-                    fileModificationTrackerService.errorFileModification(modificationId);
-                    if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                    } else {
-                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                    }
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                 }
             }
         };
+        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
+        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
     }
 
     @Override
@@ -106,36 +111,36 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification Suggestion Modification (" + modificationType + ")", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-                List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
-                if (priorContextData != null) {
-                    for (HistoricalContextObjectDataHolder data : priorContextData) {
-                        priorContext.add(new HistoricalContextObjectHolder(data));
-                    }
-                }
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), suggestionId, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeModification(desktopCodeModificationRequestResource);
-                if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
-                    fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
-                    fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
-                    promptContextService.clearPromptContext();
-                } else {
-                    if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
-                        OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        //openAiApiKeyDialog.setVisible(true);
-                    } else {
-                        JOptionPane.showMessageDialog(super.getParentComponent(), fileModificationSuggestionModificationRecord.getError(), "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                    fileModificationTrackerService.removeModificationSuggestionModification(modificationId);
+        Runnable task = () -> {
+            List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+            List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
+            if (priorContextData != null) {
+                for (HistoricalContextObjectDataHolder data : priorContextData) {
+                    priorContext.add(new HistoricalContextObjectHolder(data));
                 }
             }
+            String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), suggestionId, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeModification(desktopCodeModificationRequestResource);
+            if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
+                fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
+                fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
+                promptContextService.clearPromptContext();
+            } else {
+                if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
+                    OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
+                    //openAiApiKeyDialog.setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(null, fileModificationSuggestionModificationRecord.getError(), "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                fileModificationTrackerService.removeModificationSuggestionModification(modificationId);
+            }
         };
+        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification Suggestion Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
+        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
     }
 
     @Override
@@ -148,33 +153,33 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, code.length(), modificationType);
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + modificationType + ")", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-                List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
-                if (priorContextData != null) {
-                    for (HistoricalContextObjectDataHolder data : priorContextData) {
-                        priorContext.add(new HistoricalContextObjectHolder(data));
-                    }
+        Runnable task = () -> {
+            List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+            List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
+            if (priorContextData != null) {
+                for (HistoricalContextObjectDataHolder data : priorContextData) {
+                    priorContext.add(new HistoricalContextObjectHolder(data));
                 }
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, ModificationType.FIX, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
-                if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
-                    fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getModificationSuggestions());
-                    promptContextService.clearPromptContext();
+            }
+            String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, ModificationType.FIX, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
+            if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getModificationSuggestions());
+                promptContextService.clearPromptContext();
+            } else {
+                fileModificationTrackerService.errorFileModification(modificationId);
+                if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                 } else {
-                    fileModificationTrackerService.errorFileModification(modificationId);
-                    if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                    } else {
-                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                    }
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                 }
             }
         };
+        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
+        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
     }
 
     @Override
@@ -187,36 +192,36 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification Suggestion Modification (" + modificationType + ")", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-                List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
-                if (priorContextData != null) {
-                    for (HistoricalContextObjectDataHolder data : priorContextData) {
-                        priorContext.add(new HistoricalContextObjectHolder(data));
-                    }
-                }
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), suggestionId, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeFix(desktopCodeModificationRequestResource);
-                if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
-                    fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
-                    fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
-                    promptContextService.clearPromptContext();
-                } else {
-                    if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
-                        OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        //openAiApiKeyDialog.setVisible(true);
-                    } else {
-                        JOptionPane.showMessageDialog(super.getParentComponent(), fileModificationSuggestionModificationRecord.getError(), "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                    fileModificationTrackerService.removeModificationSuggestionModification(modificationId);
+        Runnable task = () -> {
+            List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+            List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
+            if (priorContextData != null) {
+                for (HistoricalContextObjectDataHolder data : priorContextData) {
+                    priorContext.add(new HistoricalContextObjectHolder(data));
                 }
             }
+            String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), suggestionId, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeFix(desktopCodeModificationRequestResource);
+            if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
+                fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
+                fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
+                promptContextService.clearPromptContext();
+            } else {
+                if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
+                    OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
+                    //openAiApiKeyDialog.setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(null, fileModificationSuggestionModificationRecord.getError(), "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                fileModificationTrackerService.removeModificationSuggestionModification(modificationId);
+            }
         };
+        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification Suggestion Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
+        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
     }
 
     @Override
@@ -228,33 +233,33 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             }
         }
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, 0, ModificationType.CREATE);
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + ModificationType.CREATE + ")", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-                List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
-                if (priorContextData != null) {
-                    for (HistoricalContextObjectDataHolder data : priorContextData) {
-                        priorContext.add(new HistoricalContextObjectHolder(data));
-                    }
+        Runnable task = () -> {
+            List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+            List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
+            if (priorContextData != null) {
+                for (HistoricalContextObjectDataHolder data : priorContextData) {
+                    priorContext.add(new HistoricalContextObjectHolder(data));
                 }
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
-                if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
-                    fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions());
-                    promptContextService.clearPromptContext();
+            }
+            String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
+            if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions());
+                promptContextService.clearPromptContext();
+            } else {
+                fileModificationTrackerService.errorFileModification(modificationId);
+                if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.CREATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                 } else {
-                    fileModificationTrackerService.errorFileModification(modificationId);
-                    if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.CREATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                    } else {
-                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                    }
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                 }
             }
         };
+        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.CREATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
+        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
     }
 
     @Override
@@ -265,40 +270,38 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 return;
             }
         }
-        System.out.println("Creator testo 1");
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, 0, ModificationType.CREATE);
-        System.out.println("Creator testo 2");
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + ModificationType.CREATE + ")", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-                List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
-                if (priorContextData != null) {
-                    for (HistoricalContextObjectDataHolder data : priorContextData) {
-                        priorContext.add(new HistoricalContextObjectHolder(data));
-                    }
-                }
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
-                if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
-                    System.out.println("Creator testo 3");
-                    fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), false);
-                    System.out.println("Creator testo 4");
-                    promptContextService.clearPromptContext();
-                } else {
-                    if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                        OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        //openAiApiKeyDialog.setVisible(true);
-                    } else {
-                        JOptionPane.showMessageDialog(super.getParentComponent(), desktopCodeCreationResponseResource.getError(), "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                    fileModificationTrackerService.removeModification(modificationId);
+        Runnable task = () -> {
+            List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+            List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
+            if (priorContextData != null) {
+                for (HistoricalContextObjectDataHolder data : priorContextData) {
+                    priorContext.add(new HistoricalContextObjectHolder(data));
                 }
             }
+            String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
+            if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
+                System.out.println("Creator testo 3");
+                fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), false);
+                System.out.println("Creator testo 4");
+                promptContextService.clearPromptContext();
+            } else {
+                if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
+                    OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
+                    //openAiApiKeyDialog.setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                fileModificationTrackerService.removeModification(modificationId);
+            }
         };
+        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.CREATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
+        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
     }
 
     @Override
@@ -311,36 +314,36 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, 0, 0, ModificationType.CREATE);
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification Suggestion Modification (" + ModificationType.CREATE + ")", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-                List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
-                if (priorContextData != null) {
-                    for (HistoricalContextObjectDataHolder data : priorContextData) {
-                        priorContext.add(new HistoricalContextObjectHolder(data));
-                    }
-                }
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(fileModificationSuggestion.getFilePath(), description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeCreation(desktopCodeCreationRequestResource);
-                if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
-                    fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
-                    fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
-                    promptContextService.clearPromptContext();
-                } else {
-                    if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
-                        OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
-                        //openAiApiKeyDialog.setVisible(true);
-                    } else {
-                        JOptionPane.showMessageDialog(super.getParentComponent(), fileModificationSuggestionModificationRecord.getError(), "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                    fileModificationTrackerService.removeModificationSuggestionModification(modificationId);
+        Runnable task = () -> {
+            List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+            List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
+            if (priorContextData != null) {
+                for (HistoricalContextObjectDataHolder data : priorContextData) {
+                    priorContext.add(new HistoricalContextObjectHolder(data));
                 }
             }
+            String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(fileModificationSuggestion.getFilePath(), description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeCreation(desktopCodeCreationRequestResource);
+            if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
+                fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
+                fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
+                promptContextService.clearPromptContext();
+            } else {
+                if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
+                    OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
+                    //openAiApiKeyDialog.setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(null, fileModificationSuggestionModificationRecord.getError(), "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                fileModificationTrackerService.removeModificationSuggestionModification(modificationId);
+            }
         };
+        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification Suggestion Modification (" + ModificationType.CREATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
+        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
     }
 
     @Override
@@ -356,32 +359,32 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
         fileModification.setNewLanguage(newLanguage);
         fileModification.setNewFileType(newFileType);
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "File Modification (" + ModificationType.TRANSLATE + ")", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-                List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
-                if (priorContextData != null) {
-                    for (HistoricalContextObjectDataHolder data : priorContextData) {
-                        priorContext.add(new HistoricalContextObjectHolder(data));
-                    }
+        Runnable task = () -> {
+            List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+            List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
+            if (priorContextData != null) {
+                for (HistoricalContextObjectDataHolder data : priorContextData) {
+                    priorContext.add(new HistoricalContextObjectHolder(data));
                 }
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(filePath, code, newLanguage, newFileType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                DesktopCodeTranslationResponseResource desktopCodeTranslationResponseResource = codeModificationService.getTranslatedCode(desktopCodeTranslationRequestResource);
-                if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null && desktopCodeTranslationResponseResource.getModificationSuggestions().size() > 0) {
-                    fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeTranslationResponseResource.getModificationSuggestions());
-                    promptContextService.clearPromptContext();
+            }
+            String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+            DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(filePath, code, newLanguage, newFileType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeTranslationResponseResource desktopCodeTranslationResponseResource = codeModificationService.getTranslatedCode(desktopCodeTranslationRequestResource);
+            if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null && desktopCodeTranslationResponseResource.getModificationSuggestions().size() > 0) {
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeTranslationResponseResource.getModificationSuggestions());
+                promptContextService.clearPromptContext();
+            } else {
+                fileModificationTrackerService.errorFileModification(modificationId);
+                if (desktopCodeTranslationResponseResource.getError().equals("null: null")) {
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                 } else {
-                    fileModificationTrackerService.errorFileModification(modificationId);
-                    if (desktopCodeTranslationResponseResource.getError().equals("null: null")) {
-                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                    } else {
-                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeTranslationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                    }
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeTranslationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                 }
             }
         };
+        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.TRANSLATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
+        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
     }
 }

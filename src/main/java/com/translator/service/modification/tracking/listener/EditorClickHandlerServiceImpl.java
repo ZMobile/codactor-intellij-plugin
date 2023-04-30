@@ -37,25 +37,20 @@ public class EditorClickHandlerServiceImpl implements EditorClickHandlerService 
         if (editorClickHandlerMap.containsKey(filePath)) {
             return;
         }
-        System.out.println("Testo double mini 1: " + filePath);
         EditorClickHandler editorClickHandler = new EditorClickHandler(fileModificationTrackerService, codactorToolWindowService, filePath);
-        System.out.println("Testo double mini 2");
         VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
         if (virtualFile == null) {
             return;
         }
-        System.out.println("Testo double mini 3: " + virtualFile);
 
         Editor editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
         if (editor == null) {
             //Open file in editor G
             FileEditorManager.getInstance(project).openFile(virtualFile, true);
             editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
-            System.out.println("Testo double mini 4: editor = " + editor);
         }
         assert editor != null;
         editor.addEditorMouseListener(editorClickHandler);
-        System.out.println("Testo double mini 5");
         editorClickHandlerMap.put(filePath, editorClickHandler);
     }
 
@@ -69,10 +64,14 @@ public class EditorClickHandlerServiceImpl implements EditorClickHandlerService 
 
             Editor editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
             editorClickHandlerMap.remove(filePath);
-            if (editorClickHandler == null) {
+            if (editor == null || editorClickHandler == null) {
                 return;
             }
-            editor.removeEditorMouseListener(editorClickHandler);
+            try {
+                editor.removeEditorMouseListener(editorClickHandler);
+            } catch (Exception e) {
+                //e.printStackTrace();
+            }
         }
     }
 }

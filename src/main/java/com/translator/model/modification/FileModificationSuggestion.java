@@ -1,5 +1,6 @@
 package com.translator.model.modification;
 
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -11,12 +12,13 @@ import com.intellij.openapi.editor.highlighter.EditorHighlighterFactory;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import com.translator.service.code.GptToLanguageTransformerService;
 import com.translator.service.code.GptToLanguageTransformerServiceImpl;
 
 import java.util.Objects;
 
-public class FileModificationSuggestion {
+public class FileModificationSuggestion implements Disposable {
     private final Project project;
     private final String filePath;
     private final String modificationId;
@@ -85,5 +87,10 @@ public class FileModificationSuggestion {
 
     public Editor getSuggestedCode() {
         return suggestedCode;
+    }
+
+    @Override
+    public void dispose() {
+        EditorFactory.getInstance().releaseEditor(suggestedCode);
     }
 }

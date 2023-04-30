@@ -2,6 +2,7 @@ package com.translator;
 
 import com.google.inject.assistedinject.Assisted;
 import com.intellij.ide.plugins.newui.HorizontalLayout;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
@@ -46,7 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ProvisionalModificationCustomizer extends JDialog {
+public class ProvisionalModificationCustomizer extends JDialog implements Disposable {
     private Project project;
     private FileModificationSuggestion fileModificationSuggestion;
     private CodeSnippetExtractorService codeSnippetExtractorService;
@@ -97,12 +98,12 @@ public class ProvisionalModificationCustomizer extends JDialog {
         FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(extension);
         ApplicationManager.getApplication().invokeAndWait(() -> {
             Document document = editorFactory.createDocument(fileModification.getBeforeText());
-            Editor editor = editorFactory.createEditor(document, null);
+            defaultSolution = editorFactory.createEditor(document, null);
             EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
-            ((EditorEx) editor).setHighlighter(editorHighlighter);
-            ((EditorEx) editor).setViewer(true);
-            editor.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, editor.getComponent().getPreferredSize().height));
-            defaultSolution = editor;
+            ((EditorEx) defaultSolution).setHighlighter(editorHighlighter);
+            ((EditorEx) defaultSolution).setViewer(true);
+            defaultSolution.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, defaultSolution.getComponent().getPreferredSize().height));
+            defaultSolution = defaultSolution;
         });
         suggestedSolution = fileModificationSuggestion.getSuggestedCode();
         selectedEditor = suggestedSolution;
@@ -460,5 +461,10 @@ public class ProvisionalModificationCustomizer extends JDialog {
 
     public FileModificationSuggestion getFileModificationSuggestion() {
         return fileModificationSuggestion;
+    }
+
+    @Override
+    public void dispose() {
+        EditorFactory.getInstance().releaseEditor(defaultSolution);
     }
 }

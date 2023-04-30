@@ -12,6 +12,11 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -47,23 +52,12 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
     }
 
     public String getAllText(String filePath) {
-        // Convert the file path to a VirtualFile instance
-        AtomicReference<String> text = new AtomicReference<>();
-        ApplicationManager.getApplication().invokeAndWait(() -> {
-            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
-
-            if (virtualFile != null) {
-                // Get the Document instance corresponding to the VirtualFile
-                Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
-
-                if (document != null) {
-                    // Retrieve the entire text from the document
-                    text.set(document.getText());
-                }
-            }
-        });
-
-        return text.get();
+        Path path = Paths.get(filePath);
+        try {
+            return Files.readString(path, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

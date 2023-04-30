@@ -2,6 +2,7 @@ package com.translator.view.renderer;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
+import com.intellij.util.ui.JBUI;
 import com.translator.model.modification.*;
 import com.translator.service.file.FileReaderService;
 import com.translator.service.line.LineCounterService;
@@ -9,6 +10,8 @@ import com.translator.service.line.LineCounterServiceImpl;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class QueuedModificationObjectRenderer extends JPanel implements ListCellRenderer<QueuedFileModificationObjectHolder> {
     private Project project;
@@ -98,7 +101,10 @@ public class QueuedModificationObjectRenderer extends JPanel implements ListCell
             }
         } else if (value.getQueuedModificationObjectType() == QueuedModificationObjectType.MULTI_FILE_MODIFICATION) {
             MultiFileModification multiFileModification = value.getMultiFileModification();
-            lineRangeText = "Multi-File Mod Stage: " + multiFileModification.getStage();
+            lineRangeText = "Multi-File Mod";
+            if (multiFileModification.getStage() != null && !multiFileModification.getStage().equals("")) {
+                lineRangeText += " Stage: " + multiFileModification.getStage();
+            }
             statusText = "(Queued)";
             filePathLabel.setText("File: " + multiFileModification.getFilePath());
             setBackground(JBColor.decode("#CC5100"));

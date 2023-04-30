@@ -32,24 +32,18 @@ public class RangeReplaceServiceImpl implements RangeReplaceService {
         File file = new File(filePath);
         if (silent) {
             try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                System.out.println("This gets called 2");
                 out.println(replacementString);
-                System.out.println("This gets called 3");
                 FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
-                System.out.println("This gets called 4");
 
-            // Obtain the VirtualFile for the file you want to refresh
-            LocalFileSystem localFileSystem = LocalFileSystem.getInstance();
-            VirtualFile virtualFile = localFileSystem.refreshAndFindFileByPath(filePath);
+                // Obtain the VirtualFile for the file you want to refresh
+                LocalFileSystem localFileSystem = LocalFileSystem.getInstance();
+                VirtualFile virtualFile = localFileSystem.refreshAndFindFileByPath(filePath);
 
-            if (virtualFile != null) {
-                System.out.println("This gets called 5");
-                // Refresh the currently opened file
-                fileEditorManager.updateFilePresentation(virtualFile);
-            }
-            System.out.println("This gets called 6");
+                if (virtualFile != null) {
+                    // Refresh the currently opened file
+                    fileEditorManager.updateFilePresentation(virtualFile);
+                }
             } catch (FileNotFoundException e) {
-                System.out.println("This gets called Fail");
                 e.printStackTrace();
             }
         } else {
@@ -68,13 +62,9 @@ public class RangeReplaceServiceImpl implements RangeReplaceService {
             });
 
             if (documentHolder[0] == null && file.length() == 0) {
-                System.out.println("This gets called 1");
                 try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                    System.out.println("This gets called 2");
                     out.println(replacementString);
-                    System.out.println("This gets called 3");
                     //FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
-                    System.out.println("This gets called 4");
 
             /*// Obtain the VirtualFile for the file you want to refresh
             LocalFileSystem localFileSystem = LocalFileSystem.getInstance();
@@ -87,7 +77,6 @@ public class RangeReplaceServiceImpl implements RangeReplaceService {
             }
             System.out.println("This gets called 6");*/
                 } catch (FileNotFoundException e) {
-                    System.out.println("This gets called Fail");
                     e.printStackTrace();
                 }
             } else if (!documentHolder[0].getText().substring(startOffset, endOffset).trim().equals(replacementString.trim())) {

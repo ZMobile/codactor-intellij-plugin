@@ -16,11 +16,9 @@ public class FileCreatorServiceImpl implements FileCreatorService {
         List<File> files = new ArrayList<>();
         List<String> fileNames = extractCommands(input);
 
-        System.out.println("Big testo 2: " + fileNames.size());
         if (directoryPath != null && !fileNames.isEmpty()) {
             fileNames.forEach(fileName -> {
                 try {
-                    System.out.println("Big testo 3: " + fileName);
                     files.add(createFile(directoryPath, fileName));
                 } catch (IOException e) {
                     System.err.println("Error creating file: " + fileName);
@@ -28,7 +26,6 @@ public class FileCreatorServiceImpl implements FileCreatorService {
                 }
             });
         }
-        System.out.println("Big testo 3: " + files);
         return files;
     }
 

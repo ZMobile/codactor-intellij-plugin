@@ -6,6 +6,8 @@ import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.HighlighterTargetArea;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.JBMenuItem;
+import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.model.inquiry.Inquiry;
@@ -58,12 +60,12 @@ public class InquiryViewer extends JPanel {
     private JButton discardInquiryButton;
     private JButton whatWasChangedButton;
     private JButton whatDoesThisDoButton;
-    private JPopupMenu jPopupMenu1;
-    private JMenuItem editItem;
-    private JMenuItem regenerateItem;
-    private JMenuItem previousChat;
-    private JMenuItem nextChat;
-    private JMenuItem autoGenerate;
+    private JBPopupMenu JBPopupMenu1;
+    private JBMenuItem editItem;
+    private JBMenuItem regenerateItem;
+    private JBMenuItem previousChat;
+    private JBMenuItem nextChat;
+    private JBMenuItem autoGenerate;
     private CodactorToolWindowService codactorToolWindowService;
     private CodeFileGeneratorService codeFileGeneratorService;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
@@ -191,7 +193,7 @@ public class InquiryViewer extends JPanel {
                             nextChat.setEnabled(inquiryChat.getId() != null && !Objects.equals(inquiryChat.getId(), inquiryChat.getAlternateInquiryChatIds().get(inquiryChat.getAlternateInquiryChatIds().size() - 1)));
                         }
                     }
-                    jPopupMenu1.show(jList1, e.getX(), e.getY());
+                    JBPopupMenu1.show(jList1, e.getX(), e.getY());
                 }
                 if (selectedChat == -1) {
                     return;
@@ -376,13 +378,13 @@ public class InquiryViewer extends JPanel {
                 promptInput.setText("");
             }
         });
-        jPopupMenu1 = new JPopupMenu();
+        JBPopupMenu1 = new JBPopupMenu();
 
-        editItem = new JMenuItem("Edit");
-        regenerateItem = new JMenuItem("Regenerate");
-        previousChat = new JMenuItem("Show Previous Chat");
-        nextChat = new JMenuItem("Show Next Chat");
-        autoGenerate = new JMenuItem("(Experimental) Auto-Generate");
+        editItem = new JBMenuItem("Edit");
+        regenerateItem = new JBMenuItem("Regenerate");
+        previousChat = new JBMenuItem("Show Previous Chat");
+        nextChat = new JBMenuItem("Show Next Chat");
+        autoGenerate = new JBMenuItem("(Experimental) Auto-Generate");
 
         editItem.addActionListener(new ActionListener() {
             @Override
@@ -468,13 +470,13 @@ public class InquiryViewer extends JPanel {
             }
         });
 
-        jPopupMenu1.add(editItem);
-        jPopupMenu1.add(regenerateItem);
-        jPopupMenu1.addSeparator();
-        jPopupMenu1.add(previousChat);
-        jPopupMenu1.add(nextChat);
-        jPopupMenu1.addSeparator();
-        jPopupMenu1.add(autoGenerate);
+        JBPopupMenu1.add(editItem);
+        JBPopupMenu1.add(regenerateItem);
+        JBPopupMenu1.addSeparator();
+        JBPopupMenu1.add(previousChat);
+        JBPopupMenu1.add(nextChat);
+        JBPopupMenu1.addSeparator();
+        JBPopupMenu1.add(autoGenerate);
         promptInputPanel = new JPanel();
         GroupLayout layout = new GroupLayout(this);
         setLayout(layout);

@@ -2,9 +2,13 @@ package com.translator.view.viewer;
 
 import com.google.inject.Inject;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.JBMenuItem;
+import com.intellij.openapi.ui.JBPopupMenu;
+import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.model.modification.FileModification;
+import com.translator.model.modification.FileModificationSuggestionModification;
 import com.translator.model.modification.QueuedFileModificationObjectHolder;
 import com.translator.model.modification.QueuedModificationObjectType;
 import com.translator.service.file.FileOpenerService;
@@ -14,13 +18,16 @@ import com.translator.view.renderer.QueuedModificationObjectRenderer;
 import com.translator.view.renderer.SeparatorListCellRenderer;
 
 import javax.swing.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
 
-    private JList<QueuedFileModificationObjectHolder> modificationList;
+    private JBList<QueuedFileModificationObjectHolder> modificationList;
     private JBScrollPane modificationListScrollPane;
+    private JBPopupMenu jBPopupMenu;
     private ProvisionalModificationViewer provisionalModificationViewer;
     private CodactorToolWindowService codactorToolWindowService;
     private FileReaderService fileReaderService;
@@ -42,13 +49,22 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
     }
 
     private void initComponents() {
-        modificationList = new JList<>();
+        modificationList = new JBList<>();
         modificationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         modificationListScrollPane = new JBScrollPane(modificationList);
 
         // Add a horizontal line to separate each FileModification
         modificationList.setFixedCellHeight(80);
         modificationList.setCellRenderer(new SeparatorListCellRenderer<>(new QueuedModificationObjectRenderer(project, fileReaderService)));
+
+        jBPopupMenu = new JBPopupMenu();
+
+        JBMenuItem pauseItem = new JBMenuItem("Pause");
+        JBMenuItem retryItem = new JBMenuItem("Retry");
+        JBMenuItem removeItem = new JBMenuItem("Remove");
+        jBPopupMenu.add(pauseItem);
+        jBPopupMenu.add(retryItem);
+        jBPopupMenu.add(removeItem);
 
         GroupLayout layout = new GroupLayout(this);
         setLayout(layout);
@@ -80,6 +96,45 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                         codactorToolWindowService.openProvisionalModificationViewerToolWindow();
                     }
                     fileOpenerService.openFileInEditor(project, fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset());
+                }
+            }
+        });
+        modificationList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                boolean showPause = false;
+                boolean showRetry = false;
+                boolean showRemove = false;
+                QueuedFileModificationObjectHolder queuedFileModificationObjectHolder = null;
+                if (e.getButton() == MouseEvent.BUTTON3) {
+                    int selectedIndex = modificationList.locationToIndex(e.getPoint());
+                    queuedFileModificationObjectHolder = modificationList.getModel().getElementAt(selectedIndex);
+                    modificationList.setSelectedIndex(selectedIndex);
+                    if (queuedFileModificationObjectHolder.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION) {
+                        FileModification fileModification = queuedFileModificationObjectHolder.getFileModification();
+                        if (!fileModification.isDone()) {
+                            if (fileModification.isError()) {
+                                showRetry = true;
+                            } else {
+                                showPause = true;
+                            }
+                        }
+                        showRemove = true;
+                    } else if (queuedFileModificationObjectHolder.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
+                        FileModificationSuggestionModification fileModificationSuggestionModification = queuedFileModificationObjectHolder.getFileModificationSuggestionModification();
+                        if (fileModificationSuggestionModification.isError()) {
+                            showRetry = true;
+                        } else {
+                            showPause = true;
+                        }
+                        showRemove = true;
+                    } else if (queuedFileModificationObjectHolder.getQueuedModificationObjectType() == QueuedModificationObjectType.MULTI_FILE_MODIFICATION) {
+                        showRemove = true;
+                    }
+                    removeItem.setVisible(showRemove);
+                    pauseItem.setVisible(showPause);
+                    retryItem.setVisible(showRetry);
+                    jBPopupMenu.show(modificationList, e.getX(), e.getY());
                 }
             }
         });
