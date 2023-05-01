@@ -4,11 +4,13 @@
  */
 package com.translator.view.viewer;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationSuggestion;
+import com.translator.service.file.FileOpenerService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.ProvisionalModificationCustomizerFactory;
@@ -37,14 +39,17 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
     private String fileModificationId;
     private CodactorToolWindowService codactorToolWindowService;
     private FileModificationTrackerService fileModificationTrackerService;
+    private FileOpenerService fileOpenerService;
     private ProvisionalModificationCustomizerFactory provisionalModificationCustomizerFactory;
 
     @Inject
     public ProvisionalModificationViewer(CodactorToolWindowService codactorToolWindowService,
                                          FileModificationTrackerService fileModificationTrackerService,
+                                         FileOpenerService fileOpenerService,
                                          ProvisionalModificationCustomizerFactory provisionalModificationCustomizerFactory) {
         this.codactorToolWindowService = codactorToolWindowService;
         this.fileModificationTrackerService = fileModificationTrackerService;
+        this.fileOpenerService = fileOpenerService;
         this.provisionalModificationCustomizerFactory = provisionalModificationCustomizerFactory;
         initComponents();
     }
@@ -109,6 +114,10 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
                 }
                 if (anyDone) {
                     updateModificationList(nextModification);
+                    FileModification finalNextModification = nextModification;
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        fileOpenerService.openFileInEditor(finalNextModification.getFilePath(), finalNextModification.getRangeMarker().getStartOffset());
+                    });
                 } else {
                     codactorToolWindowService.closeModificationQueueViewerToolWindow();
                     updateModificationList(null);

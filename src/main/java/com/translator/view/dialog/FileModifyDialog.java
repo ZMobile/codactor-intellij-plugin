@@ -128,6 +128,7 @@ public class FileModifyDialog extends JDialog {
                 smartModificationRequestButton.setSelected(false);
                 smartModificationRequestButton.setEnabled(true);
             }
+            updateSelectedFilesLabel();
         });
 
         smartModificationRequestButton = new JToggleButton("Smart modification request");
@@ -139,6 +140,7 @@ public class FileModifyDialog extends JDialog {
                 applyToEachFileButton.setSelected(false);
                 applyToEachFileButton.setEnabled(true);
             }
+            updateSelectedFilesLabel();
         });
 
 // Create a panel for the toggle buttons
@@ -223,7 +225,7 @@ public class FileModifyDialog extends JDialog {
                 descriptionLabel.setText("Enter the changes to perform to each of these files:");
             }
         } else {
-            descriptionLabel.setText("Enter the changes to perform to the files in this list:");
+            descriptionLabel.setText("(GPT-4+ Recommended) Enter the changes to perform to the files in this list:");
         }
     }
 
@@ -246,7 +248,11 @@ public class FileModifyDialog extends JDialog {
                 if (applyToEachFileButton.isSelected()) {
                     automaticMassCodeModificationService.getModifiedCode(selectedFiles, description.getText());
                 } else {
-                    multiFileModificationService.modifyCodeFiles(selectedFiles, description.getText(), promptContextService.getPromptContext());
+                    try {
+                        multiFileModificationService.modifyCodeFiles(selectedFiles, description.getText(), promptContextService.getPromptContext());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 if (selectedFiles.size() == 1) {

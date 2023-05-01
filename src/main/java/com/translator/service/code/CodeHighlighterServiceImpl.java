@@ -39,6 +39,11 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
             return;
         }
 
+        highlightTextArea(fileModificationTracker, editor);
+    }
+
+    @Override
+    public void highlightTextArea(FileModificationTracker fileModificationTracker, Editor editor) {
         ApplicationManager.getApplication().invokeLater(() -> {
             removeAllHighlights(editor);
 

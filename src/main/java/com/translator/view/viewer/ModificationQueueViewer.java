@@ -95,7 +95,7 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                         // ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
                         codactorToolWindowService.openProvisionalModificationViewerToolWindow();
                     }
-                    fileOpenerService.openFileInEditor(project, fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset());
+                    fileOpenerService.openFileInEditor(fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset());
                 }
             }
         });

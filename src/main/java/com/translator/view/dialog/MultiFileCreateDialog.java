@@ -73,7 +73,7 @@ public class MultiFileCreateDialog extends JDialog {
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.insets = new Insets(10, 10, 0, 10);
-        JLabel descriptionLabel = new JLabel("Enter a description for the files to be created:");
+        JLabel descriptionLabel = new JLabel("(GPT-4+ Recommended) Enter a description for the files to be created:");
         mainPanel.add(descriptionLabel, gbc);
         gbc = new GridBagConstraints();
         gbc.gridx = 0;

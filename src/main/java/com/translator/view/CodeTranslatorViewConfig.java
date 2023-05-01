@@ -42,8 +42,9 @@ public class CodeTranslatorViewConfig extends AbstractModule {
     @Provides
     public ProvisionalModificationViewer codeSnippetListViewer(CodactorToolWindowService codactorToolWindowService,
                                                                FileModificationTrackerService fileModificationTrackerService,
+                                                               FileOpenerService fileOpenerService,
                                                                ProvisionalModificationCustomizerFactory provisionalModificationCustomizerFactory) {
-        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationTrackerService, provisionalModificationCustomizerFactory);
+        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationTrackerService, fileOpenerService, provisionalModificationCustomizerFactory);
     }
 
     @Singleton

@@ -10,8 +10,17 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 
+import javax.inject.Inject;
+
 public class FileOpenerServiceImpl implements FileOpenerService {
-    public void openFileInEditor(Project project, String filePath) {
+    private Project project;
+
+    @Inject
+    public FileOpenerServiceImpl(Project project) {
+        this.project = project;
+    }
+
+    public void openFileInEditor(String filePath) {
         VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
         VirtualFile virtualFile = virtualFileManager.findFileByUrl("file://" + filePath);
 
@@ -21,7 +30,7 @@ public class FileOpenerServiceImpl implements FileOpenerService {
         }
     }
 
-    public void openFileInEditor(Project project, String filePath, int startIndex) {
+    public void openFileInEditor(String filePath, int startIndex) {
         VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
         VirtualFile virtualFile = virtualFileManager.findFileByUrl("file://" + filePath);
 

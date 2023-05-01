@@ -22,16 +22,13 @@ import java.util.Objects;
 public class GuardedBlockServiceImpl implements GuardedBlockService {
     private final Project project;
     private final FileModificationTrackerService fileModificationTrackerService;
-    private final UneditableSegmentListenerService uneditableSegmentListenerService;
     private final Map<String, RangeMarker> guardedBlocks;
 
     @Inject
     public GuardedBlockServiceImpl(Project project,
-                                   FileModificationTrackerService fileModificationTrackerService,
-                                   UneditableSegmentListenerService uneditableSegmentListenerService) {
+                                   FileModificationTrackerService fileModificationTrackerService) {
         this.project = project;
         this.fileModificationTrackerService = fileModificationTrackerService;
-        this.uneditableSegmentListenerService = uneditableSegmentListenerService;
         this.guardedBlocks = new HashMap<>();
     }
 

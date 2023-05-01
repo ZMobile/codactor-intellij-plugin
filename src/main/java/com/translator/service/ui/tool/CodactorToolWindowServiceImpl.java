@@ -5,9 +5,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import com.intellij.ui.content.ContentManagerEvent;
+import com.intellij.ui.content.ContentManagerListener;
 import com.translator.CodactorInjector;
 import com.translator.view.console.CodactorConsole;
 import com.translator.view.viewer.*;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
@@ -50,6 +53,14 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
             this.modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
         }
         Content content = contentFactory.createContent(modificationQueueViewer, "Queue", false);
+        toolWindow.getContentManager().addContentManagerListener(new ContentManagerListener() {
+            @Override
+            public void contentRemoved(@NotNull ContentManagerEvent event) {
+                if (event.getContent() == content) {
+                    toolWindow.getContentManager().removeContent(content, true);
+                }
+            }
+        });
         toolWindow.getContentManager().addContent(content);
         toolWindow.getContentManager().setSelectedContent(content);
         toolWindowService.openToolWindow(modificationQueueViewerToolWindowId);

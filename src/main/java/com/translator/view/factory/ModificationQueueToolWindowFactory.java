@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.openapi.wm.ex.ToolWindowManagerListener;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.translator.CodactorInjector;
@@ -13,6 +14,10 @@ import org.jetbrains.annotations.NotNull;
 public class ModificationQueueToolWindowFactory implements ToolWindowFactory {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+        createAndAddContent(project, toolWindow);
+    }
+
+    private void createAndAddContent(Project project, ToolWindow toolWindow) {
         Injector injector = CodactorInjector.getInstance().getInjector(project);
         ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
         //modificationQueueViewer.setProject(project);
@@ -24,6 +29,8 @@ public class ModificationQueueToolWindowFactory implements ToolWindowFactory {
 
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(modificationQueueViewer, "Queue", false);
+
+        toolWindow.getContentManager().removeAllContents(true);
         toolWindow.getContentManager().addContent(content);
     }
 }

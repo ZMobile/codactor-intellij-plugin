@@ -37,7 +37,6 @@ public class EditorClickHandlerServiceImpl implements EditorClickHandlerService 
         if (editorClickHandlerMap.containsKey(filePath)) {
             return;
         }
-        EditorClickHandler editorClickHandler = new EditorClickHandler(fileModificationTrackerService, codactorToolWindowService, filePath);
         VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
         if (virtualFile == null) {
             return;
@@ -45,11 +44,16 @@ public class EditorClickHandlerServiceImpl implements EditorClickHandlerService 
 
         Editor editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
         if (editor == null) {
-            //Open file in editor G
-            FileEditorManager.getInstance(project).openFile(virtualFile, true);
-            editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
+            return;
         }
-        assert editor != null;
+        addEditorClickHandler(filePath, editor);
+    }
+
+    public void addEditorClickHandler(String filePath, Editor editor) {
+        if (editorClickHandlerMap.containsKey(filePath)) {
+            return;
+        }
+        EditorClickHandler editorClickHandler = new EditorClickHandler(fileModificationTrackerService, codactorToolWindowService, filePath);
         editor.addEditorMouseListener(editorClickHandler);
         editorClickHandlerMap.put(filePath, editorClickHandler);
     }

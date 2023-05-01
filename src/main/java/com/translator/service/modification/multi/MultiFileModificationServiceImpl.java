@@ -14,6 +14,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.ai.LikelihoodResponse;
 import com.translator.model.ai.ModificationImplementableResponse;
+import com.translator.model.ai.ModificationNeededResponse;
 import com.translator.model.api.translator.modification.DesktopCodeModificationRequestResource;
 import com.translator.model.api.translator.modification.DesktopCodeModificationResponseResource;
 import com.translator.model.history.HistoricalContextInquiryHolder;
@@ -24,6 +25,7 @@ import com.translator.model.inquiry.Inquiry;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.modification.ModificationType;
 import com.translator.model.modification.RecordType;
+import com.translator.model.thread.BooleanWaiter;
 import com.translator.service.code.CodeSnippetExtractorService;
 import com.translator.service.json.JsonExtractorService;
 import com.translator.service.modification.CodeModificationService;
@@ -76,7 +78,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
     }
 
     @Override
-    public void modifyCodeFiles(List<String> filePaths, String modification, List<HistoricalContextObjectDataHolder> priorContextData) {
+    public void modifyCodeFiles(List<String> filePaths, String modification, List<HistoricalContextObjectDataHolder> priorContextData) throws InterruptedException {
         //String testoPath = filePaths.get(0);
         //String testoCode = codeSnippetExtractorService.getAllText(testoPath);
         //String modificationIdTesto = fileModificationTrackerService.addModification(filePaths.get(0), 0, testoCode.length(), ModificationType.MODIFY);
@@ -98,7 +100,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
             VirtualFile file = LocalFileSystem.getInstance().findFileByPath(filePath);
             if (file != null) {
                 ApplicationManager.getApplication().invokeAndWait(() -> {
-                    FileEditorManager.getInstance(project).openFile(file, true);
+                    //FileEditorManager.getInstance(project).openFile(file, true);
                     String code = codeSnippetExtractorService.getAllText(filePath);
                     String modificationId = fileModificationTrackerService.addModification(filePath, 0, code.length(), ModificationType.MODIFY);
                     modificationIdMap.put(filePath, modificationId);
@@ -111,10 +113,23 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 e.printStackTrace();
             }
         }
-        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Multi-File Modification", true) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                for (String filePath : filePaths) {
+        Map<String, Boolean> booleanMap = new HashMap<>();
+        Map<String, Boolean> activatedMap = new HashMap<>();
+
+        for (String filePath : filePaths) {
+            booleanMap.put(filePath, false);
+        }
+        BooleanWaiter filePathLikelihoodWaiter = new BooleanWaiter(booleanMap);
+
+        for (String filePath : filePaths) {
+            Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Multi-File Modification", true) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    if (activatedMap.containsKey(filePath)) {
+                        System.out.println("Duplicate process attempted. Aborted.");
+                        return;
+                    }
+                    activatedMap.put(filePath, true);
                     if (modificationIdMap.containsKey(filePath)) {
                         String code = codeMap.get(filePath);
                         String question = "I'm looking to implement the following change(s) to my program: \"" + modification + "\". First things first, what is the percentage likelihood that this specific code file has anything to do with this modification and/or will be affected by the above change(s)?: \"" + code + "\". Please provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0";
@@ -144,19 +159,27 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                             assert likelihoodResponse != null;
                             filePathPercentageMap.put(filePath, likelihoodResponse.getLikelihoodPercentage());
                         }
+                        filePathLikelihoodWaiter.setTrue(filePath);
                         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/4) Ranking File Modification Likelihood (" + filePathPercentageMap.values().size() + "/" + filePaths.size() + ")");
                     }
                 }
+            };
+            ProgressManager.getInstance().run(backgroundTask);
+        }
+        filePathLikelihoodWaiter.waitForAllTrue();
 
-                List<String> sortedFilePaths = new ArrayList<>();
-                for (String filePath : filePaths) {
-                    if (filePathPercentageMap.containsKey(filePath) && filePathPercentageMap.get(filePath) != 0) {
-                        sortedFilePaths.add(filePath);
-                    } else {
-                        fileModificationTrackerService.removeModification(modificationIdMap.get(filePath));
-                    }
-                }
-                fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/4) Determining minimum files necessary to complete modification...");
+        List<String> sortedFilePaths = new ArrayList<>();
+        for (String filePath : filePaths) {
+            if (filePathPercentageMap.containsKey(filePath) && filePathPercentageMap.get(filePath) != 0) {
+                sortedFilePaths.add(filePath);
+            } else {
+                fileModificationTrackerService.removeModification(modificationIdMap.get(filePath));
+            }
+        }
+        fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/4) Determining minimum files necessary to complete modification...");
+        Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Multi-File Modification", true) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
                 sortedFilePaths.sort((filePath1, filePath2) -> Double.compare(filePathPercentageMap.get(filePath2), filePathPercentageMap.get(filePath1)));
                 List<String> utilizedFilePaths = new ArrayList<>();
                 String initialFilePath = sortedFilePaths.get(0);
@@ -165,6 +188,9 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 Inquiry newInquiry = inquiryDao.createGeneralInquiry(initialQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                 InquiryChat mostRecentInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                 String json = JsonExtractorService.extractJsonObject(mostRecentInquiryChat.getMessage());
+                HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat.getId(), null, false, null);
+                HistoricalContextObjectHolder priorContextObject = new HistoricalContextObjectHolder(inquiryContext);
+                priorContext.add(priorContextObject);
                 ModificationImplementableResponse modificationImplementableResponse = null;
                 boolean badJson = false;
                 try {
@@ -177,13 +203,13 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                     InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
                     String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
+                    HistoricalContextInquiryHolder inquiryContext2 = new HistoricalContextInquiryHolder(fixInquiry.getId(), fixInquiryChat.getId(), null, false, null);
+                    HistoricalContextObjectHolder priorContextObject2 = new HistoricalContextObjectHolder(inquiryContext2);
+                    priorContext.add(priorContextObject2);
                     modificationImplementableResponse = gson.fromJson(fixJson, ModificationImplementableResponse.class);
                 }
                 assert modificationImplementableResponse != null;
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/4) Determining minimum files necessary to complete modification... (1 file processed)");
-                HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat.getId(), null, false, null);
-                HistoricalContextObjectHolder priorContextObject = new HistoricalContextObjectHolder(inquiryContext);
-                priorContext.add(priorContextObject);
                 utilizedFilePaths.add(initialFilePath);
                 if (!modificationImplementableResponse.getModificationAchievable()) {
                     for (int i = 1; i < sortedFilePaths.size(); i++) {
@@ -193,11 +219,27 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                         mostRecentInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         String json2 = JsonExtractorService.extractJsonObject(mostRecentInquiryChat.getMessage());
-                        ModificationImplementableResponse modificationImplementableResponse2 = gson.fromJson(json2, ModificationImplementableResponse.class);
-                        fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/4) Determining minimum files necessary to complete modification... (" + i + 1 + " files processed)");
                         inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat.getId(), null, false, null);
                         priorContextObject = new HistoricalContextObjectHolder(inquiryContext);
                         priorContext.add(priorContextObject);
+                        ModificationImplementableResponse modificationImplementableResponse2 = null;
+                        boolean badJson2 = false;
+                        try {
+                            modificationImplementableResponse2 = gson.fromJson(json2, ModificationImplementableResponse.class);
+                        } catch (JsonSyntaxException jsonSyntaxException) {
+                            badJson2 = true;
+                        }
+                        if (badJson2) {
+                            String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ modificationAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if modificationAchievable is false?";
+                            Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                            InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
+                            String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
+                            HistoricalContextInquiryHolder inquiryContext2 = new HistoricalContextInquiryHolder(fixInquiry.getId(), fixInquiryChat.getId(), null, false, null);
+                            HistoricalContextObjectHolder priorContextObject2 = new HistoricalContextObjectHolder(inquiryContext2);
+                            priorContext.add(priorContextObject2);
+                            modificationImplementableResponse2 = gson.fromJson(fixJson, ModificationImplementableResponse.class);
+                        }
+                        fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/4) Determining minimum files necessary to complete modification... (" + i + 1 + " files processed)");
                         utilizedFilePaths.add(initialFilePath);
                         if (modificationImplementableResponse2.getModificationAchievable()) {
                             break;
@@ -214,7 +256,8 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
                     if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                         fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getModificationSuggestions());
-                        HistoricalContextModificationHolder modificationContext = new HistoricalContextModificationHolder(desktopCodeModificationRequestResource.getSuggestionId(), RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
+                        String suggestionId = desktopCodeModificationResponseResource.getModificationSuggestions().get(0).getId();
+                        HistoricalContextModificationHolder modificationContext = new HistoricalContextModificationHolder(suggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
                         priorContextObject = new HistoricalContextObjectHolder(modificationContext);
                         priorContext.add(priorContextObject);
                         modificationsPriorContext.add(priorContextObject);
@@ -241,11 +284,40 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     if (!utilizedFilePaths.contains(filePath)) {
                         filesToProcess.add(filePath);
                     }
+                }
+                for (String filePath : filesToProcess) {
                     String fileCode = codeMap.get(filePath);
-                    String question = "Analyze this code: \"" + fileCode + "\" at " + filePath + "\"? Does this file need to be changed in order to fulfill the requested modification: \"" + modification + "\"  Yes or No?";
+                    String question = "Analyze this code: \"" + fileCode + "\" at " + filePath + "\". Does this file need to be changed in order to fulfill the requested modification: \"" + modification + "\"  Yes or No? Please provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\".";
                     Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext);
                     InquiryChat latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
-                    if (latestInquiryChat.getMessage().toLowerCase().startsWith("yes")) {
+                    System.out.println("Latest inquiry chat testo: " + latestInquiryChat.getMessage());
+                    if (latestInquiryChat.getMessage() == null) {
+                        System.out.println("Retrying");
+                        finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext);
+                        latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
+                        System.out.println("Latest inquiry chat testo: " + latestInquiryChat.getMessage());
+                    }
+                    String json2 = JsonExtractorService.extractJsonObject(latestInquiryChat.getMessage());
+                    ModificationNeededResponse modificationNeededResponse = null;
+                    boolean badJson2 = false;
+                    if (json2 != null) {
+                        try {
+                            modificationNeededResponse = gson.fromJson(json2, ModificationNeededResponse.class);
+                        } catch (JsonSyntaxException jsonSyntaxException) {
+                            badJson2 = true;
+                        }
+                    } else {
+                        badJson2 = true;
+                    }
+                    if (badJson2) {
+                        String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\"?";
+                        Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                        InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
+                        System.out.println("Fix inquiry chat testo: " + latestInquiryChat.getMessage());
+                        String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
+                        modificationNeededResponse = gson.fromJson(fixJson, ModificationNeededResponse.class);
+                    }
+                    if (modificationNeededResponse.isModificationNeeded()) {
                         String modificationForThisFile = "The modifications that need to be applied to this code to achieve the above modification: (" + modification + ")";
                         DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, fileCode, modificationForThisFile, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
                         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);

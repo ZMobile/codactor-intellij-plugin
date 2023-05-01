@@ -7,7 +7,9 @@ import com.intellij.openapi.actionSystem.KeyboardShortcut;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
 import com.translator.CodactorInjector;
+import com.translator.service.code.CodeHighlighterService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
+import com.translator.service.modification.tracking.listener.EditorClickHandlerService;
 import com.translator.view.viewer.HistoricalModificationListViewer;
 import com.translator.view.viewer.InquiryListViewer;
 import com.translator.view.viewer.InquiryViewer;
@@ -43,10 +45,11 @@ public class MyStartupActivity implements StartupActivity {
             historicalModificationListViewer.setProject(project);
             inquiryListViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
             inquiryViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
-            /*// Register your custom action with the same keyboard shortcut
-            DoubleControlAction doubleControlAction = new DoubleControlAction(runAnythingAction);
-            actionManager.registerAction(RUN_ANYTHING_ACTION_ID, doubleControlAction);
-            doubleControlAction.registerCustomShortcutSet(new CustomShortcutSet(keyboardShortcut), null);*/
+
+            EditorClickHandlerService editorClickHandlerService = injector.getInstance(EditorClickHandlerService.class);
+            CodeHighlighterService codeHighlighterService = injector.getInstance(CodeHighlighterService.class);
+
+            EditorListener.register(fileModificationTrackerService, editorClickHandlerService, codeHighlighterService);
         }
     }
 }

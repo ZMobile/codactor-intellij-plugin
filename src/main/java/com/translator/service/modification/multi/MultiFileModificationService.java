@@ -5,5 +5,5 @@ import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import java.util.List;
 
 public interface MultiFileModificationService {
-    void modifyCodeFiles(List<String> filePaths, String modification, List<HistoricalContextObjectDataHolder> priorContext);
+    void modifyCodeFiles(List<String> filePaths, String modification, List<HistoricalContextObjectDataHolder> priorContext) throws InterruptedException;
 }

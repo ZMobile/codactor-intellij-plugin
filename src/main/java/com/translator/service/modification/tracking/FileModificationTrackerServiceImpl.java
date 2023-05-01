@@ -1,5 +1,6 @@
 package com.translator.service.modification.tracking;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.translator.ProvisionalModificationCustomizer;
@@ -72,9 +73,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                     JOptionPane.ERROR_MESSAGE);*/
         }
         if (modificationType != ModificationType.CREATE) {
-            System.out.println("Testo 3");
             editorClickHandlerService.addEditorClickHandler(newFilePath);
-            System.out.println("Testo 4");
             guardedBlockService.addFileModificationGuardedBlock(fileModificationId, startIndex, endIndex);
             codeHighlighterService.highlightTextArea(fileModificationTracker);
         }
@@ -126,7 +125,9 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                 .orElseThrow();
         FileModification fileModification = fileModificationTracker.getModification(modificationId);
         for (FileModificationSuggestion fileModificationSuggestion : fileModification.getModificationOptions()) {
+            ApplicationManager.getApplication().invokeLater(() -> {
             EditorFactory.getInstance().releaseEditor(fileModificationSuggestion.getSuggestedCode());
+            });
             FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = getModificationSuggestionModificationTracker(fileModificationSuggestion.getId());
             if (fileModificationSuggestionModificationTracker == null) {
                 continue;
