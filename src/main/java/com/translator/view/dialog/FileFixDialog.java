@@ -16,6 +16,7 @@ import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticMassCodeModificationServiceFactory;
 import com.translator.service.modification.AutomaticMassCodeModificationService;
 import com.translator.service.modification.AutomaticMassCodeModificationServiceImpl;
+import com.translator.service.modification.multi.MultiFileModificationService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.factory.PromptContextBuilderFactory;
@@ -32,6 +33,7 @@ public class FileFixDialog extends JDialog {
     private PromptContextService promptContextService;
     private PromptContextBuilderFactory promptContextBuilderFactory;
     private AutomaticMassCodeModificationService automaticMassCodeModificationService;
+    private MultiFileModificationService multiFileModificationService;
     private OpenAiModelService openAiModelService;
     private JBList<String> fileList;
     private DefaultListModel<String> listModel;
@@ -43,12 +45,15 @@ public class FileFixDialog extends JDialog {
     private JButton addButton;
     private JButton removeButton;
     private JButton okButton;
+    private JToggleButton applyToEachFileButton;
+    private JToggleButton smartFixRequestButton;
 
     public FileFixDialog(Project project,
                          CodactorToolWindowService codactorToolWindowService,
                          PromptContextService promptContextService,
                          PromptContextBuilderFactory promptContextBuilderFactory,
                          AutomaticMassCodeModificationServiceFactory automaticMassCodeModificationServiceFactory,
+                         MultiFileModificationService multiFileModificationService,
                          OpenAiModelService openAiModelService,
                          List<VirtualFile> selectedItems) {
         this.project = project;
@@ -56,6 +61,7 @@ public class FileFixDialog extends JDialog {
         this.promptContextService = promptContextService;
         this.promptContextBuilderFactory = promptContextBuilderFactory;
         this.automaticMassCodeModificationService = automaticMassCodeModificationServiceFactory.create(promptContextService);
+        this.multiFileModificationService = multiFileModificationService;
         this.openAiModelService = openAiModelService;
         setLayout(new BorderLayout());
         setTitle("Fix Code");
@@ -113,6 +119,45 @@ public class FileFixDialog extends JDialog {
 
         northPanel.add(new JBScrollPane(fileList), BorderLayout.CENTER);
         northPanel.add(leftPanel, BorderLayout.WEST);
+
+        applyToEachFileButton = new JToggleButton("Apply below fix to each file");
+        applyToEachFileButton.setSelected(true);
+        applyToEachFileButton.setEnabled(false);
+        applyToEachFileButton.addActionListener(e -> {
+            applyToEachFileButton.setEnabled(!applyToEachFileButton.isSelected());
+            if (applyToEachFileButton.isSelected()) {
+                smartFixRequestButton.setSelected(false);
+                smartFixRequestButton.setEnabled(true);
+            }
+            updateSelectedFilesLabel();
+        });
+
+        smartFixRequestButton = new JToggleButton("Smart fix request");
+        smartFixRequestButton.setSelected(false);
+        smartFixRequestButton.setEnabled(true);
+        smartFixRequestButton.addActionListener(e -> {
+            smartFixRequestButton.setEnabled(!smartFixRequestButton.isSelected());
+            if (smartFixRequestButton.isSelected()) {
+                applyToEachFileButton.setSelected(false);
+                applyToEachFileButton.setEnabled(true);
+            }
+            updateSelectedFilesLabel();
+        });
+
+// Create a panel for the toggle buttons
+        // Create a panel for the toggle buttons
+        JPanel toggleButtonsPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints toggleButtonsConstraints = new GridBagConstraints();
+        toggleButtonsConstraints.gridx = 0;
+        toggleButtonsConstraints.gridy = 0;
+        toggleButtonsConstraints.insets = new Insets(5, 0, 5, 5); // Top, left, bottom, right padding
+        toggleButtonsPanel.add(applyToEachFileButton, toggleButtonsConstraints);
+
+        toggleButtonsConstraints.gridx = 1;
+        toggleButtonsPanel.add(smartFixRequestButton, toggleButtonsConstraints);
+
+// Modify the northPanel layout
+        northPanel.add(toggleButtonsPanel, BorderLayout.SOUTH);
 
         modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
         modelComboBox.addActionListener(e -> {
@@ -172,12 +217,16 @@ public class FileFixDialog extends JDialog {
     }
 
     private void updateSelectedFilesLabel() {
-        if (fileList.getSelectedValuesList().size() == 1) {
-            descriptionLabel.setText("Enter the problem to fix with this file:");
-        } else if (fileList.getSelectedValuesList().isEmpty()) {
-            descriptionLabel.setText("Enter the problem to fix with each file added to this list:");
+        if (applyToEachFileButton.isSelected()) {
+            if (fileList.getItemsCount() == 1) {
+                descriptionLabel.setText("Enter the problem to fix with this file:");
+            } else if (fileList.getItemsCount() == 0) {
+                descriptionLabel.setText("Enter the problem to fix with each file added to this list:");
+            } else {
+                descriptionLabel.setText("Enter the problem to fix with each of these files:");
+            }
         } else {
-            descriptionLabel.setText("Enter the problem to fix with each of these files:");
+            descriptionLabel.setText("Enter the problem to fix within the files in this list:");
         }
     }
 
@@ -196,7 +245,16 @@ public class FileFixDialog extends JDialog {
                     SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FileFixDialog.this, "Please select at least one file.", "Error", JOptionPane.ERROR_MESSAGE));
                     return null;
                 }
-                automaticMassCodeModificationService.getFixedCode(selectedFiles, description.getText());
+                if (applyToEachFileButton.isSelected()) {
+                    automaticMassCodeModificationService.getFixedCode(selectedFiles, description.getText());
+                } else {
+                    try {
+                        multiFileModificationService.fixCodeFiles(selectedFiles, description.getText(), promptContextService.getPromptContext());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
 
                 if (selectedFiles.size() == 1) {
                     // Open the modified file in the editor

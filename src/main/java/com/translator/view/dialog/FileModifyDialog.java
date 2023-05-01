@@ -217,15 +217,15 @@ public class FileModifyDialog extends JDialog {
 
     private void updateSelectedFilesLabel() {
         if (applyToEachFileButton.isSelected()) {
-            if (fileList.getSelectedValuesList().size() == 1) {
+            if (fileList.getItemsCount() == 1) {
                 descriptionLabel.setText("Enter the changes to perform to this file:");
-            } else if (fileList.getSelectedValuesList().isEmpty()) {
+            } else if (fileList.getItemsCount() == 0) {
                 descriptionLabel.setText("Enter the changes to each file added to this list:");
             } else {
                 descriptionLabel.setText("Enter the changes to perform to each of these files:");
             }
         } else {
-            descriptionLabel.setText("(GPT-4+ Recommended) Enter the changes to perform to the files in this list:");
+            descriptionLabel.setText("Enter the changes to perform to the files in this list:");
         }
     }
 
