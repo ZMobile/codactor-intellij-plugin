@@ -131,7 +131,7 @@ public class FileModifyDialog extends JDialog {
             updateSelectedFilesLabel();
         });
 
-        smartModificationRequestButton = new JToggleButton("Smart modification request");
+        smartModificationRequestButton = new JToggleButton("(Experimental) Smart modification request");
         smartModificationRequestButton.setSelected(false);
         smartModificationRequestButton.setEnabled(true);
         smartModificationRequestButton.addActionListener(e -> {

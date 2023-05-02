@@ -7,13 +7,14 @@ import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
-import com.translator.model.modification.FileModification;
-import com.translator.model.modification.FileModificationSuggestionModification;
-import com.translator.model.modification.QueuedFileModificationObjectHolder;
-import com.translator.model.modification.QueuedModificationObjectType;
+import com.translator.model.modification.*;
 import com.translator.service.file.FileOpenerService;
 import com.translator.service.file.FileReaderService;
+import com.translator.service.modification.tracking.FileModificationTrackerService;
+import com.translator.service.openai.OpenAiApiKeyService;
+import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
+import com.translator.view.dialog.FileModificationErrorDialog;
 import com.translator.view.renderer.QueuedModificationObjectRenderer;
 import com.translator.view.renderer.SeparatorListCellRenderer;
 
@@ -30,6 +31,9 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
     private JBPopupMenu jBPopupMenu;
     private ProvisionalModificationViewer provisionalModificationViewer;
     private CodactorToolWindowService codactorToolWindowService;
+    private OpenAiApiKeyService openAiApiKeyService;
+    private OpenAiModelService openAiModelService;
+    private FileModificationTrackerService fileModificationTrackerService;
     private FileReaderService fileReaderService;
     private FileOpenerService fileOpenerService;
     private Project project;
@@ -39,12 +43,18 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                                    ProvisionalModificationViewer provisionalModificationViewer,
                                    CodactorToolWindowService codactorToolWindowService,
                                    FileReaderService fileReaderService,
-                                   FileOpenerService fileOpenerService) {
+                                   FileOpenerService fileOpenerService,
+                                   OpenAiApiKeyService openAiApiKeyService,
+                                   OpenAiModelService openAiModelService,
+                                   FileModificationTrackerService fileModificationTrackerService) {
         this.project = project;
         this.provisionalModificationViewer = provisionalModificationViewer;
         this.codactorToolWindowService = codactorToolWindowService;
         this.fileReaderService = fileReaderService;
         this.fileOpenerService = fileOpenerService;
+        this.openAiApiKeyService = openAiApiKeyService;
+        this.openAiModelService = openAiModelService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
         initComponents();
     }
 
@@ -88,6 +98,10 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                 QueuedFileModificationObjectHolder queuedFileModificationObjectHolder = modificationList.getModel().getElementAt(index);
                 if (queuedFileModificationObjectHolder.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION) {
                     FileModification fileModification = queuedFileModificationObjectHolder.getFileModification();
+                    if (fileModification.isError()) {
+                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, fileModification.getFilePath(), null, fileModification.getModificationType(), openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                        fileModificationErrorDialog.setVisible(true);
+                    }
                     if (fileModification.isDone()) {
                         provisionalModificationViewer.updateModificationList(fileModification);
 

@@ -1,5 +1,8 @@
 package com.translator.service.openai;
 
+import com.intellij.credentialStore.CredentialAttributes;
+import com.intellij.credentialStore.Credentials;
+import com.intellij.ide.passwordSafe.PasswordSafe;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -17,69 +20,21 @@ public class OpenAiApiKeyServiceImpl implements OpenAiApiKeyService {
         if (openAiApiKey != null) {
             return openAiApiKey;
         }
-        String userHome = System.getProperty("user.home");
-        String codactorFolder = userHome + "/Codactor";
-        File codactorFolderFile = new File(codactorFolder);
-        if (!codactorFolderFile.exists()) {
-            codactorFolderFile.mkdir();
-        }
-        String credentialsFolder = userHome + "/Codactor/credentials";
-        File credentialsFolderFile = new File(credentialsFolder);
-        if (!credentialsFolderFile.exists()) {
-            credentialsFolderFile.mkdir();
-        }
-        String credentialsPath = userHome + "/Codactor/credentials/openaikey.txt";
-        File file = new File(credentialsPath);
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        try {
-            String openAiApiKey = IOUtils.toString(FileUtils.openInputStream(file), StandardCharsets.UTF_8);
-            if (openAiApiKey == null || openAiApiKey.isEmpty()) {
-                return null;
-            }
-            this.openAiApiKey = openAiApiKey;
-            return openAiApiKey;
-        } catch (IOException e) {
-            e.printStackTrace();
+        CredentialAttributes credentialAttributes = new CredentialAttributes("openai_api_key", "user");
+        Credentials credentials = PasswordSafe.getInstance().get(credentialAttributes);
+        String openAiApiKey = credentials != null ? String.valueOf(credentials.getPassword()) : null;
+        if (openAiApiKey == null || openAiApiKey.isEmpty()) {
             return null;
         }
+        this.openAiApiKey = openAiApiKey;
+        return openAiApiKey;
     }
 
     public void setOpenAiApiKey(String openAiApiKey) {
         this.openAiApiKey = openAiApiKey;
         //Write it in the file
-        String userHome = System.getProperty("user.home");
-        String codactorFolder = userHome + "/Codactor";
-        File codactorFolderFile = new File(codactorFolder);
-        if (!codactorFolderFile.exists()) {
-            codactorFolderFile.mkdir();
-        }
-        String credentialsFolder = userHome + "/Codactor/credentials";
-        File credentialsFolderFile = new File(credentialsFolder);
-        if (!credentialsFolderFile.exists()) {
-            credentialsFolderFile.mkdir();
-        }
-        String credentialsPath = userHome + "/Codactor/credentials/openaikey.txt";
-        File file = new File(credentialsPath);
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        try {
-            //Write it in the file
-            try (FileWriter writer = new FileWriter(credentialsPath)) {
-                writer.write(openAiApiKey);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        CredentialAttributes credentialAttributes = new CredentialAttributes("openai_api_key", "user");
+        Credentials credentials = new Credentials("", openAiApiKey);
+        PasswordSafe.getInstance().set(credentialAttributes, credentials);
     }
 }

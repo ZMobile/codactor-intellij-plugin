@@ -17,6 +17,7 @@ import com.translator.service.file.FileReaderService;
 import com.translator.service.file.SelectedFileFetcherService;
 import com.translator.service.inquiry.InquiryService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
+import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.console.CodactorConsole;
@@ -80,8 +81,11 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                                            ProvisionalModificationViewer provisionalModificationViewer,
                                                            CodactorToolWindowService codactorToolWindowService,
                                                            FileReaderService fileReaderService,
-                                                           FileOpenerService fileOpenerService) {
-        return new ModificationQueueViewer(project, provisionalModificationViewer, codactorToolWindowService, fileReaderService, fileOpenerService);
+                                                           FileOpenerService fileOpenerService,
+                                                           OpenAiApiKeyService openAiApiKeyService,
+                                                           OpenAiModelService openAiModelService,
+                                                           FileModificationTrackerService fileModificationTrackerService) {
+        return new ModificationQueueViewer(project, provisionalModificationViewer, codactorToolWindowService, fileReaderService, fileOpenerService, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
     }
 
     @Singleton

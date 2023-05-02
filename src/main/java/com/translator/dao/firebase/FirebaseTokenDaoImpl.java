@@ -1,6 +1,9 @@
 package com.translator.dao.firebase;
 
 import com.google.gson.Gson;
+import com.intellij.credentialStore.CredentialAttributes;
+import com.intellij.credentialStore.Credentials;
+import com.intellij.ide.passwordSafe.PasswordSafe;
 import com.translator.model.api.firebase.FirebaseAuthLoginResponseResource;
 import com.translator.model.api.firebase.FirebaseToken;
 import com.translator.model.api.firebase.UserLoginRequestResource;
@@ -57,30 +60,12 @@ public class FirebaseTokenDaoImpl implements FirebaseTokenDao {
         try (InputStream is = con.getInputStream()) {
             String response = IOUtils.toString(is, StandardCharsets.UTF_8);
             FirebaseAuthLoginResponseResource firebaseAuthLoginResponseResource = gson.fromJson(response, FirebaseAuthLoginResponseResource.class);
-            String userHome = System.getProperty("user.home");
-            String codactorFolder = userHome + "/Codactor";
-            File codactorFolderFile = new File(codactorFolder);
-            if (!codactorFolderFile.exists()) {
-                codactorFolderFile.mkdir();
+            if (firebaseAuthLoginResponseResource == null) {
+                return null;
             }
-            String credentialsFolder = userHome + "/Codactor/credentials";
-            File credentialsFolderFile = new File(credentialsFolder);
-            if (!credentialsFolderFile.exists()) {
-                credentialsFolderFile.mkdir();
-            }
-            String credentialsPath = userHome + "/Codactor/credentials/credentials.txt";
-            File credentialsFile = new File(credentialsPath);
-            if (!credentialsFile.exists()) {
-                credentialsFile.createNewFile();
-            }
-            try (FileWriter writer = new FileWriter(credentialsPath)) {
-                if (firebaseAuthLoginResponseResource== null) {
-                    return null;
-                }
-                writer.write(firebaseAuthLoginResponseResource.getRefreshToken());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            CredentialAttributes credentialAttributes = new CredentialAttributes("firebase_refresh_token", "user");
+            Credentials credentials = new Credentials("", firebaseAuthLoginResponseResource.getRefreshToken());
+            PasswordSafe.getInstance().set(credentialAttributes, credentials);
             return firebaseAuthLoginResponseResource;
         } catch (IOException e) {
             throw new RuntimeException(e);

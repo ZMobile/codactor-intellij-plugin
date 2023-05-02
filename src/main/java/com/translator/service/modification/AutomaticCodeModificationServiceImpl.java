@@ -90,8 +90,10 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    fileModificationErrorDialog.setVisible(true);
                 }
             }
         };
@@ -171,8 +173,10 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    fileModificationErrorDialog.setVisible(true);
                 }
             }
         };
@@ -251,8 +255,10 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.CREATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    fileModificationErrorDialog.setVisible(true);
                 }
             }
         };
@@ -377,8 +383,10 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeTranslationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeTranslationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    fileModificationErrorDialog.setVisible(true);
                 }
             }
         };

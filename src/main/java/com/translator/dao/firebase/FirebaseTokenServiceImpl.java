@@ -1,5 +1,8 @@
 package com.translator.dao.firebase;
 
+import com.intellij.credentialStore.CredentialAttributes;
+import com.intellij.credentialStore.Credentials;
+import com.intellij.ide.passwordSafe.PasswordSafe;
 import com.translator.model.api.firebase.FirebaseAuthLoginResponseResource;
 import com.translator.model.api.firebase.FirebaseToken;
 import org.apache.commons.io.FileUtils;
@@ -26,42 +29,14 @@ public class FirebaseTokenServiceImpl implements FirebaseTokenService {
         if (firebaseToken != null && !firebaseToken.isExpired()) {
             return firebaseToken;
         }
-        String userHome = System.getProperty("user.home");
-        String codactorFolder = userHome + "/Codactor";
-        File codactorFolderFile = new File(codactorFolder);
-        if (!codactorFolderFile.exists()) {
-            codactorFolderFile.mkdir();
-        }
-        String generatedCodeFolder = userHome + "/Codactor/Generated-Code";
-        File generatedCodeFile = new File(generatedCodeFolder);
-        if (!generatedCodeFile.exists()) {
-            generatedCodeFile.mkdir();
-        }
-        String credentialsFolder = userHome + "/Codactor/credentials";
-        File credentialsFolderFile = new File(credentialsFolder);
-        if (!credentialsFolderFile.exists()) {
-            credentialsFolderFile.mkdir();
-        }
-        String credentialsPath = userHome + "/Codactor/credentials/credentials.txt";
-        File file = new File(credentialsPath);
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        try {
-            String refreshToken = IOUtils.toString(FileUtils.openInputStream(file), StandardCharsets.UTF_8);
-            if (refreshToken == null || refreshToken.isEmpty()) {
-                return null;
-            }
-            FirebaseToken firebaseToken = firebaseTokenDao.getFirebaseToken(refreshToken);
-            return firebaseToken;
-        } catch (IOException e) {
-            e.printStackTrace();
+        CredentialAttributes credentialAttributes = new CredentialAttributes("firebase_refresh_token", "user");
+        Credentials credentials = PasswordSafe.getInstance().get(credentialAttributes);
+        String refreshToken = credentials != null ? String.valueOf(credentials.getPassword()) : null;
+        if (refreshToken == null || refreshToken.isEmpty()) {
             return null;
         }
+        FirebaseToken firebaseToken = firebaseTokenDao.getFirebaseToken(refreshToken);
+        return firebaseToken;
     }
 
     @Override
@@ -84,33 +59,7 @@ public class FirebaseTokenServiceImpl implements FirebaseTokenService {
     }
 
     public void logout() {
-        String userHome = System.getProperty("user.home");
-        String codactorFolder = userHome + "/Codactor";
-        File codactorFolderFile = new File(codactorFolder);
-        if (!codactorFolderFile.exists()) {
-            codactorFolderFile.mkdir();
-        }
-        String credentialsFolder = userHome + "/Codactor/credentials";
-        File credentialsFolderFile = new File(credentialsFolder);
-        if (!credentialsFolderFile.exists()) {
-            credentialsFolderFile.mkdir();
-        }
-        String credentialsPath = userHome + "/Codactor/credentials/credentials.txt";
-        File credentialsFile = new File(credentialsPath);
-        if (!credentialsFile.exists()) {
-            try {
-                credentialsFile.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            //Clears the contents of the file
-            try {
-                Files.write(credentialsFile.toPath(), "".getBytes());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        System.exit(0);
+        CredentialAttributes credentialAttributes = new CredentialAttributes("firebase_refresh_token", "user");
+        PasswordSafe.getInstance().set(credentialAttributes, null);
     }
 }

@@ -132,7 +132,7 @@ public class FileFixDialog extends JDialog {
             updateSelectedFilesLabel();
         });
 
-        smartFixRequestButton = new JToggleButton("Smart fix request");
+        smartFixRequestButton = new JToggleButton("(Experimental) Smart fix request");
         smartFixRequestButton.setSelected(false);
         smartFixRequestButton.setEnabled(true);
         smartFixRequestButton.addActionListener(e -> {
