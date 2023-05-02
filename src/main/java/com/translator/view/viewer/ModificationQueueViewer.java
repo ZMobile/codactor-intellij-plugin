@@ -72,9 +72,6 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
         JBMenuItem pauseItem = new JBMenuItem("Pause");
         JBMenuItem retryItem = new JBMenuItem("Retry");
         JBMenuItem removeItem = new JBMenuItem("Remove");
-        jBPopupMenu.add(pauseItem);
-        jBPopupMenu.add(retryItem);
-        jBPopupMenu.add(removeItem);
 
         GroupLayout layout = new GroupLayout(this);
         setLayout(layout);
@@ -148,6 +145,15 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                     removeItem.setVisible(showRemove);
                     pauseItem.setVisible(showPause);
                     retryItem.setVisible(showRetry);
+                    if (showPause) {
+                        jBPopupMenu.add(pauseItem);
+                    }
+                    if (showRetry) {
+                        jBPopupMenu.add(retryItem);
+                    }
+                    if (showRemove) {
+                        jBPopupMenu.add(removeItem);
+                    }
                     jBPopupMenu.show(modificationList, e.getX(), e.getY());
                 }
             }

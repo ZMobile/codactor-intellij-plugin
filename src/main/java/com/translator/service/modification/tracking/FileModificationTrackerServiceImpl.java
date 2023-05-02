@@ -1,8 +1,10 @@
 package com.translator.service.modification.tracking;
 
+import com.google.inject.Injector;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
+import com.translator.CodactorInjector;
 import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.*;
 import com.translator.service.code.CodeHighlighterService;
@@ -107,6 +109,10 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     public String addMultiFileModification(String description, String language, String fileExtension, String filePath) {
         MultiFileModification multiFileModification = new MultiFileModification(description, language, fileExtension, filePath);
         activeMultiFileModifications.add(multiFileModification);
+        if (modificationQueueViewer == null) {
+            Injector injector = CodactorInjector.getInstance().getInjector(project);
+            this.modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
+        }
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         return multiFileModification.getId();
     }
