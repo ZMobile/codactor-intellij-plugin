@@ -1,6 +1,6 @@
 package com.translator.service.modification.tracking;
 
-import com.translator.ProvisionalModificationCustomizer;
+import com.translator.view.dialog.ProvisionalModificationCustomizer;
 import com.translator.model.modification.*;
 import com.translator.view.viewer.ModificationQueueViewer;
 

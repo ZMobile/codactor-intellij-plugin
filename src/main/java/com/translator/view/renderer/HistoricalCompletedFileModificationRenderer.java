@@ -1,5 +1,6 @@
 package com.translator.view.renderer;
 
+import com.intellij.ui.JBColor;
 import com.translator.model.history.data.HistoricalContextModificationDataHolder;
 import com.translator.model.modification.RecordType;
 import com.translator.service.line.LineCounterService;
@@ -75,6 +76,7 @@ public class HistoricalCompletedFileModificationRenderer extends JPanel implemen
             filePathLabel.setText("New General Inquiry");
             modificationTypeLabel.setText("");
             lineRangeLabel.setText("");
+            setBackground(JBColor.DARK_GRAY);
         }
 
         return this;

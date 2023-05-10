@@ -4,10 +4,11 @@ plugins {
 }
 
 group = "com.codactor"
-version = "1.0-SNAPSHOT"
+version = "1.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 dependencies {
     implementation("io.github.kju2.languagedetector:language-detector:1.0.5")
@@ -18,8 +19,6 @@ dependencies {
 intellij {
     version.set("2022.1.4")
     type.set("IC") // Target IDE Platform
-    //setPlugins("java")
-    //pluginXmlPath.set("src/main/resources/META-INF/plugin.xml")
     plugins.set(listOf("java"))
 }
 
@@ -45,6 +44,8 @@ tasks {
         implementation("com.google.inject:guice:5.1.0")
         implementation("com.google.inject.extensions:guice-assistedinject:5.1.0")
         implementation("com.norconex.language:langdetect:1.3.0")
+        implementation("org.jhotdraw:jhotdraw:7.7.0")
+        implementation("org.openjfx:javafx-swing:21-ea+5")
     }
 
     publishPlugin {

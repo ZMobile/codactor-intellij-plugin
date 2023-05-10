@@ -111,7 +111,9 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 return;
             }
         }
+        System.out.println("Testo 1: " + suggestionId);
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
+        System.out.println("Testo: " + fileModificationSuggestion);
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
         Runnable task = () -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
@@ -249,6 +251,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
             DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
             if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
+                System.out.println("Making sure this gets called: " + desktopCodeCreationResponseResource.getModificationSuggestions().get(0));
                 fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions());
                 promptContextService.clearPromptContext();
             } else {

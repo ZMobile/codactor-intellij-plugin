@@ -20,14 +20,7 @@ public class CustomBackgroundTask extends Task.Backgroundable {
 
     @Override
     public void run(@NotNull ProgressIndicator indicator) {
-        while (!customProgressIndicator.isCanceled()) {
-            task.run();
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                break;
-            }
-        }
+        task.run();
     }
 
     // Custom cancel method to be called from outside

@@ -11,7 +11,6 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.intellij.ui.components.JBTextField;
-import com.translator.PromptContextBuilder;
 import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.inquiry.Inquiry;
 import com.translator.model.inquiry.InquiryChat;

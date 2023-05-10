@@ -5,7 +5,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.translator.CodactorInjector;
-import com.translator.ProvisionalModificationCustomizer;
+import com.translator.view.dialog.ProvisionalModificationCustomizer;
 import com.translator.model.modification.*;
 import com.translator.service.code.CodeHighlighterService;
 import com.translator.service.code.CodeSnippetExtractorService;
@@ -93,8 +93,10 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             fileModificationSuggestionModificationTracker = new FileModificationSuggestionModificationTracker(fileModificationSuggestion, rangeReplaceService);
             activeModificationSuggestionModifications.put(suggestionId, fileModificationSuggestionModificationTracker);
         }
+        System.out.println("This got called testo: " + fileModificationSuggestionModificationTracker);
         String fileModificationSuggestionModificationId = fileModificationSuggestionModificationTracker.addModificationSuggestionModification(newFilePath, startIndex, endIndex, modificationType);
         if (fileModificationSuggestionModificationId == null) {
+            System.out.println("This got called testo 1");
             /*JBTextArea display = fileModificationSuggestion.getDisplay();
             JOptionPane.showMessageDialog(display, "Can't modify code that is already being modified", "Error",
                     JOptionPane.ERROR_MESSAGE);*/

@@ -1,5 +1,6 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
+
     <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
     <id>com.codactor.codactor-intellij-plugin</id>
 
@@ -8,7 +9,8 @@
     <name>Codactor</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="h.zante2011@gmail.com" url="https://www.codactor.com">Codactor</vendor>
+    <vendor email="h.zante2011@gmail.com" url="https://www.codactor.com">
+        Codactor</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
@@ -29,17 +31,17 @@
         <toolWindow
                 id="Codactor"
                 anchor="bottom"
-                icon="AllIcons.Debugger.Console"
+                icon="/META-INF/toolWindowIconDark.svg"
                 factoryClass="com.translator.view.factory.CodactorToolWindowFactory"/>
         <toolWindow
                 id="Modifications"
                 anchor="right"
-                icon="AllIcons.Debugger.Console"
+                icon="/META-INF/toolWindowIconDark.svg"
                 factoryClass="com.translator.view.factory.ModificationQueueToolWindowFactory"/>
         <toolWindow
                 id="Inquiries"
                 anchor="right"
-                icon="AllIcons.Debugger.Console"
+                icon="/META-INF/toolWindowIconDark.svg"
                 factoryClass="com.translator.view.factory.InquiryToolWindowFactory"/>
         <postStartupActivity implementation="com.translator.listener.MyStartupActivity"/>
     </extensions>

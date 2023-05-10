@@ -47,6 +47,7 @@ public class FileModificationSuggestionModificationTracker {
         for (FileModificationSuggestionModification m : modifications) {
             // Check if the proposed modification would overlap with any existing modifications in this tracker
             if ((startIndex <= m.getRangeMarker().getStartOffset() && endIndex >= m.getRangeMarker().getStartOffset()) || (startIndex <= m.getRangeMarker().getEndOffset() && endIndex >= m.getRangeMarker().getEndOffset())) {
+                System.out.println("This got called");
                 return null;
             }
         }

@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package com.translator;
+package com.translator.view.dialog;
 
 import com.google.inject.assistedinject.Assisted;
 import com.intellij.openapi.ui.Splitter;

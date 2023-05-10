@@ -110,7 +110,9 @@ public class FileModificationTracker {
                 if (fileModification.getModificationType() == ModificationType.TRANSLATE) {
                     suggestions.add(new FileModificationSuggestion(project, modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode(), fileModification.getNewFileType().trim().toLowerCase()));
                 } else {
-                    suggestions.add(new FileModificationSuggestion(project, modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode()));
+                    FileModificationSuggestion fileModificationSuggestion = new FileModificationSuggestion(project, modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode());
+                    System.out.println("This gets called threeoo: " + fileModificationSuggestion.getId());
+                    suggestions.add(fileModificationSuggestion);
                 }
             }
             fileModification.setModificationOptions(suggestions);

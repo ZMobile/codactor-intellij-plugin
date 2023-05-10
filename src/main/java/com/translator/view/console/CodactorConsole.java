@@ -12,7 +12,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.*;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
-import com.translator.PromptContextBuilder;
+import com.translator.view.uml.*;
+import com.translator.view.dialog.PromptContextBuilder;
 import com.translator.model.file.FileItem;
 import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
@@ -29,6 +30,12 @@ import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.dialog.MultiFileCreateDialog;
 import com.translator.view.factory.PromptContextBuilderFactory;
 import org.jetbrains.annotations.NotNull;
+import org.jhotdraw.app.Application;
+import org.jhotdraw.app.OSXApplication;
+import org.jhotdraw.app.SDIApplication;
+import org.jhotdraw.samples.draw.DrawApplicationModel;
+import org.jhotdraw.samples.draw.DrawView;
+import org.jhotdraw.util.ResourceBundleUtil;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -296,6 +303,37 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         JPanel rightToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5)); // Set horizontal gap to 0
         rightToolbar.add(hiddenLabel);
         rightToolbar.add(advancedButton);
+        JButton testoButton = new JButton("Test");
+        testoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        Application app;
+                        String os = System.getProperty("os.name").toLowerCase();
+                        if (os.startsWith("mac")) {
+                            app = new CodactorUmlBuilderOSXApplication();
+                        } else if (os.startsWith("win")) {
+                            //app = new MDIApplication();
+                            app = new CodactorUmlBuilderOSXApplication();
+                        } else {
+                            app = new CodactorUmlBuilderSDIApplication();
+                        }
+
+                        CodactorUmlBuilderApplicationModel model = new CodactorUmlBuilderApplicationModel();
+                        model.setName("JHotDraw Draw");
+                        model.setVersion(Main.class.getPackage().getImplementationVersion());
+                        model.setCopyright("Copyright 2006-2009 (c) by the authors of JHotDraw and all its contributors.\n" +
+                                "This software is licensed under LGPL or Creative Commons 3.0 Attribution.");
+                        model.setViewFactory(CodactorUmlBuilderView::new);
+                        app.setModel(model);
+                        String[] args = new String[0];
+                        app.launch(args);
+                    }
+                });
+            }
+        });
+        rightToolbar.add(testoButton);
 
         topToolbar.add(leftToolbar);
         topToolbar.add(rightToolbar, BorderLayout.EAST);
