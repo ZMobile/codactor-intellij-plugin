@@ -1,4 +1,4 @@
-package com.translator.view.dialog;
+package com.translator;
 
 import com.google.inject.assistedinject.Assisted;
 import com.intellij.ide.plugins.newui.HorizontalLayout;
@@ -34,7 +34,6 @@ import com.translator.service.modification.tracking.FileModificationTrackerServi
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.dialog.MultiFileCreateDialog;
-import com.translator.view.dialog.PromptContextBuilder;
 import com.translator.view.factory.PromptContextBuilderFactory;
 
 import javax.inject.Inject;

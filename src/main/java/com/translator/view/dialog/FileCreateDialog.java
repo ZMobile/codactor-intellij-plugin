@@ -1,6 +1,7 @@
 package com.translator.view.dialog;
 
 import com.intellij.openapi.ui.ComboBox;
+import com.translator.PromptContextBuilder;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.view.factory.PromptContextBuilderFactory;

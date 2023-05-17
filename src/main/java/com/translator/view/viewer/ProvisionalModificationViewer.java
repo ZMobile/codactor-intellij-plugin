@@ -7,7 +7,7 @@ package com.translator.view.viewer;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
-import com.translator.view.dialog.ProvisionalModificationCustomizer;
+import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationSuggestion;
 import com.translator.service.file.FileOpenerService;

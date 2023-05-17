@@ -3,6 +3,9 @@
  */
 package com.translator.view.uml;
 
+import com.google.inject.Inject;
+import com.translator.model.uml.draw.figure.listener.CustomFigureSelectionListener;
+import com.translator.service.factory.uml.CustomFigureSelectionListenerFactory;
 import org.jhotdraw.app.AbstractView;
 import org.jhotdraw.app.ApplicationLabels;
 import org.jhotdraw.app.action.edit.RedoAction;
@@ -52,11 +55,16 @@ public class CodactorUmlBuilderView extends AbstractView {
      * view, or a single shared editor for all views.
      */
     private DrawingEditor editor;
+
+    private CustomFigureSelectionListenerFactory customFigureSelectionListenerFactory;
     
     /**
      * Creates a new view.
      */
-    public CodactorUmlBuilderView() {
+    @Inject
+    public CodactorUmlBuilderView(CustomFigureSelectionListenerFactory customFigureSelectionListenerFactory) {
+        this.customFigureSelectionListenerFactory = customFigureSelectionListenerFactory;
+
         initComponents();
         
         scrollPane.setLayout(new PlacardScrollPaneLayout());
@@ -143,6 +151,15 @@ public class CodactorUmlBuilderView extends AbstractView {
     public void write(URI f, URIChooser fc) throws IOException {
         Drawing drawing = view.getDrawing();
         OutputFormat outputFormat = drawing.getOutputFormats().get(0);
+        /* before writing out the drawing, write out the metadata of each SpecialNode
+        /for (Figure figure : drawing.getChildren()) {
+            if (figure instanceof SpecialNode) {
+                SpecialNode node = (SpecialNode) figure;
+                String metadata = node.getMetadata();
+                // write out metadata here...
+            }
+        }*/
+        //Testo
         outputFormat.write(f, drawing);
     }
     
@@ -248,6 +265,7 @@ public class CodactorUmlBuilderView extends AbstractView {
 
         scrollPane = new JScrollPane();
         view = new org.jhotdraw.draw.DefaultDrawingView();
+        view.addFigureSelectionListener(customFigureSelectionListenerFactory.create());
 
         setLayout(new BorderLayout());
 

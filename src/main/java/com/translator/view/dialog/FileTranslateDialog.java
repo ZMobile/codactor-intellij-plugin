@@ -11,6 +11,7 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextField;
+import com.translator.PromptContextBuilder;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticMassCodeModificationServiceFactory;
 import com.translator.service.modification.AutomaticMassCodeModificationService;

@@ -5,7 +5,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.translator.CodactorInjector;
-import com.translator.view.dialog.ProvisionalModificationCustomizer;
+import com.translator.ProvisionalModificationCustomizer;
 import com.translator.model.modification.*;
 import com.translator.service.code.CodeHighlighterService;
 import com.translator.service.code.CodeSnippetExtractorService;

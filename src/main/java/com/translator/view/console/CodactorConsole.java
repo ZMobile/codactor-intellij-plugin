@@ -12,8 +12,9 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.*;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
+import com.translator.service.factory.uml.CodactorUmlBuilderViewFactory;
 import com.translator.view.uml.*;
-import com.translator.view.dialog.PromptContextBuilder;
+import com.translator.PromptContextBuilder;
 import com.translator.model.file.FileItem;
 import com.translator.model.history.HistoricalContextObjectHolder;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
@@ -31,11 +32,6 @@ import com.translator.view.dialog.MultiFileCreateDialog;
 import com.translator.view.factory.PromptContextBuilderFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jhotdraw.app.Application;
-import org.jhotdraw.app.OSXApplication;
-import org.jhotdraw.app.SDIApplication;
-import org.jhotdraw.samples.draw.DrawApplicationModel;
-import org.jhotdraw.samples.draw.DrawView;
-import org.jhotdraw.util.ResourceBundleUtil;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -72,6 +68,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private CodeFileGeneratorService codeFileGeneratorService;
     private OpenAiModelService openAiModelService;
     private PromptContextBuilderFactory promptContextBuilderFactory;
+    private CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory;
 
     @Inject
     public CodactorConsole(Project project,
@@ -83,7 +80,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            CodeFileGeneratorService codeFileGeneratorService,
                            OpenAiModelService openAiModelService,
                            AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory,
-                           PromptContextBuilderFactory promptContextBuilderFactory) {
+                           PromptContextBuilderFactory promptContextBuilderFactory,
+                           CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory) {
         super(new BorderLayout());
         this.project = project;
         this.promptContextService = promptContextService;
@@ -95,6 +93,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.openAiModelService = openAiModelService;
         this.automaticCodeModificationService = automaticCodeModificationServiceFactory.create(promptContextService);
         this.promptContextBuilderFactory = promptContextBuilderFactory;
+        this.codactorUmlBuilderViewFactory = codactorUmlBuilderViewFactory;
+
         textArea = new JBTextArea();
         textArea.setBackground(Color.BLACK);
         textArea.setForeground(Color.WHITE);
@@ -322,10 +322,10 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
 
                         CodactorUmlBuilderApplicationModel model = new CodactorUmlBuilderApplicationModel();
                         model.setName("JHotDraw Draw");
-                        model.setVersion(Main.class.getPackage().getImplementationVersion());
+                        model.setVersion(getClass().getPackage().getImplementationVersion());
                         model.setCopyright("Copyright 2006-2009 (c) by the authors of JHotDraw and all its contributors.\n" +
                                 "This software is licensed under LGPL or Creative Commons 3.0 Attribution.");
-                        model.setViewFactory(CodactorUmlBuilderView::new);
+                        model.setViewFactory(codactorUmlBuilderViewFactory::create);
                         app.setModel(model);
                         String[] args = new String[0];
                         app.launch(args);

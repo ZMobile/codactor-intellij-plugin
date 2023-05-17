@@ -7,10 +7,14 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.intellij.openapi.project.Project;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.inquiry.InquiryDao;
+import com.translator.model.uml.draw.figure.listener.CustomFigureSelectionListener;
 import com.translator.service.CodeTranslatorServiceConfig;
 import com.translator.service.code.CodeSnippetExtractorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.factory.AutomaticCodeModificationServiceFactory;
+import com.translator.service.factory.uml.CodactorUmlBuilderViewFactory;
+import com.translator.service.factory.uml.CustomFigureSelectionListenerFactory;
+import com.translator.service.factory.uml.PromptNodeDialogFactory;
 import com.translator.service.file.CodeFileGeneratorService;
 import com.translator.service.file.FileOpenerService;
 import com.translator.service.file.FileReaderService;
@@ -23,6 +27,8 @@ import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.console.CodactorConsole;
 import com.translator.view.factory.PromptContextBuilderFactory;
 import com.translator.view.factory.ProvisionalModificationCustomizerFactory;
+import com.translator.view.uml.CodactorUmlBuilderView;
+import com.translator.view.uml.dialog.PromptNodeDialog;
 import com.translator.view.viewer.*;
 
 public class CodeTranslatorViewConfig extends AbstractModule {
@@ -37,6 +43,9 @@ public class CodeTranslatorViewConfig extends AbstractModule {
         install(new CodeTranslatorServiceConfig(project));
         install(new FactoryModuleBuilder().build(ProvisionalModificationCustomizerFactory.class));
         install(new FactoryModuleBuilder().build(PromptContextBuilderFactory.class));
+        install(new FactoryModuleBuilder().build(CodactorUmlBuilderViewFactory.class));
+        install(new FactoryModuleBuilder().build(CustomFigureSelectionListenerFactory.class));
+        install(new FactoryModuleBuilder().build(PromptNodeDialogFactory.class));
     }
 
     @Singleton
@@ -99,7 +108,18 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            CodeFileGeneratorService codeFileGeneratorService,
                                            OpenAiModelService openAiModelService,
                                            AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory,
-                                           PromptContextBuilderFactory promptContextBuilderFactory) {
-        return new CodactorConsole(project, promptContextService, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, codeFileGeneratorService, openAiModelService, automaticCodeModificationServiceFactory, promptContextBuilderFactory);
+                                           PromptContextBuilderFactory promptContextBuilderFactory,
+                                           CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory) {
+        return new CodactorConsole(project, promptContextService, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, codeFileGeneratorService, openAiModelService, automaticCodeModificationServiceFactory, promptContextBuilderFactory, codactorUmlBuilderViewFactory);
+    }
+
+    @Provides
+    public CodactorUmlBuilderView codactorUmlBuilderView(CustomFigureSelectionListenerFactory customFigureSelectionListenerFactory) {
+        return new CodactorUmlBuilderView(customFigureSelectionListenerFactory);
+    }
+
+    @Provides
+    public CustomFigureSelectionListener customFigureSelectionListener(PromptNodeDialogFactory promptNodeDialogFactory) {
+        return new CustomFigureSelectionListener(promptNodeDialogFactory);
     }
 }
