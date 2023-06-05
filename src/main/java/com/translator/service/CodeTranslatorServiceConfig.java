@@ -43,6 +43,8 @@ import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.service.ui.tool.CodactorToolWindowServiceImpl;
 import com.translator.service.ui.tool.ToolWindowService;
 import com.translator.service.ui.tool.ToolWindowServiceImpl;
+import com.translator.service.uml.NodeDialogWindowMapperService;
+import com.translator.service.uml.NodeDialogWindowMapperServiceImpl;
 
 public class CodeTranslatorServiceConfig extends AbstractModule {
     private Project project;
@@ -83,6 +85,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(InquiryService.class).to(InquiryServiceImpl.class);
         bind(RenameFileService.class).to(RenameFileServiceImpl.class);
         bind(BackgroundTaskMapperService.class).to(BackgroundTaskMapperServiceImpl.class).asEagerSingleton();
+        bind(NodeDialogWindowMapperService.class).to(NodeDialogWindowMapperServiceImpl.class).asEagerSingleton();
     }
 
     @Singleton
@@ -100,8 +103,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                             GuardedBlockService guardedBlockService,
                                                                             RangeReplaceService rangeReplaceService,
                                                                             EditorClickHandlerService editorClickHandlerService,
-                                                                            RenameFileService renameFileService) {
-        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService);
+                                                                            RenameFileService renameFileService,
+                                                                            BackgroundTaskMapperService backgroundTaskMapperService) {
+        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService);
     }
 
     @Singleton

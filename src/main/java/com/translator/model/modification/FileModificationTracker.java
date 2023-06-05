@@ -111,7 +111,6 @@ public class FileModificationTracker {
                     suggestions.add(new FileModificationSuggestion(project, modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode(), fileModification.getNewFileType().trim().toLowerCase()));
                 } else {
                     FileModificationSuggestion fileModificationSuggestion = new FileModificationSuggestion(project, modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode());
-                    System.out.println("This gets called threeoo: " + fileModificationSuggestion.getId());
                     suggestions.add(fileModificationSuggestion);
                 }
             }

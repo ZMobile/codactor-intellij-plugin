@@ -1,11 +1,8 @@
 package com.translator.model.uml.draw.figure.listener;
 
-import com.translator.PromptContextBuilder;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
-import com.translator.service.context.PromptContextService;
-import com.translator.service.context.PromptContextServiceImpl;
-import com.translator.service.factory.uml.PromptNodeDialogFactory;
-import com.translator.view.factory.PromptContextBuilderFactory;
+import com.translator.service.uml.NodeDialogWindowMapperService;
+import com.translator.view.uml.factory.dialog.PromptNodeDialogFactory;
 import com.translator.view.uml.dialog.PromptNodeDialog;
 import org.jhotdraw.draw.Figure;
 import org.jhotdraw.draw.event.FigureSelectionListener;
@@ -14,17 +11,15 @@ import org.jhotdraw.draw.event.FigureSelectionEvent;
 import javax.inject.Inject;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.HashMap;
-import java.util.Map;
 
 public class CustomFigureSelectionListener implements FigureSelectionListener {
-   private PromptNodeDialogFactory promptNodeDialogFactory;
-    private Map<Figure, PromptNodeDialog> promptNodeDialogMap;
+    private PromptNodeDialogFactory promptNodeDialogFactory;
+    private NodeDialogWindowMapperService nodeDialogTrackerService;
 
     @Inject
-    public CustomFigureSelectionListener(PromptNodeDialogFactory promptNodeDialogFactory) {
+    public CustomFigureSelectionListener(PromptNodeDialogFactory promptNodeDialogFactory, NodeDialogWindowMapperService nodeDialogTrackerService) {
         this.promptNodeDialogFactory = promptNodeDialogFactory;
-        this.promptNodeDialogMap = new HashMap<>();
+        this.nodeDialogTrackerService = nodeDialogTrackerService;
     }
 
     @Override
@@ -36,19 +31,20 @@ public class CustomFigureSelectionListener implements FigureSelectionListener {
                 if (object instanceof Figure) {
                     Figure figure = (Figure) object;
                     if (figure instanceof LabeledRectangleFigure) {
+                        LabeledRectangleFigure labeledRectangleFigure = (LabeledRectangleFigure) figure;
                         PromptNodeDialog promptNodeDialog;
-                        if (!promptNodeDialogMap.containsKey(figure)) {
-                            promptNodeDialog = promptNodeDialogFactory.create(null);
-                            promptNodeDialogMap.put(figure, promptNodeDialog);
+                        if (!nodeDialogTrackerService.getPromptNodeDialogMap().containsKey(labeledRectangleFigure)) {
+                            promptNodeDialog = promptNodeDialogFactory.create(labeledRectangleFigure);
+                            nodeDialogTrackerService.getPromptNodeDialogMap().put(labeledRectangleFigure, promptNodeDialog);
                             promptNodeDialog.addWindowListener(new WindowAdapter() {
                                 @Override
                                 public void windowClosed(WindowEvent e) {
-                                    promptNodeDialogMap.remove(figure);
+                                    nodeDialogTrackerService.getPromptNodeDialogMap().remove(figure);
                                 }
                             });
-                            promptNodeDialogMap.put(figure, promptNodeDialog);
+                            nodeDialogTrackerService.getPromptNodeDialogMap().put(labeledRectangleFigure, promptNodeDialog);
                         } else {
-                            promptNodeDialog = promptNodeDialogMap.get(figure);
+                            promptNodeDialog = nodeDialogTrackerService.getPromptNodeDialogMap().get(figure);
                         }
                         promptNodeDialog.setVisible(true);
                     }

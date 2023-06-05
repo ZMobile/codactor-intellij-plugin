@@ -4,8 +4,8 @@
 package com.translator.view.uml;
 
 import com.google.inject.Inject;
-import com.translator.model.uml.draw.figure.listener.CustomFigureSelectionListener;
-import com.translator.service.factory.uml.CustomFigureSelectionListenerFactory;
+import com.translator.view.uml.factory.adapter.CustomMouseAdapterFactory;
+import com.translator.view.uml.factory.tool.PromptNodeCreationToolFactory;
 import org.jhotdraw.app.AbstractView;
 import org.jhotdraw.app.ApplicationLabels;
 import org.jhotdraw.app.action.edit.RedoAction;
@@ -56,14 +56,14 @@ public class CodactorUmlBuilderView extends AbstractView {
      */
     private DrawingEditor editor;
 
-    private CustomFigureSelectionListenerFactory customFigureSelectionListenerFactory;
+    private CustomMouseAdapterFactory customMouseAdapterFactory;
     
     /**
      * Creates a new view.
      */
     @Inject
-    public CodactorUmlBuilderView(CustomFigureSelectionListenerFactory customFigureSelectionListenerFactory) {
-        this.customFigureSelectionListenerFactory = customFigureSelectionListenerFactory;
+    public CodactorUmlBuilderView(CustomMouseAdapterFactory customMouseAdapterFactory) {
+        this.customMouseAdapterFactory = customMouseAdapterFactory;
 
         initComponents();
         
@@ -265,7 +265,7 @@ public class CodactorUmlBuilderView extends AbstractView {
 
         scrollPane = new JScrollPane();
         view = new org.jhotdraw.draw.DefaultDrawingView();
-        view.addFigureSelectionListener(customFigureSelectionListenerFactory.create());
+        view.addMouseListener(customMouseAdapterFactory.create(view));
 
         setLayout(new BorderLayout());
 

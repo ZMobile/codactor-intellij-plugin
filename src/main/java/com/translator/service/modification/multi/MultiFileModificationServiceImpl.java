@@ -83,7 +83,6 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
         //String testoPath = filePaths.get(0);
         //String testoCode = codeSnippetExtractorService.getAllText(testoPath);
         //String modificationIdTesto = fileModificationTrackerService.addModification(filePaths.get(0), 0, testoCode.length(), ModificationType.MODIFY);
-        System.out.println("This gets called 0000");
         List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
         if (priorContextData != null) {
             for (HistoricalContextObjectDataHolder data : priorContextData) {
@@ -265,10 +264,10 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     } else {
                         fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                         if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                            FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                            FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, null, ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                             fileModificationErrorDialog.setVisible(true);
                         } else {
-                            FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                            FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                             fileModificationErrorDialog.setVisible(true);
                         }
                     }
@@ -293,12 +292,9 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     String question = "Analyze this code: \"" + fileCode + "\" at " + filePath + "\". Does this file need to be changed in order to fulfill the requested modification: \"" + modification + "\"  Yes or No? Please provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\".";
                     Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext);
                     InquiryChat latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
-                    System.out.println("Latest inquiry chat testo: " + latestInquiryChat.getMessage());
                     if (latestInquiryChat.getMessage() == null) {
-                        System.out.println("Retrying");
                         finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext);
                         latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
-                        System.out.println("Latest inquiry chat testo: " + latestInquiryChat.getMessage());
                     }
                     String json2 = JsonExtractorService.extractJsonObject(latestInquiryChat.getMessage());
                     ModificationNeededResponse modificationNeededResponse = null;
@@ -316,7 +312,6 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\"?";
                         Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                         InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
-                        System.out.println("Fix inquiry chat testo: " + latestInquiryChat.getMessage());
                         String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
                         modificationNeededResponse = gson.fromJson(fixJson, ModificationNeededResponse.class);
                     }
@@ -329,10 +324,10 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         } else {
                             fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                             if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                                FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                                FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, null, ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                                 fileModificationErrorDialog.setVisible(true);
                             } else {
-                                FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                                FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                                 fileModificationErrorDialog.setVisible(true);
                             }
                         }
@@ -353,7 +348,6 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
         //String testoPath = filePaths.get(0);
         //String testoCode = codeSnippetExtractorService.getAllText(testoPath);
         //String modificationIdTesto = fileModificationTrackerService.addModification(filePaths.get(0), 0, testoCode.length(), ModificationType.MODIFY);
-        System.out.println("This gets called 0000");
         List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
         if (priorContextData != null) {
             for (HistoricalContextObjectDataHolder data : priorContextData) {
@@ -534,11 +528,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     } else {
                         fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                         if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                            FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                            fileModificationErrorDialog.setVisible(true);
+                            //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, null, ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                            //fileModificationErrorDialog.setVisible(true);
                         } else {
-                            FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                            fileModificationErrorDialog.setVisible(true);
+                            //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                            //fileModificationErrorDialog.setVisible(true);
                         }
                     }
                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/4) Fixing necessary files... (" + i + 1 + " file(s) modified)");
@@ -562,12 +556,9 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     String question = "Analyze this code: \"" + fileCode + "\" at " + filePath + "\". Does this file need to be changed in order to fix the above error/problem: \"" + error + "\"  Yes or No? Please provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\".";
                     Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext);
                     InquiryChat latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
-                    System.out.println("Latest inquiry chat testo: " + latestInquiryChat.getMessage());
                     if (latestInquiryChat.getMessage() == null) {
-                        System.out.println("Retrying");
                         finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext);
                         latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
-                        System.out.println("Latest inquiry chat testo: " + latestInquiryChat.getMessage());
                     }
                     String json2 = JsonExtractorService.extractJsonObject(latestInquiryChat.getMessage());
                     ModificationNeededResponse modificationNeededResponse = null;
@@ -585,7 +576,6 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\"?";
                         Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                         InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
-                        System.out.println("Fix inquiry chat testo: " + latestInquiryChat.getMessage());
                         String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
                         modificationNeededResponse = gson.fromJson(fixJson, ModificationNeededResponse.class);
                     }
@@ -597,11 +587,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         } else {
                             fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                             if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                                FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                                fileModificationErrorDialog.setVisible(true);
+                                //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, null, ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                                //fileModificationErrorDialog.setVisible(true);
                             } else {
-                                FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
-                                fileModificationErrorDialog.setVisible(true);
+                                //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                                //fileModificationErrorDialog.setVisible(true);
                             }
                         }
                     } else {

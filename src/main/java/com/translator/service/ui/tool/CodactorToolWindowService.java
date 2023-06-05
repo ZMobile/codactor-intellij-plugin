@@ -4,6 +4,8 @@ import com.translator.view.console.CodactorConsole;
 import com.translator.view.viewer.*;
 
 public interface CodactorToolWindowService {
+    void openCodactorConsoleToolWindow();
+
     void openModificationQueueViewerToolWindow();
 
     void openProvisionalModificationViewerToolWindow();

@@ -89,15 +89,16 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             } else {
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, modificationId, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
-                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, modificationId, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     fileModificationErrorDialog.setVisible(true);
                 }
             }
+            backgroundTaskMapperService.removeTask(modificationId);
         };
-        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        Runnable cancelTask = () -> {};
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
@@ -111,9 +112,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 return;
             }
         }
-        System.out.println("Testo 1: " + suggestionId);
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
-        System.out.println("Testo: " + fileModificationSuggestion);
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
         Runnable task = () -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
@@ -140,8 +139,9 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 }
                 fileModificationTrackerService.removeModificationSuggestionModification(modificationId);
             }
+            backgroundTaskMapperService.removeTask(modificationId);
         };
-        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        Runnable cancelTask = () -> {};
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification Suggestion Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
@@ -174,15 +174,16 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             } else {
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, modificationId, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
-                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, modificationId, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     fileModificationErrorDialog.setVisible(true);
                 }
             }
+            backgroundTaskMapperService.removeTask(modificationId);
         };
-        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        Runnable cancelTask = () -> {};
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
@@ -223,8 +224,9 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 }
                 fileModificationTrackerService.removeModificationSuggestionModification(modificationId);
             }
+            backgroundTaskMapperService.removeTask(modificationId);
         };
-        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        Runnable cancelTask = () -> {};
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification Suggestion Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
@@ -257,15 +259,16 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             } else {
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.CREATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, modificationId, filePath, null, ModificationType.CREATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
-                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, modificationId, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     fileModificationErrorDialog.setVisible(true);
                 }
             }
+            backgroundTaskMapperService.removeTask(modificationId);
         };
-        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        Runnable cancelTask = () -> {};
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.CREATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
@@ -306,8 +309,9 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 }
                 fileModificationTrackerService.removeModification(modificationId);
             }
+            backgroundTaskMapperService.removeTask(modificationId);
         };
-        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        Runnable cancelTask = () -> {};
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.CREATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
@@ -348,8 +352,9 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 }
                 fileModificationTrackerService.removeModificationSuggestionModification(modificationId);
             }
+            backgroundTaskMapperService.removeTask(modificationId);
         };
-        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        Runnable cancelTask = () -> {};
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification Suggestion Modification (" + ModificationType.CREATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
@@ -385,15 +390,16 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             } else {
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeTranslationResponseResource.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, modificationId, filePath, null, ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
-                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, filePath, desktopCodeTranslationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                    FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, modificationId, filePath, desktopCodeTranslationResponseResource.getError(), ModificationType.TRANSLATE, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                     fileModificationErrorDialog.setVisible(true);
                 }
             }
+            backgroundTaskMapperService.removeTask(modificationId);
         };
-        Runnable cancelTask = () -> fileModificationTrackerService.errorFileModification(modificationId);
+        Runnable cancelTask = () -> {};
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.TRANSLATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);

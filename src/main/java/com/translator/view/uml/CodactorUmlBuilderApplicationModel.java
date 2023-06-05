@@ -3,7 +3,9 @@
  */
 package com.translator.view.uml;
 
+import com.google.inject.Inject;
 import com.translator.model.uml.draw.figure.*;
+import com.translator.view.uml.factory.tool.PromptNodeCreationToolFactory;
 import org.jhotdraw.annotation.Nullable;
 import org.jhotdraw.app.Application;
 import org.jhotdraw.app.ApplicationModel;
@@ -43,10 +45,13 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
      * This editor is shared by all views.
      */
     private DefaultDrawingEditor sharedEditor;
+    private final PromptNodeCreationToolFactory promptNodeCreationToolFactory;
 
     /** Creates a new instance. */
-    public CodactorUmlBuilderApplicationModel() {
-        list = new LinkedList<>();
+    @Inject
+    public CodactorUmlBuilderApplicationModel(PromptNodeCreationToolFactory promptNodeCreationToolFactory) {
+        this.list = new LinkedList<>();
+        this.promptNodeCreationToolFactory = promptNodeCreationToolFactory;
     }
 
     public DefaultDrawingEditor getSharedEditor() {
@@ -118,7 +123,7 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
         ConnectionTool cnt;
         ConnectionFigure lc;
 
-        ButtonFactory.addToolTo(tb, editor, new CreationTool(new LabeledRectangleFigure("Prompt")), "edit.createRectangle", labels);
+        ButtonFactory.addToolTo(tb, editor, promptNodeCreationToolFactory.create(new LabeledRectangleFigure("Prompt")), "edit.createRectangle", labels);
         ButtonFactory.addToolTo(tb, editor, new CreationTool(new LabeledRoundRectangleFigure("Calculator")), "edit.createRoundRectangle", labels);
         ButtonFactory.addToolTo(tb, editor, new CreationTool(new LabeledEllipseFigure("Custom Code")), "edit.createEllipse", labels);
         ButtonFactory.addToolTo(tb, editor, new CreationTool(new LabeledDiamondFigure("Verifier")), "edit.createDiamond", labels);

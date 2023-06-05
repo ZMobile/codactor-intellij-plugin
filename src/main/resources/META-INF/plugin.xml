@@ -47,7 +47,7 @@
     </extensions>
     <actions>
         <action id="CustomCreateMultiFile"
-                class="com.translator.view.action.CustomCreateMultiFileAction"
+                class="com.translator.view.action.file.CustomCreateMultiFileAction"
                 text="Create AI Generated Multi-File"
                 description="Describe a set of files to generate them with AI">
             <add-to-group group-id="NewGroup" anchor="first" />
@@ -55,31 +55,85 @@
     </actions>
     <actions>
         <action id="CustomCreateFile"
-                class="com.translator.view.action.CustomCreateFileAction"
+                class="com.translator.view.action.file.CustomCreateFileAction"
                 text="Create AI Generated File"
                 description="Describe a file to generate it with AI">
             <add-to-group group-id="NewGroup" anchor="first" />
         </action>
         <action id="ModifyCodeAction"
-                class="com.translator.view.action.CustomModifyFileAction"
+                class="com.translator.view.action.file.CustomModifyFileAction"
                 text="Modify Code"
                 description="Modify the selected files with AI">
                 <!-- icon="/path/to/your/icon.png"> -->
             <add-to-group group-id="ProjectViewPopupMenu" anchor="before" relative-to-action="FindUsages" />
         </action>
         <action id="FixCodeAction"
-                class="com.translator.view.action.CustomFixFileAction"
+                class="com.translator.view.action.file.CustomFixFileAction"
                 text="Fix Code"
                 description="Fix the selected files with AI">
             <!-- icon="/path/to/your/icon.png"> -->
             <add-to-group group-id="ProjectViewPopupMenu" anchor="before" relative-to-action="FindUsages" />
         </action>
         <action id="TranslateCodeAction"
-                class="com.translator.view.action.CustomTranslateFileAction"
+                class="com.translator.view.action.file.CustomTranslateFileAction"
                 text="Translate Code"
                 description="Translate the selected files with AI">
             <!-- icon="/path/to/your/icon.png"> -->
             <add-to-group group-id="ProjectViewPopupMenu" anchor="before" relative-to-action="FindUsages" />
+        </action>
+        <action id="ModifyCodeEditorAction"
+                class="com.translator.view.action.editor.CustomModifyEditorAction"
+                text="Modify Code"
+                description="Modify this file with AI">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
+        </action>
+        <action id="ModifySelectedCodeEditorAction"
+                class="com.translator.view.action.editor.CustomModifySelectedEditorAction"
+                text="Modify Selected Code"
+                description="Modify selected code with AI">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
+        </action>
+        <action id="FixCodeEditorAction"
+                class="com.translator.view.action.editor.CustomFixEditorAction"
+                text="Fix Code"
+                description="Fix this file with AI">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
+        </action>
+        <action id="FixSelectedCodeEditorAction"
+                class="com.translator.view.action.editor.CustomFixSelectedEditorAction"
+                text="Fix Selected Code"
+                description="Fix selected code with AI">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
+        </action>
+        <action id="TranslateCodeEditorAction"
+                class="com.translator.view.action.editor.CustomTranslateEditorAction"
+                text="Translate Code"
+                description="Translate this file with AI">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
+        </action>
+        <action id="InquiryCodeEditorAction"
+                class="com.translator.view.action.editor.CustomInquireEditorAction"
+                text="Inquire Code"
+                description="Inquiry this file with AI">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
+        </action>
+        <action id="InquirySelectedCodeEditorAction"
+                class="com.translator.view.action.editor.CustomInquireSelectedEditorAction"
+                text="Inquire Selected Code"
+                description="Inquiry selected code with AI">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
+        </action>
+        <action id="CreateCodeEditorAction"
+                class="com.translator.view.action.editor.CustomCreateEditorAction"
+                text="Create Code"
+                description="Create this file with AI">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
+        </action>
+        <action id="CreateFilesCodeEditorAction"
+                class="com.translator.view.action.editor.CustomCreateFilesEditorAction"
+                text="Create Code Files"
+                description="Create files  with AI">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
         </action>
     </actions>
 </idea-plugin>

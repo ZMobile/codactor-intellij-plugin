@@ -3,12 +3,19 @@ package com.translator.view.uml.dialog.panel;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.table.JBTable;
+import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
+import com.translator.model.uml.node.PromptNode;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 
 public class PromptConnectionViewer extends JPanel {
-    public PromptConnectionViewer() {
+    private PromptNode promptNode;
+
+    public PromptConnectionViewer(PromptNode promptNode) {
+        this.promptNode = promptNode;
+        setLayout(new BorderLayout()); // Set the layout to BorderLayout
         String[] columnNames = {"Connection ID", "Key", "Input/Output"};
         Object[][] data = {
                 {"id1", "key1", "Input"},
@@ -39,12 +46,23 @@ public class PromptConnectionViewer extends JPanel {
 
         JBTable table = new JBTable(model);
 
-        // Set up the editor for the "Input/Output" column
         JComboBox<String> comboBox = new ComboBox<>(new String[]{"Input", "Output"});
         table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(comboBox));
 
-        // Add the table to a scroll pane, then add the scroll pane to this panel
         JScrollPane scrollPane = new JBScrollPane(table);
-        add(scrollPane);
+        add(scrollPane, BorderLayout.CENTER); // Add the scrollPane to the CENTER region
+
+        JToolBar jToolBar = new JToolBar();
+        jToolBar.setFloatable(false);
+        jToolBar.setBorderPainted(false);
+
+        JLabel label = new JLabel("Connections");
+        label.setHorizontalTextPosition(SwingConstants.CENTER);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        jToolBar.add(label);
+
+        add(jToolBar, BorderLayout.NORTH); // Add the toolBar to the SOUTH region
     }
 }
+

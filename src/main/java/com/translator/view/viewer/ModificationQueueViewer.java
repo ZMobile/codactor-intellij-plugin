@@ -13,12 +13,15 @@ import com.translator.service.file.FileReaderService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
+import com.translator.service.task.BackgroundTaskMapperService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
 import com.translator.view.dialog.FileModificationErrorDialog;
 import com.translator.view.renderer.QueuedModificationObjectRenderer;
 import com.translator.view.renderer.SeparatorListCellRenderer;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -36,6 +39,7 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
     private FileModificationTrackerService fileModificationTrackerService;
     private FileReaderService fileReaderService;
     private FileOpenerService fileOpenerService;
+    private BackgroundTaskMapperService backgroundTaskMapperService;
     private Project project;
 
     @Inject
@@ -46,7 +50,8 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                                    FileOpenerService fileOpenerService,
                                    OpenAiApiKeyService openAiApiKeyService,
                                    OpenAiModelService openAiModelService,
-                                   FileModificationTrackerService fileModificationTrackerService) {
+                                   FileModificationTrackerService fileModificationTrackerService,
+                                   BackgroundTaskMapperService backgroundTaskMapperService) {
         this.project = project;
         this.provisionalModificationViewer = provisionalModificationViewer;
         this.codactorToolWindowService = codactorToolWindowService;
@@ -55,6 +60,7 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
         this.openAiApiKeyService = openAiApiKeyService;
         this.openAiModelService = openAiModelService;
         this.fileModificationTrackerService = fileModificationTrackerService;
+        this.backgroundTaskMapperService = backgroundTaskMapperService;
         initComponents();
     }
 
@@ -68,10 +74,6 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
         modificationList.setCellRenderer(new SeparatorListCellRenderer<>(new QueuedModificationObjectRenderer(project, fileReaderService)));
 
         jBPopupMenu = new JBPopupMenu();
-
-        JBMenuItem pauseItem = new JBMenuItem("Pause");
-        JBMenuItem retryItem = new JBMenuItem("Retry");
-        JBMenuItem removeItem = new JBMenuItem("Remove");
 
         GroupLayout layout = new GroupLayout(this);
         setLayout(layout);
@@ -95,8 +97,9 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                 QueuedFileModificationObjectHolder queuedFileModificationObjectHolder = modificationList.getModel().getElementAt(index);
                 if (queuedFileModificationObjectHolder.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION) {
                     FileModification fileModification = queuedFileModificationObjectHolder.getFileModification();
+                    fileOpenerService.openFileInEditor(fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset());
                     if (fileModification.isError()) {
-                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, fileModification.getFilePath(), null, fileModification.getModificationType(), openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                        FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, fileModification.getId(), fileModification.getFilePath(), null, fileModification.getModificationType(), openAiApiKeyService, openAiModelService, fileModificationTrackerService);
                         fileModificationErrorDialog.setVisible(true);
                     }
                     if (fileModification.isDone()) {
@@ -106,7 +109,6 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                         // ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
                         codactorToolWindowService.openProvisionalModificationViewerToolWindow();
                     }
-                    fileOpenerService.openFileInEditor(fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset());
                 }
             }
         });
@@ -116,6 +118,9 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                 boolean showPause = false;
                 boolean showRetry = false;
                 boolean showRemove = false;
+                JBMenuItem pauseItem = new JBMenuItem("Pause");
+                JBMenuItem retryItem = new JBMenuItem("Retry");
+                JBMenuItem removeItem = new JBMenuItem("Remove");
                 QueuedFileModificationObjectHolder queuedFileModificationObjectHolder = null;
                 if (e.getButton() == MouseEvent.BUTTON3) {
                     int selectedIndex = modificationList.locationToIndex(e.getPoint());
@@ -126,11 +131,30 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                         if (!fileModification.isDone()) {
                             if (fileModification.isError()) {
                                 showRetry = true;
+                                retryItem.addActionListener(new ActionListener() {
+                                    @Override
+                                    public void actionPerformed(ActionEvent a) {
+                                        fileModificationTrackerService.removeModification(fileModification.getId());
+                                        fileModificationTrackerService.addModification(fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset(), fileModification.getRangeMarker().getEndOffset(), fileModification.getModificationType());
+                                    }
+                                });
                             } else {
                                 showPause = true;
+                                pauseItem.addActionListener(new ActionListener() {
+                                    @Override
+                                    public void actionPerformed(ActionEvent a) {
+                                        fileModificationTrackerService.errorFileModification(fileModification.getId());
+                                    }
+                                });
                             }
                         }
                         showRemove = true;
+                        removeItem.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent a) {
+                                fileModificationTrackerService.removeModification(fileModification.getId());
+                            }
+                        });
                     } else if (queuedFileModificationObjectHolder.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
                         FileModificationSuggestionModification fileModificationSuggestionModification = queuedFileModificationObjectHolder.getFileModificationSuggestionModification();
                         if (fileModificationSuggestionModification.isError()) {

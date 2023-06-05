@@ -20,6 +20,7 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
     private ToolWindowService toolWindowService;
     private String modificationQueueViewerToolWindowId;
     private String inquiryViewerToolWindowId;
+    private String consoleToolWindowId;
     private CodactorConsole console;
     private ModificationQueueViewer modificationQueueViewer;
     private ProvisionalModificationViewer provisionalModificationViewer;
@@ -34,6 +35,7 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
                                             InquiryViewer inquiryViewer,
                                             InquiryListViewer inquiryListViewer,
                                             HistoricalModificationListViewer historicalModificationListViewer,
+                                            CodactorConsole codactorConsole,
                                             ToolWindowService toolWindowService) {
         this.project = project;
         this.modificationQueueViewer = modificationQueueViewer;
@@ -41,9 +43,25 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
         this.inquiryViewer = inquiryViewer;
         this.inquiryListViewer = inquiryListViewer;
         this.historicalModificationListViewer = historicalModificationListViewer;
+        this.console = codactorConsole;
         this.toolWindowService = toolWindowService;
         this.modificationQueueViewerToolWindowId = "Modifications";
         this.inquiryViewerToolWindowId = "Inquiries";
+        this.consoleToolWindowId = "Codactor";
+    }
+
+    @Override
+    public void openCodactorConsoleToolWindow() {
+        ToolWindow toolWindow = toolWindowService.getToolWindow(consoleToolWindowId);
+        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+        if (console == null) {
+            Injector injector = CodactorInjector.getInstance().getInjector(project);
+            this.console = injector.getInstance(CodactorConsole.class);
+        }
+        Content content = contentFactory.createContent(console, "Console", false);
+        toolWindow.getContentManager().addContent(content);
+        toolWindow.getContentManager().setSelectedContent(content);
+        toolWindowService.openToolWindow(consoleToolWindowId);
     }
 
     public void openModificationQueueViewerToolWindow() {

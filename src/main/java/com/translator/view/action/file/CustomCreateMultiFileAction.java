@@ -1,4 +1,4 @@
-package com.translator.view.action;
+package com.translator.view.action.file;
 
 import com.google.inject.Injector;
 import com.intellij.ide.actions.CreateElementActionBase;

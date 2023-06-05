@@ -3,6 +3,7 @@ package com.translator.view.dialog;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
+import com.translator.model.modification.FileModification;
 import com.translator.model.modification.ModificationType;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.openai.OpenAiApiKeyService;
@@ -14,13 +15,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class FileModificationErrorDialog extends JDialog {
-
+    private String modificationId;
     private String filePath;
     private OpenAiApiKeyService openAiApiKeyService;
     private OpenAiModelService openAiModelService;
     private FileModificationTrackerService fileModificationTrackerService;
 
     public FileModificationErrorDialog(JFrame parent,
+                                       String modificationId,
                                        String filePath,
                                        String error,
                                        ModificationType modificationType,
@@ -46,7 +48,7 @@ public class FileModificationErrorDialog extends JDialog {
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Handle Remove Modification action
+                fileModificationTrackerService.removeModification(modificationId);
                 dispose();
             }
         });
@@ -55,7 +57,6 @@ public class FileModificationErrorDialog extends JDialog {
         leaveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Handle Leave Modification in Queue action
                 dispose();
             }
         });
@@ -64,7 +65,9 @@ public class FileModificationErrorDialog extends JDialog {
         retryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Handle Retry Modification action
+                FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
+                fileModificationTrackerService.removeModification(modificationId);
+                fileModificationTrackerService.addModification(fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset(), fileModification.getRangeMarker().getEndOffset(), fileModification.getModificationType());
                 dispose();
             }
         });

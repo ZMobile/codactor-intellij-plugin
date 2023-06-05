@@ -16,6 +16,7 @@ import com.translator.model.history.HistoricalContextObjectType;
 import com.translator.model.history.data.HistoricalContextObjectDataHolder;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.inquiry.InquiryChatType;
+import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.model.uml.node.PromptNode;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorServiceImpl;
@@ -36,9 +37,12 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PromptViewer extends JPanel {
+    private PromptNode promptNode;
+    private List<InquiryChat> inquiryChats;
 
     private HistoricalContextObjectHolder historicalContextObjectHolder;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
@@ -48,12 +52,11 @@ public class PromptViewer extends JPanel {
     private JBScrollPane jBScrollPane1;
     private JBLabel viewerLabel;
     private JButton addButton;
-    private HistoricalContextModificationListViewer historicalContextModificationListViewer;
-    private HistoricalContextInquiryListViewer historicalContextInquiryListViewer;
-    private HistoricalContextObjectListViewer historicalContextObjectListViewer;
     private int selectedChat;
 
-    public PromptViewer() {
+    public PromptViewer(PromptNode promptNode) {
+        this.promptNode = promptNode;
+        this.inquiryChats = new ArrayList<>();
         this.textAreaHeightCalculatorService = new TextAreaHeightCalculatorServiceImpl();
         this.historicalContextObjectHolder = null;
         this.selectedChat = -1;
@@ -93,7 +96,7 @@ public class PromptViewer extends JPanel {
                                     Editor editor = fixedHeightPanel.getEditor();
                                     editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
                                 }
-                            }
+                             }
                             continue;
                         }
                         for (Component component : inquiryChatViewer.getComponents()) {
@@ -152,7 +155,15 @@ public class PromptViewer extends JPanel {
                             firstComponentCopied = true;
                         }
                     }
-                    new TextAreaWindow(text.toString());
+                    TextAreaWindow.TextAreaWindowActionListener textAreaWindowActionListener = new TextAreaWindow.TextAreaWindowActionListener() {
+                        @Override
+                        public void onOk(String text) {
+                            InquiryChat inquiryChat = inquiryChats.get(selectedChat);
+                            inquiryChat.setMessage(text);
+                            updateChatContents(inquiryChats);
+                        }
+                    };
+                    new TextAreaWindow("Edit Prompt", text.toString(), true, "Cancel", "Ok", textAreaWindowActionListener);
                 }
             }
         });
@@ -166,7 +177,7 @@ public class PromptViewer extends JPanel {
         viewerLabel = new JBLabel("Prompts");
         viewerLabel.setHorizontalTextPosition(SwingConstants.CENTER);
         viewerLabel.setVerticalTextPosition(SwingConstants.BOTTOM);
-        viewerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        viewerLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         jToolBar2.add(viewerLabel);
 
         jToolBar3 = new JToolBar();
@@ -182,15 +193,8 @@ public class PromptViewer extends JPanel {
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (historicalContextModificationListViewer.getModificationList().getSelectedIndex() != -1) {
-                    HistoricalContextObjectDataHolder selectedInquiry = historicalContextModificationListViewer.getModificationList().getSelectedValue();
-                    historicalContextObjectListViewer.addContextObject(selectedInquiry);
-                    historicalContextModificationListViewer.getModificationList().clearSelection();
-                } else if (historicalContextInquiryListViewer.getInquiryList().getSelectedIndex() != -1) {
-                    HistoricalContextObjectDataHolder selectedInquiry = historicalContextInquiryListViewer.getInquiryList().getSelectedValue();
-                    historicalContextObjectListViewer.addContextObject(selectedInquiry);
-                    historicalContextInquiryListViewer.getInquiryList().clearSelection();
-                }
+                inquiryChats.add(0, new InquiryChat(null, null, null, null, "User", "Insert prompt here", null));
+                updateChatContents(inquiryChats);
             }
         });
         jToolBar3.add(addButton);
@@ -213,6 +217,7 @@ public class PromptViewer extends JPanel {
     }
 
     public void updateChatContents(java.util.List<InquiryChat> inquiryChats) {
+        this.inquiryChats = inquiryChats;
         if (inquiryChats == null) {
             jList1.setModel(new DefaultListModel<>());
             return;
@@ -335,17 +340,5 @@ public class PromptViewer extends JPanel {
         jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, newTotalHeight));
         jList1.setModel(newModel);
         jBScrollPane1.setViewportView(jList1);
-    }
-
-    public void setHistoricalContextInquiryListViewer(HistoricalContextInquiryListViewer historicalContextInquiryListViewer) {
-        this.historicalContextInquiryListViewer = historicalContextInquiryListViewer;
-    }
-
-    public void setHistoricalContextModificationListViewer(HistoricalContextModificationListViewer historicalContextModificationListViewer) {
-        this.historicalContextModificationListViewer = historicalContextModificationListViewer;
-    }
-
-    public void setHistoricalContextObjectListViewer(HistoricalContextObjectListViewer historicalContextObjectListViewer) {
-        this.historicalContextObjectListViewer = historicalContextObjectListViewer;
     }
 }

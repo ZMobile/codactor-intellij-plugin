@@ -1,4 +1,4 @@
-package com.translator.service.factory.uml;
+package com.translator.view.uml.factory;
 
 import com.translator.view.uml.CodactorUmlBuilderView;
 

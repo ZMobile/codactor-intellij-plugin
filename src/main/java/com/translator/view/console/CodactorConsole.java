@@ -12,7 +12,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.*;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
-import com.translator.service.factory.uml.CodactorUmlBuilderViewFactory;
+import com.translator.view.uml.factory.CodactorUmlBuilderApplicationModelFactory;
+import com.translator.view.uml.factory.CodactorUmlBuilderViewFactory;
 import com.translator.view.uml.*;
 import com.translator.PromptContextBuilder;
 import com.translator.model.file.FileItem;
@@ -69,6 +70,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private OpenAiModelService openAiModelService;
     private PromptContextBuilderFactory promptContextBuilderFactory;
     private CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory;
+    private CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory;
 
     @Inject
     public CodactorConsole(Project project,
@@ -81,7 +83,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            OpenAiModelService openAiModelService,
                            AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory,
                            PromptContextBuilderFactory promptContextBuilderFactory,
-                           CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory) {
+                           CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory,
+                           CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory) {
         super(new BorderLayout());
         this.project = project;
         this.promptContextService = promptContextService;
@@ -94,6 +97,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.automaticCodeModificationService = automaticCodeModificationServiceFactory.create(promptContextService);
         this.promptContextBuilderFactory = promptContextBuilderFactory;
         this.codactorUmlBuilderViewFactory = codactorUmlBuilderViewFactory;
+        this.codactorUmlBuilderApplicationModelFactory = codactorUmlBuilderApplicationModelFactory;
 
         textArea = new JBTextArea();
         textArea.setBackground(Color.BLACK);
@@ -303,7 +307,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         JPanel rightToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5)); // Set horizontal gap to 0
         rightToolbar.add(hiddenLabel);
         rightToolbar.add(advancedButton);
-        JButton testoButton = new JButton("Test");
+        /*JButton testoButton = new JButton("Test");
         testoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -320,7 +324,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                             app = new CodactorUmlBuilderSDIApplication();
                         }
 
-                        CodactorUmlBuilderApplicationModel model = new CodactorUmlBuilderApplicationModel();
+                        CodactorUmlBuilderApplicationModel model = codactorUmlBuilderApplicationModelFactory.create();
                         model.setName("JHotDraw Draw");
                         model.setVersion(getClass().getPackage().getImplementationVersion());
                         model.setCopyright("Copyright 2006-2009 (c) by the authors of JHotDraw and all its contributors.\n" +
@@ -333,7 +337,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                 });
             }
         });
-        rightToolbar.add(testoButton);
+        rightToolbar.add(testoButton);*/
 
         topToolbar.add(leftToolbar);
         topToolbar.add(rightToolbar, BorderLayout.EAST);
@@ -580,5 +584,38 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             // Set the selected index to 0
             modelComboBox.setSelectedIndex(0);
         }
+    }
+
+    public void updateModificationTypeComboBox(String selected) {
+        modificationTypeComboBox.setSelectedItem(selected);
+        int selectedIndex = -1;
+        for (int i = 0; i < modificationTypeComboBox.getItemCount(); i++) {
+            if (selected.equals(modificationTypeComboBox.getItemAt(i))) {
+                selectedIndex = i;
+                break;
+            }
+        }
+
+        // Check if the selected element is in the combo box
+        if (selectedIndex != -1 && selectedIndex != 0) {
+            // Store the element at position 0
+            String elementAtZero = modificationTypeComboBox.getItemAt(0);
+
+            // Remove the selected element from the combo box
+            modificationTypeComboBox.removeItemAt(selectedIndex);
+
+            // Insert the selected element at the first position
+            modificationTypeComboBox.insertItemAt(selected, 0);
+
+            // Remove the element at position 1 (which was previously at position 0)
+            modificationTypeComboBox.removeItemAt(1);
+
+            // Insert the element that was previously at position 0 to the original position of the selected element
+            modificationTypeComboBox.insertItemAt(elementAtZero, selectedIndex);
+
+            // Set the selected index to 0
+            modificationTypeComboBox.setSelectedIndex(0);
+        }
+        updateLabelAndButton(selected);
     }
 }

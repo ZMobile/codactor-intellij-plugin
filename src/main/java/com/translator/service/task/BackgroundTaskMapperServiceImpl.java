@@ -16,4 +16,12 @@ public class BackgroundTaskMapperServiceImpl implements BackgroundTaskMapperServ
         taskMap.get(id).cancel();
         taskMap.remove(id);
     }
+
+    public void removeTask(String id) {
+        taskMap.remove(id);
+    }
+
+    public boolean hasTask(String id) {
+        return taskMap.containsKey(id);
+    }
 }

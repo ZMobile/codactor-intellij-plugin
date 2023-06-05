@@ -13,6 +13,7 @@ import com.translator.service.code.GuardedBlockService;
 import com.translator.service.code.RangeReplaceService;
 import com.translator.service.file.RenameFileService;
 import com.translator.service.modification.tracking.listener.EditorClickHandlerService;
+import com.translator.service.task.BackgroundTaskMapperService;
 import com.translator.view.viewer.ModificationQueueViewer;
 
 import javax.inject.Inject;
@@ -32,6 +33,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     private RangeReplaceService rangeReplaceService;
     private EditorClickHandlerService editorClickHandlerService;
     private RenameFileService renameFileService;
+    private BackgroundTaskMapperService backgroundTaskMapperService;
     private ModificationQueueViewer modificationQueueViewer;
 
     @Inject
@@ -42,7 +44,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                                               GuardedBlockService guardedBlockService,
                                               RangeReplaceService rangeReplaceService,
                                               EditorClickHandlerService editorClickHandlerService,
-                                              RenameFileService renameFileService) {
+                                              RenameFileService renameFileService,
+                                              BackgroundTaskMapperService backgroundTaskMapperService) {
         this.project = project;
         this.activeModificationFiles = new HashMap<>();
         this.activeModificationSuggestionModifications = new HashMap<>();
@@ -55,10 +58,10 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         this.rangeReplaceService = rangeReplaceService;
         this.editorClickHandlerService = editorClickHandlerService;
         this.renameFileService = renameFileService;
+        this.backgroundTaskMapperService = backgroundTaskMapperService;
     }
 
     public String addModification(String filePath, int startIndex, int endIndex, ModificationType modificationType) {
-        System.out.println("Testo 1");
         String newFilePath = Objects.requireNonNullElse(filePath, "Untitled");
         FileModificationTracker fileModificationTracker;
         if (activeModificationFiles.containsKey(newFilePath)) {
@@ -67,7 +70,6 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             fileModificationTracker = new FileModificationTracker(project, newFilePath, codeSnippetExtractorService, rangeReplaceService, codeRangeTrackerService);
             activeModificationFiles.put(newFilePath, fileModificationTracker);
         }
-        System.out.println("Testo 2");
         String fileModificationId = fileModificationTracker.addModification(startIndex, endIndex, modificationType);
         if (fileModificationId == null) {
             //JBTextArea display = displayMap.get(newFilePath);
@@ -93,10 +95,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             fileModificationSuggestionModificationTracker = new FileModificationSuggestionModificationTracker(fileModificationSuggestion, rangeReplaceService);
             activeModificationSuggestionModifications.put(suggestionId, fileModificationSuggestionModificationTracker);
         }
-        System.out.println("This got called testo: " + fileModificationSuggestionModificationTracker);
         String fileModificationSuggestionModificationId = fileModificationSuggestionModificationTracker.addModificationSuggestionModification(newFilePath, startIndex, endIndex, modificationType);
         if (fileModificationSuggestionModificationId == null) {
-            System.out.println("This got called testo 1");
             /*JBTextArea display = fileModificationSuggestion.getDisplay();
             JOptionPane.showMessageDialog(display, "Can't modify code that is already being modified", "Error",
                     JOptionPane.ERROR_MESSAGE);*/
@@ -151,9 +151,11 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         }
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         guardedBlockService.removeFileModificationGuardedBlock(modificationId);
-        //jTreeHighlighterService.repaint();
         codeHighlighterService.highlightTextArea(fileModificationTracker);
         disposeProvisionalModificationCustomizers(fileModification);
+        if (backgroundTaskMapperService.hasTask(modificationId)) {
+            backgroundTaskMapperService.cancelTask(modificationId);
+        }
     }
 
     public void removeModificationSuggestionModification(String modificationSuggestionModificationId) {
@@ -376,6 +378,9 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     @Override
     public void errorFileModification(String modificationId) {
         FileModification fileModification = getModification(modificationId);
+        if (backgroundTaskMapperService.hasTask(modificationId)) {
+            backgroundTaskMapperService.cancelTask(modificationId);
+        }
         if (fileModification == null) {
             return;
         }

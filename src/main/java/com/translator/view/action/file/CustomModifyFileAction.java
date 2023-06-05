@@ -1,4 +1,4 @@
-package com.translator.view.action;
+package com.translator.view.action.file;
 
 import com.google.inject.Injector;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -12,7 +12,7 @@ import com.translator.service.factory.AutomaticMassCodeModificationServiceFactor
 import com.translator.service.modification.multi.MultiFileModificationService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.ui.tool.CodactorToolWindowService;
-import com.translator.view.dialog.FileFixDialog;
+import com.translator.view.dialog.FileModifyDialog;
 import com.translator.view.factory.PromptContextBuilderFactory;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,8 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class CustomFixFileAction extends AnAction {
-    @Override
+public class CustomModifyFileAction extends AnAction {
     public void actionPerformed(@NotNull AnActionEvent e) {
         Project project = e.getProject();
         if (project == null) {
@@ -64,9 +63,9 @@ public class CustomFixFileAction extends AnAction {
         MultiFileModificationService multiFileModificationService = injector.getInstance(MultiFileModificationService.class);
         OpenAiModelService openAiModelService = injector.getInstance(OpenAiModelService.class);
 
-        // Show the custom dialog and fix the selected files
-        FileFixDialog fileFixDialog = new FileFixDialog(project, codactorToolWindowService, new PromptContextServiceImpl(), promptContextBuilderFactory, automaticMassCodeModificationServiceFactory, multiFileModificationService, openAiModelService, Arrays.asList(virtualFiles));
-        fileFixDialog.setVisible(true);
+        // Show the custom dialog and modify the selected files
+        FileModifyDialog fileModifyDialog = new FileModifyDialog(project, codactorToolWindowService, new PromptContextServiceImpl(), promptContextBuilderFactory, automaticMassCodeModificationServiceFactory, multiFileModificationService, openAiModelService, allFiles);
+        fileModifyDialog.setVisible(true);
     }
 
     private void collectFiles(VirtualFile directory, List<VirtualFile> fileList, Set<String> selectedFilePaths) {
