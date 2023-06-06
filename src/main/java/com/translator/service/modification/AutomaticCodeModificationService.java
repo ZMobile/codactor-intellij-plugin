@@ -5,9 +5,13 @@ import com.translator.model.modification.ModificationType;
 public interface AutomaticCodeModificationService {
     void getModifiedCode(String filePath, int startIndex, int endIndex, String modification, ModificationType modificationType);
 
+    void getModifiedCode(String filePath, String modification, ModificationType modificationType);
+
     void getModifiedCodeModification(String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType);
 
     void getFixedCode(String filePath, int startIndex, int endIndex, String error, ModificationType modificationType);
+
+    void getFixedCode(String filePath, String error, ModificationType modificationType);
 
     void getModifiedCodeFix(String suggestionId, String code, int startIndex, int endIndex, String error, ModificationType modificationType);
 

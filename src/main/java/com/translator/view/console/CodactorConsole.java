@@ -356,7 +356,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        automaticCodeModificationService.getModifiedCode(fileItem.getFilePath(), 0, code.length(), textArea.getText(), ModificationType.MODIFY);
+                        automaticCodeModificationService.getModifiedCode(fileItem.getFilePath(), textArea.getText(), ModificationType.MODIFY);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Modify Selected")) {
                     SelectionModel selectionModel = codeSnippetExtractorService.getSelectedText(fileItem.getFilePath());
@@ -372,7 +372,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        automaticCodeModificationService.getFixedCode(fileItem.getFilePath(), 0, code.length(), textArea.getText(), ModificationType.FIX);
+                        automaticCodeModificationService.getFixedCode(fileItem.getFilePath(), textArea.getText(), ModificationType.FIX);
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Fix Selected")) {
                     codactorToolWindowService.openModificationQueueViewerToolWindow();

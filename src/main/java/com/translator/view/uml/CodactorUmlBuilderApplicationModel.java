@@ -3,6 +3,7 @@
  */
 package com.translator.view.uml;
 
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.translator.model.uml.draw.figure.*;
 import com.translator.view.uml.factory.tool.PromptNodeCreationToolFactory;
@@ -46,12 +47,15 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
      */
     private DefaultDrawingEditor sharedEditor;
     private final PromptNodeCreationToolFactory promptNodeCreationToolFactory;
+    private final Gson gson;
 
     /** Creates a new instance. */
     @Inject
-    public CodactorUmlBuilderApplicationModel(PromptNodeCreationToolFactory promptNodeCreationToolFactory) {
+    public CodactorUmlBuilderApplicationModel(PromptNodeCreationToolFactory promptNodeCreationToolFactory,
+                                              Gson gson) {
         this.list = new LinkedList<>();
         this.promptNodeCreationToolFactory = promptNodeCreationToolFactory;
+        this.gson = gson;
     }
 
     public DefaultDrawingEditor getSharedEditor() {
@@ -123,7 +127,7 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
         ConnectionTool cnt;
         ConnectionFigure lc;
 
-        ButtonFactory.addToolTo(tb, editor, promptNodeCreationToolFactory.create(new LabeledRectangleFigure("Prompt")), "edit.createRectangle", labels);
+        ButtonFactory.addToolTo(tb, editor, promptNodeCreationToolFactory.create(new LabeledRectangleFigure("Prompt", gson)), "edit.createRectangle", labels);
         ButtonFactory.addToolTo(tb, editor, new CreationTool(new LabeledRoundRectangleFigure("Calculator")), "edit.createRoundRectangle", labels);
         ButtonFactory.addToolTo(tb, editor, new CreationTool(new LabeledEllipseFigure("Custom Code")), "edit.createEllipse", labels);
         ButtonFactory.addToolTo(tb, editor, new CreationTool(new LabeledDiamondFigure("Verifier")), "edit.createDiamond", labels);

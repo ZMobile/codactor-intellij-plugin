@@ -1,5 +1,7 @@
 package com.translator.model.uml.draw.figure;
 
+import com.google.gson.Gson;
+import com.translator.model.uml.node.PromptNode;
 import org.jhotdraw.draw.RectangleFigure;
 import org.jhotdraw.draw.TextFigure;
 
@@ -9,15 +11,16 @@ import java.awt.geom.Rectangle2D;
 
 public class LabeledRectangleFigure extends RectangleFigure {
     private TextFigure label;
+    private Gson gson;
     private String metadata;
 
-    public LabeledRectangleFigure(String name) {
+    public LabeledRectangleFigure(String name, Gson gson) {
         super();
 
-        label = new TextFigure();
-        label.setText(name);
-
-        this.metadata = null;
+        this.label = new TextFigure();
+        this.label.setText(name);
+        PromptNode promptNode = new PromptNode();
+        this.metadata = gson.toJson(promptNode);
     }
 
     public String getMetadata() {
