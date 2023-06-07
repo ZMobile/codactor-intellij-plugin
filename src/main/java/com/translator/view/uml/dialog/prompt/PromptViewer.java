@@ -1,4 +1,4 @@
-package com.translator.view.uml.dialog.panel;
+package com.translator.view.uml.dialog.prompt;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
@@ -10,23 +10,19 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
-import com.translator.dao.history.ContextQueryDao;
 import com.translator.model.history.HistoricalContextObjectHolder;
-import com.translator.model.history.HistoricalContextObjectType;
-import com.translator.model.history.data.HistoricalContextObjectDataHolder;
+import com.translator.model.inquiry.Inquiry;
 import com.translator.model.inquiry.InquiryChat;
 import com.translator.model.inquiry.InquiryChatType;
-import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.model.uml.node.PromptNode;
+import com.translator.model.uml.prompt.Prompt;
+import com.translator.service.task.BackgroundTaskMapperService;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.ui.measure.TextAreaHeightCalculatorServiceImpl;
 import com.translator.view.menu.TextAreaWindow;
 import com.translator.view.panel.FixedHeightPanel;
 import com.translator.view.renderer.InquiryChatRenderer;
 import com.translator.view.viewer.InquiryChatViewer;
-import com.translator.view.viewer.context.HistoricalContextInquiryListViewer;
-import com.translator.view.viewer.context.HistoricalContextModificationListViewer;
-import com.translator.view.viewer.context.HistoricalContextObjectListViewer;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -39,11 +35,12 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PromptViewer extends JPanel {
     private PromptNode promptNode;
+    private BackgroundTaskMapperService backgroundTaskMapperService;
     private List<InquiryChat> inquiryChats;
-
     private HistoricalContextObjectHolder historicalContextObjectHolder;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
     private JBList<InquiryChatViewer> jList1;
@@ -52,6 +49,7 @@ public class PromptViewer extends JPanel {
     private JBScrollPane jBScrollPane1;
     private JBLabel viewerLabel;
     private JButton addButton;
+    private JButton removeButton;
     private int selectedChat;
 
     public PromptViewer(PromptNode promptNode) {
@@ -158,9 +156,8 @@ public class PromptViewer extends JPanel {
                     TextAreaWindow.TextAreaWindowActionListener textAreaWindowActionListener = new TextAreaWindow.TextAreaWindowActionListener() {
                         @Override
                         public void onOk(String text) {
-                            InquiryChat inquiryChat = inquiryChats.get(selectedChat);
-                            inquiryChat.setMessage(text);
-                            updateChatContents(inquiryChats);
+                            promptNode.getPromptList().get(selectedChat).setPrompt(text);
+                            updatePromptChatContents(promptNode.getPromptList());
                         }
                     };
                     new TextAreaWindow("Edit Prompt", text.toString(), true, "Cancel", "Ok", textAreaWindowActionListener);
@@ -184,6 +181,24 @@ public class PromptViewer extends JPanel {
         jToolBar3.setFloatable(false);
         jToolBar3.setBorderPainted(false);
 
+        removeButton = new JButton("-");
+        removeButton.setPreferredSize(new Dimension(50, 32));
+        removeButton.setFocusable(false);
+        removeButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        removeButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        removeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        removeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedIndex = jList1.getSelectedIndex();
+                if (selectedIndex == -1) {
+                    selectedIndex = 0;
+                }
+                promptNode.getPromptList().remove(selectedIndex);
+                updatePromptChatContents(promptNode.getPromptList());
+            }
+        });
+        jToolBar3.add(removeButton);
         addButton = new JButton("+");
         addButton.setPreferredSize(new Dimension(50, 32));
         addButton.setFocusable(false);
@@ -193,8 +208,9 @@ public class PromptViewer extends JPanel {
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                inquiryChats.add(0, new InquiryChat(null, null, null, null, "User", "Insert prompt here", null));
-                updateChatContents(inquiryChats);
+                Prompt prompt = new Prompt(promptNode.getId(), "Insert prompt here");
+                promptNode.getPromptList().add(prompt);
+                updatePromptChatContents(promptNode.getPromptList());
             }
         });
         jToolBar3.add(addButton);
@@ -216,84 +232,83 @@ public class PromptViewer extends JPanel {
                         .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, jList1.getHeight(), Short.MAX_VALUE)); // Set size for jList1// Add a gap of 20 between jList1 and JBTextArea
     }
 
-    public void updateChatContents(java.util.List<InquiryChat> inquiryChats) {
+    public void updateInquiryChatContents(java.util.List<InquiryChat> inquiryChats) {
         this.inquiryChats = inquiryChats;
-        if (inquiryChats == null) {
-            jList1.setModel(new DefaultListModel<>());
-            return;
-        }
-        int totalHeight = 0;
-        DefaultListModel<InquiryChatViewer> model = new DefaultListModel<>();
-        for (InquiryChat inquiryChat : inquiryChats) {
-            InquiryChatViewer chatViewer = new InquiryChatViewer(inquiryChat);
-            model.addElement(chatViewer);
-            for (Component component : chatViewer.getComponents()) {
-                if (component instanceof JBTextArea) {
-                    JBTextArea chatDisplay = (JBTextArea) component;
-                    int newHeight = 0;
-                    int newWidth = getWidth();
-                    if (inquiryChat.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
-                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
-                    } else {
-                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+        ApplicationManager.getApplication().invokeLater(() -> {
+                if (inquiryChats == null) {
+                    jList1.setModel(new DefaultListModel<>());
+                    return;
+                }
+                int totalHeight = 0;
+                DefaultListModel<InquiryChatViewer> model = new DefaultListModel<>();
+                for (InquiryChat inquiryChat : inquiryChats) {
+                    InquiryChatViewer chatViewer = new InquiryChatViewer(inquiryChat);
+                    model.addElement(chatViewer);
+                    for (Component component : chatViewer.getComponents()) {
+                        if (component instanceof JBTextArea) {
+                            JBTextArea chatDisplay = (JBTextArea) component;
+                            int newHeight = 0;
+                            int newWidth = getWidth();
+                            if (inquiryChat.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                                newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
+                            } else {
+                                newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+                            }
+                            Dimension preferredSize = new Dimension(newWidth, newHeight);
+                            chatDisplay.setPreferredSize(preferredSize);
+                            chatDisplay.setMaximumSize(preferredSize);
+                            chatDisplay.setSize(preferredSize);
+                            totalHeight += newHeight + chatViewer.getComponent(0).getHeight();
+                        } else if (component instanceof FixedHeightPanel) {
+                            FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                            totalHeight += fixedHeightPanel.getHeight();
+                        }
+                        totalHeight += chatViewer.getComponent(0).getHeight();
                     }
-                    Dimension preferredSize = new Dimension(newWidth, newHeight);
-                    chatDisplay.setPreferredSize(preferredSize);
-                    chatDisplay.setMaximumSize(preferredSize);
-                    chatDisplay.setSize(preferredSize);
-                    totalHeight += newHeight + chatViewer.getComponent(0).getHeight();
-                } else if (component instanceof FixedHeightPanel) {
-                    FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                    totalHeight += fixedHeightPanel.getHeight();
                 }
-                totalHeight += chatViewer.getComponent(0).getHeight();
+                jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, totalHeight));
+                jList1.setModel(model);
+                ComponentListener componentListener = new ComponentAdapter() {
+                    @Override
+                    public void componentResized(ComponentEvent e) {
+                        PromptViewer.this.componentResized(model);
+                    }
+                };
+                jList1.getParent().addComponentListener(componentListener);
+                jBScrollPane1.setViewportView(jList1);
+                //JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
+                //vertical.setValue(vertical.getMaximum() - vertical.getVisibleAmount());
             }
-        }
-        jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, totalHeight));
-        jList1.setModel(model);
-        ComponentListener componentListener = new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                PromptViewer.this.componentResized(model);
-            }
-        };
-        jList1.getParent().addComponentListener(componentListener);
-        jBScrollPane1.setViewportView(jList1);
-        //JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-        //vertical.setValue(vertical.getMaximum() - vertical.getVisibleAmount());
+        );
     }
 
-    public void updateHistoricalContextObjectHolder(HistoricalContextObjectHolder historicalContextObjectHolder) {
-        this.historicalContextObjectHolder = historicalContextObjectHolder;
-        if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.INQUIRY) {
-            updateChatContents(historicalContextObjectHolder.getHistoricalContextInquiryHolder().getRequestedChats());
-        } else if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
-            updateChatContents(historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRequestedChats());
+    public void updatePromptChatContents(List<Prompt> prompts) {
+        inquiryChats.clear();
+        for (Prompt prompt : prompts) {
+            inquiryChats.add(new InquiryChat(null, null, null, null, "User", prompt.getPrompt(), null));
         }
-        JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-        vertical.setValue(vertical.getMaximum());
+        updateInquiryChatContents(inquiryChats);
     }
 
-    public void updateHistoricalContextObjectHolder(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {
-        HistoricalContextObjectHolder newHistoricalContextObjectHolder = new HistoricalContextObjectHolder(historicalContextObjectDataHolder);
-        ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            HistoricalContextObjectHolder response = null;//contextQueryDao.queryHistoricalContextObject(newHistoricalContextObjectHolder);
-            if (response != null) {
-                historicalContextObjectHolder = response;
-                if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.INQUIRY) {
-                    updateChatContents(historicalContextObjectHolder.getHistoricalContextInquiryHolder().getRequestedChats());
-                } else if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
-                    updateChatContents(historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRequestedChats());
-                }
-                JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-                vertical.setValue(vertical.getMaximum());
-            } else {
-                JOptionPane.showMessageDialog(null, "Unable to load context object", "Error",
-                        JOptionPane.ERROR_MESSAGE);
+    public void updateChatContents(List<Prompt> prompts, Map<Prompt, InquiryChat> promptAnswerMap) {
+        inquiryChats.clear();
+        for (Prompt prompt : prompts) {
+            inquiryChats.add(new InquiryChat(null, null, null, null, "User", prompt.getPrompt(), null));
+            if (promptAnswerMap.containsKey(prompt)) {
+                InquiryChat answer = promptAnswerMap.get(prompt);
+                inquiryChats.add(answer);
             }
-            return null;
-        });
+        }
+        updateInquiryChatContents(inquiryChats);
     }
+
+    public void updateChatContents(PromptNode promptNode) {
+        inquiryChats.clear();
+        Inquiry inquiry = promptNode.getActiveInquiryList().get(0);
+        //inquiry.getChats().get(0).setAlternateInquiryChatIds();
+        updateInquiryChatContents(inquiry.getChats());
+    }
+
 
     public String getFileExtension(String filePath) {
         if (filePath == null) {
@@ -341,4 +356,6 @@ public class PromptViewer extends JPanel {
         jList1.setModel(newModel);
         jBScrollPane1.setViewportView(jList1);
     }
+
+
 }

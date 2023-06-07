@@ -1,6 +1,7 @@
 package com.translator.service.task;
 
 import com.intellij.openapi.progress.Task;
+import com.translator.model.task.CustomBackgroundTask;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,8 +14,11 @@ public class BackgroundTaskMapperServiceImpl implements BackgroundTaskMapperServ
     }
 
     public void cancelTask(String id) {
-        taskMap.get(id).cancel();
-        taskMap.remove(id);
+        if (taskMap.containsKey(id)) {
+            System.out.println("Canceling task " + id);
+            taskMap.get(id).cancel();
+            taskMap.remove(id);
+        }
     }
 
     public void removeTask(String id) {
@@ -23,5 +27,10 @@ public class BackgroundTaskMapperServiceImpl implements BackgroundTaskMapperServ
 
     public boolean hasTask(String id) {
         return taskMap.containsKey(id);
+    }
+
+    @Override
+    public CustomBackgroundTask getTask(String id) {
+        return taskMap.get(id);
     }
 }

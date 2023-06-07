@@ -1,7 +1,7 @@
 package com.translator.service.uml;
 
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
-import com.translator.view.uml.dialog.PromptNodeDialog;
+import com.translator.view.uml.dialog.prompt.PromptNodeDialog;
 
 import java.util.Map;
 

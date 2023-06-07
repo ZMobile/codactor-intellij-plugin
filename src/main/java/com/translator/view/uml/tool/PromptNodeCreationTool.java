@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.service.uml.NodeDialogWindowMapperService;
-import com.translator.view.uml.dialog.PromptNodeDialog;
+import com.translator.view.uml.dialog.prompt.PromptNodeDialog;
 import com.translator.view.uml.factory.dialog.PromptNodeDialogFactory;
 import org.jhotdraw.draw.Figure;
 import org.jhotdraw.draw.tool.CreationTool;

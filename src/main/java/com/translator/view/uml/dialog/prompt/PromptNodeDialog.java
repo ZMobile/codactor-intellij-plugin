@@ -1,33 +1,46 @@
-package com.translator.view.uml.dialog;
+package com.translator.view.uml.dialog.prompt;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.model.uml.node.PromptNode;
-import com.translator.view.uml.dialog.panel.PromptConnectionViewer;
-import com.translator.view.uml.dialog.panel.PromptViewer;
+import com.translator.service.task.BackgroundTaskMapperService;
+import com.translator.service.uml.PromptNodeDialogRunnerService;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Objects;
 
 public class PromptNodeDialog extends JDialog {
+    private Project project;
     private PromptConnectionViewer promptConnectionViewer;
     private PromptViewer promptViewer;
     private LabeledRectangleFigure promptNodeFigure;
     private PromptNode promptNode;
     private JButton runButton;
+    private JButton cancelButton;
+    private JButton resetButton;
     private ComboBox<String> modelComboBox;
+    private PromptNodeDialogRunnerService promptNodeDialogRunnerService;
+    private BackgroundTaskMapperService backgroundTaskMapperService;
 
     @Inject
-    public PromptNodeDialog(@Assisted LabeledRectangleFigure promptNodeFigure, Gson gson) {
+    public PromptNodeDialog(@Assisted LabeledRectangleFigure promptNodeFigure,
+                            Project project,
+                            PromptNodeDialogRunnerService promptNodeDialogRunnerService,
+                            BackgroundTaskMapperService backgroundTaskMapperService,
+                            Gson gson) {
         super();
-
+        this.project = project;
         this.promptNodeFigure = promptNodeFigure;
         this.promptNode = gson.fromJson(promptNodeFigure.getMetadata(), PromptNode.class);
         this.promptConnectionViewer = new PromptConnectionViewer(promptNode);
         this.promptViewer = new PromptViewer(promptNode);
+        this.promptNodeDialogRunnerService = promptNodeDialogRunnerService;
+        this.backgroundTaskMapperService = backgroundTaskMapperService;
 
         setTitle("Prompt Node");
         setSize(400, 500);
@@ -41,7 +54,7 @@ public class PromptNodeDialog extends JDialog {
         toolBar.setBorderPainted(false);
 
         modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
-        modelComboBox.setMaximumSize(new Dimension(150, modelComboBox.getHeight()));
+        //modelComboBox.setMaximumSize(new Dimension(150, runButton.getHeight()));
         String selectedElement = promptNode.getAiModel();
         int selectedIndex = -1;
         for (int i = 0; i < modelComboBox.getItemCount(); i++) {
@@ -79,17 +92,50 @@ public class PromptNodeDialog extends JDialog {
                 promptNode.setAiModel(model);
             }
         });
+
+        cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(e -> {
+            backgroundTaskMapperService.cancelTask(promptNode.getId());
+            promptNode.setProcessed(true);
+            cancelButton.setVisible(false);
+            resetButton.setVisible(true);
+            runButton.setEnabled(true);
+            runButton.setText("Re-Run");
+        });
+        cancelButton.setVisible(promptNode.isRunning());
+        resetButton = new JButton("Reset");
+        resetButton.addActionListener(e -> {
+            System.out.println("Reset button clicked");
+            promptViewer.updatePromptChatContents(promptNode.getPromptList());
+            runButton.setText("Run");
+        });
+        resetButton.setVisible(promptNode.isProcessed());
         toolBar.add(Box.createHorizontalGlue());
         toolBar.add(modelComboBox);
-
+        toolBar.add(cancelButton);
+        toolBar.add(resetButton);
         runButton = new JButton("Run");
+        runButton.setEnabled(!promptNode.isRunning());
+        if (promptNode.isProcessed()) {
+            runButton.setText("Re-run");
+        }
+        runButton.addActionListener(e -> {
+            runButton.setEnabled(false);
+            cancelButton.setVisible(true);
+            System.out.println("Run button clicked");
+            promptNodeDialogRunnerService.run(promptNodeFigure, promptNode, Objects.requireNonNull(modelComboBox.getSelectedItem()).toString());
+            promptNodeFigure.setMetadata(gson.toJson(promptNode));
+
+        });
+
+
+
         toolBar.add(runButton);
 
         add(toolBar, BorderLayout.NORTH);
         panel.add(promptConnectionViewer, BorderLayout.NORTH);
         panel.add(promptViewer, BorderLayout.CENTER);
         add(panel, BorderLayout.CENTER);
-
     }
 
     public PromptConnectionViewer getPromptConnectionViewer() {
@@ -98,5 +144,17 @@ public class PromptNodeDialog extends JDialog {
 
     public PromptViewer getPromptViewer() {
         return promptViewer;
+    }
+
+    public JButton getCancelButton() {
+        return cancelButton;
+    }
+
+    public JButton getResetButton() {
+        return resetButton;
+    }
+
+    public JButton getRunButton() {
+        return runButton;
     }
 }

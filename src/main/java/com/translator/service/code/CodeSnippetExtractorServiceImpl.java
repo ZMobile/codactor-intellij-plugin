@@ -64,12 +64,6 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
     @Override
     public SelectionModel getSelectedText(String filePath) {
         FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
-        VirtualFile[] selectedFiles = fileEditorManager.getSelectedFiles();
-
-        VirtualFile virtualFile = Arrays.stream(selectedFiles)
-                .filter(file -> file.getPath().equals(filePath))
-                .findFirst()
-                .orElseThrow();
 
         // Get the Editor instance for the selected file
         Editor editor = fileEditorManager.getSelectedTextEditor();

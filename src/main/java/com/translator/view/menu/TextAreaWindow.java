@@ -21,6 +21,12 @@ public class TextAreaWindow {
     // other constructors omitted for brevity
 
     public TextAreaWindow(String initialText) {
+        this(initialText, null);
+    }
+
+
+    public TextAreaWindow(String initialText, TextAreaWindowActionListener listener) {
+        this.listener = listener;
         SwingUtilities.invokeLater(() -> {
             JDialog dialog = new JDialog((Frame) null, "Copy/Selection window", true);
             dialog.setLayout(new BorderLayout());
@@ -43,6 +49,7 @@ public class TextAreaWindow {
             JPanel buttonPanel = new JPanel();
             JButton okButton = new JButton("OK");
             okButton.addActionListener(e -> {
+                listener.onOk(textArea.getText());
                 text = textArea.getText();
                 dialog.dispose();
             });
@@ -57,7 +64,6 @@ public class TextAreaWindow {
             dialog.setLocationRelativeTo(null);
             dialog.setVisible(true);
         });
-        this.listener = null;
     }
 
 

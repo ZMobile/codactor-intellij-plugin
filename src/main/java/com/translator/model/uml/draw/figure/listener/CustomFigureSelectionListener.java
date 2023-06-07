@@ -3,7 +3,7 @@ package com.translator.model.uml.draw.figure.listener;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.service.uml.NodeDialogWindowMapperService;
 import com.translator.view.uml.factory.dialog.PromptNodeDialogFactory;
-import com.translator.view.uml.dialog.PromptNodeDialog;
+import com.translator.view.uml.dialog.prompt.PromptNodeDialog;
 import org.jhotdraw.draw.Figure;
 import org.jhotdraw.draw.event.FigureSelectionListener;
 import org.jhotdraw.draw.event.FigureSelectionEvent;

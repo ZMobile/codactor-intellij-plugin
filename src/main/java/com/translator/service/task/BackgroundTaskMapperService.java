@@ -1,6 +1,6 @@
 package com.translator.service.task;
 
-import com.intellij.openapi.progress.Task;
+import com.translator.model.task.CustomBackgroundTask;
 
 public interface BackgroundTaskMapperService {
     void addTask(String id, CustomBackgroundTask customBackgroundTask);
@@ -10,4 +10,6 @@ public interface BackgroundTaskMapperService {
     void removeTask(String id);
 
     boolean hasTask(String id);
+
+    CustomBackgroundTask getTask(String id);
 }

@@ -45,9 +45,9 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
         if (document == null) {
             throw new IllegalStateException("Could not get document for file: " + filePath);
         }
-
-                    RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);
-                    guardedBlocks.put(fileModification.getId(), guardedBlock);
+            int newEndOffset = Math.min(endOffset, document.getTextLength());
+            RangeMarker guardedBlock = document.createGuardedBlock(startOffset, newEndOffset);
+            guardedBlocks.put(fileModification.getId(), guardedBlock);
         });
         //uneditableSegmentListenerService.addUneditableFileModificationSegmentListener(fileModificationId);
     }

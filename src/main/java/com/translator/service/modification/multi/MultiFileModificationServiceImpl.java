@@ -2,9 +2,7 @@ package com.translator.service.modification.multi;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.stream.MalformedJsonException;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
@@ -33,21 +31,11 @@ import com.translator.service.modification.CodeModificationService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
-import com.translator.service.task.CustomBackgroundTask;
 import com.translator.view.dialog.FileModificationErrorDialog;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
-import javax.swing.*;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
 
 public class MultiFileModificationServiceImpl implements MultiFileModificationService {
     private Project project;

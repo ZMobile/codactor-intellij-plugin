@@ -3,7 +3,6 @@ package com.translator.service.modification;
 import com.google.inject.assistedinject.Assisted;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.translator.dao.firebase.FirebaseTokenService;
 import com.translator.model.api.translator.modification.*;
@@ -13,17 +12,17 @@ import com.translator.model.modification.FileModification;
 import com.translator.model.modification.FileModificationSuggestion;
 import com.translator.model.modification.FileModificationSuggestionModificationRecord;
 import com.translator.model.modification.ModificationType;
+import com.translator.model.task.CancellableRunnable;
 import com.translator.service.code.CodeSnippetExtractorService;
 import com.translator.service.context.PromptContextService;
 import com.translator.service.modification.tracking.FileModificationTrackerService;
 import com.translator.service.openai.OpenAiApiKeyService;
 import com.translator.service.openai.OpenAiModelService;
 import com.translator.service.task.BackgroundTaskMapperService;
-import com.translator.service.task.CustomBackgroundTask;
+import com.translator.model.task.CustomBackgroundTask;
 import com.translator.view.dialog.FileModificationErrorDialog;
 import com.translator.view.dialog.LoginDialog;
 import com.translator.view.dialog.OpenAiApiKeyDialog;
-import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -72,7 +71,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
         String modificationId = fileModificationTrackerService.addModification(filePath, startIndex, endIndex, modificationType);
-        Runnable task = () -> {
+        CancellableRunnable task = customProgressIndicator -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
             List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
             if (priorContextData != null) {
@@ -114,7 +113,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, code.length(), modificationType);
-        Runnable task = () -> {
+        CancellableRunnable task = customProgressIndicator -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
             List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
             if (priorContextData != null) {
@@ -156,7 +155,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
-        Runnable task = () -> {
+        CancellableRunnable task = customProgressIndicator -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
             List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
             if (priorContextData != null) {
@@ -199,7 +198,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, code.length(), modificationType);
-        Runnable task = () -> {
+        CancellableRunnable task = customProgressIndicator -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
             List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
             if (priorContextData != null) {
@@ -241,7 +240,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, code.length(), modificationType);
-        Runnable task = () -> {
+        CancellableRunnable task = customProgressIndicator -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
             List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
             if (priorContextData != null) {
@@ -283,7 +282,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
-        Runnable task = () -> {
+        CancellableRunnable task = customProgressIndicator -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
             List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
             if (priorContextData != null) {
@@ -325,7 +324,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             }
         }
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, 0, ModificationType.CREATE);
-        Runnable task = () -> {
+        CancellableRunnable task = customProgressIndicator -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
             List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
             if (priorContextData != null) {
@@ -367,7 +366,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             }
         }
         String modificationId = fileModificationTrackerService.addModification(filePath, 0, 0, ModificationType.CREATE);
-        Runnable task = () -> {
+        CancellableRunnable task = customProgressIndicator -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
             List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
             if (priorContextData != null) {
@@ -411,7 +410,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, 0, 0, ModificationType.CREATE);
-        Runnable task = () -> {
+        CancellableRunnable task = customProgressIndicator -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
             List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
             if (priorContextData != null) {
@@ -457,7 +456,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
         fileModification.setNewLanguage(newLanguage);
         fileModification.setNewFileType(newFileType);
-        Runnable task = () -> {
+        CancellableRunnable task = customProgressIndicator -> {
             List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
             List<HistoricalContextObjectDataHolder> priorContextData = promptContextService.getPromptContext();
             if (priorContextData != null) {

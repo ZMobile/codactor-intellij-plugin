@@ -45,6 +45,8 @@ import com.translator.service.ui.tool.ToolWindowService;
 import com.translator.service.ui.tool.ToolWindowServiceImpl;
 import com.translator.service.uml.NodeDialogWindowMapperService;
 import com.translator.service.uml.NodeDialogWindowMapperServiceImpl;
+import com.translator.service.uml.PromptNodeDialogRunnerService;
+import com.translator.service.uml.PromptNodeDialogRunnerServiceImpl;
 
 public class CodeTranslatorServiceConfig extends AbstractModule {
     private Project project;
@@ -86,6 +88,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(RenameFileService.class).to(RenameFileServiceImpl.class);
         bind(BackgroundTaskMapperService.class).to(BackgroundTaskMapperServiceImpl.class).asEagerSingleton();
         bind(NodeDialogWindowMapperService.class).to(NodeDialogWindowMapperServiceImpl.class).asEagerSingleton();
+        bind(PromptNodeDialogRunnerService.class).to(PromptNodeDialogRunnerServiceImpl.class);
     }
 
     @Singleton

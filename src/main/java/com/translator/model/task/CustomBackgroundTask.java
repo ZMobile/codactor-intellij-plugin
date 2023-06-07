@@ -1,4 +1,4 @@
-package com.translator.service.task;
+package com.translator.model.task;
 
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
@@ -6,35 +6,39 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
 public class CustomBackgroundTask extends Task.Backgroundable {
-    private final Runnable task;
+    private final CancellableRunnable task;
     private final Runnable cancelTask;
-    private final CustomProgressIndicator customProgressIndicator;
+    private ProgressIndicator progressIndicator;
 
 
-    public CustomBackgroundTask(Project project, String taskName, Runnable task, Runnable cancelTask) {
+    public CustomBackgroundTask(Project project, String taskName, CancellableRunnable task, Runnable cancelTask) {
         super(project, taskName, true);
         this.task = task;
         this.cancelTask = cancelTask;
-        this.customProgressIndicator = new CustomProgressIndicator();
     }
 
     @Override
     public void run(@NotNull ProgressIndicator indicator) {
-        task.run();
+        this.progressIndicator = indicator;
+        task.run(indicator);
     }
 
     // Custom cancel method to be called from outside
     public void cancel() {
-        customProgressIndicator.cancel("Canceled by user");
+        progressIndicator.cancel();
         cancelTask.run();
     }
 
     @Override
     public void onCancel() {
-        cancel(); // Delegate the onCancel behavior to the custom cancel method
+        //cancel();
     }
 
-    public Runnable getTask() {
+    public CancellableRunnable getTask() {
         return task;
+    }
+
+    public ProgressIndicator getProgressIndicator() {
+        return progressIndicator;
     }
 }

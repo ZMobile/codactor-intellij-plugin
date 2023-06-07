@@ -1,9 +1,8 @@
-package com.translator.view.uml.dialog.panel;
+package com.translator.view.uml.dialog.prompt;
 
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.table.JBTable;
-import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.model.uml.node.PromptNode;
 
 import javax.swing.*;

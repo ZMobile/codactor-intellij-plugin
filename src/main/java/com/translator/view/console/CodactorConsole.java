@@ -307,7 +307,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         JPanel rightToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5)); // Set horizontal gap to 0
         rightToolbar.add(hiddenLabel);
         rightToolbar.add(advancedButton);
-        /*JButton testoButton = new JButton("Test");
+        JButton testoButton = new JButton("Test");
         testoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -337,7 +337,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                 });
             }
         });
-        rightToolbar.add(testoButton);*/
+        rightToolbar.add(testoButton);
 
         topToolbar.add(leftToolbar);
         topToolbar.add(rightToolbar, BorderLayout.EAST);
