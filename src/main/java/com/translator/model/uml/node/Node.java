@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public abstract class Node {
+public class Node {
     private final String myId;
     private List<NodeConnectionReference> connections;
     private boolean processed;

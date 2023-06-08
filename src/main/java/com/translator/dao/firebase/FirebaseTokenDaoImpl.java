@@ -4,9 +4,9 @@ import com.google.gson.Gson;
 import com.intellij.credentialStore.CredentialAttributes;
 import com.intellij.credentialStore.Credentials;
 import com.intellij.ide.passwordSafe.PasswordSafe;
-import com.translator.model.api.firebase.FirebaseAuthLoginResponseResource;
-import com.translator.model.api.firebase.FirebaseToken;
-import com.translator.model.api.firebase.UserLoginRequestResource;
+import com.translator.model.codactor.api.firebase.FirebaseAuthLoginResponseResource;
+import com.translator.model.codactor.api.firebase.FirebaseToken;
+import com.translator.model.codactor.api.firebase.UserLoginRequestResource;
 import org.apache.commons.io.IOUtils;
 
 import javax.inject.Inject;

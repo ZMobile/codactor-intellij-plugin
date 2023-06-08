@@ -4,8 +4,8 @@
  */
 package com.translator.dao.modification;
 
-import com.translator.model.api.translator.modification.*;
-import com.translator.model.modification.FileModificationSuggestionModificationRecord;
+import com.translator.model.codactor.api.translator.modification.*;
+import com.translator.model.codactor.modification.FileModificationSuggestionModificationRecord;
 
 /**
  *

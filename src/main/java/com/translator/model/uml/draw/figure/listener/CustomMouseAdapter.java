@@ -36,11 +36,12 @@ public class CustomMouseAdapter extends MouseAdapter {
         if (figure != null && e.getClickCount() == 2) {
             // a figure was found at the clicked location
             System.out.println("Figure clicked: " + figure);
+            System.out.println("Testo: " + defaultDrawingView.getDrawing().getChildren().size());
             if (figure instanceof LabeledRectangleFigure) {
                 LabeledRectangleFigure labeledRectangleFigure = (LabeledRectangleFigure) figure;
                 PromptNodeDialog promptNodeDialog;
                 if (!nodeDialogTrackerService.getPromptNodeDialogMap().containsKey(labeledRectangleFigure)) {
-                    promptNodeDialog = promptNodeDialogFactory.create(labeledRectangleFigure);
+                    promptNodeDialog = promptNodeDialogFactory.create(labeledRectangleFigure, defaultDrawingView.getDrawing());
                     nodeDialogTrackerService.getPromptNodeDialogMap().put(labeledRectangleFigure, promptNodeDialog);
                     promptNodeDialog.addWindowListener(new WindowAdapter() {
                         @Override
@@ -52,13 +53,14 @@ public class CustomMouseAdapter extends MouseAdapter {
                 } else {
                     promptNodeDialog = nodeDialogTrackerService.getPromptNodeDialogMap().get(labeledRectangleFigure);
                 }
+                System.out.println("This gets called 3");
+                promptNodeDialog.getPromptConnectionViewer().updateConnections();
                 promptNodeDialog.setVisible(true);
             }
         } else {
             // no figure was found at the clicked location
             System.out.println("No figure at clicked location.");
         }
-        System.out.println("Clicked testo");
 
     }
 }

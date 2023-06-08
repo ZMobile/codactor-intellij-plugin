@@ -7,8 +7,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.model.uml.node.PromptNode;
-import com.translator.service.task.BackgroundTaskMapperService;
+import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.uml.PromptNodeDialogRunnerService;
+import org.jhotdraw.draw.Drawing;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +20,7 @@ public class PromptNodeDialog extends JDialog {
     private PromptConnectionViewer promptConnectionViewer;
     private PromptViewer promptViewer;
     private LabeledRectangleFigure promptNodeFigure;
+    private Drawing drawing;
     private PromptNode promptNode;
     private JButton runButton;
     private JButton cancelButton;
@@ -29,6 +31,7 @@ public class PromptNodeDialog extends JDialog {
 
     @Inject
     public PromptNodeDialog(@Assisted LabeledRectangleFigure promptNodeFigure,
+                            @Assisted Drawing drawing,
                             Project project,
                             PromptNodeDialogRunnerService promptNodeDialogRunnerService,
                             BackgroundTaskMapperService backgroundTaskMapperService,
@@ -36,8 +39,9 @@ public class PromptNodeDialog extends JDialog {
         super();
         this.project = project;
         this.promptNodeFigure = promptNodeFigure;
+        this.drawing = drawing;
         this.promptNode = gson.fromJson(promptNodeFigure.getMetadata(), PromptNode.class);
-        this.promptConnectionViewer = new PromptConnectionViewer(promptNode);
+        this.promptConnectionViewer = new PromptConnectionViewer(promptNode, drawing, gson);
         this.promptViewer = new PromptViewer(this);
         this.promptNodeDialogRunnerService = promptNodeDialogRunnerService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;

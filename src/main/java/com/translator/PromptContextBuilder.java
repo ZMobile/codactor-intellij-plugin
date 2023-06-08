@@ -14,8 +14,8 @@ import com.intellij.util.ui.JBUI;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.dao.inquiry.InquiryDao;
-import com.translator.service.context.PromptContextService;
-import com.translator.view.viewer.context.*;
+import com.translator.service.codactor.context.PromptContextService;
+import com.translator.view.codactor.viewer.context.*;
 
 import javax.inject.Inject;
 import javax.swing.*;

@@ -7,13 +7,13 @@ import com.intellij.openapi.actionSystem.KeyboardShortcut;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
 import com.translator.CodactorInjector;
-import com.translator.service.code.CodeHighlighterService;
-import com.translator.service.modification.tracking.FileModificationTrackerService;
-import com.translator.service.modification.tracking.listener.EditorClickHandlerService;
-import com.translator.view.viewer.HistoricalModificationListViewer;
-import com.translator.view.viewer.InquiryListViewer;
-import com.translator.view.viewer.InquiryViewer;
-import com.translator.view.viewer.ModificationQueueViewer;
+import com.translator.service.codactor.code.CodeHighlighterService;
+import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerService;
+import com.translator.view.codactor.viewer.HistoricalModificationListViewer;
+import com.translator.view.codactor.viewer.InquiryListViewer;
+import com.translator.view.codactor.viewer.InquiryViewer;
+import com.translator.view.codactor.viewer.ModificationQueueViewer;
 import org.jetbrains.annotations.NotNull;
 
 public class MyStartupActivity implements StartupActivity {

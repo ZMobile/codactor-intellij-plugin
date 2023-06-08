@@ -2,19 +2,15 @@ package com.translator.listener;
 
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.editor.event.EditorFactoryAdapter;
 import com.intellij.openapi.editor.event.EditorFactoryEvent;
 import com.intellij.openapi.editor.event.EditorFactoryListener;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.translator.model.modification.FileModificationTracker;
-import com.translator.service.code.CodeHighlighterService;
-import com.translator.service.code.EditorExtractorService;
-import com.translator.service.code.GuardedBlockService;
-import com.translator.service.modification.tracking.FileModificationTrackerService;
-import com.translator.service.modification.tracking.listener.EditorClickHandlerService;
+import com.translator.model.codactor.modification.FileModificationTracker;
+import com.translator.service.codactor.code.CodeHighlighterService;
+import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerService;
 
 public class EditorListener implements EditorFactoryListener {
     private final FileModificationTrackerService fileModificationTrackerService;

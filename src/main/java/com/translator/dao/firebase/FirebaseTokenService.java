@@ -1,6 +1,6 @@
 package com.translator.dao.firebase;
 
-import com.translator.model.api.firebase.FirebaseToken;
+import com.translator.model.codactor.api.firebase.FirebaseToken;
 
 public interface FirebaseTokenService {
     void refreshFirebaseToken();

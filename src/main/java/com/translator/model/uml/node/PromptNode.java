@@ -1,11 +1,10 @@
 package com.translator.model.uml.node;
 
-import com.translator.model.inquiry.Inquiry;
+import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.uml.prompt.Prompt;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class PromptNode extends Node {
     private List<Prompt> promptList;

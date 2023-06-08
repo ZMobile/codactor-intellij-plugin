@@ -3,16 +3,10 @@ package com.translator.dao.firebase;
 import com.intellij.credentialStore.CredentialAttributes;
 import com.intellij.credentialStore.Credentials;
 import com.intellij.ide.passwordSafe.PasswordSafe;
-import com.translator.model.api.firebase.FirebaseAuthLoginResponseResource;
-import com.translator.model.api.firebase.FirebaseToken;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
+import com.translator.model.codactor.api.firebase.FirebaseAuthLoginResponseResource;
+import com.translator.model.codactor.api.firebase.FirebaseToken;
 
 import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 
 public class FirebaseTokenServiceImpl implements FirebaseTokenService {
     private FirebaseTokenDao firebaseTokenDao;

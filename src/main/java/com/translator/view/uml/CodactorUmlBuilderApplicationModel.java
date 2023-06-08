@@ -47,6 +47,7 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
      */
     private DefaultDrawingEditor sharedEditor;
     private final PromptNodeCreationToolFactory promptNodeCreationToolFactory;
+    private CodactorUmlBuilderView codactorUmlBuilderView;
     private final Gson gson;
 
     /** Creates a new instance. */
@@ -84,13 +85,13 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
     @Override
     public List<JToolBar> createToolBars(Application a, @Nullable View pr) {
         ResourceBundleUtil labels = DrawLabels.getLabels();
-        CodactorUmlBuilderView p = (CodactorUmlBuilderView) pr;
+        codactorUmlBuilderView = (CodactorUmlBuilderView) pr;
 
         DrawingEditor editor;
-        if (p == null) {
+        if (codactorUmlBuilderView == null) {
             editor = getSharedEditor();
         } else {
-            editor = p.getEditor();
+            editor = codactorUmlBuilderView.getEditor();
         }
 
         JToolBar tb;
@@ -126,8 +127,7 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
         CreationTool ct;
         ConnectionTool cnt;
         ConnectionFigure lc;
-
-        ButtonFactory.addToolTo(tb, editor, promptNodeCreationToolFactory.create(new LabeledRectangleFigure("Prompt", gson)), "edit.createRectangle", labels);
+        ButtonFactory.addToolTo(tb, editor, promptNodeCreationToolFactory.create(new LabeledRectangleFigure("Prompt")), "edit.createRectangle", labels);
         ButtonFactory.addToolTo(tb, editor, new CreationTool(new LabeledRoundRectangleFigure("Calculator")), "edit.createRoundRectangle", labels);
         ButtonFactory.addToolTo(tb, editor, new CreationTool(new LabeledEllipseFigure("Custom Code")), "edit.createEllipse", labels);
         ButtonFactory.addToolTo(tb, editor, new CreationTool(new LabeledDiamondFigure("Verifier")), "edit.createDiamond", labels);
@@ -137,11 +137,11 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
         ButtonFactory.addToolTo(tb, editor, ct = new CreationTool(new LineFigure()), "edit.createArrow", labels);
         af = (AbstractAttributedFigure) ct.getPrototype();
         af.set(END_DECORATION, new ArrowTip(0.35, 12, 11.3));
-        ButtonFactory.addToolTo(tb, editor, new ConnectionTool(new MetadataLabeledLineConnectionFigure()), "edit.createLineConnection", labels);
-        ButtonFactory.addToolTo(tb, editor, cnt = new ConnectionTool(new MetadataLabeledLineConnectionFigure()), "edit.createElbowConnection", labels);
+        ButtonFactory.addToolTo(tb, editor, new ConnectionTool(new MetadataLabeledLineConnectionFigure(gson)), "edit.createLineConnection", labels);
+        ButtonFactory.addToolTo(tb, editor, cnt = new ConnectionTool(new MetadataLabeledLineConnectionFigure(gson)), "edit.createElbowConnection", labels);
         lc = cnt.getPrototype();
         lc.setLiner(new ElbowLiner());
-        ButtonFactory.addToolTo(tb, editor, cnt = new ConnectionTool(new MetadataLabeledLineConnectionFigure()), "edit.createCurvedConnection", labels);
+        ButtonFactory.addToolTo(tb, editor, cnt = new ConnectionTool(new MetadataLabeledLineConnectionFigure(gson)), "edit.createCurvedConnection", labels);
         lc = cnt.getPrototype();
         lc.setLiner(new CurvedLiner());
         ButtonFactory.addToolTo(tb, editor, new BezierTool(new BezierFigure()), "edit.createScribble", labels);

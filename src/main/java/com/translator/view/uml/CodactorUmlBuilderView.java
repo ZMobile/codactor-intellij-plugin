@@ -4,6 +4,7 @@
 package com.translator.view.uml;
 
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.translator.view.uml.factory.adapter.CustomMouseAdapterFactory;
 import com.translator.view.uml.factory.tool.PromptNodeCreationToolFactory;
 import org.jhotdraw.app.AbstractView;
@@ -57,7 +58,7 @@ public class CodactorUmlBuilderView extends AbstractView {
     private DrawingEditor editor;
 
     private CustomMouseAdapterFactory customMouseAdapterFactory;
-    
+
     /**
      * Creates a new view.
      */
@@ -281,5 +282,11 @@ public class CodactorUmlBuilderView extends AbstractView {
     private JScrollPane scrollPane;
     private org.jhotdraw.draw.DefaultDrawingView view;
     // End of variables declaration//GEN-END:variables
-    
+
+
+    public DefaultDrawingView getView() {
+        return view;
+    }
 }
+
+

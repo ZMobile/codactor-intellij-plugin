@@ -11,16 +11,14 @@ import java.awt.geom.Rectangle2D;
 
 public class LabeledRectangleFigure extends RectangleFigure {
     private TextFigure label;
-    private Gson gson;
     private String metadata;
 
-    public LabeledRectangleFigure(String name, Gson gson) {
+    public LabeledRectangleFigure(String name) {
         super();
 
         this.label = new TextFigure();
         this.label.setText(name);
-        PromptNode promptNode = new PromptNode();
-        this.metadata = gson.toJson(promptNode);
+        this.metadata = null;
     }
 
     public String getMetadata() {
