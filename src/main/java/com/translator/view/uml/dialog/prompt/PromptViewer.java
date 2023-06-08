@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 public class PromptViewer extends JPanel {
+    private PromptNodeDialog promptNodeDialog;
     private PromptNode promptNode;
     private BackgroundTaskMapperService backgroundTaskMapperService;
     private List<InquiryChat> inquiryChats;
@@ -52,8 +53,9 @@ public class PromptViewer extends JPanel {
     private JButton removeButton;
     private int selectedChat;
 
-    public PromptViewer(PromptNode promptNode) {
-        this.promptNode = promptNode;
+    public PromptViewer(PromptNodeDialog promptNodeDialog) {
+        this.promptNodeDialog = promptNodeDialog;
+        this.promptNode = promptNodeDialog.getPromptNode();
         this.inquiryChats = new ArrayList<>();
         this.textAreaHeightCalculatorService = new TextAreaHeightCalculatorServiceImpl();
         this.historicalContextObjectHolder = null;
@@ -153,14 +155,18 @@ public class PromptViewer extends JPanel {
                             firstComponentCopied = true;
                         }
                     }
-                    TextAreaWindow.TextAreaWindowActionListener textAreaWindowActionListener = new TextAreaWindow.TextAreaWindowActionListener() {
-                        @Override
-                        public void onOk(String text) {
-                            promptNode.getPromptList().get(selectedChat).setPrompt(text);
-                            updatePromptChatContents(promptNode.getPromptList());
-                        }
-                    };
-                    new TextAreaWindow("Edit Prompt", text.toString(), true, "Cancel", "Ok", textAreaWindowActionListener);
+                    if (promptNode.isProcessed()) {
+                        new TextAreaWindow(text.toString());
+                    } else {
+                        TextAreaWindow.TextAreaWindowActionListener textAreaWindowActionListener = new TextAreaWindow.TextAreaWindowActionListener() {
+                            @Override
+                            public void onOk(String text) {
+                                promptNode.getPromptList().get(selectedChat).setPrompt(text);
+                                updatePromptChatContents(promptNode.getPromptList());
+                            }
+                        };
+                        new TextAreaWindow("Edit Prompt", text.toString(), true, "Cancel", "Ok", textAreaWindowActionListener);
+                    }
                 }
             }
         });

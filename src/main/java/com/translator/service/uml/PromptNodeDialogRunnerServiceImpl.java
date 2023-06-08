@@ -100,6 +100,7 @@ public class PromptNodeDialogRunnerServiceImpl implements PromptNodeDialogRunner
                 promptNodeDialog.getResetButton().setVisible(true);
             }
             promptNode.setRunning(false);
+            promptNode.setProcessed(true);
             promptNodeFigure.setMetadata(gson.toJson(promptNode));
             backgroundTaskMapperService.removeTask(promptNode.getId());
         };

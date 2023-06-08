@@ -38,7 +38,7 @@ public class PromptNodeDialog extends JDialog {
         this.promptNodeFigure = promptNodeFigure;
         this.promptNode = gson.fromJson(promptNodeFigure.getMetadata(), PromptNode.class);
         this.promptConnectionViewer = new PromptConnectionViewer(promptNode);
-        this.promptViewer = new PromptViewer(promptNode);
+        this.promptViewer = new PromptViewer(this);
         this.promptNodeDialogRunnerService = promptNodeDialogRunnerService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
 
@@ -156,5 +156,9 @@ public class PromptNodeDialog extends JDialog {
 
     public JButton getRunButton() {
         return runButton;
+    }
+
+    public PromptNode getPromptNode() {
+        return promptNode;
     }
 }
