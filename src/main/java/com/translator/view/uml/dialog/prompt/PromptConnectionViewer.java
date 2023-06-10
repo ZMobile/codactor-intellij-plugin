@@ -2,38 +2,55 @@ package com.translator.view.uml.dialog.prompt;
 
 import com.google.gson.Gson;
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.table.JBTable;
 import com.translator.model.uml.connection.Connection;
 import com.translator.model.uml.draw.figure.*;
 import com.translator.model.uml.node.Node;
 import com.translator.model.uml.node.PromptNode;
+import com.translator.service.uml.node.NodeDialogWindowMapperService;
+import com.translator.service.uml.node.PromptHighlighterService;
 import org.jhotdraw.draw.Drawing;
 import org.jhotdraw.draw.Figure;
 
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class PromptConnectionViewer extends JPanel {
+    private PromptNodeDialog promptNodeDialog;
     private PromptNode promptNode;
     private Drawing drawing;
     private Gson gson;
     private JBTable table;
+    private NodeDialogWindowMapperService nodeDialogWindowMapperService;
+    private PromptHighlighterService promptHighlighterService;
+    private List<MetadataLabeledLineConnectionFigure> inputFigures;
+    private List<MetadataLabeledLineConnectionFigure> outputFigures;
 
-    public PromptConnectionViewer(PromptNode promptNode, Drawing drawing, Gson gson) {
+    public PromptConnectionViewer(PromptNodeDialog promptNodeDialog,
+                                  PromptNode promptNode,
+                                  Drawing drawing,
+                                  Gson gson,
+                                  NodeDialogWindowMapperService nodeDialogWindowMapperService,
+                                  PromptHighlighterService promptHighlighterService) {
+        this.promptNodeDialog = promptNodeDialog;
         this.promptNode = promptNode;
         this.drawing = drawing;
         this.gson = gson;
+        this.nodeDialogWindowMapperService = nodeDialogWindowMapperService;
+        this.promptHighlighterService = promptHighlighterService;
+        this.inputFigures = new ArrayList<>();
+        this.outputFigures = new ArrayList<>();
         setLayout(new BorderLayout()); // Set the layout to BorderLayout
         String[] columnNames = {"Connection ID", "Key", "Input/Output"};
         Object[][] data = {
-                {"id1", "key1", "Input"},
-                {"id2", "key2", "Output"},
-                // add more rows as needed
+
         };
 
         DefaultTableModel model = new DefaultTableModel(data, columnNames) {
@@ -58,14 +75,13 @@ public class PromptConnectionViewer extends JPanel {
         };
 
         table = new JBTable(model);
-
+        table.setFillsViewportHeight(true); // Ensure the table takes up all available space in the view
+        add(table, BorderLayout.CENTER);
         JComboBox<String> comboBox = new ComboBox<>(new String[]{"Input", "Output"});
         table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(comboBox));
-        System.out.println("This gets called 1");
+        table.setMinimumSize(new Dimension(0, 50));
         updateConnections();
-        System.out.println("This gets called 2");
-        JScrollPane scrollPane = new JBScrollPane(table);
-        add(scrollPane, BorderLayout.CENTER); // Add the scrollPane to the CENTER region
+        add(table, BorderLayout.CENTER);
 
         JToolBar jToolBar = new JToolBar();
         jToolBar.setFloatable(false);
@@ -81,75 +97,86 @@ public class PromptConnectionViewer extends JPanel {
     }
 
     public void updateConnections() {
-        for (Figure figure : drawing.getChildren()) {
-            if (figure instanceof LabeledRectangleFigure) {
-                LabeledRectangleFigure labeledRectangleFigure = (LabeledRectangleFigure) figure;
-                Node node = gson.fromJson(labeledRectangleFigure.getMetadata(), Node.class);
-                System.out.println("Node: " + node.getId());
-            }
-        }
         List<MetadataLabeledLineConnectionFigure> metadataLabeledLineConnectionFigureList = drawing.getChildren().stream()
                 .filter(child -> child instanceof MetadataLabeledLineConnectionFigure)
                 .map(child -> (MetadataLabeledLineConnectionFigure) child)
                 .collect(Collectors.toList());
-        for (MetadataLabeledLineConnectionFigure metadataLabeledLineConnectionFigure : metadataLabeledLineConnectionFigureList) {
-            System.out.println("Metadata: " + metadataLabeledLineConnectionFigure.getMetadata());
-            System.out.println("Start: " + getNodeIdFromFigure(metadataLabeledLineConnectionFigure.getStartFigure()));
-            System.out.println("End: " + getNodeIdFromFigure(metadataLabeledLineConnectionFigure.getEndFigure()));
-        }
-        List<MetadataLabeledLineConnectionFigure> inputs = metadataLabeledLineConnectionFigureList.stream()
+
+        inputFigures.clear();
+        inputFigures = metadataLabeledLineConnectionFigureList.stream()
                 .peek(metadataLabeledLineConnectionFigure -> System.out.println("Checking input: " + getNodeIdFromFigure(metadataLabeledLineConnectionFigure.getEndFigure())))
                 .filter(metadataLabeledLineConnectionFigure -> promptNode.getId().equals(getNodeIdFromFigure(metadataLabeledLineConnectionFigure.getEndFigure())))
                 .collect(Collectors.toList());
 
-        List<MetadataLabeledLineConnectionFigure> outputs = metadataLabeledLineConnectionFigureList.stream()
+        outputFigures.clear();
+        outputFigures = metadataLabeledLineConnectionFigureList.stream()
                 .peek(metadataLabeledLineConnectionFigure -> System.out.println("Checking output: " + getNodeIdFromFigure(metadataLabeledLineConnectionFigure.getStartFigure())))
                 .filter(metadataLabeledLineConnectionFigure -> promptNode.getId().equals(getNodeIdFromFigure(metadataLabeledLineConnectionFigure.getStartFigure())))
                 .collect(Collectors.toList());
 
-
         List<Object[]> rowData = new ArrayList<>();
 
-        for (MetadataLabeledLineConnectionFigure input : inputs) {
+        for (MetadataLabeledLineConnectionFigure input : inputFigures) {
             Connection connection = gson.fromJson(input.getMetadata(), Connection.class);
             Object[] row = {connection.getId(), connection.getInputKey(), "Input"};
             rowData.add(row);
         }
 
-        for (MetadataLabeledLineConnectionFigure output : outputs) {
+        for (MetadataLabeledLineConnectionFigure output : outputFigures) {
             Connection connection = gson.fromJson(output.getMetadata(), Connection.class);
             Object[] row = {connection.getId(), connection.getOutputKey(), "Output"};
             rowData.add(row);
         }
 
-        DefaultTableModel model = new DefaultTableModel(rowData.toArray(new Object[0][]), new String[]{"Connection ID", "Key", "Input/Output"}) {
+        DefaultTableModel model = new DefaultTableModel(rowData.toArray(new Object[0][]), new String[]{"Connection ID", "Key (Editable)", "Input/Output"}) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                // Make the "Connection ID" column non-editable
-                if (column == 0) {
-                    return false;
-                } else {
-                    return true;
-                }
+                return column == 1; // Only second column is editable now
             }
 
             @Override
             public Class<?> getColumnClass(int columnIndex) {
-                if (columnIndex == 2) {
-                    return JComboBox.class;
-                } else {
-                    return super.getColumnClass(columnIndex);
-                }
+                return super.getColumnClass(columnIndex);
             }
         };
 
-        // assuming that 'table' is a member variable
-        table.setModel(model);
+        model.addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                if (e.getType() == TableModelEvent.UPDATE) {
+                    int row = e.getFirstRow();
+                    int column = e.getColumn();
+                    Object data = model.getValueAt(row, column);
+                    String connectionId = model.getValueAt(row, 0).toString();
+
+                    if (column == 1) { // If the "Key" column is changed
+                        setConnectionKey(connectionId, data.toString());
+                    }
+                    promptHighlighterService.highlightPrompts(promptNodeDialog);
+                }
+            }
+        });
+
+        JBTable table = new JBTable(model);
+        table.setFillsViewportHeight(true);
+
+// Create a JPanel and add the table to it
+        JPanel panel = new JPanel(new BorderLayout());
+
+// Manually create and set the table header
+        JTableHeader header = table.getTableHeader();
+        panel.add(header, BorderLayout.NORTH);
+        panel.add(table, BorderLayout.CENTER);
+        panel.setMinimumSize(new Dimension(0, 50));
+
+        this.add(panel, BorderLayout.CENTER);
+
+        this.revalidate();
+        this.repaint();
     }
 
     public String getNodeIdFromFigure(Figure figure) {
         String metadata = getLabeledNodeMetadata(figure);
-        System.out.println("Testo metadata: " + metadata);
         Node node = gson.fromJson(metadata, Node.class);
         return node.getId();
     }
@@ -158,7 +185,7 @@ public class PromptConnectionViewer extends JPanel {
         if (figure instanceof LabeledRectangleFigure) {
             return ((LabeledRectangleFigure) figure).getMetadata();
         } else if (figure instanceof LabeledDiamondFigure) {
-            return  ((LabeledDiamondFigure) figure).getMetadata();
+            return ((LabeledDiamondFigure) figure).getMetadata();
         } else if (figure instanceof LabeledEllipseFigure) {
             return ((LabeledEllipseFigure) figure).getMetadata();
         } else if (figure instanceof LabeledRoundRectangleFigure) {
@@ -169,5 +196,36 @@ public class PromptConnectionViewer extends JPanel {
             return null;
         }
     }
-}
 
+    public void setConnectionKey(String connectionId, String key) {
+        drawing.getChildren().stream()
+                .filter(child -> child instanceof MetadataLabeledLineConnectionFigure)
+                .map(child -> (MetadataLabeledLineConnectionFigure) child)
+                .filter(metadataLabeledLineConnectionFigure -> connectionId.equals(gson.fromJson(metadataLabeledLineConnectionFigure.getMetadata(), Connection.class).getId()))
+                .forEach(metadataLabeledLineConnectionFigure -> {
+                    Connection connection = gson.fromJson(metadataLabeledLineConnectionFigure.getMetadata(), Connection.class);
+                    if (connection.getInputNodeId().equals(promptNode.getId())) {
+                        connection.setInputKey(key);
+                    } else if (connection.getOutputNodeId().equals(promptNode.getId())) {
+                        connection.setOutputKey(key);
+                    }
+                    metadataLabeledLineConnectionFigure.setMetadata(gson.toJson(connection));
+                });
+    }
+
+    public List<Connection> getInputs() {
+        List<Connection> inputs = new ArrayList<>();
+        for (MetadataLabeledLineConnectionFigure input : inputFigures) {
+            inputs.add(gson.fromJson(input.getMetadata(), Connection.class));
+        }
+        return inputs;
+    }
+
+    public List<Connection> getOutputs() {
+        List<Connection> outputs = new ArrayList<>();
+        for (MetadataLabeledLineConnectionFigure output : outputFigures) {
+            outputs.add(gson.fromJson(output.getMetadata(), Connection.class));
+        }
+        return outputs;
+    }
+}

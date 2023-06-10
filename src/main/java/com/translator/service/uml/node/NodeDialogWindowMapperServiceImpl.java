@@ -1,4 +1,4 @@
-package com.translator.service.uml;
+package com.translator.service.uml.node;
 
 import com.google.inject.Inject;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;

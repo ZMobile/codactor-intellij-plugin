@@ -3,7 +3,7 @@ package com.translator.model.uml.draw.figure.listener;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
-import com.translator.service.uml.NodeDialogWindowMapperService;
+import com.translator.service.uml.node.NodeDialogWindowMapperService;
 import com.translator.view.uml.factory.dialog.PromptNodeDialogFactory;
 import com.translator.view.uml.dialog.prompt.PromptNodeDialog;
 import org.jhotdraw.draw.DefaultDrawingView;
@@ -17,15 +17,15 @@ import java.awt.event.WindowEvent;
 public class CustomMouseAdapter extends MouseAdapter {
     private DefaultDrawingView defaultDrawingView;
     private PromptNodeDialogFactory promptNodeDialogFactory;
-    private NodeDialogWindowMapperService nodeDialogTrackerService;
+    private NodeDialogWindowMapperService nodeDialogWindowMapperService;
 
     @Inject
     public CustomMouseAdapter(@Assisted DefaultDrawingView defaultDrawingView,
                               PromptNodeDialogFactory promptNodeDialogFactory,
-                              NodeDialogWindowMapperService nodeDialogTrackerService) {
+                              NodeDialogWindowMapperService nodeDialogWindowMapperService) {
         this.defaultDrawingView = defaultDrawingView;
         this.promptNodeDialogFactory = promptNodeDialogFactory;
-        this.nodeDialogTrackerService = nodeDialogTrackerService;
+        this.nodeDialogWindowMapperService = nodeDialogWindowMapperService;
     }
 
     @Override
@@ -36,24 +36,22 @@ public class CustomMouseAdapter extends MouseAdapter {
         if (figure != null && e.getClickCount() == 2) {
             // a figure was found at the clicked location
             System.out.println("Figure clicked: " + figure);
-            System.out.println("Testo: " + defaultDrawingView.getDrawing().getChildren().size());
             if (figure instanceof LabeledRectangleFigure) {
                 LabeledRectangleFigure labeledRectangleFigure = (LabeledRectangleFigure) figure;
                 PromptNodeDialog promptNodeDialog;
-                if (!nodeDialogTrackerService.getPromptNodeDialogMap().containsKey(labeledRectangleFigure)) {
+                if (!nodeDialogWindowMapperService.getPromptNodeDialogMap().containsKey(labeledRectangleFigure)) {
                     promptNodeDialog = promptNodeDialogFactory.create(labeledRectangleFigure, defaultDrawingView.getDrawing());
-                    nodeDialogTrackerService.getPromptNodeDialogMap().put(labeledRectangleFigure, promptNodeDialog);
+                    nodeDialogWindowMapperService.getPromptNodeDialogMap().put(labeledRectangleFigure, promptNodeDialog);
                     promptNodeDialog.addWindowListener(new WindowAdapter() {
                         @Override
                         public void windowClosed(WindowEvent e) {
-                            nodeDialogTrackerService.getPromptNodeDialogMap().remove(labeledRectangleFigure);
+                            nodeDialogWindowMapperService.getPromptNodeDialogMap().remove(labeledRectangleFigure);
                         }
                     });
-                    nodeDialogTrackerService.getPromptNodeDialogMap().put(labeledRectangleFigure, promptNodeDialog);
+                    nodeDialogWindowMapperService.getPromptNodeDialogMap().put(labeledRectangleFigure, promptNodeDialog);
                 } else {
-                    promptNodeDialog = nodeDialogTrackerService.getPromptNodeDialogMap().get(labeledRectangleFigure);
+                    promptNodeDialog = nodeDialogWindowMapperService.getPromptNodeDialogMap().get(labeledRectangleFigure);
                 }
-                System.out.println("This gets called 3");
                 promptNodeDialog.getPromptConnectionViewer().updateConnections();
                 promptNodeDialog.setVisible(true);
             }

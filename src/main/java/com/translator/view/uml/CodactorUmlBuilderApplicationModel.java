@@ -6,6 +6,7 @@ package com.translator.view.uml;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.translator.model.uml.draw.figure.*;
+import com.translator.view.uml.factory.tool.NodeConnectionToolFactory;
 import com.translator.view.uml.factory.tool.PromptNodeCreationToolFactory;
 import org.jhotdraw.annotation.Nullable;
 import org.jhotdraw.app.Application;
@@ -47,15 +48,18 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
      */
     private DefaultDrawingEditor sharedEditor;
     private final PromptNodeCreationToolFactory promptNodeCreationToolFactory;
+    private final NodeConnectionToolFactory nodeConnectionToolFactory;
     private CodactorUmlBuilderView codactorUmlBuilderView;
     private final Gson gson;
 
     /** Creates a new instance. */
     @Inject
     public CodactorUmlBuilderApplicationModel(PromptNodeCreationToolFactory promptNodeCreationToolFactory,
+                                              NodeConnectionToolFactory nodeConnectionToolFactory,
                                               Gson gson) {
         this.list = new LinkedList<>();
         this.promptNodeCreationToolFactory = promptNodeCreationToolFactory;
+        this.nodeConnectionToolFactory = nodeConnectionToolFactory;
         this.gson = gson;
     }
 
@@ -137,11 +141,11 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
         ButtonFactory.addToolTo(tb, editor, ct = new CreationTool(new LineFigure()), "edit.createArrow", labels);
         af = (AbstractAttributedFigure) ct.getPrototype();
         af.set(END_DECORATION, new ArrowTip(0.35, 12, 11.3));
-        ButtonFactory.addToolTo(tb, editor, new ConnectionTool(new MetadataLabeledLineConnectionFigure(gson)), "edit.createLineConnection", labels);
-        ButtonFactory.addToolTo(tb, editor, cnt = new ConnectionTool(new MetadataLabeledLineConnectionFigure(gson)), "edit.createElbowConnection", labels);
+        ButtonFactory.addToolTo(tb, editor, nodeConnectionToolFactory.create(new MetadataLabeledLineConnectionFigure()), "edit.createLineConnection", labels);
+        ButtonFactory.addToolTo(tb, editor, cnt = nodeConnectionToolFactory.create(new MetadataLabeledLineConnectionFigure()), "edit.createElbowConnection", labels);
         lc = cnt.getPrototype();
         lc.setLiner(new ElbowLiner());
-        ButtonFactory.addToolTo(tb, editor, cnt = new ConnectionTool(new MetadataLabeledLineConnectionFigure(gson)), "edit.createCurvedConnection", labels);
+        ButtonFactory.addToolTo(tb, editor, cnt = nodeConnectionToolFactory.create(new MetadataLabeledLineConnectionFigure()), "edit.createCurvedConnection", labels);
         lc = cnt.getPrototype();
         lc.setLiner(new CurvedLiner());
         ButtonFactory.addToolTo(tb, editor, new BezierTool(new BezierFigure()), "edit.createScribble", labels);

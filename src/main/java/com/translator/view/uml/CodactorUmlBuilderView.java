@@ -82,6 +82,7 @@ public class CodactorUmlBuilderView extends AbstractView {
                 setHasUnsavedChanges(undo.hasSignificantEdits());
             }
         });
+
         
         ResourceBundleUtil labels = ApplicationLabels.getLabels();
         

@@ -29,6 +29,7 @@ import com.translator.view.codactor.console.CodactorConsole;
 import com.translator.view.codactor.factory.PromptContextBuilderFactory;
 import com.translator.view.codactor.factory.ProvisionalModificationCustomizerFactory;
 import com.translator.view.uml.CodactorUmlBuilderView;
+import com.translator.view.uml.factory.tool.NodeConnectionToolFactory;
 import com.translator.view.uml.factory.tool.PromptNodeCreationToolFactory;
 import com.translator.view.codactor.viewer.*;
 
@@ -47,6 +48,7 @@ public class CodeTranslatorViewConfig extends AbstractModule {
         install(new FactoryModuleBuilder().build(CodactorUmlBuilderViewFactory.class));
         install(new FactoryModuleBuilder().build(CodactorUmlBuilderApplicationModelFactory.class));
         install(new FactoryModuleBuilder().build(PromptNodeDialogFactory.class));
+        install(new FactoryModuleBuilder().build(NodeConnectionToolFactory.class));
         install(new FactoryModuleBuilder().build(CustomMouseAdapterFactory.class));
         install(new FactoryModuleBuilder().build(PromptNodeCreationToolFactory.class));
     }

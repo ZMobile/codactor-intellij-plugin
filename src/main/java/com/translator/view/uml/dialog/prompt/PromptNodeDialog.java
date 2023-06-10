@@ -8,7 +8,9 @@ import com.intellij.openapi.ui.ComboBox;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.model.uml.node.PromptNode;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
-import com.translator.service.uml.PromptNodeDialogRunnerService;
+import com.translator.service.uml.node.NodeDialogWindowMapperService;
+import com.translator.service.uml.node.PromptHighlighterService;
+import com.translator.service.uml.node.PromptNodeDialogRunnerService;
 import org.jhotdraw.draw.Drawing;
 
 import javax.swing.*;
@@ -27,22 +29,26 @@ public class PromptNodeDialog extends JDialog {
     private JButton resetButton;
     private ComboBox<String> modelComboBox;
     private PromptNodeDialogRunnerService promptNodeDialogRunnerService;
+    private PromptHighlighterService promptHighlighterService;
     private BackgroundTaskMapperService backgroundTaskMapperService;
+    private NodeDialogWindowMapperService nodeDialogWindowMapperService;
 
     @Inject
     public PromptNodeDialog(@Assisted LabeledRectangleFigure promptNodeFigure,
                             @Assisted Drawing drawing,
                             Project project,
                             PromptNodeDialogRunnerService promptNodeDialogRunnerService,
+                            PromptHighlighterService promptHighlighterService,
                             BackgroundTaskMapperService backgroundTaskMapperService,
+                            NodeDialogWindowMapperService nodeDialogWindowMapperService,
                             Gson gson) {
         super();
         this.project = project;
         this.promptNodeFigure = promptNodeFigure;
         this.drawing = drawing;
         this.promptNode = gson.fromJson(promptNodeFigure.getMetadata(), PromptNode.class);
-        this.promptConnectionViewer = new PromptConnectionViewer(promptNode, drawing, gson);
-        this.promptViewer = new PromptViewer(this);
+        this.promptConnectionViewer = new PromptConnectionViewer(this, promptNode, drawing, gson, nodeDialogWindowMapperService, promptHighlighterService);
+        this.promptViewer = new PromptViewer(this, promptHighlighterService);
         this.promptNodeDialogRunnerService = promptNodeDialogRunnerService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
 
@@ -129,7 +135,6 @@ public class PromptNodeDialog extends JDialog {
             System.out.println("Run button clicked");
             promptNodeDialogRunnerService.run(promptNodeFigure, promptNode, Objects.requireNonNull(modelComboBox.getSelectedItem()).toString());
             promptNodeFigure.setMetadata(gson.toJson(promptNode));
-
         });
 
 

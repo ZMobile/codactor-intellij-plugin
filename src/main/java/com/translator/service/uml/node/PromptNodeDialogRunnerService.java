@@ -1,4 +1,4 @@
-package com.translator.service.uml;
+package com.translator.service.uml.node;
 
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.model.uml.node.PromptNode;

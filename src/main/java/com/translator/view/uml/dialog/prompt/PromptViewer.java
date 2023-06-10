@@ -19,6 +19,7 @@ import com.translator.model.uml.prompt.Prompt;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorServiceImpl;
+import com.translator.service.uml.node.PromptHighlighterService;
 import com.translator.view.codactor.menu.TextAreaWindow;
 import com.translator.view.codactor.panel.FixedHeightPanel;
 import com.translator.view.codactor.renderer.InquiryChatRenderer;
@@ -44,7 +45,8 @@ public class PromptViewer extends JPanel {
     private List<InquiryChat> inquiryChats;
     private HistoricalContextObjectHolder historicalContextObjectHolder;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
-    private JBList<InquiryChatViewer> jList1;
+    private PromptHighlighterService promptHighlighterService;
+    private JBList<InquiryChatViewer> promptList;
     private JToolBar jToolBar2;
     private JToolBar jToolBar3;
     private JBScrollPane jBScrollPane1;
@@ -53,8 +55,9 @@ public class PromptViewer extends JPanel {
     private JButton removeButton;
     private int selectedChat;
 
-    public PromptViewer(PromptNodeDialog promptNodeDialog) {
+    public PromptViewer(PromptNodeDialog promptNodeDialog, PromptHighlighterService promptHighlighterService) {
         this.promptNodeDialog = promptNodeDialog;
+        this.promptHighlighterService = promptHighlighterService;
         this.promptNode = promptNodeDialog.getPromptNode();
         this.inquiryChats = new ArrayList<>();
         this.textAreaHeightCalculatorService = new TextAreaHeightCalculatorServiceImpl();
@@ -64,27 +67,29 @@ public class PromptViewer extends JPanel {
     }
 
     private void initComponents() {
-        jList1 = new JBList<>();
-        //jList1.setMaximumSize(new Dimension(getWidth(), Integer.MAX_VALUE));
-        jList1.setModel(new DefaultListModel<>());
-        jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        jList1.setCellRenderer(new InquiryChatRenderer());
-        jList1.addListSelectionListener(new ListSelectionListener() {
+        promptList = new JBList<>();
+        //promptList.setMaximumSize(new Dimension(getWidth(), Integer.MAX_VALUE));
+        promptList.setModel(new DefaultListModel<>());
+        promptList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        promptList.setCellRenderer(new InquiryChatRenderer());
+        promptList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
-                    int selectedIndex = jList1.getSelectedIndex();
+                    int selectedIndex = promptList.getSelectedIndex();
                     if (selectedIndex == -1) {
                         return;
                     }
                     selectedChat = selectedIndex;
                     Color highlightColor = Color.decode("#009688");
-                    for (int i = 0; i < jList1.getModel().getSize(); i++) {
-                        InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(i);
+                    //promptHighlighterService.highlightPrompts(promptNodeDialog);
+                    for (int i = 0; i < promptList.getModel().getSize(); i++) {
+                        InquiryChatViewer inquiryChatViewer = promptList.getModel().getElementAt(i);
                         if (i == selectedIndex) {
                             for (Component component : inquiryChatViewer.getComponents()) {
                                 if (component instanceof JBTextArea) {
                                     JBTextArea selectedJBTextArea = (JBTextArea) component;
+                                    selectedJBTextArea.getHighlighter().removeAllHighlights();
                                     //Highlight the whole text area
                                     try {
                                         selectedJBTextArea.getHighlighter().addHighlight(0, selectedJBTextArea.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
@@ -94,9 +99,11 @@ public class PromptViewer extends JPanel {
                                 } else if (component instanceof FixedHeightPanel) {
                                     FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
                                     Editor editor = fixedHeightPanel.getEditor();
+                                    editor.getMarkupModel().removeAllHighlighters();
                                     editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
                                 }
                              }
+                            promptHighlighterService.highlightPromptsWithoutRemoval(promptNodeDialog);
                             continue;
                         }
                         for (Component component : inquiryChatViewer.getComponents()) {
@@ -109,18 +116,19 @@ public class PromptViewer extends JPanel {
                                 editor.getMarkupModel().removeAllHighlighters();
                             }
                         }
+                        promptHighlighterService.highlightPromptsWithoutRemoval(promptNodeDialog);
                     }
                 }
             }
         });
-        jList1.addKeyListener(new KeyAdapter() {
+        promptList.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 //If Cntrl + C is pressed (or command for mac users)
                 if (e.getKeyCode() == KeyEvent.VK_C && (e.isControlDown() || e.isMetaDown())) {
                     if (selectedChat != -1) {
                         //Copy the selected text to the clipboard
-                        InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(selectedChat);
+                        InquiryChatViewer inquiryChatViewer = promptList.getModel().getElementAt(selectedChat);
                         JBTextArea jBTextArea = (JBTextArea) inquiryChatViewer.getComponents()[1];
                         StringSelection selection = new StringSelection(jBTextArea.getText());
                         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -129,13 +137,13 @@ public class PromptViewer extends JPanel {
                 }
             }
         });
-        jList1.addMouseListener(new MouseAdapter() {
+        promptList.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
                     if (selectedChat == -1) {
                         return;
                     }
-                    InquiryChatViewer inquiryChatViewer = jList1.getModel().getElementAt(selectedChat);
+                    InquiryChatViewer inquiryChatViewer = promptList.getModel().getElementAt(selectedChat);
                     StringBuilder text = new StringBuilder();
                     boolean firstComponentCopied = false;
                     for (int i = 0; i < inquiryChatViewer.getComponents().length; i++) {
@@ -163,6 +171,7 @@ public class PromptViewer extends JPanel {
                             public void onOk(String text) {
                                 promptNode.getPromptList().get(selectedChat).setPrompt(text);
                                 updatePromptChatContents(promptNode.getPromptList());
+                                promptHighlighterService.highlightPrompts(promptNodeDialog);
                             }
                         };
                         new TextAreaWindow("Edit Prompt", text.toString(), true, "Cancel", "Ok", textAreaWindowActionListener);
@@ -170,7 +179,7 @@ public class PromptViewer extends JPanel {
                 }
             }
         });
-        jBScrollPane1 = new JBScrollPane(jList1);
+        jBScrollPane1 = new JBScrollPane(promptList);
         jBScrollPane1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         jToolBar2 = new JToolBar();
@@ -196,7 +205,7 @@ public class PromptViewer extends JPanel {
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int selectedIndex = jList1.getSelectedIndex();
+                int selectedIndex = promptList.getSelectedIndex();
                 if (selectedIndex == -1) {
                     selectedIndex = 0;
                 }
@@ -217,6 +226,7 @@ public class PromptViewer extends JPanel {
                 Prompt prompt = new Prompt(promptNode.getId(), "Insert prompt here");
                 promptNode.getPromptList().add(prompt);
                 updatePromptChatContents(promptNode.getPromptList());
+                //promptHighlighterService.highlightPrompts(promptNodeDialog);
             }
         });
         jToolBar3.add(addButton);
@@ -235,14 +245,14 @@ public class PromptViewer extends JPanel {
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                                 .addComponent(jToolBar2, GroupLayout.PREFERRED_SIZE, 22, GroupLayout.PREFERRED_SIZE)
                                 .addComponent(jToolBar3, GroupLayout.PREFERRED_SIZE, 22, GroupLayout.PREFERRED_SIZE))
-                        .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, jList1.getHeight(), Short.MAX_VALUE)); // Set size for jList1// Add a gap of 20 between jList1 and JBTextArea
+                        .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, promptList.getHeight(), Short.MAX_VALUE)); // Set size for promptList// Add a gap of 20 between promptList and JBTextArea
     }
 
     public void updateInquiryChatContents(java.util.List<InquiryChat> inquiryChats) {
         this.inquiryChats = inquiryChats;
         ApplicationManager.getApplication().invokeLater(() -> {
                 if (inquiryChats == null) {
-                    jList1.setModel(new DefaultListModel<>());
+                    promptList.setModel(new DefaultListModel<>());
                     return;
                 }
                 int totalHeight = 0;
@@ -272,17 +282,19 @@ public class PromptViewer extends JPanel {
                         totalHeight += chatViewer.getComponent(0).getHeight();
                     }
                 }
-                jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, totalHeight));
-                jList1.setModel(model);
+                promptList.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, totalHeight));
+                promptList.setModel(model);
                 ComponentListener componentListener = new ComponentAdapter() {
                     @Override
                     public void componentResized(ComponentEvent e) {
+                        System.out.println("This gets calledaaaaa 5");
                         PromptViewer.this.componentResized(model);
                     }
                 };
-                jList1.getParent().addComponentListener(componentListener);
-                jBScrollPane1.setViewportView(jList1);
-                //JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
+                promptList.getParent().addComponentListener(componentListener);
+                jBScrollPane1.setViewportView(promptList);
+                promptHighlighterService.highlightPrompts(promptNodeDialog);
+            //JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
                 //vertical.setValue(vertical.getMaximum() - vertical.getVisibleAmount());
             }
         );
@@ -358,10 +370,20 @@ public class PromptViewer extends JPanel {
             }
             newModel.addElement(chatViewer);
         }
-        jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, newTotalHeight));
-        jList1.setModel(newModel);
-        jBScrollPane1.setViewportView(jList1);
+        promptList.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, newTotalHeight));
+        promptList.setModel(newModel);
+        jBScrollPane1.setViewportView(promptList);
     }
 
+    public List<InquiryChatViewer> getPrompts() {
+        List<InquiryChatViewer> prompts = new ArrayList<>();
+        for (int i = 0; i < promptList.getModel().getSize(); i++) {
+            prompts.add(promptList.getModel().getElementAt(i));
+        }
+        return prompts;
+    }
 
+    public JBList<InquiryChatViewer> getPromptJList() {
+        return promptList;
+    }
 }

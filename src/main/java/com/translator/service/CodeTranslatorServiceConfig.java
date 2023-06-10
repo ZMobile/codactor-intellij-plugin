@@ -43,10 +43,7 @@ import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowServiceImpl;
 import com.translator.service.codactor.ui.tool.ToolWindowService;
 import com.translator.service.codactor.ui.tool.ToolWindowServiceImpl;
-import com.translator.service.uml.NodeDialogWindowMapperService;
-import com.translator.service.uml.NodeDialogWindowMapperServiceImpl;
-import com.translator.service.uml.PromptNodeDialogRunnerService;
-import com.translator.service.uml.PromptNodeDialogRunnerServiceImpl;
+import com.translator.service.uml.node.*;
 
 public class CodeTranslatorServiceConfig extends AbstractModule {
     private Project project;
@@ -89,6 +86,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(BackgroundTaskMapperService.class).to(BackgroundTaskMapperServiceImpl.class).asEagerSingleton();
         bind(NodeDialogWindowMapperService.class).to(NodeDialogWindowMapperServiceImpl.class).asEagerSingleton();
         bind(PromptNodeDialogRunnerService.class).to(PromptNodeDialogRunnerServiceImpl.class);
+        bind(PromptHighlighterService.class).to(PromptHighlighterServiceImpl.class);
     }
 
     @Singleton

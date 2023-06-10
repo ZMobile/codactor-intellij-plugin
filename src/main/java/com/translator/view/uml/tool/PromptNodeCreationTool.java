@@ -5,10 +5,9 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.model.uml.node.PromptNode;
-import com.translator.service.uml.NodeDialogWindowMapperService;
+import com.translator.service.uml.node.NodeDialogWindowMapperService;
 import com.translator.view.uml.dialog.prompt.PromptNodeDialog;
 import com.translator.view.uml.factory.dialog.PromptNodeDialogFactory;
-import org.apache.tools.ant.types.optional.image.Draw;
 import org.jhotdraw.draw.Drawing;
 import org.jhotdraw.draw.DrawingEditor;
 import org.jhotdraw.draw.DrawingView;
@@ -20,17 +19,17 @@ import java.awt.event.WindowEvent;
 
 public class PromptNodeCreationTool extends CreationTool {
     private final PromptNodeDialogFactory promptNodeDialogFactory;
-    private final NodeDialogWindowMapperService nodeDialogTrackerService;
+    private final NodeDialogWindowMapperService nodeDialogWindowMapperService;
     private final Gson gson;
 
     @Inject
     public PromptNodeCreationTool(@Assisted LabeledRectangleFigure prototype,
                                   PromptNodeDialogFactory promptNodeDialogFactory,
-                                  NodeDialogWindowMapperService nodeDialogTrackerService,
+                                  NodeDialogWindowMapperService nodeDialogWindowMapperService,
                                   Gson gson) {
         super(prototype);
         this.promptNodeDialogFactory = promptNodeDialogFactory;
-        this.nodeDialogTrackerService = nodeDialogTrackerService;
+        this.nodeDialogWindowMapperService = nodeDialogWindowMapperService;
         this.gson = gson;
     }
 
@@ -46,20 +45,19 @@ public class PromptNodeCreationTool extends CreationTool {
             DrawingView view = editor.getActiveView();
             if (view != null) {
                 Drawing drawing = view.getDrawing();
-
                 PromptNodeDialog promptNodeDialog;
-                if (!nodeDialogTrackerService.getPromptNodeDialogMap().containsKey(labeledRectangleFigure)) {
+                if (!nodeDialogWindowMapperService.getPromptNodeDialogMap().containsKey(labeledRectangleFigure)) {
                     promptNodeDialog = promptNodeDialogFactory.create(labeledRectangleFigure, drawing);
-                    nodeDialogTrackerService.getPromptNodeDialogMap().put(labeledRectangleFigure, promptNodeDialog);
+                    nodeDialogWindowMapperService.getPromptNodeDialogMap().put(labeledRectangleFigure, promptNodeDialog);
                     promptNodeDialog.addWindowListener(new WindowAdapter() {
                         @Override
                         public void windowClosed(WindowEvent e) {
-                            nodeDialogTrackerService.getPromptNodeDialogMap().remove(labeledRectangleFigure);
+                            nodeDialogWindowMapperService.getPromptNodeDialogMap().remove(labeledRectangleFigure);
                         }
                     });
-                    nodeDialogTrackerService.getPromptNodeDialogMap().put(labeledRectangleFigure, promptNodeDialog);
+                    nodeDialogWindowMapperService.getPromptNodeDialogMap().put(labeledRectangleFigure, promptNodeDialog);
                 } else {
-                    promptNodeDialog = nodeDialogTrackerService.getPromptNodeDialogMap().get(labeledRectangleFigure);
+                    promptNodeDialog = nodeDialogWindowMapperService.getPromptNodeDialogMap().get(labeledRectangleFigure);
                 }
                 promptNodeDialog.setVisible(true);
 

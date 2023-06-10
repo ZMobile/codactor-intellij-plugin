@@ -32,6 +32,7 @@ public class InquiryChatRenderer extends JPanel implements ListCellRenderer<Inqu
 
     @Override
     public Component getListCellRendererComponent(JList<? extends InquiryChatViewer> list, InquiryChatViewer value, int index, boolean isSelected, boolean cellHasFocus) {
+        System.out.println("Breakpoint");
         ApplicationManager.getApplication().invokeAndWait(() -> {
             removeAll();
             add(value, BorderLayout.CENTER);

@@ -130,6 +130,13 @@ public class InquiryChatViewer extends JPanel {
         this(inquiryChat, inquiryChat.getFrom());
     }
 
+
+    @Override
+    public void revalidate() {
+        super.revalidate();
+        System.out.println("This got called 3");
+    }
+
     private List<Component> createComponentsFromMessage(String message) {
         List<Component> components = new ArrayList<>();
         Matcher matcher = CODE_BLOCK_PATTERN.matcher(message);
