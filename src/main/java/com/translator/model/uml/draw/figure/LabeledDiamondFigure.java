@@ -4,7 +4,7 @@ import org.jhotdraw.draw.*;
 import java.awt.*;
 import java.awt.geom.*;
 
-public class LabeledDiamondFigure extends DiamondFigure {
+public class LabeledDiamondFigure extends DiamondFigure implements LabeledMetadataFigure {
     private TextFigure label;
     private String metadata;
 
@@ -23,6 +23,10 @@ public class LabeledDiamondFigure extends DiamondFigure {
 
     public void setMetadata(String metadata) {
         this.metadata = metadata;
+    }
+
+    public TextFigure getLabel() {
+        return label;
     }
 
     @Override

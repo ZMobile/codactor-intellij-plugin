@@ -10,18 +10,16 @@ public class PromptNode extends Node {
     private List<Prompt> promptList;
     private List<Inquiry> activeInquiryList;
     private int outputCount;
-    private boolean running;
     private boolean error;
-    private String aiModel;
+    private String model;
 
     public PromptNode() {
         super();
         this.promptList = new ArrayList<>();
         this.activeInquiryList = new ArrayList<>();
         this.outputCount = 1;
-        this.running = false;
         this.error = false;
-        this.aiModel = "gpt-3.5-turbo";
+        this.model = "gpt-3.5-turbo";
     }
 
     public List<Prompt> getPromptList() {
@@ -40,14 +38,6 @@ public class PromptNode extends Node {
         this.activeInquiryList = activeInquiryList;
     }
 
-    public boolean isRunning() {
-        return running;
-    }
-
-    public void setRunning(boolean running) {
-        this.running = running;
-    }
-
     public boolean isError() {
         return error;
     }
@@ -64,11 +54,11 @@ public class PromptNode extends Node {
         this.outputCount = outputCountMultiplier;
     }
 
-    public String getAiModel() {
-        return aiModel;
+    public String getModel() {
+        return model;
     }
 
-    public void setAiModel(String aiModel) {
-        this.aiModel = aiModel;
+    public void setModel(String aiModel) {
+        this.model = aiModel;
     }
 }

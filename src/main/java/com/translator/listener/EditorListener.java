@@ -8,7 +8,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.model.codactor.modification.FileModificationTracker;
-import com.translator.service.codactor.code.CodeHighlighterService;
+import com.translator.service.codactor.editor.CodeHighlighterService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerService;
 

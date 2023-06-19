@@ -9,7 +9,11 @@ import com.intellij.ui.content.ContentManagerEvent;
 import com.intellij.ui.content.ContentManagerListener;
 import com.translator.CodactorInjector;
 import com.translator.view.codactor.console.CodactorConsole;
-import com.translator.view.codactor.viewer.*;
+import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
+import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
+import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;
+import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
+import com.translator.view.codactor.viewer.modification.ProvisionalModificationViewer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;

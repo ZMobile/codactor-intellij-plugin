@@ -7,13 +7,15 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.CodactorInjector;
-import com.translator.service.codactor.context.PromptContextServiceImpl;
-import com.translator.service.codactor.factory.AutomaticMassCodeModificationServiceFactory;
+import com.translator.service.codactor.context.PromptContextService;
+import com.translator.service.codactor.factory.PromptContextServiceFactory;
+import com.translator.service.codactor.modification.AutomaticMassCodeModificationService;
 import com.translator.service.codactor.modification.multi.MultiFileModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.FileFixDialog;
-import com.translator.view.codactor.factory.PromptContextBuilderFactory;
+import com.translator.view.codactor.factory.dialog.FileFixDialogFactory;
+import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -58,14 +60,9 @@ public class CustomFixFileAction extends AnAction {
         }
 
         Injector injector = CodactorInjector.getInstance().getInjector(project);
-        CodactorToolWindowService codactorToolWindowService = injector.getInstance(CodactorToolWindowService.class);
-        PromptContextBuilderFactory promptContextBuilderFactory = injector.getInstance(PromptContextBuilderFactory.class);
-        AutomaticMassCodeModificationServiceFactory automaticMassCodeModificationServiceFactory = injector.getInstance(AutomaticMassCodeModificationServiceFactory.class);
-        MultiFileModificationService multiFileModificationService = injector.getInstance(MultiFileModificationService.class);
-        OpenAiModelService openAiModelService = injector.getInstance(OpenAiModelService.class);
-
-        // Show the custom dialog and fix the selected files
-        FileFixDialog fileFixDialog = new FileFixDialog(project, codactorToolWindowService, new PromptContextServiceImpl(), promptContextBuilderFactory, automaticMassCodeModificationServiceFactory, multiFileModificationService, openAiModelService, Arrays.asList(virtualFiles));
+        FileFixDialogFactory fileFixDialogFactory = injector.getInstance(FileFixDialogFactory.class);
+        PromptContextService promptContextService = injector.getInstance(PromptContextServiceFactory.class).create();
+        FileFixDialog fileFixDialog = fileFixDialogFactory.create(promptContextService, Arrays.asList(virtualFiles));
         fileFixDialog.setVisible(true);
     }
 

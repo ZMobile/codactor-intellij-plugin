@@ -22,7 +22,6 @@ public class MetadataLabeledLineConnectionFigure extends LabeledLineConnectionFi
     }
 
     public void swapFigures() {
-        System.out.println("This gets calledaaaaa");
         willChange();
         Connector startConnector = getStartConnector();
         Connector endConnector = getEndConnector();

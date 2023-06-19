@@ -1,5 +1,7 @@
 package com.translator.view.codactor.dialog;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -11,14 +13,12 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
-import com.translator.PromptContextBuilder;
 import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.factory.AutomaticMassCodeModificationServiceFactory;
 import com.translator.service.codactor.modification.AutomaticMassCodeModificationService;
 import com.translator.service.codactor.modification.multi.MultiFileModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
-import com.translator.view.codactor.factory.PromptContextBuilderFactory;
+import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,7 +30,7 @@ public class FileModifyDialog extends JDialog {
     private Project project;
     private CodactorToolWindowService codactorToolWindowService;
     private PromptContextService promptContextService;
-    private PromptContextBuilderFactory promptContextBuilderFactory;
+    private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
     private AutomaticMassCodeModificationService automaticMassCodeModificationService;
     private MultiFileModificationService multiFileModificationService;
     private OpenAiModelService openAiModelService;
@@ -47,19 +47,20 @@ public class FileModifyDialog extends JDialog {
     private JToggleButton applyToEachFileButton;
     private JToggleButton smartModificationRequestButton;
 
+    @Inject
     public FileModifyDialog(Project project,
                             CodactorToolWindowService codactorToolWindowService,
-                            PromptContextService promptContextService,
-                            PromptContextBuilderFactory promptContextBuilderFactory,
-                            AutomaticMassCodeModificationServiceFactory automaticMassCodeModificationServiceFactory,
+                            @Assisted PromptContextService promptContextService,
+                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
+                            AutomaticMassCodeModificationService automaticMassCodeModificationService,
                             MultiFileModificationService multiFileModificationService,
                             OpenAiModelService openAiModelService,
-                            List<VirtualFile> selectedItems) {
+                            @Assisted List<VirtualFile> selectedItems) {
         this.project = project;
         this.codactorToolWindowService = codactorToolWindowService;
         this.promptContextService = promptContextService;
-        this.promptContextBuilderFactory = promptContextBuilderFactory;
-        this.automaticMassCodeModificationService = automaticMassCodeModificationServiceFactory.create(promptContextService);
+        this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
+        this.automaticMassCodeModificationService = automaticMassCodeModificationService;
         this.multiFileModificationService = multiFileModificationService;
         this.openAiModelService = openAiModelService;
         setLayout(new BorderLayout());
@@ -158,7 +159,7 @@ public class FileModifyDialog extends JDialog {
 // Modify the northPanel layout
         northPanel.add(toggleButtonsPanel, BorderLayout.SOUTH);
 
-        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
+        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
         modelComboBox.addActionListener(e -> {
             ComboBox<String> cb = (ComboBox<String>) e.getSource();
             String model = (String) cb.getSelectedItem();
@@ -170,8 +171,8 @@ public class FileModifyDialog extends JDialog {
         advancedButton = new JButton("(Advanced) Add Context");
         advancedButton.addActionListener(e -> {
             promptContextService.setStatusLabel(hiddenLabel);
-            PromptContextBuilder promptContextBuilder = promptContextBuilderFactory.create(promptContextService);
-            promptContextBuilder.setVisible(true);
+            PromptContextBuilderDialog promptContextBuilderDialog = promptContextBuilderDialogFactory.create(promptContextService);
+            promptContextBuilderDialog.setVisible(true);
         });
 
         okButton = new JButton("Modify");
@@ -246,10 +247,12 @@ public class FileModifyDialog extends JDialog {
                 }
 
                 if (applyToEachFileButton.isSelected()) {
-                    automaticMassCodeModificationService.getModifiedCode(selectedFiles, description.getText());
+                    automaticMassCodeModificationService.getModifiedCode(selectedFiles, description.getText(), promptContextService.getPromptContext());
+                    promptContextService.clearPromptContext();
                 } else {
                     try {
                         multiFileModificationService.modifyCodeFiles(selectedFiles, description.getText(), promptContextService.getPromptContext());
+                        promptContextService.clearPromptContext();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }

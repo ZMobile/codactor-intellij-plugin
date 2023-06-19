@@ -3,8 +3,9 @@ package com.translator.model.codactor.modification;
 
 import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.project.Project;
-import com.translator.service.codactor.code.CodeSnippetExtractorService;
-import com.translator.service.codactor.code.RangeReplaceService;
+import com.translator.model.codactor.history.HistoricalContextObjectHolder;
+import com.translator.service.codactor.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.editor.RangeReplaceService;
 import com.translator.service.codactor.modification.tracking.CodeRangeTrackerService;
 
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ public class FileModificationTracker {
     }
 
 
-    public String addModification(int startIndex, int endIndex, ModificationType modificationType) {
+    public String addModification(String modification, int startIndex, int endIndex, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         String beforeText = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
         RangeMarker rangeMarker = codeRangeTrackerService.createRangeMarker(filePath, startIndex, endIndex);
         for (FileModification m : modifications) {
@@ -53,7 +54,7 @@ public class FileModificationTracker {
                 }
             }
         }
-        FileModification fileModification = new FileModification(filePath, rangeMarker, beforeText, modificationType);
+        FileModification fileModification = new FileModification(filePath, modification, rangeMarker, beforeText, modificationType, priorContext);
         modifications.add(fileModification);
         return fileModification.getId();
     }

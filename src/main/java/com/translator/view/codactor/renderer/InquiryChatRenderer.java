@@ -1,7 +1,7 @@
 package com.translator.view.codactor.renderer;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.translator.view.codactor.viewer.InquiryChatViewer;
+import com.translator.view.codactor.viewer.inquiry.InquiryChatViewer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,7 +32,6 @@ public class InquiryChatRenderer extends JPanel implements ListCellRenderer<Inqu
 
     @Override
     public Component getListCellRendererComponent(JList<? extends InquiryChatViewer> list, InquiryChatViewer value, int index, boolean isSelected, boolean cellHasFocus) {
-        System.out.println("Breakpoint");
         ApplicationManager.getApplication().invokeAndWait(() -> {
             removeAll();
             add(value, BorderLayout.CENTER);

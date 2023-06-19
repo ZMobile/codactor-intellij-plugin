@@ -9,12 +9,13 @@ import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.translator.CodactorInjector;
 import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.context.PromptContextServiceImpl;
+import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.CodeFileGeneratorService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.MultiFileCreateDialog;
-import com.translator.view.codactor.factory.PromptContextBuilderFactory;
+import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
+import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 import org.jetbrains.annotations.NotNull;
 
 public class CustomCreateMultiFileAction extends CreateElementActionBase {
@@ -27,13 +28,10 @@ public class CustomCreateMultiFileAction extends CreateElementActionBase {
     protected PsiElement @NotNull [] invokeDialog(Project project, PsiDirectory directory) {
         // Show the custom dialog and create the file
         Injector injector = CodactorInjector.getInstance().getInjector(project);
-        OpenAiModelService openAiModelService = injector.getInstance(OpenAiModelService.class);
-        CodactorToolWindowService codactorToolWindowService = injector.getInstance(CodactorToolWindowService.class);
-        CodeFileGeneratorService codeFileGeneratorService = injector.getInstance(CodeFileGeneratorService.class);
-        PromptContextService promptContextService = new PromptContextServiceImpl();
-        PromptContextBuilderFactory promptContextBuilderFactory = injector.getInstance(PromptContextBuilderFactory.class);
+        MultiFileCreateDialogFactory multiFileCreateDialogFactory = injector.getInstance(MultiFileCreateDialogFactory.class);
+        PromptContextService promptContextService = injector.getInstance(PromptContextServiceFactory.class).create();
         VirtualFile directoryVirtualFile = directory.getVirtualFile();
-        MultiFileCreateDialog multiFileCreateDialog = new MultiFileCreateDialog(directoryVirtualFile.getPath(), null, openAiModelService, codactorToolWindowService, codeFileGeneratorService, promptContextService, promptContextBuilderFactory);
+        MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(directoryVirtualFile.getPath(), null, promptContextService);
         multiFileCreateDialog.setVisible(true);
 
         return PsiElement.EMPTY_ARRAY;

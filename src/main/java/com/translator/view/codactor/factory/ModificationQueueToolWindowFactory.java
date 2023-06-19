@@ -7,7 +7,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.translator.CodactorInjector;
-import com.translator.view.codactor.viewer.ModificationQueueViewer;
+import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
 import org.jetbrains.annotations.NotNull;
 
 public class ModificationQueueToolWindowFactory implements ToolWindowFactory {

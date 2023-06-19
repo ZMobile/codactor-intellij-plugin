@@ -1,15 +1,13 @@
 package com.translator.service.codactor.modification;
 
-import com.google.inject.assistedinject.Assisted;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.modification.ModificationType;
-import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.factory.AutomaticCodeModificationServiceFactory;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 
 import javax.inject.Inject;
@@ -22,16 +20,15 @@ public class AutomaticMassCodeModificationServiceImpl implements AutomaticMassCo
 
     @Inject
     public AutomaticMassCodeModificationServiceImpl(Project project,
-                                                AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory,
-                                                @Assisted PromptContextService promptContextService,
+                                                    AutomaticCodeModificationService automaticCodeModificationService,
                                                     FileModificationTrackerService fileModificationTrackerService) {
         this.project = project;
-        this.automaticCodeModificationService = automaticCodeModificationServiceFactory.create(promptContextService);
+        this.automaticCodeModificationService = automaticCodeModificationService;
         this.fileModificationTrackerService = fileModificationTrackerService;
     }
 
     @Override
-    public void getModifiedCode(List<String> filePaths, String modification) {
+    public void getModifiedCode(List<String> filePaths, String modification, List<HistoricalContextObjectHolder> priorContext) {
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(modification);
         for (String filePath : filePaths) {
             //Get the document to find the start and end index. It needs to be some read action
@@ -46,7 +43,7 @@ public class AutomaticMassCodeModificationServiceImpl implements AutomaticMassCo
                         String code = document.getText();
                         int startIndex = 0;
                         int endIndex = code.length();
-                        automaticCodeModificationService.getModifiedCode(filePath, startIndex, endIndex, modification, ModificationType.MODIFY);
+                        automaticCodeModificationService.getModifiedCode(filePath, startIndex, endIndex, modification, ModificationType.MODIFY, priorContext);
                     }
                 }
             });
@@ -61,7 +58,7 @@ public class AutomaticMassCodeModificationServiceImpl implements AutomaticMassCo
     }
 
     @Override
-    public void getFixedCode(List<String> filePaths, String error) {
+    public void getFixedCode(List<String> filePaths, String error, List<HistoricalContextObjectHolder> priorContext) {
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(error);
         for (String filePath : filePaths) {
             //Get the document to find the start and end index. It needs to be some read action
@@ -76,7 +73,7 @@ public class AutomaticMassCodeModificationServiceImpl implements AutomaticMassCo
                         String code = document.getText();
                         int startIndex = 0;
                         int endIndex = code.length();
-                        automaticCodeModificationService.getModifiedCode(filePath, startIndex, endIndex, error, ModificationType.FIX);
+                        automaticCodeModificationService.getModifiedCode(filePath, startIndex, endIndex, error, ModificationType.FIX, priorContext);
                     }
                 }
             });
@@ -91,12 +88,12 @@ public class AutomaticMassCodeModificationServiceImpl implements AutomaticMassCo
     }
 
     @Override
-    public void getTranslatedCode(List<String> filePaths, String newLanguage, String newFileType) {
+    public void getTranslatedCode(List<String> filePaths, String newLanguage, String newFileType, List<HistoricalContextObjectHolder> priorContext) {
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification("Translate files to " + newLanguage);
         for (String filePath : filePaths) {
             //Get the document to find the start and end index. It needs to be some read action
             ApplicationManager.getApplication().invokeLater(() -> {
-                automaticCodeModificationService.getTranslatedCode(filePath, newLanguage, newFileType);
+                automaticCodeModificationService.getTranslatedCode(filePath, newLanguage, newFileType, priorContext);
             });
             try {
                 Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)

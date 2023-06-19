@@ -7,7 +7,7 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-public class LabeledEllipseFigure extends EllipseFigure {
+public class LabeledEllipseFigure extends EllipseFigure implements LabeledMetadataFigure {
     private TextFigure label;
     private String metadata;
 
@@ -26,6 +26,10 @@ public class LabeledEllipseFigure extends EllipseFigure {
 
     public void setMetadata(String metadata) {
         this.metadata = metadata;
+    }
+
+    public TextFigure getLabel() {
+        return label;
     }
 
     @Override

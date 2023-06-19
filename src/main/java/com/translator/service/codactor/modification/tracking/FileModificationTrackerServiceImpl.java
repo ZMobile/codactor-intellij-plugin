@@ -5,16 +5,17 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.translator.CodactorInjector;
-import com.translator.ProvisionalModificationCustomizer;
+import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
+import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.modification.*;
-import com.translator.service.codactor.code.CodeHighlighterService;
-import com.translator.service.codactor.code.CodeSnippetExtractorService;
-import com.translator.service.codactor.code.GuardedBlockService;
-import com.translator.service.codactor.code.RangeReplaceService;
+import com.translator.service.codactor.editor.CodeHighlighterService;
+import com.translator.service.codactor.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.editor.GuardedBlockService;
+import com.translator.service.codactor.editor.RangeReplaceService;
 import com.translator.service.codactor.file.RenameFileService;
 import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerService;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
-import com.translator.view.codactor.viewer.ModificationQueueViewer;
+import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -24,7 +25,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     private Project project;
     private Map<String, FileModificationTracker> activeModificationFiles;
     private Map<String, FileModificationSuggestionModificationTracker> activeModificationSuggestionModifications;
-    private Map<String, List<ProvisionalModificationCustomizer>> provisionalModificationCustomizerMap;
+    private Map<String, List<ProvisionalModificationCustomizerDialog>> provisionalModificationCustomizerMap;
     private List<MultiFileModification> activeMultiFileModifications;
     private CodeHighlighterService codeHighlighterService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
@@ -61,7 +62,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         this.backgroundTaskMapperService = backgroundTaskMapperService;
     }
 
-    public String addModification(String filePath, int startIndex, int endIndex, ModificationType modificationType) {
+    public String addModification(String filePath, String modification, int startIndex, int endIndex, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         String newFilePath = Objects.requireNonNullElse(filePath, "Untitled");
         FileModificationTracker fileModificationTracker;
         if (activeModificationFiles.containsKey(newFilePath)) {
@@ -70,7 +71,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             fileModificationTracker = new FileModificationTracker(project, newFilePath, codeSnippetExtractorService, rangeReplaceService, codeRangeTrackerService);
             activeModificationFiles.put(newFilePath, fileModificationTracker);
         }
-        String fileModificationId = fileModificationTracker.addModification(startIndex, endIndex, modificationType);
+        String fileModificationId = fileModificationTracker.addModification(modification, startIndex, endIndex, modificationType, priorContext);
         if (fileModificationId == null) {
             //JBTextArea display = displayMap.get(newFilePath);
             /*JOptionPane.showMessageDialog(display, "Can't modify code that is already being modified", "Error",
@@ -354,21 +355,21 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         this.modificationQueueViewer = modificationQueueViewer;
     }
 
-    public void addProvisionalModificationCustomizer(ProvisionalModificationCustomizer provisionalModificationCustomizer) {
-        List<ProvisionalModificationCustomizer> provisionalModificationCustomizerList = provisionalModificationCustomizerMap.get(provisionalModificationCustomizer.getFileModificationSuggestion().getId());
-        if (provisionalModificationCustomizerList == null) {
-            provisionalModificationCustomizerList = new ArrayList<>();
+    public void addProvisionalModificationCustomizer(ProvisionalModificationCustomizerDialog provisionalModificationCustomizerDialog) {
+        List<ProvisionalModificationCustomizerDialog> provisionalModificationCustomizerDialogList = provisionalModificationCustomizerMap.get(provisionalModificationCustomizerDialog.getFileModificationSuggestion().getId());
+        if (provisionalModificationCustomizerDialogList == null) {
+            provisionalModificationCustomizerDialogList = new ArrayList<>();
         }
-        provisionalModificationCustomizerList.add(provisionalModificationCustomizer);
-        provisionalModificationCustomizerMap.put(provisionalModificationCustomizer.getFileModificationSuggestion().getId(), provisionalModificationCustomizerList);
+        provisionalModificationCustomizerDialogList.add(provisionalModificationCustomizerDialog);
+        provisionalModificationCustomizerMap.put(provisionalModificationCustomizerDialog.getFileModificationSuggestion().getId(), provisionalModificationCustomizerDialogList);
     }
 
     private void disposeProvisionalModificationCustomizers(FileModification fileModification) {
         for (FileModificationSuggestion fileModificationSuggestion : fileModification.getModificationOptions()) {
-            List<ProvisionalModificationCustomizer> provisionalModificationCustomizerList = provisionalModificationCustomizerMap.get(fileModificationSuggestion.getId());
-            if (provisionalModificationCustomizerList != null) {
-                for (ProvisionalModificationCustomizer provisionalModificationCustomizer : provisionalModificationCustomizerList) {
-                    provisionalModificationCustomizer.dispose();
+            List<ProvisionalModificationCustomizerDialog> provisionalModificationCustomizerDialogList = provisionalModificationCustomizerMap.get(fileModificationSuggestion.getId());
+            if (provisionalModificationCustomizerDialogList != null) {
+                for (ProvisionalModificationCustomizerDialog provisionalModificationCustomizerDialog : provisionalModificationCustomizerDialogList) {
+                    provisionalModificationCustomizerDialog.dispose();
                 }
             }
             provisionalModificationCustomizerMap.remove(fileModificationSuggestion.getId());

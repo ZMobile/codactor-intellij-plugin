@@ -8,20 +8,19 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.intellij.openapi.project.Project;
 import com.translator.dao.CodeTranslatorDaoConfig;
 import com.translator.dao.inquiry.InquiryDao;
-import com.translator.service.codactor.code.*;
+import com.translator.service.codactor.editor.*;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.context.PromptContextServiceImpl;
 import com.translator.service.codactor.copy.DirectoryCopierService;
 import com.translator.service.codactor.copy.DirectoryCopierServiceImpl;
-import com.translator.service.codactor.factory.AutomaticCodeModificationServiceFactory;
-import com.translator.service.codactor.factory.AutomaticMassCodeModificationServiceFactory;
+import com.translator.service.codactor.factory.CodeFileGeneratorServiceFactory;
+import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.*;
 import com.translator.service.codactor.inquiry.InquiryService;
 import com.translator.service.codactor.inquiry.InquiryServiceImpl;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
-import com.translator.service.codactor.modification.CodeModificationService;
-import com.translator.service.codactor.modification.CodeModificationServiceImpl;
+import com.translator.service.codactor.modification.*;
 import com.translator.service.codactor.modification.multi.MultiFileModificationService;
 import com.translator.service.codactor.modification.multi.MultiFileModificationServiceImpl;
 import com.translator.service.codactor.modification.tracking.CodeRangeTrackerService;
@@ -35,6 +34,8 @@ import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.openai.OpenAiModelServiceImpl;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.codactor.task.BackgroundTaskMapperServiceImpl;
+import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
+import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformerImpl;
 import com.translator.service.codactor.ui.ModificationQueueListButtonService;
 import com.translator.service.codactor.ui.ModificationQueueListButtonServiceImpl;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
@@ -44,6 +45,12 @@ import com.translator.service.codactor.ui.tool.CodactorToolWindowServiceImpl;
 import com.translator.service.codactor.ui.tool.ToolWindowService;
 import com.translator.service.codactor.ui.tool.ToolWindowServiceImpl;
 import com.translator.service.uml.node.*;
+import com.translator.service.uml.node.query.ConnectionQueryService;
+import com.translator.service.uml.node.query.ConnectionQueryServiceImpl;
+import com.translator.service.uml.node.query.NodeQueryService;
+import com.translator.service.uml.node.query.NodeQueryServiceImpl;
+import com.translator.service.uml.node.runner.*;
+import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
 public class CodeTranslatorServiceConfig extends AbstractModule {
     private Project project;
@@ -55,8 +62,12 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
     @Override
     protected void configure() {
         install(new CodeTranslatorDaoConfig());
-        install(new FactoryModuleBuilder().build(AutomaticCodeModificationServiceFactory.class));
-        install(new FactoryModuleBuilder().build(AutomaticMassCodeModificationServiceFactory.class));
+        install(new FactoryModuleBuilder().build(PromptContextBuilderDialogFactory.class));
+        install(new FactoryModuleBuilder().build(PromptContextServiceFactory.class));
+        install(new FactoryModuleBuilder().build(CodeFileGeneratorServiceFactory.class));
+        bind(PromptContextService.class).to(PromptContextServiceImpl.class).asEagerSingleton();
+        bind(AutomaticMassCodeModificationService.class).to(AutomaticMassCodeModificationServiceImpl.class);
+        bind(AutomaticCodeModificationService.class).to(AutomaticCodeModificationServiceImpl.class);
         bind(CodeModificationService.class).to(CodeModificationServiceImpl.class);
         bind(OpenAiApiKeyService.class).to(OpenAiApiKeyServiceImpl.class).asEagerSingleton();
         bind(OpenAiModelService.class).to(OpenAiModelServiceImpl.class).asEagerSingleton();
@@ -64,7 +75,6 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(FileReaderService.class).to(FileReaderServiceImpl.class);
         bind(FileOpenerService.class).to(FileOpenerServiceImpl.class);
         bind(SelectedFileFetcherService.class).to(SelectedFileFetcherServiceImpl.class);
-        bind(PromptContextService.class).to(PromptContextServiceImpl.class);
         bind(DirectoryCopierService.class).to(DirectoryCopierServiceImpl.class);
         bind(LineCounterService.class).to(LineCounterServiceImpl.class);
         bind(TabKeyListenerService.class).to(TabKeyListenerServiceImpl.class).asEagerSingleton();
@@ -85,8 +95,13 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(RenameFileService.class).to(RenameFileServiceImpl.class);
         bind(BackgroundTaskMapperService.class).to(BackgroundTaskMapperServiceImpl.class).asEagerSingleton();
         bind(NodeDialogWindowMapperService.class).to(NodeDialogWindowMapperServiceImpl.class).asEagerSingleton();
-        bind(PromptNodeDialogRunnerService.class).to(PromptNodeDialogRunnerServiceImpl.class);
         bind(PromptHighlighterService.class).to(PromptHighlighterServiceImpl.class);
+        bind(ConnectionQueryService.class).to(ConnectionQueryServiceImpl.class);
+        bind(NodeQueryService.class).to(NodeQueryServiceImpl.class);
+        bind(NodeRunnerManagerService.class).to(NodeRunnerManagerServiceImpl.class);
+        bind(PromptNodeRunnerService.class).to(PromptNodeRunnerServiceImpl.class);
+        bind(FileModificationRestarterService.class).to(FileModificationRestarterServiceImpl.class);
+        bind(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer.class).to(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformerImpl.class);
     }
 
     @Singleton
@@ -111,14 +126,14 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
 
     @Singleton
     @Provides
-    public CodeFileGeneratorService getCodeFileGeneratorService(Project project,
-                                                                InquiryDao inquiryDao,
-                                                                CodeModificationService codeModificationService,
-                                                                FileModificationTrackerService fileModificationTrackerService,
-                                                                OpenAiApiKeyService openAiApiKeyService,
-                                                                OpenAiModelService openAiModelService,
-                                                                FileCreatorService fileCreatorService) {
-        return new CodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationService, fileModificationTrackerService, openAiApiKeyService, openAiModelService, fileCreatorService);
+    public MassCodeFileGeneratorService getCodeFileGeneratorService(Project project,
+                                                                    InquiryDao inquiryDao,
+                                                                    CodeModificationService codeModificationService,
+                                                                    FileModificationTrackerService fileModificationTrackerService,
+                                                                    OpenAiApiKeyService openAiApiKeyService,
+                                                                    OpenAiModelService openAiModelService,
+                                                                    FileCreatorService fileCreatorService) {
+        return new MassCodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationService, fileModificationTrackerService, openAiApiKeyService, openAiModelService, fileCreatorService);
     }
 
     @Singleton
@@ -126,11 +141,12 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
     public MultiFileModificationService multiFileModificationService(Project project,
                                                                     InquiryDao inquiryDao,
                                                                     FileModificationTrackerService fileModificationTrackerService,
+                                                                    FileModificationRestarterService fileModificationRestarterService,
                                                                     CodeModificationService codeModificationService,
                                                                     CodeSnippetExtractorService codeSnippetExtractorService,
                                                                     OpenAiApiKeyService openAiApiKeyService,
                                                                     OpenAiModelService openAiModelService,
                                                                      Gson gson) {
-        return new MultiFileModificationServiceImpl(project, inquiryDao, fileModificationTrackerService, codeModificationService, codeSnippetExtractorService, openAiApiKeyService, openAiModelService, gson);
+        return new MultiFileModificationServiceImpl(project, inquiryDao, fileModificationTrackerService, fileModificationRestarterService, codeModificationService, codeSnippetExtractorService, openAiApiKeyService, openAiModelService, gson);
     }
 }

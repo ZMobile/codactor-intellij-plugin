@@ -21,7 +21,7 @@ import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorServic
 import com.translator.view.codactor.menu.TextAreaWindow;
 import com.translator.view.codactor.panel.FixedHeightPanel;
 import com.translator.view.codactor.renderer.InquiryChatRenderer;
-import com.translator.view.codactor.viewer.InquiryChatViewer;
+import com.translator.view.codactor.viewer.inquiry.InquiryChatViewer;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;

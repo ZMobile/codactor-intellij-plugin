@@ -1,29 +1,26 @@
 package com.translator.model.uml.node;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class Node {
     private final String myId;
-    private List<NodeConnectionReference> connections;
+    private boolean running;
     private boolean processed;
+    private String startedByNodeId;
+    private String output;
 
     public Node() {
-        myId = UUID.randomUUID().toString();
+        this.myId = UUID.randomUUID().toString();
+        this.running = false;
+        this.output = null;
+        this.startedByNodeId = null;
     }
 
     public String getId() {
         return myId;
-    }
-
-
-    public List<NodeConnectionReference> getConnections() {
-        return connections;
-    }
-
-    public void setConnections(List<NodeConnectionReference> connections) {
-        this.connections = connections;
     }
 
     public boolean isProcessed() {
@@ -32,5 +29,29 @@ public class Node {
 
     public void setProcessed(boolean processed) {
         this.processed = processed;
+    }
+
+    public String getOutput() {
+        return output;
+    }
+
+    public void setOutput(String output) {
+        this.output = output;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
+
+    public String getStartedByNodeId() {
+        return startedByNodeId;
+    }
+
+    public void setStartedByNodeId(String startedByNodeId) {
+        this.startedByNodeId = startedByNodeId;
     }
 }

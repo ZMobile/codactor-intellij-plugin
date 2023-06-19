@@ -3,7 +3,7 @@ package com.translator.model.codactor.modification;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.util.TextRange;
-import com.translator.service.codactor.code.RangeReplaceService;
+import com.translator.service.codactor.editor.RangeReplaceService;
 
 import java.util.ArrayList;
 import java.util.List;

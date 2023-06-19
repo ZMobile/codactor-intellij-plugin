@@ -2,6 +2,7 @@ package com.translator.view.codactor.menu;
 
 
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 
@@ -27,7 +28,7 @@ public class TextAreaWindow {
 
     public TextAreaWindow(String initialText, TextAreaWindowActionListener listener) {
         this.listener = listener;
-        SwingUtilities.invokeLater(() -> {
+        ApplicationManager.getApplication().invokeLater(() -> {
             JDialog dialog = new JDialog((Frame) null, "Copy/Selection window", true);
             dialog.setLayout(new BorderLayout());
 
@@ -70,7 +71,7 @@ public class TextAreaWindow {
 
     public TextAreaWindow(String header, String initialText, boolean lineWrapping, String cancelButtonText, String okButtonText, TextAreaWindowActionListener textAreaWindowActionListener) {
         this.listener = textAreaWindowActionListener;
-        SwingUtilities.invokeLater(() -> {
+        ApplicationManager.getApplication().invokeLater(() -> {
             JDialog dialog = new JDialog((Frame) null, header, true);
             dialog.setLayout(new BorderLayout());
 

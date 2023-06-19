@@ -2,7 +2,7 @@ package com.translator.service.uml.node;
 
 import com.google.inject.Inject;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
-import com.translator.view.uml.dialog.prompt.PromptNodeDialog;
+import com.translator.view.uml.node.dialog.prompt.PromptNodeDialog;
 
 import java.util.HashMap;
 import java.util.Map;

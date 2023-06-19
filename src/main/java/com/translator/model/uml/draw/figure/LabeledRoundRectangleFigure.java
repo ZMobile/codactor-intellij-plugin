@@ -7,7 +7,7 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-public class LabeledRoundRectangleFigure extends RoundRectangleFigure {
+public class LabeledRoundRectangleFigure extends RoundRectangleFigure implements LabeledMetadataFigure {
     private TextFigure label;
     private String metadata;
 
@@ -26,6 +26,10 @@ public class LabeledRoundRectangleFigure extends RoundRectangleFigure {
 
     public void setMetadata(String metadata) {
         this.metadata = metadata;
+    }
+
+    public TextFigure getLabel() {
+        return label;
     }
 
     @Override

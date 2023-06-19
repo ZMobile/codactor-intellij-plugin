@@ -7,7 +7,7 @@ import com.translator.model.codactor.modification.FileModification;
 import com.translator.model.codactor.modification.FileModificationTracker;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
-import com.translator.view.codactor.viewer.ProvisionalModificationViewer;
+import com.translator.view.codactor.viewer.modification.ProvisionalModificationViewer;
 
 import java.awt.event.MouseEvent;
 

@@ -10,13 +10,11 @@ import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.model.uml.connection.Connection;
 import com.translator.view.codactor.panel.FixedHeightPanel;
-import com.translator.view.codactor.viewer.InquiryChatViewer;
-import com.translator.view.uml.dialog.prompt.PromptConnectionViewer;
-import com.translator.view.uml.dialog.prompt.PromptNodeDialog;
-import com.translator.view.uml.dialog.prompt.PromptViewer;
+import com.translator.view.codactor.viewer.inquiry.InquiryChatViewer;
+import com.translator.view.uml.node.dialog.prompt.PromptConnectionViewer;
+import com.translator.view.uml.node.dialog.prompt.PromptNodeDialog;
+import com.translator.view.uml.node.dialog.prompt.PromptViewer;
 
-import javax.swing.*;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import java.awt.*;
 import java.util.List;

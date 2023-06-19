@@ -1,19 +1,38 @@
 package com.translator.view.codactor.dialog;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
-import com.translator.PromptContextBuilder;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDirectory;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.translator.service.codactor.context.PromptContextService;
+import com.translator.service.codactor.factory.CodeFileGeneratorServiceFactory;
+import com.translator.service.codactor.file.CodeFileGeneratorService;
+import com.translator.service.codactor.modification.AutomaticCodeModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
-import com.translator.view.codactor.factory.PromptContextBuilderFactory;
+import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
+import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 
 public class FileCreateDialog extends JDialog {
+    private Project project;
+    private PsiDirectory directory;
     private OpenAiModelService openAiModelService;
     private PromptContextService promptContextService;
-    private PromptContextBuilderFactory promptContextBuilderFactory;
+    private CodeFileGeneratorService codeFileGeneratorService;
+    private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
     private JPanel contentPane;
     private JTextField fileNameInput;
     private JTextArea fileDescription;
@@ -23,14 +42,19 @@ public class FileCreateDialog extends JDialog {
     private JButton okButton;
     private ActionListener okActionListener;
 
-    public FileCreateDialog(OpenAiModelService openAiModelService,
-                            PromptContextService promptContextService,
-                            PromptContextBuilderFactory promptContextBuilderFactory,
-                            ActionListener okActionListener) {
+    @Inject
+    public FileCreateDialog(Project project,
+                            OpenAiModelService openAiModelService,
+                            @Assisted PromptContextService promptContextService,
+                            CodeFileGeneratorServiceFactory codeFileGeneratorServiceFactory,
+                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
+                            @Assisted PsiDirectory directory) {
+        this.project = project;
         this.openAiModelService = openAiModelService;
         this.promptContextService = promptContextService;
-        this.promptContextBuilderFactory = promptContextBuilderFactory;
-        this.okActionListener = okActionListener;
+        this.codeFileGeneratorService = codeFileGeneratorServiceFactory.create(promptContextService);
+        this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
+        this.directory = directory;
         setModal(true);
         initUIComponents();
         setContentPane(contentPane);
@@ -43,9 +67,29 @@ public class FileCreateDialog extends JDialog {
         contentPane = new JPanel(new BorderLayout());
         fileNameInput = new JTextField();
         fileDescription = new JTextArea();
-        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
+        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
 // Get the index of the selected element
+        okActionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JButton okButton = (JButton) e.getSource();
+                FileCreateDialog fileCreateDialog = (FileCreateDialog) SwingUtilities.getWindowAncestor(okButton);
 
+                String fileName = fileCreateDialog.getFileNameInput().getText();
+                if (!fileName.contains(".") || fileName.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(fileCreateDialog, "Please enter a valid file name with an extension.", "Error", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    String fileDescription = fileCreateDialog.getFileDescription().getText();
+                    PsiElement createdElement = codeFileGeneratorService.createCodeFile(fileName, fileDescription, directory);
+                    if (createdElement != null) {
+                        if (createdElement instanceof PsiFile) {
+                            FileEditorManager.getInstance(project).openFile(((PsiFile) createdElement).getVirtualFile(), true);
+                        }
+                        fileCreateDialog.setVisible(false);
+                    }
+                }
+            }
+        };
 // Get the index of the selected element
         String selectedElement = openAiModelService.getSelectedOpenAiModel();
         int selectedIndex = -1;
@@ -97,8 +141,8 @@ public class FileCreateDialog extends JDialog {
 
         advancedButton.addActionListener(e -> {
             promptContextService.setStatusLabel(hiddenLabel);
-            PromptContextBuilder promptContextBuilder = promptContextBuilderFactory.create(promptContextService);
-            promptContextBuilder.setVisible(true);
+            PromptContextBuilderDialog promptContextBuilderDialog = promptContextBuilderDialogFactory.create(promptContextService);
+            promptContextBuilderDialog.setVisible(true);
         });
 
         contentPane.add(createTopPanel(), BorderLayout.NORTH);

@@ -1,7 +1,11 @@
 package com.translator.service.codactor.ui.tool;
 
 import com.translator.view.codactor.console.CodactorConsole;
-import com.translator.view.codactor.viewer.*;
+import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
+import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
+import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;
+import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
+import com.translator.view.codactor.viewer.modification.ProvisionalModificationViewer;
 
 public interface CodactorToolWindowService {
     void openCodactorConsoleToolWindow();

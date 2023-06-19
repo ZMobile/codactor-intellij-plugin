@@ -9,12 +9,12 @@ import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.modification.RecordType;
-import com.translator.service.codactor.code.GptToLanguageTransformerService;
+import com.translator.service.codactor.editor.GptToLanguageTransformerService;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
-import com.translator.view.codactor.viewer.InquiryViewer;
+import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;

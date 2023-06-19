@@ -7,13 +7,15 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.CodactorInjector;
-import com.translator.service.codactor.context.PromptContextServiceImpl;
-import com.translator.service.codactor.factory.AutomaticMassCodeModificationServiceFactory;
+import com.translator.service.codactor.context.PromptContextService;
+import com.translator.service.codactor.factory.PromptContextServiceFactory;
+import com.translator.service.codactor.modification.AutomaticMassCodeModificationService;
 import com.translator.service.codactor.modification.multi.MultiFileModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.FileModifyDialog;
-import com.translator.view.codactor.factory.PromptContextBuilderFactory;
+import com.translator.view.codactor.factory.dialog.FileModifyDialogFactory;
+import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -57,14 +59,9 @@ public class CustomModifyFileAction extends AnAction {
         }
 
         Injector injector = CodactorInjector.getInstance().getInjector(project);
-        CodactorToolWindowService codactorToolWindowService = injector.getInstance(CodactorToolWindowService.class);
-        PromptContextBuilderFactory promptContextBuilderFactory = injector.getInstance(PromptContextBuilderFactory.class);
-        AutomaticMassCodeModificationServiceFactory automaticMassCodeModificationServiceFactory = injector.getInstance(AutomaticMassCodeModificationServiceFactory.class);
-        MultiFileModificationService multiFileModificationService = injector.getInstance(MultiFileModificationService.class);
-        OpenAiModelService openAiModelService = injector.getInstance(OpenAiModelService.class);
-
-        // Show the custom dialog and modify the selected files
-        FileModifyDialog fileModifyDialog = new FileModifyDialog(project, codactorToolWindowService, new PromptContextServiceImpl(), promptContextBuilderFactory, automaticMassCodeModificationServiceFactory, multiFileModificationService, openAiModelService, allFiles);
+        FileModifyDialogFactory fileModifyDialogFactory = injector.getInstance(FileModifyDialogFactory.class);
+        PromptContextService promptContextService = injector.getInstance(PromptContextServiceFactory.class).create();
+        FileModifyDialog fileModifyDialog = fileModifyDialogFactory.create(promptContextService, allFiles);
         fileModifyDialog.setVisible(true);
     }
 

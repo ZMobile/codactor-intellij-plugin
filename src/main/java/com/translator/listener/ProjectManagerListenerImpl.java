@@ -10,10 +10,10 @@ import com.intellij.openapi.project.ProjectManagerListener;
 import com.translator.CodactorInjector;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.view.codactor.action.DoubleControlAction;
-import com.translator.view.codactor.viewer.HistoricalModificationListViewer;
-import com.translator.view.codactor.viewer.InquiryListViewer;
-import com.translator.view.codactor.viewer.InquiryViewer;
-import com.translator.view.codactor.viewer.ModificationQueueViewer;
+import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;
+import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
+import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
+import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
 import org.jetbrains.annotations.NotNull;
 
 import static com.intellij.ide.actions.runAnything.RunAnythingAction.RUN_ANYTHING_ACTION_ID;

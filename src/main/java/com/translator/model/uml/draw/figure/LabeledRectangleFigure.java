@@ -9,7 +9,7 @@ import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-public class LabeledRectangleFigure extends RectangleFigure {
+public class LabeledRectangleFigure extends RectangleFigure implements LabeledMetadataFigure {
     private TextFigure label;
     private String metadata;
 
@@ -27,6 +27,10 @@ public class LabeledRectangleFigure extends RectangleFigure {
 
     public void setMetadata(String metadata) {
         this.metadata = metadata;
+    }
+
+    public TextFigure getLabel() {
+        return label;
     }
 
     @Override

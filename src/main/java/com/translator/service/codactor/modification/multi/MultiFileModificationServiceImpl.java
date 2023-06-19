@@ -19,19 +19,20 @@ import com.translator.model.codactor.api.translator.modification.DesktopCodeModi
 import com.translator.model.codactor.history.HistoricalContextInquiryHolder;
 import com.translator.model.codactor.history.HistoricalContextModificationHolder;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.modification.ModificationType;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.model.codactor.thread.BooleanWaiter;
-import com.translator.service.codactor.code.CodeSnippetExtractorService;
+import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.json.JsonExtractorService;
 import com.translator.service.codactor.modification.CodeModificationService;
+import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.view.codactor.dialog.FileModificationErrorDialog;
+import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFactory;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
@@ -41,44 +42,40 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
     private Project project;
     private InquiryDao inquiryDao;
     private FileModificationTrackerService fileModificationTrackerService;
+    private FileModificationRestarterService fileModificationRestarterService;
     private CodeModificationService codeModificationService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
     private OpenAiApiKeyService openAiApiKeyService;
     private OpenAiModelService openAiModelService;
+    private FileModificationErrorDialogFactory fileModificationErrorDialogFactory;
     private Gson gson;
 
     @Inject
     public MultiFileModificationServiceImpl(Project project,
                                             InquiryDao inquiryDao,
                                             FileModificationTrackerService fileModificationTrackerService,
+                                            FileModificationRestarterService fileModificationRestarterService,
                                             CodeModificationService codeModificationService,
                                             CodeSnippetExtractorService codeSnippetExtractorService,
                                             OpenAiApiKeyService openAiApiKeyService,
                                             OpenAiModelService openAiModelService,
+                                            FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                             Gson gson) {
         this.project = project;
         this.inquiryDao = inquiryDao;
         this.fileModificationTrackerService = fileModificationTrackerService;
+        this.fileModificationRestarterService = fileModificationRestarterService;
         this.codeModificationService = codeModificationService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.openAiApiKeyService = openAiApiKeyService;
         this.openAiModelService = openAiModelService;
+        this.fileModificationErrorDialogFactory = fileModificationErrorDialogFactory;
         this.gson = gson;
     }
 
     @Override
-    public void modifyCodeFiles(List<String> filePaths, String modification, List<HistoricalContextObjectDataHolder> priorContextData) throws InterruptedException {
-        //String testoPath = filePaths.get(0);
-        //String testoCode = codeSnippetExtractorService.getAllText(testoPath);
-        //String modificationIdTesto = fileModificationTrackerService.addModification(filePaths.get(0), 0, testoCode.length(), ModificationType.MODIFY);
-        List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-        if (priorContextData != null) {
-            for (HistoricalContextObjectDataHolder data : priorContextData) {
-                priorContext.add(new HistoricalContextObjectHolder(data));
-            }
-        }
-
-        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+    public void modifyCodeFiles(List<String> filePaths, String modification, List<HistoricalContextObjectHolder> priorContext) throws InterruptedException {
+       String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(modification);
         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/4) Ranking File Modification Likelihood");
         Map<String, Double> filePathPercentageMap = new HashMap<>();
@@ -90,7 +87,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 ApplicationManager.getApplication().invokeAndWait(() -> {
                     //FileEditorManager.getInstance(project).openFile(file, true);
                     String code = codeSnippetExtractorService.getAllText(filePath);
-                    String modificationId = fileModificationTrackerService.addModification(filePath, 0, code.length(), ModificationType.MODIFY);
+                    String modificationId = fileModificationTrackerService.addModification(filePath, modification, 0, code.length(), ModificationType.MODIFY, priorContext);
                     modificationIdMap.put(filePath, modificationId);
                     codeMap.put(filePath, code);
                 });
@@ -252,10 +249,10 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     } else {
                         fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                         if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                            FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, null, ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                            FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(null, filePath, null, ModificationType.MODIFY);
                             fileModificationErrorDialog.setVisible(true);
                         } else {
-                            FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                            FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.MODIFY);
                             fileModificationErrorDialog.setVisible(true);
                         }
                     }
@@ -312,10 +309,10 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         } else {
                             fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                             if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                                FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, null, ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(null, filePath, null, ModificationType.MODIFY);
                                 fileModificationErrorDialog.setVisible(true);
                             } else {
-                                FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.MODIFY, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.MODIFY);
                                 fileModificationErrorDialog.setVisible(true);
                             }
                         }
@@ -332,17 +329,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
     }
 
     @Override
-    public void fixCodeFiles(List<String> filePaths, String error, List<HistoricalContextObjectDataHolder> priorContextData) throws InterruptedException {
-        //String testoPath = filePaths.get(0);
-        //String testoCode = codeSnippetExtractorService.getAllText(testoPath);
-        //String modificationIdTesto = fileModificationTrackerService.addModification(filePaths.get(0), 0, testoCode.length(), ModificationType.MODIFY);
-        List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
-        if (priorContextData != null) {
-            for (HistoricalContextObjectDataHolder data : priorContextData) {
-                priorContext.add(new HistoricalContextObjectHolder(data));
-            }
-        }
-
+    public void fixCodeFiles(List<String> filePaths, String error, List<HistoricalContextObjectHolder> priorContext) throws InterruptedException {
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(error);
         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/4) Ranking File Modification Likelihood");
@@ -355,7 +342,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 ApplicationManager.getApplication().invokeAndWait(() -> {
                     //FileEditorManager.getInstance(project).openFile(file, true);
                     String code = codeSnippetExtractorService.getAllText(filePath);
-                    String modificationId = fileModificationTrackerService.addModification(filePath, 0, code.length(), ModificationType.MODIFY);
+                    String modificationId = fileModificationTrackerService.addModification(filePath, error, 0, code.length(), ModificationType.FIX, priorContext);
                     modificationIdMap.put(filePath, modificationId);
                     codeMap.put(filePath, code);
                 });
@@ -516,10 +503,10 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     } else {
                         fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                         if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                            //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, null, ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                            //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, null, ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService, fileModificationRestarterService);
                             //fileModificationErrorDialog.setVisible(true);
                         } else {
-                            //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                            //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService, fileModificationRestarterService);
                             //fileModificationErrorDialog.setVisible(true);
                         }
                     }
@@ -575,10 +562,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         } else {
                             fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                             if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                                //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, null, ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                                //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, null, ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService, fileModificationRestarterService);
+                                //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, null, ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService, fileModificationRestarterService);
                                 //fileModificationErrorDialog.setVisible(true);
                             } else {
-                                //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService);
+                                //FileModificationErrorDialog fileModificationErrorDialog = new FileModificationErrorDialog(null, null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.FIX, openAiApiKeyService, openAiModelService, fileModificationTrackerService, fileModificationRestarterService);
                                 //fileModificationErrorDialog.setVisible(true);
                             }
                         }

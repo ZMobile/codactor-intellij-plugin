@@ -13,13 +13,13 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.translator.CodactorInjector;
 import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.context.PromptContextServiceImpl;
-import com.translator.service.codactor.factory.AutomaticCodeModificationServiceFactory;
+import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.modification.AutomaticCodeModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.FileCreateDialog;
-import com.translator.view.codactor.factory.PromptContextBuilderFactory;
+import com.translator.view.codactor.factory.dialog.FileCreateDialogFactory;
+import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 
 public class CustomCreateFileAction extends CreateElementActionBase {
-    private PromptContextService promptContextService;
 
     public CustomCreateFileAction() {
         super("AI Generated File", "Describe a file to generate it with AI", null);
@@ -38,34 +37,10 @@ public class CustomCreateFileAction extends CreateElementActionBase {
     @Override
     protected PsiElement @NotNull [] invokeDialog(Project project, PsiDirectory directory) {
         // Show the custom dialog and create the file
-        promptContextService = new PromptContextServiceImpl();
         Injector injector = CodactorInjector.getInstance().getInjector(project);
-        OpenAiModelService openAiModelService = injector.getInstance(OpenAiModelService.class);
-        PromptContextService promptContextService = new PromptContextServiceImpl();
-        PromptContextBuilderFactory promptContextBuilderFactory = injector.getInstance(PromptContextBuilderFactory.class);
-        ActionListener okActionListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JButton okButton = (JButton) e.getSource();
-                FileCreateDialog fileCreateDialog = (FileCreateDialog) SwingUtilities.getWindowAncestor(okButton);
-
-                String fileName = fileCreateDialog.getFileNameInput().getText();
-                if (!fileName.contains(".") || fileName.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(fileCreateDialog, "Please enter a valid file name with an extension.", "Error", JOptionPane.ERROR_MESSAGE);
-                } else {
-                    String fileDescription = fileCreateDialog.getFileDescription().getText();
-                    PsiElement createdElement = createFile(project, fileName, fileDescription, directory);
-                    if (createdElement != null) {
-                        if (createdElement instanceof PsiFile) {
-                            FileEditorManager.getInstance(project).openFile(((PsiFile) createdElement).getVirtualFile(), true);
-                        }
-                        fileCreateDialog.setVisible(false);
-                    }
-                }
-            }
-        };
-
-        FileCreateDialog fileCreateDialog = new FileCreateDialog(openAiModelService, promptContextService, promptContextBuilderFactory, okActionListener);
+        FileCreateDialogFactory fileCreateDialogFactory = injector.getInstance(FileCreateDialogFactory.class);
+        PromptContextService promptContextService = injector.getInstance(PromptContextServiceFactory.class).create();
+        FileCreateDialog fileCreateDialog = fileCreateDialogFactory.create(directory, promptContextService);
         fileCreateDialog.setVisible(true);
         return PsiElement.EMPTY_ARRAY;
     }
@@ -103,11 +78,12 @@ public class CustomCreateFileAction extends CreateElementActionBase {
 
         if (!description.isEmpty()) {
             Injector injector = CodactorInjector.getInstance().getInjector(project);
-            AutomaticCodeModificationServiceFactory automaticCodeModificationServiceFactory = injector.getInstance(AutomaticCodeModificationServiceFactory.class);
+            AutomaticCodeModificationService automaticCodeModificationService = injector.getInstance(AutomaticCodeModificationService.class);
             CodactorToolWindowService codactorToolWindowService = injector.getInstance(CodactorToolWindowService.class);
-            AutomaticCodeModificationService automaticCodeModificationService = automaticCodeModificationServiceFactory.create(promptContextService);
+            PromptContextService promptContextService = injector.getInstance(PromptContextService.class);
             String newDescription = "The code for " + fileName + ": " + description;
-            automaticCodeModificationService.createAndImplementCode(filePath, newDescription);
+            automaticCodeModificationService.createAndImplementCode(filePath, newDescription, promptContextService.getPromptContext());
+            promptContextService.clearPromptContext();
             codactorToolWindowService.openModificationQueueViewerToolWindow();
         }
         LocalFileSystem localFileSystem = LocalFileSystem.getInstance();

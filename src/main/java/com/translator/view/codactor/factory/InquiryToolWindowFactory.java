@@ -7,8 +7,8 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.translator.CodactorInjector;
-import com.translator.view.codactor.viewer.InquiryListViewer;
-import com.translator.view.codactor.viewer.InquiryViewer;
+import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
+import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.ComponentAdapter;

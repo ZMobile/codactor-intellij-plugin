@@ -10,7 +10,7 @@ import com.translator.CodactorInjector;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.console.CodactorConsole;
-import com.translator.view.codactor.viewer.ModificationQueueViewer;
+import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
 import org.jetbrains.annotations.NotNull;
 
 public class CodactorToolWindowFactory implements ToolWindowFactory {

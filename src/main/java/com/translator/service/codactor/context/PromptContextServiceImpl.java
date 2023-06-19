@@ -1,6 +1,8 @@
 package com.translator.service.codactor.context;
 
+import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
+import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -8,10 +10,12 @@ import java.util.List;
 
 public class PromptContextServiceImpl implements PromptContextService {
     private List<HistoricalContextObjectDataHolder> context;
+    private HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer historicalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
     private JLabel statusLabel;
 
     @Inject
-    public PromptContextServiceImpl() {
+    public PromptContextServiceImpl(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer historicalContextObjectDataHolderToHistoricalContextObjectHolderTransformer) {
+        this.historicalContextObjectDataHolderToHistoricalContextObjectHolderTransformer = historicalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
         this.context = null;
         this.statusLabel = new JLabel();
         updateStatusLabel();
@@ -24,7 +28,18 @@ public class PromptContextServiceImpl implements PromptContextService {
     }
 
     @Override
-    public List<HistoricalContextObjectDataHolder> getPromptContext() {
+    public List<HistoricalContextObjectHolder> getPromptContext() {
+        if (context == null) {
+            return null;
+        }
+        if (context.isEmpty()) {
+            return null;
+        }
+        return historicalContextObjectDataHolderToHistoricalContextObjectHolderTransformer.convert(context);
+    }
+
+    @Override
+    public List<HistoricalContextObjectDataHolder> getPromptContextData() {
         if (context == null) {
             return null;
         }

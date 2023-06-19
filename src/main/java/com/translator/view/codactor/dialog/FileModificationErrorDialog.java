@@ -1,10 +1,13 @@
 package com.translator.view.codactor.dialog;
 
+import com.google.inject.assistedinject.Assisted;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.translator.model.codactor.modification.FileModification;
 import com.translator.model.codactor.modification.ModificationType;
+import com.translator.service.codactor.modification.AutomaticCodeModificationService;
+import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
 import com.translator.service.codactor.openai.OpenAiModelService;
@@ -20,20 +23,22 @@ public class FileModificationErrorDialog extends JDialog {
     private OpenAiApiKeyService openAiApiKeyService;
     private OpenAiModelService openAiModelService;
     private FileModificationTrackerService fileModificationTrackerService;
+    private FileModificationRestarterService fileModificationRestarterService;
 
-    public FileModificationErrorDialog(JFrame parent,
-                                       String modificationId,
-                                       String filePath,
-                                       String error,
-                                       ModificationType modificationType,
+    public FileModificationErrorDialog(@Assisted String modificationId,
+                                       @Assisted String filePath,
+                                       @Assisted String error,
+                                       @Assisted ModificationType modificationType,
                                        OpenAiApiKeyService openAiApiKeyService,
                                        OpenAiModelService openAiModelService,
-                                       FileModificationTrackerService fileModificationTrackerService) {
-        super(parent, "File Modification Error", true);
+                                       FileModificationTrackerService fileModificationTrackerService,
+                                       FileModificationRestarterService fileModificationRestarterService) {
+        super();
         this.filePath = filePath;
         this.openAiApiKeyService = openAiApiKeyService;
         this.openAiModelService = openAiModelService;
         this.fileModificationTrackerService = fileModificationTrackerService;
+        this.fileModificationRestarterService = fileModificationRestarterService;
 
         JBPanel messagePanel = new JBPanel();
         if (error != null) {
@@ -67,7 +72,7 @@ public class FileModificationErrorDialog extends JDialog {
             public void actionPerformed(ActionEvent e) {
                 FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
                 fileModificationTrackerService.removeModification(modificationId);
-                fileModificationTrackerService.addModification(fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset(), fileModification.getRangeMarker().getEndOffset(), fileModification.getModificationType());
+                fileModificationRestarterService.restartFileModification(fileModification);
                 dispose();
             }
         });
@@ -75,7 +80,7 @@ public class FileModificationErrorDialog extends JDialog {
         // Add JComboBox modelComboBox
         ComboBox<String> modelComboBox = new ComboBox<>();
         // Populate modelComboBox with items
-        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
+        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
 // Get the index of the selected element
 
 // Get the index of the selected element
@@ -128,7 +133,7 @@ public class FileModificationErrorDialog extends JDialog {
         getContentPane().add(messagePanel, BorderLayout.CENTER);
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
         pack();
-        setLocationRelativeTo(parent);
+        //setLocationRelativeTo(parent);
     }
 }
 

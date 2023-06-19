@@ -12,8 +12,8 @@ import com.intellij.openapi.editor.highlighter.EditorHighlighterFactory;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.project.Project;
-import com.translator.service.codactor.code.GptToLanguageTransformerService;
-import com.translator.service.codactor.code.GptToLanguageTransformerServiceImpl;
+import com.translator.service.codactor.editor.GptToLanguageTransformerService;
+import com.translator.service.codactor.editor.GptToLanguageTransformerServiceImpl;
 
 import java.util.Objects;
 

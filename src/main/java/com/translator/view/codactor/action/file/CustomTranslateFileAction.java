@@ -7,12 +7,14 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.CodactorInjector;
-import com.translator.service.codactor.context.PromptContextServiceImpl;
-import com.translator.service.codactor.factory.AutomaticMassCodeModificationServiceFactory;
+import com.translator.service.codactor.context.PromptContextService;
+import com.translator.service.codactor.factory.PromptContextServiceFactory;
+import com.translator.service.codactor.modification.AutomaticMassCodeModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.FileTranslateDialog;
-import com.translator.view.codactor.factory.PromptContextBuilderFactory;
+import com.translator.view.codactor.factory.dialog.FileTranslateDialogFactory;
+import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -53,13 +55,9 @@ public class CustomTranslateFileAction extends AnAction {
         }
 
         Injector injector = CodactorInjector.getInstance().getInjector(project);
-        CodactorToolWindowService codactorToolWindowService = injector.getInstance(CodactorToolWindowService.class);
-        PromptContextBuilderFactory promptContextBuilderFactory = injector.getInstance(PromptContextBuilderFactory.class);
-        AutomaticMassCodeModificationServiceFactory automaticMassCodeModificationServiceFactory = injector.getInstance(AutomaticMassCodeModificationServiceFactory.class);
-        OpenAiModelService openAiModelService = injector.getInstance(OpenAiModelService.class);
-
-        // Show the custom dialog and translate the selected files
-        FileTranslateDialog fileTranslateDialog = new FileTranslateDialog(project, codactorToolWindowService, new PromptContextServiceImpl(), promptContextBuilderFactory, automaticMassCodeModificationServiceFactory, openAiModelService, allFiles);
+        FileTranslateDialogFactory fileTranslateDialogFactory = injector.getInstance(FileTranslateDialogFactory.class);
+        PromptContextService promptContextService = injector.getInstance(PromptContextServiceFactory.class).create();
+        FileTranslateDialog fileTranslateDialog = fileTranslateDialogFactory.create(promptContextService, allFiles);
         fileTranslateDialog.setVisible(true);
     }
 

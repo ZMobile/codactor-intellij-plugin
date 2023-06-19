@@ -1,6 +1,8 @@
 package com.translator.model.codactor.modification;
 
 import com.intellij.openapi.editor.RangeMarker;
+import com.translator.model.codactor.history.HistoricalContextObjectHolder;
+import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,18 +14,22 @@ public class FileModification {
     private String filePath;
     private RangeMarker rangeMarker;
     private String beforeText;
+    private String modification;
     private ModificationType modificationType;
+    private List<HistoricalContextObjectHolder> priorContext;
     private List<FileModificationSuggestion> modificationOptions;
     private String newLanguage;
     private String newFileType;
     private boolean done;
     private boolean error;
 
-    public FileModification(String filePath, RangeMarker rangeMarker, String beforeText, ModificationType modificationType) {
+    public FileModification(String filePath, String modification, RangeMarker rangeMarker, String beforeText, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         this.filePath = filePath;
         this.myId = UUID.randomUUID().toString();
         this.rangeMarker = rangeMarker;
         this.beforeText = beforeText;
+        this.modification = modification;
+        this.priorContext = priorContext;
         this.modificationType = modificationType;
         this.modificationOptions = new ArrayList<>();
         this.done = false;
@@ -64,6 +70,18 @@ public class FileModification {
 
     public void setBeforeText(String beforeText) {
         this.beforeText = beforeText;
+    }
+
+    public String getModification() {
+        return modification;
+    }
+
+    public void setModification(String modification) {
+        this.modification = modification;
+    }
+
+    public List<HistoricalContextObjectHolder> getPriorContext() {
+        return priorContext;
     }
 
     public ModificationType getModificationType() {
