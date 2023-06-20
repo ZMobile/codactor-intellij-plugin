@@ -96,7 +96,7 @@ public class HistoricalModificationListViewer extends JPanel {
                 }
                 if (index == 0) {
                     Inquiry inquiry = new Inquiry(null, null, null, null, null, null, null, null, null, null);
-                    inquiryViewer.updateInquiryContents(inquiry);
+                    inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                     inquiryViewer.setLoadingChat(false);
                     codactorToolWindowService.openInquiryViewerToolWindow();
                     return;
@@ -110,7 +110,7 @@ public class HistoricalModificationListViewer extends JPanel {
                     FileModificationSuggestionRecord fileModificationSuggestionRecord = historicalContextModificationDataHolder.getFileModificationSuggestionRecord();
                     temporaryInquiry = new Inquiry(null, fileModificationSuggestionRecord.getModificationId(), fileModificationSuggestionRecord.getId(), RecordType.FILE_MODIFICATION_SUGGESTION, fileModificationSuggestionRecord.getFilePath(), fileModificationSuggestionRecord.getBeforeCode(), fileModificationSuggestionRecord.getModification(), fileModificationSuggestionRecord.getSuggestedCode(), fileModificationSuggestionRecord.getModificationType(), null);
                 }
-                inquiryViewer.updateInquiryContents(temporaryInquiry);
+                inquiryViewer.getInquiryChatListViewer().updateInquiryContents(temporaryInquiry);
                 codactorToolWindowService.openInquiryViewerToolWindow();
             }
         });

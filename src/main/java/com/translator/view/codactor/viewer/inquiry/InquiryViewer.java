@@ -5,11 +5,14 @@ import com.google.inject.Injector;
 import com.intellij.openapi.project.Project;
 import com.translator.CodactorInjector;
 import com.translator.model.codactor.inquiry.Inquiry;
+import com.translator.model.codactor.modification.RecordType;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.MassCodeFileGeneratorService;
 import com.translator.service.codactor.inquiry.InquiryService;
 import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
+import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;
 
@@ -22,12 +25,14 @@ import java.awt.event.*;
  * @author zantehays
  */
 public class InquiryViewer extends JPanel {
+    private Project project;
     private Inquiry inquiry;
     private JToolBar toolbar;
     private JButton otherInquiriesButton;
     private JButton newInquiryButton;
     private JButton discardInquiryButton;
     private InquiryService inquiryService;
+    private CodactorToolWindowService codactorToolWindowService;
     private InquiryChatListViewer inquiryChatListViewer;
     private InquiryChatBoxViewer inquiryChatBoxViewer;
     private InquiryListViewer inquiryListViewer;
@@ -36,25 +41,20 @@ public class InquiryViewer extends JPanel {
     @Inject
     public InquiryViewer(Project project,
                          CodactorToolWindowService codactorToolWindowService,
-                         MassCodeFileGeneratorService massCodeFileGeneratorService,
+                         MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                          InquiryService inquiryService,
-                         OpenAiModelService openAiModelService,
-                         PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
-                         PromptContextServiceFactory promptContextServiceFactory) {
-        initComponents(project, codactorToolWindowService, massCodeFileGeneratorService, inquiryService, openAiModelService, promptContextBuilderDialogFactory, promptContextServiceFactory);
+                         PromptContextServiceFactory promptContextServiceFactory,
+                         TextAreaHeightCalculatorService textAreaHeightCalculatorService,
+                         OpenAiModelService openAiModelService) {
+        this.project = project;
+        this.inquiryService = inquiryService;
+        this.codactorToolWindowService = codactorToolWindowService;
+        this.inquiryChatListViewer = new InquiryChatListViewer(this, textAreaHeightCalculatorService, openAiModelService, promptContextServiceFactory, multiFileCreateDialogFactory);
+        this.inquiryChatBoxViewer = new InquiryChatBoxViewer(this);
+        initComponents();
     }
 
-    private void initComponents(Project project,
-                                 CodactorToolWindowService codactorToolWindowService,
-                                 MassCodeFileGeneratorService massCodeFileGeneratorService,
-                                 InquiryService inquiryService,
-                                 OpenAiModelService openAiModelService,
-                                 PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
-                                 PromptContextServiceFactory promptContextServiceFactory) {
-        this.inquiryService = inquiryService;
-        inquiryChatListViewer = new InquiryChatListViewer(project, codactorToolWindowService, massCodeFileGeneratorService, inquiryService, openAiModelService, promptContextBuilderDialogFactory, promptContextServiceFactory);
-        inquiryChatBoxViewer = new InquiryChatBoxViewer();
-
+    private void initComponents() {
         toolbar = new JToolBar();
         toolbar.setFloatable(false);
         toolbar.setBorderPainted(false);
@@ -117,13 +117,14 @@ public class InquiryViewer extends JPanel {
         add(inquiryChatBoxViewer, BorderLayout.SOUTH);
     }
 
-    private void askNewGeneralInquiryQuestion(String question) {
+    public void askNewGeneralInquiryQuestion(String question) {
+        
         inquiryService.createGeneralInquiry(question);
     }
 
 
-    private void askInquiryQuestion(String subjectRecordId, RecordType recordType, String question, String filePath) {
-        //jToolBar3.setVisible(false); Need to keep toolbar but remove "What is this code?" buttons etc.
+    public void askInquiryQuestion(String subjectRecordId, RecordType recordType, String question, String filePath) {
+        inquiryChatBoxViewer.getToolBar().setVisible(false);
         inquiryService.createInquiry(subjectRecordId, recordType, question, filePath);
     }
 
@@ -134,7 +135,8 @@ public class InquiryViewer extends JPanel {
 
     public void setInquiry(Inquiry inquiry) {
         this.inquiry = inquiry;
-        this.inquiryListViewer.updateInquiryList(inquiry.g);
+        this.inquiryChatListViewer.updateInquiryContents(inquiry);
+        this.inquiryChatBoxViewer.setInquiry(inquiry);
     }
 
     public InquiryChatBoxViewer getInquiryChatBoxViewer() {
@@ -151,5 +153,17 @@ public class InquiryViewer extends JPanel {
 
     public void setHistoricalModificationListViewer(HistoricalModificationListViewer historicalModificationListViewer) {
         this.historicalModificationListViewer = historicalModificationListViewer;
+    }
+
+    public void setLoadingChat(boolean loadingChat) {
+        this.inquiryChatBoxViewer.getAskButton().setEnabled(!loadingChat);
+        this.getInquiryChatListViewer().getEditItem().setEnabled(!loadingChat);
+        this.getInquiryChatListViewer().getRegenerateItem().setEnabled(!loadingChat);
+        this.getInquiryChatListViewer().getNextChat().setEnabled(!loadingChat);
+        this.getInquiryChatListViewer().getPreviousChat().setEnabled(!loadingChat);
+    }
+
+    public Inquiry getInquiry() {
+        return inquiry;
     }
 }

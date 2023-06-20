@@ -30,6 +30,7 @@ import com.translator.service.codactor.modification.AutomaticCodeModificationSer
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
+import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
 import javax.inject.Inject;
@@ -49,10 +50,10 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
     private CodactorToolWindowService codactorToolWindowService;
     private AutomaticCodeModificationService automaticCodeModificationService;
     private InquiryService inquiryService;
-    private MassCodeFileGeneratorService massCodeFileGeneratorService;
     private PromptContextService promptContextService;
     private FileModificationTrackerService fileModificationTrackerService;
     private OpenAiModelService openAiModelService;
+    private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
     private PromptContextServiceFactory promptContextServiceFactory;
     private Editor defaultSolution;
@@ -67,6 +68,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                                                    InquiryService inquiryService,
                                                    MassCodeFileGeneratorService massCodeFileGeneratorService,
                                                    AutomaticCodeModificationService automaticCodeModificationService,
+                                                   MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                                    PromptContextServiceFactory promptContextServiceFactory,
                                                    PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                                                    FileModificationTrackerService fileModificationTrackerService,
@@ -78,7 +80,6 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.codactorToolWindowService = codactorToolWindowService;
         this.inquiryService = inquiryService;
-        this.massCodeFileGeneratorService = massCodeFileGeneratorService;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.openAiModelService = openAiModelService;
         this.automaticCodeModificationService = automaticCodeModificationService;
@@ -344,7 +345,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create Files")) {
                     if (!textArea.getText().isEmpty()) {
-                        MultiFileCreateDialog multiFileCreateDialog = new MultiFileCreateDialog(null, textArea.getText(), openAiModelService, codactorToolWindowService, massCodeFileGeneratorService, promptContextService, promptContextBuilderDialogFactory);
+                        MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(null, textArea.getText(), promptContextService, openAiModelService);
                         multiFileCreateDialog.setVisible(true);
                         promptContextService.clearPromptContext();
                     }

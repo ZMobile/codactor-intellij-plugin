@@ -1,8 +1,10 @@
 package com.translator.view.codactor.viewer.inquiry;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.ui.JBMenuItem;
 import com.intellij.openapi.ui.JBPopupMenu;
+import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.model.codactor.inquiry.Inquiry;
@@ -10,6 +12,7 @@ import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
+import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.view.codactor.dialog.MultiFileCreateDialog;
 import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
@@ -37,18 +40,24 @@ public class InquiryChatListViewer extends JPanel {
     private int selectedChat = -1;
     private int lastSelectedChat = -1;
     private JToolBar jToolBar;
+    private JBMenuItem editItem;
+    private JBMenuItem regenerateItem;
+    private JBMenuItem previousChat;
+    private JBMenuItem nextChat;
+    private JBMenuItem autoGenerate;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
+    private OpenAiModelService openAiModelService;
     private PromptContextServiceFactory promptContextServiceFactory;
     private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
 
-    public InquiryChatListViewer(Inquiry inquiry,
-                                 InquiryViewer inquiryViewer,
+    public InquiryChatListViewer(InquiryViewer inquiryViewer,
                                  TextAreaHeightCalculatorService textAreaHeightCalculatorService,
+                                 OpenAiModelService openAiModelService,
                                  PromptContextServiceFactory promptContextServiceFactory,
                                  MultiFileCreateDialogFactory multiFileCreateDialogFactory) {
-        this.inquiry = inquiry;
         this.inquiryViewer = inquiryViewer;
         this.textAreaHeightCalculatorService = textAreaHeightCalculatorService;
+        this.openAiModelService = openAiModelService;
         this.promptContextServiceFactory = promptContextServiceFactory;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         initComponents();
@@ -56,22 +65,19 @@ public class InquiryChatListViewer extends JPanel {
     }
 
     private void initComponents() {
-        inquiryChatList = new JList<>();
+        inquiryChatList = new JBList<>();
         inquiryChatList.setModel(new DefaultListModel<>());
         inquiryChatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         inquiryChatList.setCellRenderer(new InquiryChatRenderer());
 
-        listSelectionListener = new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()) {
-                    int selectedIndex = inquiryChatList.getSelectedIndex();
-                    if (selectedIndex == -1) {
-                        return;
-                    }
-                    selectedChat = selectedIndex;
-                    updateSelectionHighlighting();
+        listSelectionListener = e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedIndex = inquiryChatList.getSelectedIndex();
+                if (selectedIndex == -1) {
+                    return;
                 }
+                selectedChat = selectedIndex;
+                updateSelectionHighlighting();
             }
         };
 
@@ -91,13 +97,81 @@ public class InquiryChatListViewer extends JPanel {
                 }
             }
         });
-        JBPopupMenu jBPopupMenu1 = new JBPopupMenu();
+        JBPopupMenu jBPopupMenu = new JBPopupMenu();
+        inquiryChatList.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                InquiryChatViewer inquiryChatViewer = null;
+                if (e.getButton() == MouseEvent.BUTTON3) {
+                    inquiryChatViewer = inquiryChatList.getModel().getElementAt(inquiryChatList.locationToIndex(e.getPoint()));
+                    int selectedIndex = inquiryChatList.locationToIndex(e.getPoint());
+                    inquiryChatList.setSelectedIndex(selectedIndex);
+                    InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
+                    if (inquiryChat == null || inquiryChat.getFrom().equalsIgnoreCase("assistant") || inquiryChatList.locationToIndex(e.getPoint()) == 0) {
+                        editItem.setEnabled(false);
+                        regenerateItem.setEnabled(false);
+                        previousChat.setEnabled(false);
+                        nextChat.setEnabled(false);
+                    } else {
+                        if (inquiryChat.getFrom().equalsIgnoreCase("user")) {
+                            editItem.setEnabled(true);
+                            regenerateItem.setEnabled(true);
+                        } else {
+                            editItem.setEnabled(false);
+                            regenerateItem.setEnabled(false);
+                        }
+                        if (inquiryChat.getAlternateInquiryChatIds().isEmpty()) {
+                            previousChat.setEnabled(false);
+                            nextChat.setEnabled(false);
+                        } else {
+                            previousChat.setEnabled(!Objects.equals(inquiryChat.getId(), inquiryChat.getAlternateInquiryChatIds().get(0)));
+                            nextChat.setEnabled(inquiryChat.getId() != null && !Objects.equals(inquiryChat.getId(), inquiryChat.getAlternateInquiryChatIds().get(inquiryChat.getAlternateInquiryChatIds().size() - 1)));
+                        }
+                    }
+                    jBPopupMenu.show(inquiryChatList, e.getX(), e.getY());
+                }
+                if (selectedChat == -1) {
+                    return;
+                }
+                if (inquiryChatViewer == null) {
+                    inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
+                }
+                if (e.getClickCount() == 2) {
+                    //Component component = inquiryChatViewer.getComponentAt(e.getPoint());
+                    StringBuilder text = new StringBuilder();
+                    boolean firstComponentCopied = false;
+                    for (int i = 0; i < inquiryChatViewer.getComponents().length; i++) {
+                        Component component1 = inquiryChatViewer.getComponents()[i];
+                        if (firstComponentCopied) {
+                            text.append("\n");
+                            text.append("\n");
+                        }
+                        if (component1 instanceof JBTextArea) {
+                            JBTextArea jBTextArea = (JBTextArea) component1;
+                            text.append(jBTextArea.getText());
+                            firstComponentCopied = true;
+                        } else if (component1 instanceof FixedHeightPanel) {
+                            FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
+                            Editor editor = fixedHeightPanel.getEditor();
+                            text.append(editor.getDocument().getText());
+                            firstComponentCopied = true;
+                        }
+                    }
+                    new TextAreaWindow(text.toString());
+                } else if (selectedChat == lastSelectedChat) {
+                    inquiryChatList.clearSelection();
+                    inquiryChatList.setSelectedIndex(-1);
+                    selectedChat = -1;
+                    updateSelectionHighlighting();
+                }
+                lastSelectedChat = selectedChat;
+            }
+        });
 
-        JBMenuItem editItem = new JBMenuItem("Edit");
-        JBMenuItem regenerateItem = new JBMenuItem("Regenerate");
-        JBMenuItem previousChat = new JBMenuItem("Show Previous Chat");
-        JBMenuItem nextChat = new JBMenuItem("Show Next Chat");
-        JBMenuItem autoGenerate = new JBMenuItem("(Experimental) Auto-Generate");
+        editItem = new JBMenuItem("Edit");
+        regenerateItem = new JBMenuItem("Regenerate");
+        previousChat = new JBMenuItem("Show Previous Chat");
+        nextChat = new JBMenuItem("Show Next Chat");
+        autoGenerate = new JBMenuItem("(Experimental) Auto-Generate");
 
         editItem.addActionListener(new ActionListener() {
             @Override
@@ -178,88 +252,20 @@ public class InquiryChatListViewer extends JPanel {
                     InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
                     InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
                     PromptContextService promptContextService = promptContextServiceFactory.create();
-                    MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(null, inquiryChat.getMessage(), promptContextService);
+                    MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(null, inquiryChat.getMessage(), promptContextService, openAiModelService);
                     multiFileCreateDialog.setVisible(true);
                 }
             }
         });
 
-        jBPopupMenu1.add(editItem);
-        jBPopupMenu1.add(regenerateItem);
-        jBPopupMenu1.addSeparator();
-        jBPopupMenu1.add(previousChat);
-        jBPopupMenu1.add(nextChat);
-        jBPopupMenu1.addSeparator();
-        jBPopupMenu1.add(autoGenerate);
+        jBPopupMenu.add(editItem);
+        jBPopupMenu.add(regenerateItem);
+        jBPopupMenu.addSeparator();
+        jBPopupMenu.add(previousChat);
+        jBPopupMenu.add(nextChat);
+        jBPopupMenu.addSeparator();
+        jBPopupMenu.add(autoGenerate);
 
-        inquiryChatList.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                InquiryChatViewer inquiryChatViewer = null;
-                if (e.getButton() == MouseEvent.BUTTON3) {
-                    inquiryChatViewer = inquiryChatList.getModel().getElementAt(inquiryChatList.locationToIndex(e.getPoint()));
-                    int selectedIndex = inquiryChatList.locationToIndex(e.getPoint());
-                    inquiryChatList.setSelectedIndex(selectedIndex);
-                    InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
-                    if (inquiryChat == null || inquiryChat.getFrom().equalsIgnoreCase("assistant") || inquiryChatList.locationToIndex(e.getPoint()) == 0) {
-                        editItem.setEnabled(false);
-                        regenerateItem.setEnabled(false);
-                        previousChat.setEnabled(false);
-                        nextChat.setEnabled(false);
-                    } else {
-                        if (inquiryChat.getFrom().equalsIgnoreCase("user")) {
-                            editItem.setEnabled(true);
-                            regenerateItem.setEnabled(true);
-                        } else {
-                            editItem.setEnabled(false);
-                            regenerateItem.setEnabled(false);
-                        }
-                        if (inquiryChat.getAlternateInquiryChatIds().isEmpty()) {
-                            previousChat.setEnabled(false);
-                            nextChat.setEnabled(false);
-                        } else {
-                            previousChat.setEnabled(!Objects.equals(inquiryChat.getId(), inquiryChat.getAlternateInquiryChatIds().get(0)));
-                            nextChat.setEnabled(inquiryChat.getId() != null && !Objects.equals(inquiryChat.getId(), inquiryChat.getAlternateInquiryChatIds().get(inquiryChat.getAlternateInquiryChatIds().size() - 1)));
-                        }
-                    }
-                    jBPopupMenu1.show(inquiryChatList, e.getX(), e.getY());
-                }
-                if (selectedChat == -1) {
-                    return;
-                }
-                if (inquiryChatViewer == null) {
-                    inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-                }
-                if (e.getClickCount() == 2) {
-                    //Component component = inquiryChatViewer.getComponentAt(e.getPoint());
-                    StringBuilder text = new StringBuilder();
-                    boolean firstComponentCopied = false;
-                    for (int i = 0; i < inquiryChatViewer.getComponents().length; i++) {
-                        Component component1 = inquiryChatViewer.getComponents()[i];
-                        if (firstComponentCopied) {
-                            text.append("\n");
-                            text.append("\n");
-                        }
-                        if (component1 instanceof JBTextArea) {
-                            JBTextArea jBTextArea = (JBTextArea) component1;
-                            text.append(jBTextArea.getText());
-                            firstComponentCopied = true;
-                        } else if (component1 instanceof FixedHeightPanel) {
-                            FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
-                            Editor editor = fixedHeightPanel.getEditor();
-                            text.append(editor.getDocument().getText());
-                            firstComponentCopied = true;
-                        }
-                    }
-                    new TextAreaWindow(text.toString());
-                } else if (selectedChat == lastSelectedChat) {
-                    inquiryChatList.clearSelection();
-                    inquiryChatList.setSelectedIndex(-1);
-                    selectedChat = -1;
-                    updateSelectionHighlighting();
-                }
-                lastSelectedChat = selectedChat;
-            }
-        });
         jToolBar = new JToolBar();
         jToolBar.setFloatable(false);
         jToolBar.setBorderPainted(false);
@@ -399,7 +405,9 @@ public class InquiryChatListViewer extends JPanel {
         inquiryChatList.setPreferredSize(new Dimension(jBScrollPane.getWidth() - 20, totalHeight));
         inquiryChatList.getParent().addComponentListener(componentListener);
         inquiryChatList.setModel(model);
-        jBScrollPane.setViewportView(inquiryChatList);
+        ApplicationManager.getApplication().invokeLater(() -> {
+            jBScrollPane.setViewportView(inquiryChatList);
+        });
     }
 
     private void editQuestion(String inquiryChatId, String newQuestion) {
@@ -436,5 +444,60 @@ public class InquiryChatListViewer extends JPanel {
                 .map(InquiryChat::getId)
                 .collect(Collectors.toList());
         inquiryChat.setAlternateInquiryChatIds(alternateInquiryChatIds);
+    }
+
+    public void componentResized(DefaultListModel<InquiryChatViewer> previousModel) {
+        ApplicationManager.getApplication().invokeLater(() -> {
+            DefaultListModel<InquiryChatViewer> newModel = new DefaultListModel<>();
+            int newTotalHeight = 0;
+            for (int i = 0; i < previousModel.size(); i++) {
+                InquiryChatViewer chatViewer = previousModel.getElementAt(i);
+                for (Component component : chatViewer.getComponents()) {
+                    if (component instanceof JBTextArea) {
+                        JBTextArea chatDisplay = (JBTextArea) component;
+                        int newHeight = 0;
+                        int newWidth = getWidth();
+                        if (chatViewer.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                            newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
+                        } else {
+                            newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+                        }
+                        Dimension preferredSize = new Dimension(newWidth, newHeight);
+                        chatDisplay.setPreferredSize(preferredSize);
+                        chatDisplay.setMaximumSize(preferredSize);
+                        chatDisplay.setSize(preferredSize);
+                        newTotalHeight += newHeight + chatViewer.getComponent(0).getHeight();
+                    } else if (component instanceof FixedHeightPanel) {
+                        FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                        newTotalHeight += fixedHeightPanel.getHeight();
+                    }
+                    newTotalHeight += chatViewer.getComponent(0).getHeight();
+                }
+                newModel.addElement(chatViewer);
+            }
+            inquiryChatList.setPreferredSize(new Dimension(jBScrollPane.getWidth() - 20, newTotalHeight));
+            inquiryChatList.setModel(newModel);
+            jBScrollPane.setViewportView(inquiryChatList);
+        });
+    }
+
+    public void componentResized() {
+        componentResized((DefaultListModel<InquiryChatViewer>) inquiryChatList.getModel());
+    }
+
+    public JBMenuItem getEditItem() {
+        return editItem;
+    }
+
+    public JBMenuItem getRegenerateItem() {
+        return regenerateItem;
+    }
+
+    public JBMenuItem getNextChat() {
+        return nextChat;
+    }
+
+    public JBMenuItem getPreviousChat() {
+        return previousChat;
     }
 }

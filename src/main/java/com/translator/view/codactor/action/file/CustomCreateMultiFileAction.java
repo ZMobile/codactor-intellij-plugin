@@ -30,8 +30,9 @@ public class CustomCreateMultiFileAction extends CreateElementActionBase {
         Injector injector = CodactorInjector.getInstance().getInjector(project);
         MultiFileCreateDialogFactory multiFileCreateDialogFactory = injector.getInstance(MultiFileCreateDialogFactory.class);
         PromptContextService promptContextService = injector.getInstance(PromptContextServiceFactory.class).create();
+        OpenAiModelService openAiModelService = injector.getInstance(OpenAiModelService.class);
         VirtualFile directoryVirtualFile = directory.getVirtualFile();
-        MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(directoryVirtualFile.getPath(), null, promptContextService);
+        MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(directoryVirtualFile.getPath(), null, promptContextService, openAiModelService);
         multiFileCreateDialog.setVisible(true);
 
         return PsiElement.EMPTY_ARRAY;

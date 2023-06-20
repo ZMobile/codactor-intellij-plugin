@@ -56,7 +56,7 @@ public class InquiryServiceImpl implements InquiryService {
         InquiryChat temporaryChat = new InquiryChat(null, null, null, null, "User", question, likelyCodeLanguage);
         inquiry.getChats().add(temporaryChat);
         InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
-        inquiryViewer.updateInquiryContents(inquiry);
+        inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Inquiry (MODIFICATION)", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
@@ -64,8 +64,8 @@ public class InquiryServiceImpl implements InquiryService {
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 Inquiry inquiry = inquiryDao.createInquiry(subjectRecordId, recordType, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
                 if (inquiry != null) {
-                    inquiryViewer.updateInquiryContents(inquiry);
-                    inquiryViewer.componentResized();
+                    inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
+                    inquiryViewer.getInquiryChatListViewer().componentResized();
                 }
                 inquiryViewer.setLoadingChat(false);
             }
@@ -78,7 +78,7 @@ public class InquiryServiceImpl implements InquiryService {
     public void createInquiry(String filePath, String code, String question, List<HistoricalContextObjectHolder> priorContext) {
         Inquiry temporaryInquiry = new Inquiry(null, filePath, code, question, priorContext);
         InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
-        inquiryViewer.updateInquiryContents(temporaryInquiry);
+        inquiryViewer.getInquiryChatListViewer().updateInquiryContents(temporaryInquiry);
         inquiryViewer.setLoadingChat(true);
         codactorToolWindowService.openInquiryViewerToolWindow();
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Inquiry (CODE)", true) {
@@ -86,7 +86,7 @@ public class InquiryServiceImpl implements InquiryService {
             public void run(@NotNull ProgressIndicator indicator) {
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 Inquiry inquiry = inquiryDao.createInquiry(filePath, code, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
-                inquiryViewer.updateInquiryContents(inquiry);
+                inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                 inquiryViewer.setLoadingChat(false);
                 promptContextService.clearPromptContext();
             }
@@ -101,7 +101,7 @@ public class InquiryServiceImpl implements InquiryService {
         Inquiry inquiry = new Inquiry(null, null, null, null, null, null, null, null, null, null);
         inquiry.getChats().add(temporaryChat);
         InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
-        inquiryViewer.updateInquiryContents(inquiry);
+        inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Inquiry (GENERAL)", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
@@ -109,8 +109,8 @@ public class InquiryServiceImpl implements InquiryService {
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 Inquiry inquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                 if (inquiry != null) {
-                    inquiryViewer.updateInquiryContents(inquiry);
-                    inquiryViewer.componentResized();
+                    inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
+                    inquiryViewer.getInquiryChatListViewer().componentResized();
                 }
                 inquiryViewer.setLoadingChat(false);
             }
@@ -127,7 +127,7 @@ public class InquiryServiceImpl implements InquiryService {
         InquiryChat inquiryChat = new InquiryChat(null, inquiry.getId(), inquiry.getFilePath(), previousInquiryChatId, "User", question, likelyCodeLanguage);
         findAlternatesForInquiryChat(inquiry.getChats(), inquiryChat);
         inquiry.getChats().add(inquiryChat);
-        inquiryViewer.updateInquiryContents(inquiry);
+        inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Inquiry (CONTINUED)", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
@@ -136,8 +136,8 @@ public class InquiryServiceImpl implements InquiryService {
                 Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                 inquiry.getChats().remove(inquiryChat);
                 inquiry.getChats().addAll(response.getChats());
-                inquiryViewer.updateInquiryContents(inquiry);
-                inquiryViewer.componentResized();
+                inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
+                inquiryViewer.getInquiryChatListViewer().componentResized();
                 inquiryViewer.setLoadingChat(false);
             }
         };

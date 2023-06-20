@@ -28,7 +28,7 @@ public class InquiryToolWindowFactory implements ToolWindowFactory {
         toolWindow.getComponent().addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                inquiryViewer.componentResized();
+                inquiryViewer.getInquiryChatListViewer().componentResized();
             }
         });
         toolWindow.getContentManager().addContent(content);

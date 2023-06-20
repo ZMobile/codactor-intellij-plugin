@@ -116,7 +116,7 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
         Content content = contentFactory.createContent(inquiryViewer, "Inquiry", false);
         toolWindow.getContentManager().addContent(content);
         toolWindow.getContentManager().setSelectedContent(content);
-        inquiryViewer.componentResized();
+        inquiryViewer.getInquiryChatListViewer().componentResized();
         toolWindowService.openToolWindow(inquiryViewerToolWindowId);
     }
 

@@ -88,7 +88,7 @@ public class InquiryListViewer extends JPanel {
                 }
                 Inquiry inquiry = inquiryList.getModel().getElementAt(index);
                 Inquiry inquiryWithChats = inquiryDao.getInquiry(inquiry.getId());
-                inquiryViewer.updateInquiryContents(inquiryWithChats);
+                inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiryWithChats);
                 codactorToolWindowService.openInquiryViewerToolWindow();
             }
         });

@@ -50,6 +50,7 @@ import com.translator.service.uml.node.query.ConnectionQueryServiceImpl;
 import com.translator.service.uml.node.query.NodeQueryService;
 import com.translator.service.uml.node.query.NodeQueryServiceImpl;
 import com.translator.service.uml.node.runner.*;
+import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFactory;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
 public class CodeTranslatorServiceConfig extends AbstractModule {
@@ -139,14 +140,15 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
     @Singleton
     @Provides
     public MultiFileModificationService multiFileModificationService(Project project,
-                                                                    InquiryDao inquiryDao,
-                                                                    FileModificationTrackerService fileModificationTrackerService,
-                                                                    FileModificationRestarterService fileModificationRestarterService,
-                                                                    CodeModificationService codeModificationService,
-                                                                    CodeSnippetExtractorService codeSnippetExtractorService,
-                                                                    OpenAiApiKeyService openAiApiKeyService,
-                                                                    OpenAiModelService openAiModelService,
+                                                                     InquiryDao inquiryDao,
+                                                                     FileModificationTrackerService fileModificationTrackerService,
+                                                                     FileModificationRestarterService fileModificationRestarterService,
+                                                                     CodeModificationService codeModificationService,
+                                                                     CodeSnippetExtractorService codeSnippetExtractorService,
+                                                                     OpenAiApiKeyService openAiApiKeyService,
+                                                                     OpenAiModelService openAiModelService,
+                                                                     FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                                                      Gson gson) {
-        return new MultiFileModificationServiceImpl(project, inquiryDao, fileModificationTrackerService, fileModificationRestarterService, codeModificationService, codeSnippetExtractorService, openAiApiKeyService, openAiModelService, gson);
+        return new MultiFileModificationServiceImpl(project, inquiryDao, fileModificationTrackerService, fileModificationRestarterService, codeModificationService, codeSnippetExtractorService, openAiApiKeyService, openAiModelService, fileModificationErrorDialogFactory, gson);
     }
 }

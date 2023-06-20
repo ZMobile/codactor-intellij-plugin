@@ -13,6 +13,7 @@ import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.modification.AutomaticCodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
+import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.view.codactor.factory.dialog.*;
 import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
@@ -76,12 +77,12 @@ public class CodeTranslatorViewConfig extends AbstractModule {
     @Provides
     public InquiryViewer inquiryViewer(Project project,
                                        CodactorToolWindowService codactorToolWindowService,
-                                       MassCodeFileGeneratorService massCodeFileGeneratorService,
+                                       MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                        InquiryService inquiryService,
-                                       OpenAiModelService openAiModelService,
-                                       PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
-                                       PromptContextServiceFactory promptContextServiceFactory) {
-        return new InquiryViewer(project, codactorToolWindowService, massCodeFileGeneratorService, inquiryService, openAiModelService, promptContextBuilderDialogFactory, promptContextServiceFactory);
+                                       PromptContextServiceFactory promptContextServiceFactory,
+                                       TextAreaHeightCalculatorService textAreaHeightCalculatorService,
+                                       OpenAiModelService openAiModelService) {
+        return new InquiryViewer(project, codactorToolWindowService, multiFileCreateDialogFactory, inquiryService, promptContextServiceFactory, textAreaHeightCalculatorService, openAiModelService);
     }
 
     @Singleton
@@ -122,13 +123,13 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            SelectedFileFetcherService selectedFileFetcherService,
                                            CodeSnippetExtractorService codeSnippetExtractorService,
                                            InquiryService inquiryService,
-                                           MassCodeFileGeneratorService massCodeFileGeneratorService,
                                            OpenAiModelService openAiModelService,
+                                           MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                            AutomaticCodeModificationService automaticCodeModificationService,
                                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                                            CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory,
                                            CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory) {
-        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, massCodeFileGeneratorService, openAiModelService, automaticCodeModificationService, promptContextBuilderDialogFactory, codactorUmlBuilderViewFactory, codactorUmlBuilderApplicationModelFactory);
+        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, automaticCodeModificationService, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, codactorUmlBuilderViewFactory, codactorUmlBuilderApplicationModelFactory);
     }
 
     @Provides

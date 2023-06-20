@@ -1,5 +1,6 @@
 package com.translator.view.codactor.dialog;
 
+import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBLabel;
@@ -25,9 +26,10 @@ public class FileModificationErrorDialog extends JDialog {
     private FileModificationTrackerService fileModificationTrackerService;
     private FileModificationRestarterService fileModificationRestarterService;
 
-    public FileModificationErrorDialog(@Assisted String modificationId,
-                                       @Assisted String filePath,
-                                       @Assisted String error,
+    @Inject
+    public FileModificationErrorDialog(@Assisted("modificationId") String modificationId,
+                                       @Assisted("filePath") String filePath,
+                                       @Assisted("error") String error,
                                        @Assisted ModificationType modificationType,
                                        OpenAiApiKeyService openAiApiKeyService,
                                        OpenAiModelService openAiModelService,

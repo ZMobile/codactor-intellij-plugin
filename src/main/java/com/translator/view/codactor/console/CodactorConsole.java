@@ -13,6 +13,7 @@ import com.intellij.ui.components.*;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
+import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
 import com.translator.view.uml.factory.CodactorUmlBuilderApplicationModelFactory;
 import com.translator.view.uml.factory.CodactorUmlBuilderViewFactory;
 import com.translator.view.uml.*;
@@ -51,9 +52,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private JComboBox<FileItem> fileComboBox;
     private JComboBox<String> modificationTypeComboBox;
     private JLabel jLabel1;
-    JBTextField languageInputTextField;
-    JBLabel jLabel2;
-    JBTextField fileTypeTextField;
+    private JBTextField languageInputTextField;
+    private JBLabel jLabel2;
+    private JBTextField fileTypeTextField;
 
     private JButton advancedButton;
     private JLabel hiddenLabel;
@@ -63,8 +64,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private CodeSnippetExtractorService codeSnippetExtractorService;
     private AutomaticCodeModificationService automaticCodeModificationService;
     private InquiryService inquiryService;
-    private MassCodeFileGeneratorService massCodeFileGeneratorService;
     private OpenAiModelService openAiModelService;
+    private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
     private CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory;
     private CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory;
@@ -76,9 +77,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            SelectedFileFetcherService selectedFileFetcherService,
                            CodeSnippetExtractorService codeSnippetExtractorService,
                            InquiryService inquiryService,
-                           MassCodeFileGeneratorService massCodeFileGeneratorService,
                            OpenAiModelService openAiModelService,
                            AutomaticCodeModificationService automaticCodeModificationService,
+                           MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                            CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory,
                            CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory) {
@@ -89,9 +90,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.selectedFileFetcherService = selectedFileFetcherService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.inquiryService = inquiryService;
-        this.massCodeFileGeneratorService = massCodeFileGeneratorService;
         this.openAiModelService = openAiModelService;
         this.automaticCodeModificationService = automaticCodeModificationService;
+        this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
         this.codactorUmlBuilderViewFactory = codactorUmlBuilderViewFactory;
         this.codactorUmlBuilderApplicationModelFactory = codactorUmlBuilderApplicationModelFactory;
@@ -394,7 +395,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create Files")) {
                     if (!textArea.getText().isEmpty()) {
-                        MultiFileCreateDialog multiFileCreateDialog = new MultiFileCreateDialog(null, textArea.getText(), openAiModelService, codactorToolWindowService, massCodeFileGeneratorService, promptContextService, promptContextBuilderDialogFactory);
+                        MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(null, textArea.getText(), promptContextService, openAiModelService);
                         multiFileCreateDialog.setVisible(true);
                         promptContextService.clearPromptContext();
                     }

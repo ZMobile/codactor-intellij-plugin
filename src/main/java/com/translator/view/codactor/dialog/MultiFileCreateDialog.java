@@ -14,8 +14,6 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.intellij.ui.components.JBTextField;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.inquiry.Inquiry;
-import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.file.MassCodeFileGeneratorService;
 import com.translator.service.codactor.openai.OpenAiModelService;
@@ -35,8 +33,6 @@ public class MultiFileCreateDialog extends JDialog {
     private JPanel mainPanel;
     private JBTextArea descriptionTextArea;
     private List<HistoricalContextObjectHolder> priorContext;
-    private Inquiry inquiry;
-    private InquiryChat inquiryChat;
     private OpenAiModelService openAiModelService;
     private MassCodeFileGeneratorService massCodeFileGeneratorService;
     private CodactorToolWindowService codactorToolWindowService;
@@ -54,10 +50,10 @@ public class MultiFileCreateDialog extends JDialog {
     private VirtualFile selectedDirectory = null;
 
     @Inject
-    public MultiFileCreateDialog(@Assisted String filePath,
-                                 @Assisted String description,
+    public MultiFileCreateDialog(@Assisted("filePath") String filePath,
+                                 @Assisted("description") String description,
                                  @Assisted PromptContextService promptContextService,
-                                 OpenAiModelService openAiModelService,
+                                 @Assisted OpenAiModelService openAiModelService,
                                  CodactorToolWindowService codactorToolWindowService,
                                  MassCodeFileGeneratorService massCodeFileGeneratorService,
                                  PromptContextBuilderDialogFactory promptContextBuilderDialogFactory) {
