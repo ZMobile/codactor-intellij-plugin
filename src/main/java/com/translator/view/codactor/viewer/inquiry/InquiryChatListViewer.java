@@ -2,6 +2,10 @@ package com.translator.view.codactor.viewer.inquiry;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.markup.EffectType;
+import com.intellij.openapi.editor.markup.HighlighterLayer;
+import com.intellij.openapi.editor.markup.HighlighterTargetArea;
+import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.ui.JBMenuItem;
 import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.ui.components.JBList;
@@ -23,6 +27,8 @@ import com.translator.view.codactor.renderer.InquiryChatRenderer;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -61,7 +67,6 @@ public class InquiryChatListViewer extends JPanel {
         this.promptContextServiceFactory = promptContextServiceFactory;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         initComponents();
-        addComponents();
     }
 
     private void initComponents() {
@@ -173,88 +178,73 @@ public class InquiryChatListViewer extends JPanel {
         nextChat = new JBMenuItem("Show Next Chat");
         autoGenerate = new JBMenuItem("(Experimental) Auto-Generate");
 
-        editItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-                InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
-                TextAreaWindow.TextAreaWindowActionListener textAreaWindowActionListener = new TextAreaWindow.TextAreaWindowActionListener() {
-                    @Override
-                    public void onOk(String text) {
-                        editQuestion(inquiryChat.getId(), text);
-                    }
-                };
-                new TextAreaWindow("Edit Message", inquiryChat.getMessage(), true, "Cancel", "Ok", textAreaWindowActionListener);
-            }
+        editItem.addActionListener(e -> {
+            InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
+            InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
+            TextAreaWindow.TextAreaWindowActionListener textAreaWindowActionListener = new TextAreaWindow.TextAreaWindowActionListener() {
+                @Override
+                public void onOk(String text) {
+                    editQuestion(inquiryChat.getId(), text);
+                }
+            };
+            new TextAreaWindow("Edit Message", inquiryChat.getMessage(), true, "Cancel", "Ok", textAreaWindowActionListener);
         });
-        regenerateItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-                InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
-                editQuestion(inquiryChat.getId(), inquiryChat.getMessage());
-            }
+        regenerateItem.addActionListener(e -> {
+            InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
+            InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
+            editQuestion(inquiryChat.getId(), inquiryChat.getMessage());
         });
 
-        previousChat.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (selectedChat > 0){
-                    InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-                    InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
-                    int indexOfInquiryChat = inquiryChat.getAlternateInquiryChatIds().indexOf(inquiryChat.getId());
-                    if (indexOfInquiryChat == -1) {
-                        indexOfInquiryChat = inquiryChat.getAlternateInquiryChatIds().size();
-                    }
-                    String previousChatId = inquiryChat.getAlternateInquiryChatIds().get(indexOfInquiryChat - 1);
-                    InquiryChat previousInquiryChat = inquiry.getChats().stream()
-                            .filter(inquiryChatQuery -> (inquiryChatQuery.getId() != null && inquiryChatQuery.getId().equals(previousChatId)) || (inquiryChatQuery.getId() == null && previousChatId == null))
-                            .findFirst()
-                            .orElseThrow();
-                    InquiryChat newerInquiryChat = findNextInquiryChat(inquiry.getChats(), previousInquiryChat);
-                    if (newerInquiryChat != null) {
-                        while (newerInquiryChat != null) {
-                            previousInquiryChat = newerInquiryChat;
-                            newerInquiryChat = findNextInquiryChat(inquiry.getChats(), previousInquiryChat);
-                        }
-                    }
-                    updateInquiryContents(inquiry, previousInquiryChat);
+        previousChat.addActionListener(e -> {
+            if (selectedChat > 0){
+                InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
+                InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
+                int indexOfInquiryChat = inquiryChat.getAlternateInquiryChatIds().indexOf(inquiryChat.getId());
+                if (indexOfInquiryChat == -1) {
+                    indexOfInquiryChat = inquiryChat.getAlternateInquiryChatIds().size();
                 }
+                String previousChatId = inquiryChat.getAlternateInquiryChatIds().get(indexOfInquiryChat - 1);
+                InquiryChat previousInquiryChat = inquiry.getChats().stream()
+                        .filter(inquiryChatQuery -> (inquiryChatQuery.getId() != null && inquiryChatQuery.getId().equals(previousChatId)) || (inquiryChatQuery.getId() == null && previousChatId == null))
+                        .findFirst()
+                        .orElseThrow();
+                InquiryChat newerInquiryChat = findNextInquiryChat(inquiry.getChats(), previousInquiryChat);
+                if (newerInquiryChat != null) {
+                    while (newerInquiryChat != null) {
+                        previousInquiryChat = newerInquiryChat;
+                        newerInquiryChat = findNextInquiryChat(inquiry.getChats(), previousInquiryChat);
+                    }
+                }
+                updateInquiryContents(inquiry, previousInquiryChat);
             }
         });
-        nextChat.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (selectedChat < inquiryChatList.getModel().getSize() - 1){
-                    InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-                    InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
-                    int indexOfInquiryChat = inquiryChat.getAlternateInquiryChatIds().indexOf(inquiryChat.getId());
-                    String nextChatId = inquiryChat.getAlternateInquiryChatIds().get(indexOfInquiryChat + 1);
-                    InquiryChat nextInquiryChat = inquiry.getChats().stream()
-                            .filter(inquiryChatQuery -> (inquiryChatQuery.getId() != null && inquiryChatQuery.getId().equals(nextChatId)) || (inquiryChatQuery.getId() == null && nextChatId == null))
-                            .findFirst()
-                            .orElseThrow();
-                    InquiryChat newerInquiryChat = findNextInquiryChat(inquiry.getChats(), nextInquiryChat);
-                    if (newerInquiryChat != null) {
-                        while (newerInquiryChat != null) {
-                            nextInquiryChat = newerInquiryChat;
-                            newerInquiryChat = findNextInquiryChat(inquiry.getChats(), nextInquiryChat);
-                        }
+        nextChat.addActionListener(e -> {
+            if (selectedChat < inquiryChatList.getModel().getSize() - 1){
+                InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
+                InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
+                int indexOfInquiryChat = inquiryChat.getAlternateInquiryChatIds().indexOf(inquiryChat.getId());
+                String nextChatId = inquiryChat.getAlternateInquiryChatIds().get(indexOfInquiryChat + 1);
+                InquiryChat nextInquiryChat = inquiry.getChats().stream()
+                        .filter(inquiryChatQuery -> (inquiryChatQuery.getId() != null && inquiryChatQuery.getId().equals(nextChatId)) || (inquiryChatQuery.getId() == null && nextChatId == null))
+                        .findFirst()
+                        .orElseThrow();
+                InquiryChat newerInquiryChat = findNextInquiryChat(inquiry.getChats(), nextInquiryChat);
+                if (newerInquiryChat != null) {
+                    while (newerInquiryChat != null) {
+                        nextInquiryChat = newerInquiryChat;
+                        newerInquiryChat = findNextInquiryChat(inquiry.getChats(), nextInquiryChat);
                     }
-                    updateInquiryContents(inquiry, nextInquiryChat);
                 }
+                updateInquiryContents(inquiry, nextInquiryChat);
             }
         });
-        autoGenerate.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (selectedChat > 0){
-                    InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-                    InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
-                    PromptContextService promptContextService = promptContextServiceFactory.create();
-                    MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(null, inquiryChat.getMessage(), promptContextService, openAiModelService);
-                    multiFileCreateDialog.setVisible(true);
-                }
+        autoGenerate.addActionListener(e -> {
+            if (selectedChat > 0){
+                InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
+                InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
+                PromptContextService promptContextService = promptContextServiceFactory.create();
+                MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(null, inquiryChat.getMessage(), promptContextService, openAiModelService);
+                multiFileCreateDialog.setVisible(true);
             }
         });
 
@@ -287,17 +277,43 @@ public class InquiryChatListViewer extends JPanel {
         jToolBar.setVisible(false);
         jBScrollPane = new JBScrollPane(inquiryChatList);
         jBScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jBScrollPane.setPreferredSize(new Dimension(getWidth(), getHeight()));
         add(jBScrollPane, BorderLayout.CENTER);
     }
 
-    private void addComponents() {
-        setLayout(new BorderLayout());
-        add(new JBScrollPane(inquiryChatList), BorderLayout.CENTER);
-    }
-
     private void updateSelectionHighlighting() {
-        // Update selection highlighting logic
-        // ...
+        Color highlightColor = Color.decode("#009688");
+        for (int i = 0; i < inquiryChatList.getModel().getSize(); i++) {
+            InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(i);
+            if (i == selectedChat) {
+                for (Component component : inquiryChatViewer.getComponents()) {
+                    if (component instanceof JBTextArea) {
+                        JBTextArea selectedJBTextArea = (JBTextArea) component;
+                        //Highlight the whole text area
+                        try {
+                            selectedJBTextArea.getHighlighter().addHighlight(0, selectedJBTextArea.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
+                        } catch (BadLocationException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    } else if (component instanceof FixedHeightPanel) {
+                        FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                        Editor editor = fixedHeightPanel.getEditor();
+                        editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                    }
+                }
+                continue;
+            }
+            for (Component component : inquiryChatViewer.getComponents()) {
+                if (component instanceof JBTextArea) {
+                    JBTextArea jBTextArea = (JBTextArea) component;
+                    jBTextArea.getHighlighter().removeAllHighlights();
+                } else if (component instanceof FixedHeightPanel) {
+                    FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                    Editor editor = fixedHeightPanel.getEditor();
+                    editor.getMarkupModel().removeAllHighlighters();
+                }
+            }
+        }
     }
 
     public void updateInquiryContents(Inquiry inquiry) {
@@ -315,7 +331,10 @@ public class InquiryChatListViewer extends JPanel {
     }
 
     public void updateInquiryContents(Inquiry inquiry, InquiryChat previousInquiryChat) {
+        System.out.println("Updating inquiry contents: " + inquiry.getChats().size());
         this.inquiry = inquiry;
+        this.inquiryViewer.setInquiry(inquiry);
+        this.inquiryViewer.getInquiryChatBoxViewer().setInquiry(inquiry);
         if (inquiry == null) {
             inquiryChatList.setModel(new DefaultListModel<>());
             return;
@@ -374,7 +393,7 @@ public class InquiryChatListViewer extends JPanel {
         ComponentListener componentListener = new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                //InquiryViewer.this.componentResized(model);
+                InquiryChatListViewer.this.componentResized(model);
             }
         };
         for (int i = 0; i < model.size(); i++) {
@@ -402,10 +421,10 @@ public class InquiryChatListViewer extends JPanel {
                 totalHeight += chatViewer.getComponent(0).getHeight();
             }
         }
-        inquiryChatList.setPreferredSize(new Dimension(jBScrollPane.getWidth() - 20, totalHeight));
-        inquiryChatList.getParent().addComponentListener(componentListener);
-        inquiryChatList.setModel(model);
+        inquiryChatList.setPreferredSize(new Dimension(jBScrollPane.getWidth(), totalHeight));
+        this.addComponentListener(componentListener);
         ApplicationManager.getApplication().invokeLater(() -> {
+            inquiryChatList.setModel(model);
             jBScrollPane.setViewportView(inquiryChatList);
         });
     }
@@ -475,7 +494,8 @@ public class InquiryChatListViewer extends JPanel {
                 }
                 newModel.addElement(chatViewer);
             }
-            inquiryChatList.setPreferredSize(new Dimension(jBScrollPane.getWidth() - 20, newTotalHeight));
+            jBScrollPane.setPreferredSize(new Dimension(getWidth(), getHeight()));
+            inquiryChatList.setPreferredSize(new Dimension(jBScrollPane.getWidth(), newTotalHeight));
             inquiryChatList.setModel(newModel);
             jBScrollPane.setViewportView(inquiryChatList);
         });

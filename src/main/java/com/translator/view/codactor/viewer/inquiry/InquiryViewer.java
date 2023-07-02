@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.intellij.openapi.project.Project;
 import com.translator.CodactorInjector;
 import com.translator.model.codactor.inquiry.Inquiry;
+import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.MassCodeFileGeneratorService;
@@ -118,7 +119,6 @@ public class InquiryViewer extends JPanel {
     }
 
     public void askNewGeneralInquiryQuestion(String question) {
-        
         inquiryService.createGeneralInquiry(question);
     }
 
@@ -135,8 +135,6 @@ public class InquiryViewer extends JPanel {
 
     public void setInquiry(Inquiry inquiry) {
         this.inquiry = inquiry;
-        this.inquiryChatListViewer.updateInquiryContents(inquiry);
-        this.inquiryChatBoxViewer.setInquiry(inquiry);
     }
 
     public InquiryChatBoxViewer getInquiryChatBoxViewer() {
