@@ -104,7 +104,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
             defaultSolution.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, defaultSolution.getComponent().getPreferredSize().height));
             defaultSolution = defaultSolution;
         });
-        suggestedSolution = fileModificationSuggestion.getSuggestedCode();
+        suggestedSolution = fileModificationSuggestion.getSuggestedCodeEditor();
         selectedEditor = suggestedSolution;
         setTitle("Custom DialogWrapper");
         initComponents();
@@ -149,7 +149,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
         JButton acceptSolutionButton = new JButton("Accept Solution");
         acceptSolutionButton.addActionListener(e -> {
             if (selectedEditor == suggestedSolution) {
-                fileModificationTrackerService.implementModificationUpdate(fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getSuggestedCode().getDocument().getText(), false);
+                fileModificationTrackerService.implementModificationUpdate(fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getSuggestedCodeEditor().getDocument().getText(), false);
             } else {
                 fileModificationTrackerService.removeModification(fileModificationSuggestion.getModificationId());
             }

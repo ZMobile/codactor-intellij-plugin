@@ -76,7 +76,7 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
             return;
         }
         FileModificationSuggestion fileModificationSuggestion = fileModificationSuggestionModificationTracker.getFileModificationSuggestion();
-        Editor editor = fileModificationSuggestion.getSuggestedCode();
+        Editor editor = fileModificationSuggestion.getSuggestedCodeEditor();
 
         ApplicationManager.getApplication().invokeLater(() -> {
             removeAllHighlights(editor);

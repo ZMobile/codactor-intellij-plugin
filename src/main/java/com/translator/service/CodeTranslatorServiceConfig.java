@@ -89,7 +89,6 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(CodeSnippetExtractorService.class).to(CodeSnippetExtractorServiceImpl.class);
         bind(CodeRangeTrackerService.class).to(CodeRangeTrackerServiceImpl.class);
         bind(GptToLanguageTransformerService.class).to(GptToLanguageTransformerServiceImpl.class);
-        bind(UneditableSegmentListenerService.class).to(UneditableSegmentListenerServiceImpl.class);
         bind(GuardedBlockService.class).to(GuardedBlockServiceImpl.class);
         bind(RangeReplaceService.class).to(RangeReplaceServiceImpl.class);
         bind(InquiryService.class).to(InquiryServiceImpl.class);
@@ -103,6 +102,8 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(PromptNodeRunnerService.class).to(PromptNodeRunnerServiceImpl.class);
         bind(FileModificationRestarterService.class).to(FileModificationRestarterServiceImpl.class);
         bind(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer.class).to(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformerImpl.class);
+        bind(DiffEditorGeneratorService.class).to(DiffEditorGeneratorServiceImpl.class);
+        bind(FileModificationSuggestionDiffViewerService.class).to(FileModificationSuggestionDiffViewerServiceImpl.class);
     }
 
     @Singleton
@@ -121,8 +122,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                             RangeReplaceService rangeReplaceService,
                                                                             EditorClickHandlerService editorClickHandlerService,
                                                                             RenameFileService renameFileService,
-                                                                            BackgroundTaskMapperService backgroundTaskMapperService) {
-        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService);
+                                                                            BackgroundTaskMapperService backgroundTaskMapperService,
+                                                                            DiffEditorGeneratorService diffEditorGeneratorService) {
+        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService);
     }
 
     @Singleton

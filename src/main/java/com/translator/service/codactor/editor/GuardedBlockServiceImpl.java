@@ -65,9 +65,7 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
     public void addFileModificationSuggestionModificationGuardedBlock(String fileModificationSuggestionModificationId, int startOffset, int endOffset) {
         FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationTrackerService.getModificationSuggestionModification(fileModificationSuggestionModificationId);
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(fileModificationSuggestionModification.getSuggestionId());
-
-        Document document = fileModificationSuggestion.getSuggestedCode().getDocument();
-
+        Document document = fileModificationSuggestion.getSuggestedCodeEditor().getDocument();
         RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);
         guardedBlocks.put(fileModificationSuggestionModificationId, guardedBlock);
         //uneditableSegmentListenerService.addUneditableFileModificationSuggestionModificationSegmentListener(fileModificationSuggestionModificationId);

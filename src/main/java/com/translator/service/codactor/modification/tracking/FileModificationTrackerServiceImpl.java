@@ -5,13 +5,10 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.translator.CodactorInjector;
+import com.translator.service.codactor.editor.*;
 import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.modification.*;
-import com.translator.service.codactor.editor.CodeHighlighterService;
-import com.translator.service.codactor.editor.CodeSnippetExtractorService;
-import com.translator.service.codactor.editor.GuardedBlockService;
-import com.translator.service.codactor.editor.RangeReplaceService;
 import com.translator.service.codactor.file.RenameFileService;
 import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerService;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
@@ -35,6 +32,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     private EditorClickHandlerService editorClickHandlerService;
     private RenameFileService renameFileService;
     private BackgroundTaskMapperService backgroundTaskMapperService;
+    private DiffEditorGeneratorService diffEditorGeneratorService;
     private ModificationQueueViewer modificationQueueViewer;
 
     @Inject
@@ -46,7 +44,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                                               RangeReplaceService rangeReplaceService,
                                               EditorClickHandlerService editorClickHandlerService,
                                               RenameFileService renameFileService,
-                                              BackgroundTaskMapperService backgroundTaskMapperService) {
+                                              BackgroundTaskMapperService backgroundTaskMapperService,
+                                              DiffEditorGeneratorService diffEditorGeneratorService) {
         this.project = project;
         this.activeModificationFiles = new HashMap<>();
         this.activeModificationSuggestionModifications = new HashMap<>();
@@ -60,6 +59,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         this.editorClickHandlerService = editorClickHandlerService;
         this.renameFileService = renameFileService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
+        this.diffEditorGeneratorService = diffEditorGeneratorService;
     }
 
     public String addModification(String filePath, String modification, int startIndex, int endIndex, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
@@ -68,7 +68,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         if (activeModificationFiles.containsKey(newFilePath)) {
             fileModificationTracker = activeModificationFiles.get(newFilePath);
         } else {
-            fileModificationTracker = new FileModificationTracker(project, newFilePath, codeSnippetExtractorService, rangeReplaceService, codeRangeTrackerService);
+            fileModificationTracker = new FileModificationTracker(project, newFilePath, codeSnippetExtractorService, rangeReplaceService, codeRangeTrackerService, diffEditorGeneratorService);
             activeModificationFiles.put(newFilePath, fileModificationTracker);
         }
         String fileModificationId = fileModificationTracker.addModification(modification, startIndex, endIndex, modificationType, priorContext);
@@ -134,9 +134,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                 .orElseThrow();
         FileModification fileModification = fileModificationTracker.getModification(modificationId);
         for (FileModificationSuggestion fileModificationSuggestion : fileModification.getModificationOptions()) {
-            ApplicationManager.getApplication().invokeLater(() -> {
-            EditorFactory.getInstance().releaseEditor(fileModificationSuggestion.getSuggestedCode());
-            });
+            ApplicationManager.getApplication().invokeLater(fileModificationSuggestion::dispose);
             FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = getModificationSuggestionModificationTracker(fileModificationSuggestion.getId());
             if (fileModificationSuggestionModificationTracker == null) {
                 continue;
@@ -203,7 +201,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         }
         FileModification fileModification = fileModificationTracker.getModification(modificationId);
         for (FileModificationSuggestion fileModificationSuggestion : fileModification.getModificationOptions()) {
-            EditorFactory.getInstance().releaseEditor(fileModificationSuggestion.getSuggestedCode());
+            ApplicationManager.getApplication().invokeLater(fileModificationSuggestion::dispose);
             FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = getModificationSuggestionModificationTracker(fileModificationSuggestion.getId());
             if (fileModificationSuggestionModificationTracker == null) {
                 continue;
@@ -248,6 +246,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             activeModificationSuggestionModifications.values().remove(fileModificationSuggestionModificationTracker);
         }
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
+        FileModificationSuggestion fileModificationSuggestion = fileModificationSuggestionModificationTracker.getFileModificationSuggestion();
+        diffEditorGeneratorService.updateDiffEditor(fileModificationSuggestion.getDiffEditor(), fileModificationSuggestion.getBeforeCode(), fileModificationSuggestionModificationRecord.getEditedCode().trim());
     }
 
     public Map<String, FileModificationTracker> getActiveModificationFiles() {

@@ -12,6 +12,7 @@ import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.modification.AutomaticCodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
+import com.translator.service.codactor.modification.FileModificationSuggestionDiffViewerService;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.view.codactor.factory.dialog.*;
@@ -69,8 +70,9 @@ public class CodeTranslatorViewConfig extends AbstractModule {
     public ProvisionalModificationViewer codeSnippetListViewer(CodactorToolWindowService codactorToolWindowService,
                                                                FileModificationTrackerService fileModificationTrackerService,
                                                                FileOpenerService fileOpenerService,
+                                                               FileModificationSuggestionDiffViewerService fileModificationSuggestionDiffViewerService,
                                                                ProvisionalModificationCustomizerDialogFactory provisionalModificationCustomizerDialogFactory) {
-        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationTrackerService, fileOpenerService, provisionalModificationCustomizerDialogFactory);
+        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationTrackerService, fileOpenerService, fileModificationSuggestionDiffViewerService, provisionalModificationCustomizerDialogFactory);
     }
 
     @Singleton

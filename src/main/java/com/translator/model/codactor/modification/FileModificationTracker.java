@@ -5,6 +5,7 @@ import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.project.Project;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.editor.DiffEditorGeneratorService;
 import com.translator.service.codactor.editor.RangeReplaceService;
 import com.translator.service.codactor.modification.tracking.CodeRangeTrackerService;
 
@@ -19,17 +20,20 @@ public class FileModificationTracker {
     private final CodeSnippetExtractorService codeSnippetExtractorService;
     private final RangeReplaceService rangeReplaceService;
     private final CodeRangeTrackerService codeRangeTrackerService;
+    private final DiffEditorGeneratorService diffEditorGeneratorService;
 
     public FileModificationTracker(Project project,
                                    String filePath,
                                    CodeSnippetExtractorService codeSnippetExtractorService,
                                    RangeReplaceService rangeReplaceService,
-                                   CodeRangeTrackerService codeRangeTrackerService) {
+                                   CodeRangeTrackerService codeRangeTrackerService,
+                                   DiffEditorGeneratorService diffEditorGeneratorService) {
         this.project = project;
         this.filePath = filePath;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.rangeReplaceService = rangeReplaceService;
         this.codeRangeTrackerService = codeRangeTrackerService;
+        this.diffEditorGeneratorService = diffEditorGeneratorService;
         this.modifications = new ArrayList<>();
         this.fileModificationUpdateQueue = new ArrayList<>();
     }
@@ -109,9 +113,9 @@ public class FileModificationTracker {
             List<FileModificationSuggestion> suggestions = new ArrayList<>();
             for (FileModificationSuggestionRecord modificationOption : modificationOptions) {
                 if (fileModification.getModificationType() == ModificationType.TRANSLATE) {
-                    suggestions.add(new FileModificationSuggestion(project, modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode(), fileModification.getNewFileType().trim().toLowerCase()));
+                    suggestions.add(new FileModificationSuggestion(diffEditorGeneratorService, project, modificationOption.getId(), filePath, modificationId, fileModification.getBeforeText(), modificationOption.getSuggestedCode(), fileModification.getNewFileType().trim().toLowerCase()));
                 } else {
-                    FileModificationSuggestion fileModificationSuggestion = new FileModificationSuggestion(project, modificationOption.getId(), filePath, modificationId, modificationOption.getSuggestedCode());
+                    FileModificationSuggestion fileModificationSuggestion = new FileModificationSuggestion(diffEditorGeneratorService, project, modificationOption.getId(), filePath, modificationId, fileModification.getBeforeText(), modificationOption.getSuggestedCode());
                     suggestions.add(fileModificationSuggestion);
                 }
             }

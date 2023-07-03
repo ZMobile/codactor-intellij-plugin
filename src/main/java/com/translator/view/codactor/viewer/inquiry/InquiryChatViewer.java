@@ -13,6 +13,8 @@ import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
+import com.translator.service.codactor.editor.DiffEditorGeneratorService;
+import com.translator.service.codactor.editor.DiffEditorGeneratorServiceImpl;
 import com.translator.service.codactor.editor.GptToLanguageTransformerService;
 import com.translator.service.codactor.editor.GptToLanguageTransformerServiceImpl;
 import com.translator.view.codactor.panel.FixedHeightPanel;
@@ -32,12 +34,14 @@ public class InquiryChatViewer extends JPanel {
     private InquiryChatType inquiryChatType;
     private JToolBar jToolBar1;
     private JLabel jLabel1;
+    private String headerString;
     private String message;
     private GptToLanguageTransformerService gptToLanguageTransformerService;
     private List<Editor> editorList;
 
     public InquiryChatViewer(String filePath, String message, String headerString, InquiryChatType inquiryChatType) {
         this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
+        this.headerString = headerString;
         this.message = message;
         this.editorList = new ArrayList<>();
         if (inquiryChatType == InquiryChatType.CODE_SNIPPET && !message.startsWith("```")) {
@@ -78,7 +82,7 @@ public class InquiryChatViewer extends JPanel {
                     addComponent(component, gridy++, 0);
                 }
                 if (inquiryChat.getLikelyCodeLanguage() == null) {
-                    inquiryChat.setLikelyCodeLanguage(gptToLanguageTransformerService.convert(message));
+                    inquiryChat.setLikelyCodeLanguage(likelyCodingLanguage);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -91,6 +95,7 @@ public class InquiryChatViewer extends JPanel {
         this.inquiryChat = inquiryChat;
         this.inquiryChatType = inquiryChat.getInquiryChatType();
         this.editorList = new ArrayList<>();
+        this.headerString = headerString;
         setLayout(new GridBagLayout());
         if (inquiryChatType == InquiryChatType.CODE_SNIPPET && !inquiryChat.getMessage().startsWith("```")) {
             inquiryChat.setMessage("```" + inquiryChat.getMessage().trim() + "```");

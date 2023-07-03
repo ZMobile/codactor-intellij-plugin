@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.codactor"
-version = "1.4-SNAPSHOT"
+version = "1.5-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -46,6 +46,7 @@ tasks {
         implementation("com.norconex.language:langdetect:1.3.0")
         implementation("org.jhotdraw:jhotdraw:7.7.0")
         implementation("org.openjfx:javafx-swing:21-ea+5")
+        implementation("io.github.java-diff-utils:java-diff-utils:4.12")
     }
 
     publishPlugin {

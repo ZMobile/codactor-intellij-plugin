@@ -50,10 +50,10 @@ public class FileModificationSuggestionModificationTracker {
                 return null;
             }
         }
-        Document document = fileModificationSuggestion.getSuggestedCode().getDocument();
+        Document document = fileModificationSuggestion.getSuggestedCodeEditor().getDocument();
         RangeMarker rangeMarker = document.createRangeMarker(startIndex, endIndex);
-        String beforeText = document.getText(new TextRange(startIndex, endIndex));
-        FileModificationSuggestionModification fileModificationSuggestionModification = new FileModificationSuggestionModification(filePath, fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getId(), rangeMarker, beforeText, modificationType);
+        String beforeCode = fileModificationSuggestion.getBeforeCode();
+        FileModificationSuggestionModification fileModificationSuggestionModification = new FileModificationSuggestionModification(filePath, fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getId(), rangeMarker, fileModificationSuggestion.getBeforeCode(), modificationType);
         modifications.add(fileModificationSuggestionModification);
         return fileModificationSuggestionModification.getId();
     }
@@ -84,7 +84,7 @@ public class FileModificationSuggestionModificationTracker {
                         int formerStartIndex = m.getRangeMarker().getStartOffset();
                         int formerEndIndex = m.getRangeMarker().getEndOffset();
                         modifications.remove(m);
-                        rangeReplaceService.replaceRange(fileModificationSuggestion.getSuggestedCode(), formerStartIndex, formerEndIndex, modification);
+                        rangeReplaceService.replaceRange(fileModificationSuggestion.getSuggestedCodeEditor(), formerStartIndex, formerEndIndex, modification);
                         break;
                     }
                 }

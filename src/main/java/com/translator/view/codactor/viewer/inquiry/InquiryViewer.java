@@ -122,7 +122,6 @@ public class InquiryViewer extends JPanel {
         inquiryService.createGeneralInquiry(question);
     }
 
-
     public void askInquiryQuestion(String subjectRecordId, RecordType recordType, String question, String filePath) {
         inquiryChatBoxViewer.getToolBar().setVisible(false);
         inquiryService.createInquiry(subjectRecordId, recordType, question, filePath);
