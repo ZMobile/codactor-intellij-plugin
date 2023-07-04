@@ -31,6 +31,7 @@ public class InquiryChatViewer extends JPanel {
 
     public static class Builder {
         private InquiryChat inquiryChat;
+        private List<InquiryChat> functionCalls;
         private String headerString;
         private String filePath;
         private String message;
@@ -39,6 +40,11 @@ public class InquiryChatViewer extends JPanel {
 
         public Builder withInquiryChat(InquiryChat inquiryChat) {
             this.inquiryChat = inquiryChat;
+            return this;
+        }
+
+        public Builder withFunctionCalls(List<InquiryChat> functionCalls) {
+            this.functionCalls = functionCalls;
             return this;
         }
 
@@ -68,18 +74,31 @@ public class InquiryChatViewer extends JPanel {
         }
 
         public InquiryChatViewer build() {
-            GptToLanguageTransformerService gptToLanguageTransformerService1 = new GptToLanguageTransformerServiceImpl();
+            if (functionCalls == null) {
+                functionCalls = new ArrayList<>();
+            }
             if (likelyCodingLanguage == null) {
-                if (filePath == null) {
+                GptToLanguageTransformerService gptToLanguageTransformerService1 = new GptToLanguageTransformerServiceImpl();
+                if (filePath == null && message != null) {
                     likelyCodingLanguage = gptToLanguageTransformerService1.convert(message);
+                } else if (filePath == null) {
+                    likelyCodingLanguage = "text";
                 } else {
                     likelyCodingLanguage = gptToLanguageTransformerService1.getFromFilePath(filePath);
                 }
             }
             if (inquiryChat == null) {
-                inquiryChat = new InquiryChat(null, null, filePath, null, headerString, message, likelyCodingLanguage, inquiryChatType);
+                inquiryChat = new InquiryChat.Builder()
+                        .withFilePath(filePath)
+                        .withFrom(headerString)
+                        .withMessage(message)
+                        .withLikelyCodeLanguage(likelyCodingLanguage)
+                        .withInquiryChatType(inquiryChatType)
+                        .build();
+            } else if (headerString == null) {
+                headerString = inquiryChat.getFrom();
             }
-            return new InquiryChatViewer(inquiryChat, headerString);
+            return new InquiryChatViewer(inquiryChat, headerString, functionCalls);
         }
     }
 
@@ -94,11 +113,12 @@ public class InquiryChatViewer extends JPanel {
     private GptToLanguageTransformerService gptToLanguageTransformerService;
     private List<Editor> editorList;
 
-    public InquiryChatViewer(InquiryChat inquiryChat, String headerString) {
+    private InquiryChatViewer(InquiryChat inquiryChat, String headerString, List<InquiryChat> functionCalls) {
         this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
         this.inquiryChat = inquiryChat;
         this.editorList = new ArrayList<>();
         this.headerString = headerString;
+        this.functionCalls = functionCalls;
         setLayout(new GridBagLayout());
         if (inquiryChat.getInquiryChatType() == InquiryChatType.CODE_SNIPPET && !inquiryChat.getMessage().startsWith("```")) {
             inquiryChat.setMessage("```" + inquiryChat.getMessage().trim() + "```");
@@ -132,10 +152,6 @@ public class InquiryChatViewer extends JPanel {
                 inquiryChat.setLikelyCodeLanguage(gptToLanguageTransformerService.convert(inquiryChat.getMessage()));
             }
         }
-    }
-
-    public InquiryChatViewer(InquiryChat inquiryChat) {
-        this(inquiryChat, inquiryChat.getFrom());
     }
 
     private List<Component> createComponentsFromMessage(String message) {
@@ -212,7 +228,7 @@ public class InquiryChatViewer extends JPanel {
     public InquiryChat getInquiryChat() {
         return inquiryChat;
     }
-    
+
     private void addComponent(Component component, int gridy, double weighty) {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;

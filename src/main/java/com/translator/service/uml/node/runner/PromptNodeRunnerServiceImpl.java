@@ -69,7 +69,8 @@ public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
             promptNode.setRunning(true);
             promptNode.setStartedByNodeId(startingNodeId);
             promptNodeFigure.setMetadata(gson.toJson(promptNode));
-            Inquiry inquiry = new Inquiry(null, null, null, null, null, null, null, null, null, null);
+            Inquiry inquiry = new Inquiry.Builder()
+                    .build();
             InquiryChat previousInquiryChat = null;
             for (int i = 0; i < promptNode.getPromptList().size(); i++) {
                 Prompt prompt = promptNode.getPromptList().get(i);
@@ -81,7 +82,10 @@ public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
                         newPrompt = newPrompt.replace(connection.getOutputKey(), node.getOutput());
                     }
                 }
-                InquiryChat newQuestion = new InquiryChat(null, null, null, null, "User", newPrompt, null);
+                InquiryChat newQuestion = new InquiryChat.Builder()
+                        .withFrom("User")
+                        .withMessage(newPrompt)
+                        .build();
                 inquiry.getChats().add(newQuestion);
                 if (nodeDialogWindowMapperService.getPromptNodeDialogMap().containsKey(promptNodeFigure)) {
                     PromptNodeDialog promptNodeDialog = nodeDialogWindowMapperService.getPromptNodeDialogMap().get(promptNodeFigure);

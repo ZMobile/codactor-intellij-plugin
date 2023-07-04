@@ -11,6 +11,86 @@ import java.util.List;
 import java.util.UUID;
 
 public class Inquiry {
+
+    public static class Builder {
+        private String userId;
+        private String modificationId;
+        private String subjectRecordId;
+        private RecordType subjectRecordType;
+        private String filePath;
+        private String beforeCode;
+        private String afterCode;
+        private String subjectCode;
+        private String description;
+        private ModificationType modificationType;
+        private String initialQuestion;
+        private List<HistoricalContextObjectHolder> priorContext;
+
+        public Builder withUserId(String userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        public Builder withModificationId(String modificationId) {
+            this.modificationId = modificationId;
+            return this;
+        }
+
+        public Builder withSubjectRecordId(String subjectRecordId) {
+            this.subjectRecordId = subjectRecordId;
+            return this;
+        }
+
+        public Builder withSubjectRecordType(RecordType subjectRecordType) {
+            this.subjectRecordType = subjectRecordType;
+            return this;
+        }
+
+        public Builder withFilePath(String filePath) {
+            this.filePath = filePath;
+            return this;
+        }
+
+        public Builder withBeforeCode(String beforeCode) {
+            this.beforeCode = beforeCode;
+            return this;
+        }
+
+        public Builder withAfterCode(String afterCode) {
+            this.afterCode = afterCode;
+            return this;
+        }
+
+        public Builder withSubjectCode(String subjectCode) {
+            this.subjectCode = subjectCode;
+            return this;
+        }
+
+        public Builder withDescription(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public Builder withModificationType(ModificationType modificationType) {
+            this.modificationType = modificationType;
+            return this;
+        }
+
+        public Builder withInitialQuestion(String initialQuestion) {
+            this.initialQuestion = initialQuestion;
+            return this;
+        }
+
+        public Builder withPriorContext(List<HistoricalContextObjectHolder> priorContext) {
+            this.priorContext = priorContext;
+            return this;
+        }
+
+        public Inquiry build() {
+            return new Inquiry(userId, modificationId, subjectRecordId, subjectRecordType, filePath, beforeCode, afterCode, subjectCode, initialQuestion, description, modificationType, priorContext);
+        }
+    }
+
     private final String myId;
     private final String userId;
     private final LocalDateTime creationTimestamp;
@@ -28,14 +108,16 @@ public class Inquiry {
     private List<InquiryChat> chats;
     private List<HistoricalContextObjectHolder> priorContext;
 
-    public Inquiry(String userId,
+    private Inquiry(String userId,
                    String modificationId,
                    String subjectRecordId,
                    RecordType subjectRecordType,
                    String filePath,
                    String beforeCode,
-                   String description,
                    String afterCode,
+                   String subjectCode,
+                   String initialQuestion,
+                   String description,
                    ModificationType modificationType,
                    List<HistoricalContextObjectHolder> priorContext) {
         this.creationTimestamp = LocalDateTime.now(ZoneOffset.UTC);
@@ -47,25 +129,11 @@ public class Inquiry {
         this.subjectRecordType = subjectRecordType;
         this.filePath = filePath;
         this.beforeCode = beforeCode;
-        this.description = description;
         this.afterCode = afterCode;
-        this.modificationType = modificationType;
-        this.chats = new ArrayList<>();
-        this.priorContext = new ArrayList<>();
-    }
-
-    public Inquiry(String userId,
-                         String filePath,
-                         String subjectCode,
-                         String initialQuestion,
-                         List<HistoricalContextObjectHolder> priorContext) {
-        this.creationTimestamp = LocalDateTime.now(ZoneOffset.UTC);
-        this.modifiedTimestamp = LocalDateTime.now(ZoneOffset.UTC);
-        this.myId = UUID.randomUUID().toString();
-        this.userId = userId;
-        this.filePath = filePath;
         this.subjectCode = subjectCode;
         this.initialQuestion = initialQuestion;
+        this.description = description;
+        this.modificationType = modificationType;
         this.chats = new ArrayList<>();
         this.priorContext = priorContext;
     }

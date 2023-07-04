@@ -52,8 +52,13 @@ public class InquiryServiceImpl implements InquiryService {
     @Override
     public void createInquiry(String subjectRecordId, RecordType recordType, String question, String filePath) {
         String likelyCodeLanguage = gptToLanguageTransformerService.getFromFilePath(filePath);
-        Inquiry inquiry = new Inquiry(null, null, null, null, null, null, null, null, null, null);
-        InquiryChat temporaryChat = new InquiryChat(null, null, null, null, "User", question, likelyCodeLanguage);
+        Inquiry inquiry = new Inquiry.Builder()
+                .build();
+        InquiryChat temporaryChat = new InquiryChat.Builder()
+                .withFrom("User")
+                .withMessage(question)
+                .withLikelyCodeLanguage(likelyCodeLanguage)
+                .build();
         inquiry.getChats().add(temporaryChat);
         InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
         inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
@@ -75,7 +80,12 @@ public class InquiryServiceImpl implements InquiryService {
 
     @Override
     public void createInquiry(String filePath, String code, String question, List<HistoricalContextObjectHolder> priorContext) {
-        Inquiry temporaryInquiry = new Inquiry(null, filePath, code, question, priorContext);
+        Inquiry temporaryInquiry = new Inquiry.Builder()
+                .withFilePath(filePath)
+                .withSubjectCode(code)
+                .withInitialQuestion(question)
+                .withPriorContext(priorContext)
+                .build();
         InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
         inquiryViewer.getInquiryChatListViewer().updateInquiryContents(temporaryInquiry);
         inquiryViewer.setLoadingChat(true);
@@ -96,8 +106,13 @@ public class InquiryServiceImpl implements InquiryService {
     @Override
     public void createGeneralInquiry(String question) {
         String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
-        InquiryChat temporaryChat = new InquiryChat(null, null, null, null, "User", question, likelyCodeLanguage);
-        Inquiry inquiry = new Inquiry(null, null, null, null, null, null, null, null, null, null);
+        InquiryChat temporaryChat = new InquiryChat.Builder()
+                .withFrom("User")
+                .withMessage(question)
+                .withLikelyCodeLanguage(likelyCodeLanguage)
+                .build();
+        Inquiry inquiry = new Inquiry.Builder()
+                .build();
         inquiry.getChats().add(temporaryChat);
         InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
         inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
@@ -123,7 +138,14 @@ public class InquiryServiceImpl implements InquiryService {
         String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
         InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
         Inquiry inquiry = inquiryViewer.getInquiry();
-        InquiryChat inquiryChat = new InquiryChat(null, inquiry.getId(), inquiry.getFilePath(), previousInquiryChatId, "User", question, likelyCodeLanguage);
+        InquiryChat inquiryChat = new InquiryChat.Builder()
+                .withInquiryId(inquiry.getId())
+                .withFilePath(inquiry.getFilePath())
+                .withPreviousInquiryChatId(previousInquiryChatId)
+                .withFrom("User")
+                .withMessage(question)
+                .withLikelyCodeLanguage(likelyCodeLanguage)
+                .build();
         findAlternatesForInquiryChat(inquiry.getChats(), inquiryChat);
         inquiry.getChats().add(inquiryChat);
         inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);

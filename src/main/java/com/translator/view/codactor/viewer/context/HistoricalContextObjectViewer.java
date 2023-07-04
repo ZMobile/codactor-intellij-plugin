@@ -218,7 +218,9 @@ public class HistoricalContextObjectViewer extends JPanel {
         int totalHeight = 0;
         DefaultListModel<InquiryChatViewer> model = new DefaultListModel<>();
         for (InquiryChat inquiryChat : inquiryChats) {
-            InquiryChatViewer chatViewer = new InquiryChatViewer(inquiryChat);
+            InquiryChatViewer chatViewer = new InquiryChatViewer.Builder()
+                    .withInquiryChat(inquiryChat)
+                    .build();
             model.addElement(chatViewer);
             for (Component component : chatViewer.getComponents()) {
                 if (component instanceof JBTextArea) {

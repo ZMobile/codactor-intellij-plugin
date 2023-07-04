@@ -277,7 +277,9 @@ public class PromptViewer extends JPanel {
                 int totalHeight = 0;
                 DefaultListModel<InquiryChatViewer> model = new DefaultListModel<>();
                 for (InquiryChat inquiryChat : inquiryChats) {
-                    InquiryChatViewer chatViewer = new InquiryChatViewer(inquiryChat);
+                    InquiryChatViewer chatViewer = new InquiryChatViewer.Builder()
+                            .withInquiryChat(inquiryChat)
+                            .build();
                     model.addElement(chatViewer);
                     for (Component component : chatViewer.getComponents()) {
                         if (component instanceof JBTextArea) {
@@ -321,7 +323,10 @@ public class PromptViewer extends JPanel {
     public void updatePromptChatContents(List<Prompt> prompts) {
         inquiryChats.clear();
         for (Prompt prompt : prompts) {
-            inquiryChats.add(new InquiryChat(null, null, null, null, "User", prompt.getPrompt(), null));
+            inquiryChats.add(new InquiryChat.Builder()
+                    .withFrom("User")
+                    .withMessage(prompt.getPrompt())
+                    .build());
         }
         updateInquiryChatContents(inquiryChats);
     }
@@ -329,7 +334,10 @@ public class PromptViewer extends JPanel {
     public void updateChatContents(List<Prompt> prompts, Map<Prompt, InquiryChat> promptAnswerMap) {
         inquiryChats.clear();
         for (Prompt prompt : prompts) {
-            inquiryChats.add(new InquiryChat(null, null, null, null, "User", prompt.getPrompt(), null));
+            inquiryChats.add(new InquiryChat.Builder()
+                    .withFrom("User")
+                    .withMessage(prompt.getPrompt())
+                    .build());
             if (promptAnswerMap.containsKey(prompt)) {
                 InquiryChat answer = promptAnswerMap.get(prompt);
                 inquiryChats.add(answer);

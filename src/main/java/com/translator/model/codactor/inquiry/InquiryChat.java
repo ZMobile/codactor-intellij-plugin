@@ -6,6 +6,71 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InquiryChat {
+
+    public static class Builder {
+        private String userId;
+        private String inquiryId;
+        private String filePath;
+        private String previousInquiryChatId;
+        private String from;
+        private String message;
+        private String functionCall;
+        private InquiryChatType inquiryChatType;
+        private String likelyCodeLanguage;
+
+        public Builder withUserId(String userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        public Builder withInquiryId(String inquiryId) {
+            this.inquiryId = inquiryId;
+            return this;
+        }
+
+        public Builder withFilePath(String filePath) {
+            this.filePath = filePath;
+            return this;
+        }
+
+        public Builder withPreviousInquiryChatId(String previousInquiryChatId) {
+            this.previousInquiryChatId = previousInquiryChatId;
+            return this;
+        }
+
+        public Builder withFrom(String from) {
+            this.from = from;
+            return this;
+        }
+
+        public Builder withMessage(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public Builder withFunctionCall(String functionCall) {
+            this.functionCall = functionCall;
+            return this;
+        }
+
+        public Builder withInquiryChatType(InquiryChatType inquiryChatType) {
+            this.inquiryChatType = inquiryChatType;
+            return this;
+        }
+
+        public Builder withLikelyCodeLanguage(String likelyCodeLanguage) {
+            this.likelyCodeLanguage = likelyCodeLanguage;
+            return this;
+        }
+
+        public InquiryChat build() {
+            if (inquiryChatType == null) {
+                inquiryChatType = InquiryChatType.DEFAULT;
+            }
+            return new InquiryChat(userId, inquiryId, filePath, previousInquiryChatId, from, message, likelyCodeLanguage, inquiryChatType);
+        }
+    }
+
     private final String myId;
     private final LocalDateTime creationTimestamp;
     private LocalDateTime modifiedTimestamp;
@@ -20,22 +85,7 @@ public class InquiryChat {
     private String likelyCodeLanguage;
     private List<String> alternateInquiryChatIds;
 
-    public InquiryChat(String userId, String inquiryId, String filePath, String previousInquiryChatId, String from, String message, String likelyCodeLanguage) {
-        this.creationTimestamp = LocalDateTime.now(ZoneOffset.UTC);
-        this.modifiedTimestamp = LocalDateTime.now(ZoneOffset.UTC);
-        this.myId = null;
-        this.userId = userId;
-        this.inquiryId = inquiryId;
-        this.filePath = filePath;
-        this.previousInquiryChatId = previousInquiryChatId;
-        this.from = from;
-        this.message = message;
-        this.inquiryChatType = InquiryChatType.DEFAULT;
-        this.alternateInquiryChatIds = new ArrayList<>();
-        this.likelyCodeLanguage = likelyCodeLanguage;
-    }
-
-    public InquiryChat(String userId, String inquiryId, String filePath, String previousInquiryChatId, String from, String message, String likelyCodeLanguage, InquiryChatType inquiryChatType) {
+    private InquiryChat(String userId, String inquiryId, String filePath, String previousInquiryChatId, String from, String message, String likelyCodeLanguage, InquiryChatType inquiryChatType) {
         this.creationTimestamp = LocalDateTime.now(ZoneOffset.UTC);
         this.modifiedTimestamp = LocalDateTime.now(ZoneOffset.UTC);
         this.myId = null;

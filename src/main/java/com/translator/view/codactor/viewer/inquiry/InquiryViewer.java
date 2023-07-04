@@ -101,7 +101,7 @@ public class InquiryViewer extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (inquiry.getAfterCode() != null || !inquiry.getChats().isEmpty()) {
-                    inquiryChatListViewer.updateInquiryContents(new Inquiry(null, null, null, null, null, null, null, null, null, null));
+                    inquiryChatListViewer.updateInquiryContents(new Inquiry.Builder().build());
                 }
                 /*ProvisionalModificationCustomizer provisionalModificationCustomizer = new ProvisionalModificationCustomizer(fileModification, codeModificationService, fileModificationTrackerService, aiTaskExecutor, codeSnippetListViewer, splitPaneService);
                 provisionalModificationCustomizer.setVisible(true);*/

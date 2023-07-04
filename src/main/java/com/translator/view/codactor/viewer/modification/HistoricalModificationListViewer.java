@@ -95,7 +95,8 @@ public class HistoricalModificationListViewer extends JPanel {
                     return;
                 }
                 if (index == 0) {
-                    Inquiry inquiry = new Inquiry(null, null, null, null, null, null, null, null, null, null);
+                    Inquiry inquiry = new Inquiry.Builder()
+                            .build();
                     inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                     inquiryViewer.setLoadingChat(false);
                     codactorToolWindowService.openInquiryViewerToolWindow();
@@ -105,10 +106,28 @@ public class HistoricalModificationListViewer extends JPanel {
                 Inquiry temporaryInquiry;
                 if (historicalContextModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
                     FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord();
-                    temporaryInquiry = new Inquiry(null, fileModificationSuggestionModificationRecord.getModificationId(), fileModificationSuggestionModificationRecord.getId(), RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION, fileModificationSuggestionModificationRecord.getFilePath(), fileModificationSuggestionModificationRecord.getBeforeText(), fileModificationSuggestionModificationRecord.getModification(), fileModificationSuggestionModificationRecord.getEditedCode(), fileModificationSuggestionModificationRecord.getModificationType(), null);
+                    temporaryInquiry = new Inquiry.Builder()
+                            .withModificationId(fileModificationSuggestionModificationRecord.getModificationId())
+                            .withSubjectRecordId(fileModificationSuggestionModificationRecord.getId())
+                            .withSubjectRecordType(RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION)
+                            .withFilePath(fileModificationSuggestionModificationRecord.getFilePath())
+                            .withBeforeCode(fileModificationSuggestionModificationRecord.getBeforeText())
+                            .withAfterCode(fileModificationSuggestionModificationRecord.getEditedCode())
+                            .withDescription(fileModificationSuggestionModificationRecord.getModification())
+                            .withModificationType(fileModificationSuggestionModificationRecord.getModificationType())
+                            .build();
                 } else {
                     FileModificationSuggestionRecord fileModificationSuggestionRecord = historicalContextModificationDataHolder.getFileModificationSuggestionRecord();
-                    temporaryInquiry = new Inquiry(null, fileModificationSuggestionRecord.getModificationId(), fileModificationSuggestionRecord.getId(), RecordType.FILE_MODIFICATION_SUGGESTION, fileModificationSuggestionRecord.getFilePath(), fileModificationSuggestionRecord.getBeforeCode(), fileModificationSuggestionRecord.getModification(), fileModificationSuggestionRecord.getSuggestedCode(), fileModificationSuggestionRecord.getModificationType(), null);
+                    temporaryInquiry = new Inquiry.Builder()
+                            .withModificationId(fileModificationSuggestionRecord.getModificationId())
+                            .withSubjectRecordId(fileModificationSuggestionRecord.getId())
+                            .withSubjectRecordType(RecordType.FILE_MODIFICATION_SUGGESTION)
+                            .withFilePath(fileModificationSuggestionRecord.getFilePath())
+                            .withBeforeCode(fileModificationSuggestionRecord.getBeforeCode())
+                            .withAfterCode(fileModificationSuggestionRecord.getSuggestedCode())
+                            .withDescription(fileModificationSuggestionRecord.getModification())
+                            .withModificationType(fileModificationSuggestionRecord.getModificationType())
+                            .build();
                 }
                 inquiryViewer.getInquiryChatListViewer().updateInquiryContents(temporaryInquiry);
                 codactorToolWindowService.openInquiryViewerToolWindow();

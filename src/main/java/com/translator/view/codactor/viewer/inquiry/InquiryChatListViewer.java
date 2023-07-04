@@ -411,7 +411,9 @@ public class InquiryChatListViewer extends JPanel {
         }
         Collections.reverse(finalizedChatList);
         for (InquiryChat chat : finalizedChatList) {
-            InquiryChatViewer chatViewer = new InquiryChatViewer(chat, chat.getFrom());
+            InquiryChatViewer chatViewer = new InquiryChatViewer.Builder()
+                    .withInquiryChat(chat)
+                    .build();
             model.addElement(chatViewer);
         }
         ComponentListener componentListener = new ComponentAdapter() {
