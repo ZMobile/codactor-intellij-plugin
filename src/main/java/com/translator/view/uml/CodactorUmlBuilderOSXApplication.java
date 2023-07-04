@@ -64,7 +64,7 @@ import java.util.prefs.Preferences;
  * <p>
  * The screen menu bar has the following standard menus:
  * <pre>
- * "Application-Name" &nbsp; File &nbsp; Edit &nbsp; Window</pre>
+ * "Application-Name" &nbsp; File &nbsp; Edit &nbsp; com.translator.listener.pacman.Window</pre>
  *
  * The first menu, is the <b>application menu</b>. It has the following standard
  * menu items: 
@@ -86,7 +86,7 @@ import java.util.prefs.Preferences;
  * <pre>
  *  Clear ({@link ClearFileAction#ID}})
  *  New ({@link NewFileAction#ID}})
- *  New Window ({@link NewWindowAction#ID}})
+ *  New com.translator.listener.pacman.Window ({@link NewWindowAction#ID}})
  *  Load... ({@link LoadFileAction#ID}})
  *  Open... ({@link OpenFileAction#ID}})
  *  Load Directory... ({@link LoadDirectoryAction#ID}})
@@ -309,9 +309,9 @@ public class CodactorUmlBuilderOSXApplication extends AbstractApplication {
         // Adds a proxy icon for the file to the title bar
         // See http://developer.apple.com/technotes/tn2007/tn2196.html#WINDOW_DOCUMENTFILE
         if (uri != null && uri.getScheme() != null && "file".equals(uri.getScheme())) {
-            f.getRootPane().putClientProperty("Window.documentFile", new File(uri));
+            f.getRootPane().putClientProperty("com.translator.listener.pacman.Window.documentFile", new File(uri));
         } else {
-            f.getRootPane().putClientProperty("Window.documentFile", null);
+            f.getRootPane().putClientProperty("com.translator.listener.pacman.Window.documentFile", null);
         }
     }
 
@@ -548,7 +548,7 @@ public class CodactorUmlBuilderOSXApplication extends AbstractApplication {
 
                     // Note: Client properties must be set before heavy-weight
                     // peers are created
-                    d.getRootPane().putClientProperty("Window.style", "small");
+                    d.getRootPane().putClientProperty("com.translator.listener.pacman.Window.style", "small");
                     d.getRootPane().putClientProperty("Quaqua.RootPane.isVertical", Boolean.FALSE);
                     d.getRootPane().putClientProperty("Quaqua.RootPane.isPalette", Boolean.TRUE);
 
@@ -616,8 +616,8 @@ public class CodactorUmlBuilderOSXApplication extends AbstractApplication {
             invisibleFrame.setLocation(10000, 10000);
             // make the frame transparent and shadowless
             // see https://developer.apple.com/mac/library/technotes/tn2007/tn2196.html
-            invisibleFrame.getRootPane().putClientProperty("Window.alpha", 0f);
-            invisibleFrame.getRootPane().putClientProperty("Window.shadow", false);
+            invisibleFrame.getRootPane().putClientProperty("com.translator.listener.pacman.Window.alpha", 0f);
+            invisibleFrame.getRootPane().putClientProperty("com.translator.listener.pacman.Window.shadow", false);
             // make it visible, so the menu bar will show
             invisibleFrame.setVisible(true);
         }
@@ -657,7 +657,7 @@ public class CodactorUmlBuilderOSXApplication extends AbstractApplication {
         return vMap;
     }
 
-    /** Updates the menu items in the "Window" menu. */
+    /** Updates the menu items in the "com.translator.listener.pacman.Window" menu. */
     private class WindowMenuHandler implements PropertyChangeListener, Disposable {
 
         private JMenu windowMenu;

@@ -32,8 +32,8 @@ public class CodactorUmlBuilderOSXPaletteHandler {
     private CodactorUmlBuilderOSXApplication app;
     private WindowFocusListener focusHandler = new WindowFocusListener() {
         /**
-         * Invoked when the Window is set to be the focused Window, which means
-         * that the Window, or one of its subcomponents, will receive keyboard
+         * Invoked when the com.translator.listener.pacman.Window is set to be the focused com.translator.listener.pacman.Window, which means
+         * that the com.translator.listener.pacman.Window, or one of its subcomponents, will receive keyboard
          * events.
          */
         @Override
@@ -46,8 +46,8 @@ public class CodactorUmlBuilderOSXPaletteHandler {
         }
         
         /**
-         * Invoked when the Window is no longer the focused Window, which means
-         * that keyboard events will no longer be delivered to the Window or any of
+         * Invoked when the com.translator.listener.pacman.Window is no longer the focused com.translator.listener.pacman.Window, which means
+         * that keyboard events will no longer be delivered to the com.translator.listener.pacman.Window or any of
          * its subcomponents.
          */
         @Override

@@ -181,7 +181,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
                 FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
                 String beforeCode = fileModificationSuggestion.getBeforeCode();
                 String afterCode = fileModificationSuggestion.getSuggestedCodeEditor().getDocument().getText();
-                fileModificationSuggestionDiffViewerService.showDiffViewer(beforeCode, afterCode);
+                fileModificationSuggestionDiffViewerService.showDiffViewer(fileModification.getFilePath(), beforeCode, afterCode);
             }
         });
 

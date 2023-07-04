@@ -32,7 +32,7 @@ public class CustomCreateMultiFileAction extends CreateElementActionBase {
         PromptContextService promptContextService = injector.getInstance(PromptContextServiceFactory.class).create();
         OpenAiModelService openAiModelService = injector.getInstance(OpenAiModelService.class);
         VirtualFile directoryVirtualFile = directory.getVirtualFile();
-        MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(directoryVirtualFile.getPath(), null, promptContextService, openAiModelService);
+        MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(directoryVirtualFile.getPath(), "", promptContextService, openAiModelService);
         multiFileCreateDialog.setVisible(true);
 
         return PsiElement.EMPTY_ARRAY;

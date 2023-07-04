@@ -65,7 +65,6 @@ public class InquiryServiceImpl implements InquiryService {
                 Inquiry inquiry = inquiryDao.createInquiry(subjectRecordId, recordType, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
                 if (inquiry != null) {
                     inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
-                    inquiryViewer.getInquiryChatListViewer().componentResized();
                 }
                 inquiryViewer.setLoadingChat(false);
             }

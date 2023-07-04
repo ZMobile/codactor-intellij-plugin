@@ -331,7 +331,6 @@ public class InquiryChatListViewer extends JPanel {
     }
 
     public void updateInquiryContents(Inquiry inquiry, InquiryChat previousInquiryChat) {
-        System.out.println("Updating inquiry contents: " + inquiry.getChats().size());
         this.inquiry = inquiry;
         this.inquiryViewer.setInquiry(inquiry);
         this.inquiryViewer.getInquiryChatBoxViewer().setInquiry(inquiry);
@@ -346,24 +345,49 @@ public class InquiryChatListViewer extends JPanel {
         int totalHeight = 0;
         if (inquiry.getDescription() != null) {
             String text = inquiry.getModificationType() + ": " + inquiry.getDescription().trim();
-            InquiryChatViewer descriptionViewer = new InquiryChatViewer(inquiry.getFilePath(), text, "User", InquiryChatType.INSTIGATOR_PROMPT);
+            InquiryChatViewer descriptionViewer = new InquiryChatViewer.Builder()
+                    .withFilePath(inquiry.getFilePath())
+                    .withMessage(text)
+                    .withHeaderString("User")
+                    .withInquiryChatType(InquiryChatType.INSTIGATOR_PROMPT)
+                    .build();
             model.addElement(descriptionViewer);
             if (inquiry.getBeforeCode() != null) {
                 String beforeCodeText = "```" + inquiry.getBeforeCode().trim() + "```";
-                InquiryChatViewer beforeViewer = new InquiryChatViewer(inquiry.getFilePath(), beforeCodeText, "Before", InquiryChatType.CODE_SNIPPET);
+                InquiryChatViewer beforeViewer = new InquiryChatViewer.Builder()
+                        .withFilePath(inquiry.getFilePath())
+                        .withMessage(beforeCodeText)
+                        .withHeaderString("Before")
+                        .withInquiryChatType(InquiryChatType.CODE_SNIPPET)
+                        .build();
                 model.addElement(beforeViewer);
             }
             if (inquiry.getAfterCode() != null) {
                 String afterCodeText = "```" + inquiry.getAfterCode().trim() + "```";
-                InquiryChatViewer afterViewer = new InquiryChatViewer(inquiry.getFilePath(), afterCodeText, "After", InquiryChatType.CODE_SNIPPET);
+                InquiryChatViewer afterViewer = new InquiryChatViewer.Builder()
+                        .withFilePath(inquiry.getFilePath())
+                        .withMessage(afterCodeText)
+                        .withHeaderString("After")
+                        .withInquiryChatType(InquiryChatType.CODE_SNIPPET)
+                        .build();
                 model.addElement(afterViewer);
             }
         } else if (inquiry.getSubjectCode() != null) {
             String subjectCodeText = "```" + inquiry.getSubjectCode().trim() + "```";
-            InquiryChatViewer subjectCodeViewer = new InquiryChatViewer(inquiry.getFilePath(), subjectCodeText, "Code", InquiryChatType.CODE_SNIPPET);
+            InquiryChatViewer subjectCodeViewer = new InquiryChatViewer.Builder()
+                    .withFilePath(inquiry.getFilePath())
+                    .withMessage(subjectCodeText)
+                    .withHeaderString("Code")
+                    .withInquiryChatType(InquiryChatType.CODE_SNIPPET)
+                    .build();
             model.addElement(subjectCodeViewer);
             String text = inquiry.getInitialQuestion().trim();
-            InquiryChatViewer descriptionViewer = new InquiryChatViewer(inquiry.getFilePath(), text, "User", InquiryChatType.INSTIGATOR_PROMPT);
+            InquiryChatViewer descriptionViewer = new InquiryChatViewer.Builder()
+                    .withFilePath(inquiry.getFilePath())
+                    .withMessage(text)
+                    .withHeaderString("User")
+                    .withInquiryChatType(InquiryChatType.INSTIGATOR_PROMPT)
+                    .build();
             model.addElement(descriptionViewer);
         }
         List<InquiryChat> finalizedChatList = new ArrayList<>();
@@ -404,7 +428,7 @@ public class InquiryChatListViewer extends JPanel {
                     JBTextArea chatDisplay = (JBTextArea) component;
                     int newHeight = 0;
                     int newWidth = getWidth();
-                    if (chatViewer.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                    if (chatViewer.getInquiryChat().getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
                         newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
                     } else {
                         newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
@@ -426,6 +450,7 @@ public class InquiryChatListViewer extends JPanel {
         ApplicationManager.getApplication().invokeLater(() -> {
             inquiryChatList.setModel(model);
             jBScrollPane.setViewportView(inquiryChatList);
+            this.componentResized();
         });
     }
 
@@ -476,7 +501,7 @@ public class InquiryChatListViewer extends JPanel {
                         JBTextArea chatDisplay = (JBTextArea) component;
                         int newHeight = 0;
                         int newWidth = getWidth();
-                        if (chatViewer.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                        if (chatViewer.getInquiryChat().getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
                             newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
                         } else {
                             newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);

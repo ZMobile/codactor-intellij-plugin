@@ -254,6 +254,9 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
 
     @Override
     public void generateCodeFiles(String description, String language, String fileExtension, String filePath, List<HistoricalContextObjectHolder> priorContext) {
+        if (priorContext == null) {
+            priorContext = new ArrayList<>();
+        }
         final String newFileExtension;
         if (fileExtension.startsWith(".")) {
             newFileExtension = fileExtension.substring(1);
@@ -262,12 +265,13 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
         }
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(description, language, fileExtension, filePath);
+        List<HistoricalContextObjectHolder> finalPriorContext = priorContext;
         LimitedSwingWorker worker = new LimitedSwingWorker(new LimitedSwingWorkerExecutor()) {
             @Override
             protected Void doInBackground() {
                 String question = "I need to create a potentially multi-file " + language + " program with the following description: \"" + description + "\".  What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
-                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), finalPriorContext);
                 if (newInquiry != null) {
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
@@ -350,6 +354,9 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
 
     @Override
     public void generateCodeFilesWithConsideration(String description, String language, String fileExtension, String filePath, List<HistoricalContextObjectHolder> priorContext) {
+        if (priorContext == null) {
+            priorContext = new ArrayList<>();
+        }
         final String newFileExtension;
         if (fileExtension.startsWith(".")) {
             newFileExtension = fileExtension.substring(1);
@@ -358,12 +365,13 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
         }
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(description, language, fileExtension, filePath);
+        List<HistoricalContextObjectHolder> finalPriorContext = priorContext;
         LimitedSwingWorker worker = new LimitedSwingWorker(new LimitedSwingWorkerExecutor()) {
             @Override
             protected Void doInBackground() {
                 String question = "I need to create a potentially multi-file " + language + " program with the following description: \"" + description + "\".  What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
-                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), finalPriorContext);
                 if (newInquiry != null) {
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1.5/3) Ordering File Names");
@@ -389,7 +397,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         if (newInquiry != null) {
                             InquiryChat mostRecentInquiryChat3 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                             fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
-
+                            System.out.println("This gets called 4");
                             List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat3.getMessage());
                             List<String> completedSuggestionIds = new ArrayList<>();
                             for (int i = 0; i < newFiles.size(); i++) {
@@ -407,7 +415,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         HistoricalContextObjectHolder priorContextObject2 = new HistoricalContextObjectHolder(modificationContext);
                                         priorContext2.add(priorContextObject2);
                                     }
-                                    String modificationId = fileModificationTrackerService.addModification(newFilePath, description, 0, 0, ModificationType.CREATE, priorContext);
+                                    String modificationId = fileModificationTrackerService.addModification(newFilePath, description, 0, 0, ModificationType.CREATE, finalPriorContext);
                                     String description2 = "The complete and comprehensive " + language + " code for " + file.getName();
                                     DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description2, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext2);
                                     DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);

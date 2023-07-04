@@ -28,10 +28,65 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class InquiryChatViewer extends JPanel {
+
+    public static class Builder {
+        private InquiryChat inquiryChat;
+        private String headerString;
+        private String filePath;
+        private String message;
+        private String likelyCodingLanguage;
+        private InquiryChatType inquiryChatType;
+
+        public Builder withInquiryChat(InquiryChat inquiryChat) {
+            this.inquiryChat = inquiryChat;
+            return this;
+        }
+
+        public Builder withHeaderString(String headerString) {
+            this.headerString = headerString;
+            return this;
+        }
+
+        public Builder withFilePath(String filePath) {
+            this.filePath = filePath;
+            return this;
+        }
+
+        public Builder withMessage(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public Builder withLikelyCodingLanguage(String likelyCodingLanguage) {
+            this.likelyCodingLanguage = likelyCodingLanguage;
+            return this;
+        }
+
+        public Builder withInquiryChatType(InquiryChatType inquiryChatType) {
+            this.inquiryChatType = inquiryChatType;
+            return this;
+        }
+
+        public InquiryChatViewer build() {
+            GptToLanguageTransformerService gptToLanguageTransformerService1 = new GptToLanguageTransformerServiceImpl();
+            if (likelyCodingLanguage == null) {
+                if (filePath == null) {
+                    likelyCodingLanguage = gptToLanguageTransformerService1.convert(message);
+                } else {
+                    likelyCodingLanguage = gptToLanguageTransformerService1.getFromFilePath(filePath);
+                }
+            }
+            if (inquiryChat == null) {
+                inquiryChat = new InquiryChat(null, null, filePath, null, headerString, message, likelyCodingLanguage, inquiryChatType);
+            }
+            return new InquiryChatViewer(inquiryChat, headerString);
+        }
+    }
+
     private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile("```(.*?)```", Pattern.DOTALL);
 
     private InquiryChat inquiryChat;
-    private InquiryChatType inquiryChatType;
+    private List<InquiryChat> functionCalls;
     private JToolBar jToolBar1;
     private JLabel jLabel1;
     private String headerString;
@@ -39,65 +94,13 @@ public class InquiryChatViewer extends JPanel {
     private GptToLanguageTransformerService gptToLanguageTransformerService;
     private List<Editor> editorList;
 
-    public InquiryChatViewer(String filePath, String message, String headerString, InquiryChatType inquiryChatType) {
-        this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
-        this.headerString = headerString;
-        this.message = message;
-        this.editorList = new ArrayList<>();
-        if (inquiryChatType == InquiryChatType.CODE_SNIPPET && !message.startsWith("```")) {
-            this.message = "```" + message.trim() + "```";
-        }
-        String likelyCodingLanguage;
-        if (filePath == null) {
-            likelyCodingLanguage = gptToLanguageTransformerService.convert(message);
-        } else {
-            likelyCodingLanguage = gptToLanguageTransformerService.getFromFilePath(filePath);
-        }
-        this.inquiryChat = new InquiryChat(null, null, null, null, headerString, message, likelyCodingLanguage, inquiryChatType);
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-        jToolBar1 = new JToolBar();
-        jToolBar1.setFloatable(false);
-        jToolBar1.setBorderPainted(false);
-        jLabel1 = new JLabel();
-        jToolBar1.setRollover(true);
-        if (inquiryChat.getAlternateInquiryChatIds() != null && inquiryChat.getAlternateInquiryChatIds().size() > 1) {
-            int numerator = inquiryChat.getAlternateInquiryChatIds().indexOf(inquiryChat.getId()) + 1;
-            int denominator = inquiryChat.getAlternateInquiryChatIds().size();
-            if (numerator == 0) {
-                denominator++;
-                numerator = denominator;
-            }
-            headerString += " (" + numerator + "/" + denominator + ")";
-        }
-        jLabel1.setText(headerString);
-        jToolBar1.add(jLabel1);
-        addComponent(jToolBar1, 0, 0);
-
-        ApplicationManager.getApplication().invokeAndWait(() -> {
-            try {
-                List<Component> components = createComponentsFromMessage(message);
-                int gridy = 1;
-                for (Component component : components) {
-                    addComponent(component, gridy++, 0);
-                }
-                if (inquiryChat.getLikelyCodeLanguage() == null) {
-                    inquiryChat.setLikelyCodeLanguage(likelyCodingLanguage);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
     public InquiryChatViewer(InquiryChat inquiryChat, String headerString) {
         this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
         this.inquiryChat = inquiryChat;
-        this.inquiryChatType = inquiryChat.getInquiryChatType();
         this.editorList = new ArrayList<>();
         this.headerString = headerString;
         setLayout(new GridBagLayout());
-        if (inquiryChatType == InquiryChatType.CODE_SNIPPET && !inquiryChat.getMessage().startsWith("```")) {
+        if (inquiryChat.getInquiryChatType() == InquiryChatType.CODE_SNIPPET && !inquiryChat.getMessage().startsWith("```")) {
             inquiryChat.setMessage("```" + inquiryChat.getMessage().trim() + "```");
         }
         jToolBar1 = new JToolBar();
@@ -209,11 +212,7 @@ public class InquiryChatViewer extends JPanel {
     public InquiryChat getInquiryChat() {
         return inquiryChat;
     }
-
-    public InquiryChatType getInquiryChatType() {
-        return inquiryChatType;
-    }
-
+    
     private void addComponent(Component component, int gridy, double weighty) {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;

@@ -15,6 +15,7 @@ public class InquiryChat {
     private final String previousInquiryChatId;
     private String from;
     private String message;
+    private String functionCall;
     private InquiryChatType inquiryChatType;
     private String likelyCodeLanguage;
     private List<String> alternateInquiryChatIds;

@@ -365,7 +365,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                     JBTextArea chatDisplay = (JBTextArea) component;
                     int newHeight = 0;
                     int newWidth = getWidth();
-                    if (chatViewer.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                    if (chatViewer.getInquiryChat().getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
                         newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
                     } else {
                         newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
