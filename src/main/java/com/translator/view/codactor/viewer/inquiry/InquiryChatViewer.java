@@ -79,6 +79,7 @@ public class InquiryChatViewer extends JPanel {
             if (functionCalls == null) {
                 functionCalls = new ArrayList<>();
             }
+
             if (likelyCodingLanguage == null) {
                 GptToLanguageTransformerService gptToLanguageTransformerService1 = new GptToLanguageTransformerServiceImpl();
                 if (filePath == null && message != null) {
@@ -89,6 +90,7 @@ public class InquiryChatViewer extends JPanel {
                     likelyCodingLanguage = gptToLanguageTransformerService1.getFromFilePath(filePath);
                 }
             }
+
             if (inquiryChat == null) {
                 inquiryChat = new InquiryChat.Builder()
                         .withFilePath(filePath)
@@ -100,6 +102,7 @@ public class InquiryChatViewer extends JPanel {
             } else if (headerString == null) {
                 headerString = inquiryChat.getFrom();
             }
+
             return new InquiryChatViewer(inquiryChat, headerString, functionCalls);
         }
     }
@@ -143,6 +146,9 @@ public class InquiryChatViewer extends JPanel {
 
         jToolBar1.add(jLabel1);
         addComponent(jToolBar1, 0, 0);
+        if (inquiryChat.getFunctionCall() != null || inquiryChat.getFunctionName() != null) {
+            functionCalls.add(inquiryChat);
+        }
         FixedHeightPanel fixedHeightPanel = createFunctionCallsPanel(functionCalls);
         addComponent(fixedHeightPanel, 1, 0);
         if (inquiryChat.getMessage() != null) {
@@ -287,5 +293,13 @@ public class InquiryChatViewer extends JPanel {
         for (Editor editor : editorList) {
             EditorFactory.getInstance().releaseEditor(editor);
         }
+    }
+
+    public void setFunctionCalls(List<InquiryChat> functionCalls) {
+        this.functionCalls = functionCalls;
+    }
+
+    public List<InquiryChat> getFunctionCalls() {
+        return functionCalls;
     }
 }

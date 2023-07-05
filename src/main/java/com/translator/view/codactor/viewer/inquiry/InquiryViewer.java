@@ -1,5 +1,6 @@
 package com.translator.view.codactor.viewer.inquiry;
 
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.intellij.openapi.project.Project;
@@ -9,6 +10,7 @@ import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.MassCodeFileGeneratorService;
+import com.translator.service.codactor.inquiry.InquiryChatListFunctionCallCompressorService;
 import com.translator.service.codactor.inquiry.InquiryService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
@@ -45,11 +47,12 @@ public class InquiryViewer extends JPanel {
                          MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                          InquiryService inquiryService,
                          PromptContextServiceFactory promptContextServiceFactory,
-                         TextAreaHeightCalculatorService textAreaHeightCalculatorService) {
+                         TextAreaHeightCalculatorService textAreaHeightCalculatorService,
+                         InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService) {
         this.project = project;
         this.inquiryService = inquiryService;
         this.codactorToolWindowService = codactorToolWindowService;
-        this.inquiryChatListViewer = new InquiryChatListViewer(this, textAreaHeightCalculatorService, promptContextServiceFactory, codactorToolWindowService, multiFileCreateDialogFactory);
+        this.inquiryChatListViewer = new InquiryChatListViewer(this, textAreaHeightCalculatorService, promptContextServiceFactory, codactorToolWindowService, inquiryChatListFunctionCallCompressorService, multiFileCreateDialogFactory);
         this.inquiryChatBoxViewer = new InquiryChatBoxViewer(this);
         initComponents();
     }

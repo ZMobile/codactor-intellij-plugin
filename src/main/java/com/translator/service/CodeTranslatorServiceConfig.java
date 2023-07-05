@@ -18,6 +18,8 @@ import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.*;
 import com.translator.service.codactor.functions.CodactorFunctionGeneratorService;
 import com.translator.service.codactor.functions.CodactorFunctionGeneratorServiceImpl;
+import com.translator.service.codactor.inquiry.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.inquiry.InquiryChatListFunctionCallCompressorServiceImpl;
 import com.translator.service.codactor.inquiry.InquiryService;
 import com.translator.service.codactor.inquiry.InquiryServiceImpl;
 import com.translator.service.codactor.line.LineCounterService;
@@ -107,6 +109,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(DiffEditorGeneratorService.class).to(DiffEditorGeneratorServiceImpl.class);
         bind(FileModificationSuggestionDiffViewerService.class).to(FileModificationSuggestionDiffViewerServiceImpl.class);
         bind(CodactorFunctionGeneratorService.class).to(CodactorFunctionGeneratorServiceImpl.class);
+        bind(InquiryChatListFunctionCallCompressorService.class).to(InquiryChatListFunctionCallCompressorServiceImpl.class);
     }
 
     @Singleton

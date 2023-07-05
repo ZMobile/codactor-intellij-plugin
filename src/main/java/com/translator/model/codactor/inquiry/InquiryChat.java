@@ -1,5 +1,8 @@
 package com.translator.model.codactor.inquiry;
 
+import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunction;
+import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunctionCall;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -14,9 +17,11 @@ public class InquiryChat {
         private String previousInquiryChatId;
         private String from;
         private String message;
-        private String functionCall;
         private InquiryChatType inquiryChatType;
         private String likelyCodeLanguage;
+        private String functionName;
+        private ChatGptFunctionCall functionCall;
+        private List<ChatGptFunction> functions;
 
         public Builder withUserId(String userId) {
             this.userId = userId;
@@ -48,11 +53,6 @@ public class InquiryChat {
             return this;
         }
 
-        public Builder withFunctionCall(String functionCall) {
-            this.functionCall = functionCall;
-            return this;
-        }
-
         public Builder withInquiryChatType(InquiryChatType inquiryChatType) {
             this.inquiryChatType = inquiryChatType;
             return this;
@@ -63,11 +63,26 @@ public class InquiryChat {
             return this;
         }
 
+        public Builder withFunctionName(String functionName) {
+            this.functionName = functionName;
+            return this;
+        }
+
+        public Builder withFunctionCall(ChatGptFunctionCall functionCall) {
+            this.functionCall = functionCall;
+            return this;
+        }
+
+        public Builder withFunctions(List<ChatGptFunction> functions) {
+            this.functions = functions;
+            return this;
+        }
+
         public InquiryChat build() {
             if (inquiryChatType == null) {
                 inquiryChatType = InquiryChatType.DEFAULT;
             }
-            return new InquiryChat(userId, inquiryId, filePath, previousInquiryChatId, from, message, likelyCodeLanguage, inquiryChatType);
+            return new InquiryChat(userId, inquiryId, filePath, previousInquiryChatId, from, message, likelyCodeLanguage, inquiryChatType, functionName, functionCall, functions);
         }
     }
 
@@ -80,12 +95,24 @@ public class InquiryChat {
     private final String previousInquiryChatId;
     private String from;
     private String message;
-    private String functionCall;
     private InquiryChatType inquiryChatType;
     private String likelyCodeLanguage;
+    private String functionName;
+    private ChatGptFunctionCall functionCall;
+    private List<ChatGptFunction> functions;
     private List<String> alternateInquiryChatIds;
 
-    private InquiryChat(String userId, String inquiryId, String filePath, String previousInquiryChatId, String from, String message, String likelyCodeLanguage, InquiryChatType inquiryChatType) {
+    private InquiryChat(String userId,
+                        String inquiryId,
+                        String filePath,
+                        String previousInquiryChatId,
+                        String from,
+                        String message,
+                        String likelyCodeLanguage,
+                        InquiryChatType inquiryChatType,
+                        String functionName,
+                        ChatGptFunctionCall functionCall,
+                        List<ChatGptFunction> functions) {
         this.creationTimestamp = LocalDateTime.now(ZoneOffset.UTC);
         this.modifiedTimestamp = LocalDateTime.now(ZoneOffset.UTC);
         this.myId = null;
@@ -98,6 +125,9 @@ public class InquiryChat {
         this.inquiryChatType = inquiryChatType;
         this.alternateInquiryChatIds = new ArrayList<>();
         this.likelyCodeLanguage = likelyCodeLanguage;
+        this.functionName = functionName;
+        this.functionCall = functionCall;
+        this.functions = functions;
     }
 
     public String getId() {
@@ -162,6 +192,30 @@ public class InquiryChat {
 
     public void setLikelyCodeLanguage(String likelyCodeLanguage) {
         this.likelyCodeLanguage = likelyCodeLanguage;
+    }
+
+    public String getFunctionName() {
+        return functionName;
+    }
+
+    public void setFunctionName(String functionName) {
+        this.functionName = functionName;
+    }
+
+    public ChatGptFunctionCall getFunctionCall() {
+        return functionCall;
+    }
+
+    public void setFunctionCall(ChatGptFunctionCall functionCall) {
+        this.functionCall = functionCall;
+    }
+
+    public List<ChatGptFunction> getFunctions() {
+        return functions;
+    }
+
+    public void setFunctions(List<ChatGptFunction> functions) {
+        this.functions = functions;
     }
 
     public List<String> getAlternateInquiryChatIds() {

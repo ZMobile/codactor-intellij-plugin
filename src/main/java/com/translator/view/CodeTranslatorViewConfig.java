@@ -10,6 +10,7 @@ import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.CodeTranslatorServiceConfig;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
+import com.translator.service.codactor.inquiry.InquiryChatListFunctionCallCompressorService;
 import com.translator.service.codactor.modification.AutomaticCodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.modification.FileModificationSuggestionDiffViewerService;
@@ -82,8 +83,9 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                        MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                        InquiryService inquiryService,
                                        PromptContextServiceFactory promptContextServiceFactory,
-                                       TextAreaHeightCalculatorService textAreaHeightCalculatorService) {
-        return new InquiryViewer(project, codactorToolWindowService, multiFileCreateDialogFactory, inquiryService, promptContextServiceFactory, textAreaHeightCalculatorService);
+                                       TextAreaHeightCalculatorService textAreaHeightCalculatorService,
+                                       InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService) {
+        return new InquiryViewer(project, codactorToolWindowService, multiFileCreateDialogFactory, inquiryService, promptContextServiceFactory, textAreaHeightCalculatorService, inquiryChatListFunctionCallCompressorService);
     }
 
     @Singleton
