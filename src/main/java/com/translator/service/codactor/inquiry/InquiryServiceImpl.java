@@ -5,12 +5,14 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.translator.dao.inquiry.InquiryDao;
+import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.service.codactor.editor.GptToLanguageTransformerService;
 import com.translator.service.codactor.context.PromptContextService;
+import com.translator.service.codactor.functions.CodactorFunctionGeneratorService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
@@ -28,29 +30,29 @@ public class InquiryServiceImpl implements InquiryService {
     private InquiryDao inquiryDao;
     private CodactorToolWindowService codactorToolWindowService;
     private OpenAiApiKeyService openAiApiKeyService;
-    private OpenAiModelService openAiModelService;
     private PromptContextService promptContextService;
     private GptToLanguageTransformerService gptToLanguageTransformerService;
+    private CodactorFunctionGeneratorService codactorFunctionGeneratorService;
 
     @Inject
     public InquiryServiceImpl(Project project,
                               InquiryDao inquiryDao,
                               CodactorToolWindowService codactorToolWindowService,
                               OpenAiApiKeyService openAiApiKeyService,
-                              OpenAiModelService openAiModelService,
                               PromptContextService promptContextService,
-                              GptToLanguageTransformerService gptToLanguageTransformerService) {
+                              GptToLanguageTransformerService gptToLanguageTransformerService,
+                              CodactorFunctionGeneratorService codactorFunctionGeneratorService) {
         this.project = project;
         this.inquiryDao = inquiryDao;
         this.codactorToolWindowService = codactorToolWindowService;
         this.openAiApiKeyService = openAiApiKeyService;
-        this.openAiModelService = openAiModelService;
         this.promptContextService = promptContextService;
         this.gptToLanguageTransformerService = gptToLanguageTransformerService;
+        this.codactorFunctionGeneratorService = codactorFunctionGeneratorService;
     }
 
     @Override
-    public void createInquiry(String subjectRecordId, RecordType recordType, String question, String filePath) {
+    public void createInquiry(String subjectRecordId, RecordType recordType, String question, String filePath, String model) {
         String likelyCodeLanguage = gptToLanguageTransformerService.getFromFilePath(filePath);
         Inquiry inquiry = new Inquiry.Builder()
                 .build();
@@ -67,7 +69,11 @@ public class InquiryServiceImpl implements InquiryService {
             public void run(@NotNull ProgressIndicator indicator) {
                 inquiryViewer.setLoadingChat(true);
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                Inquiry inquiry = inquiryDao.createInquiry(subjectRecordId, recordType, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
+                List<ChatGptFunction> functions = null;
+                if (model.equals("gpt-3.5-turbo-0613") || model.equals("gpt-4-0613")) {
+                    functions = codactorFunctionGeneratorService.generateCodactorFunctions();
+                }
+                Inquiry inquiry = inquiryDao.createInquiry(subjectRecordId, recordType, question, openAiApiKey, model, new ArrayList<>(), functions);
                 if (inquiry != null) {
                     inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                 }
@@ -79,7 +85,7 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     @Override
-    public void createInquiry(String filePath, String code, String question, List<HistoricalContextObjectHolder> priorContext) {
+    public void createInquiry(String filePath, String code, String question, List<HistoricalContextObjectHolder> priorContext, String model) {
         Inquiry temporaryInquiry = new Inquiry.Builder()
                 .withFilePath(filePath)
                 .withSubjectCode(code)
@@ -94,7 +100,11 @@ public class InquiryServiceImpl implements InquiryService {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                Inquiry inquiry = inquiryDao.createInquiry(filePath, code, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                List<ChatGptFunction> functions = null;
+                if (model.equals("gpt-3.5-turbo-0613") || model.equals("gpt-4-0613")) {
+                    functions = codactorFunctionGeneratorService.generateCodactorFunctions();
+                }
+                Inquiry inquiry = inquiryDao.createInquiry(filePath, code, question, openAiApiKey, model, priorContext, functions);
                 inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                 inquiryViewer.setLoadingChat(false);
                 promptContextService.clearPromptContext();
@@ -104,7 +114,7 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     @Override
-    public void createGeneralInquiry(String question) {
+    public void createGeneralInquiry(String question, String model) {
         String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
         InquiryChat temporaryChat = new InquiryChat.Builder()
                 .withFrom("User")
@@ -121,7 +131,12 @@ public class InquiryServiceImpl implements InquiryService {
             public void run(@NotNull ProgressIndicator indicator) {
                 inquiryViewer.setLoadingChat(true);
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                Inquiry inquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                List<ChatGptFunction> functions = null;
+                if (model.equals("gpt-3.5-turbo-0613") || model.equals("gpt-4-0613")) {
+                    System.out.println("This gets called");
+                    functions = codactorFunctionGeneratorService.generateCodactorFunctions();
+                }
+                Inquiry inquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, new ArrayList<>(), functions);
                 if (inquiry != null) {
                     inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                     inquiryViewer.getInquiryChatListViewer().componentResized();
@@ -134,7 +149,7 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     @Override
-    public void continueInquiry(String previousInquiryChatId, String question) {
+    public void continueInquiry(String previousInquiryChatId, String question, String model) {
         String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
         InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
         Inquiry inquiry = inquiryViewer.getInquiry();
@@ -154,7 +169,12 @@ public class InquiryServiceImpl implements InquiryService {
             public void run(@NotNull ProgressIndicator indicator) {
                 inquiryViewer.setLoadingChat(true);
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-                Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                List<ChatGptFunction> functions = null;
+                if (model.equals("gpt-3.5-turbo-0613") || model.equals("gpt-4-0613")) {
+                    functions = codactorFunctionGeneratorService.generateCodactorFunctions();
+
+                }
+                Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, model, functions);
                 inquiry.getChats().remove(inquiryChat);
                 inquiry.getChats().addAll(response.getChats());
                 inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);

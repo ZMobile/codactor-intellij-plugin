@@ -79,7 +79,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             } else {
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, null, modificationType);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeModificationResponseResource.getError(), modificationType);
@@ -113,7 +113,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             } else {
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, null, modificationType);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeModificationResponseResource.getError(), modificationType);
@@ -147,7 +147,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
             } else {
                 if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), null, modificationType);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), modificationType);
@@ -182,7 +182,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             } else {
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, null, modificationType);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeModificationResponseResource.getError(), modificationType);
@@ -216,7 +216,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             } else {
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, null, modificationType);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeModificationResponseResource.getError(), modificationType);
@@ -250,7 +250,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
             } else {
                 if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), null, modificationType);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), modificationType);
@@ -284,7 +284,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             } else {
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, null, ModificationType.CREATE);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.CREATE);
@@ -316,7 +316,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), false);
             } else {
                 if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, null, ModificationType.CREATE);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.CREATE);
@@ -351,7 +351,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
             } else {
                 if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), null, ModificationType.CREATE);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), "", ModificationType.CREATE);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), ModificationType.CREATE);
@@ -388,7 +388,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             } else {
                 fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeTranslationResponseResource.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, null, ModificationType.TRANSLATE);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.TRANSLATE);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeTranslationResponseResource.getError(), ModificationType.TRANSLATE);

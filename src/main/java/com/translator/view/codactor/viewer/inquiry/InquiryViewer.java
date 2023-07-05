@@ -45,12 +45,11 @@ public class InquiryViewer extends JPanel {
                          MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                          InquiryService inquiryService,
                          PromptContextServiceFactory promptContextServiceFactory,
-                         TextAreaHeightCalculatorService textAreaHeightCalculatorService,
-                         OpenAiModelService openAiModelService) {
+                         TextAreaHeightCalculatorService textAreaHeightCalculatorService) {
         this.project = project;
         this.inquiryService = inquiryService;
         this.codactorToolWindowService = codactorToolWindowService;
-        this.inquiryChatListViewer = new InquiryChatListViewer(this, textAreaHeightCalculatorService, openAiModelService, promptContextServiceFactory, multiFileCreateDialogFactory);
+        this.inquiryChatListViewer = new InquiryChatListViewer(this, textAreaHeightCalculatorService, promptContextServiceFactory, codactorToolWindowService, multiFileCreateDialogFactory);
         this.inquiryChatBoxViewer = new InquiryChatBoxViewer(this);
         initComponents();
     }
@@ -119,17 +118,20 @@ public class InquiryViewer extends JPanel {
     }
 
     public void askNewGeneralInquiryQuestion(String question) {
-        inquiryService.createGeneralInquiry(question);
+        String model = inquiryChatListViewer.getOpenAiModelService().getSelectedOpenAiModel();
+        inquiryService.createGeneralInquiry(question, model);
     }
 
     public void askInquiryQuestion(String subjectRecordId, RecordType recordType, String question, String filePath) {
         inquiryChatBoxViewer.getToolBar().setVisible(false);
-        inquiryService.createInquiry(subjectRecordId, recordType, question, filePath);
+        String model = inquiryChatListViewer.getOpenAiModelService().getSelectedOpenAiModel();
+        inquiryService.createInquiry(subjectRecordId, recordType, question, filePath, model);
     }
 
     public void askContinuedQuestion(String previousInquiryChatId, String question) {
         assert inquiry != null;
-        inquiryService.continueInquiry(previousInquiryChatId, question);
+        String model = inquiryChatListViewer.getOpenAiModelService().getSelectedOpenAiModel();
+        inquiryService.continueInquiry(previousInquiryChatId, question, model);
     }
 
     public void setInquiry(Inquiry inquiry) {

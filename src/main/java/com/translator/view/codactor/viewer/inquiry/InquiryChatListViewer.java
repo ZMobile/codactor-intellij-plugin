@@ -17,7 +17,9 @@ import com.translator.model.codactor.inquiry.InquiryChatType;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.service.codactor.openai.OpenAiModelServiceImpl;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
+import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.MultiFileCreateDialog;
 import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
 import com.translator.view.codactor.menu.TextAreaWindow;
@@ -58,12 +60,12 @@ public class InquiryChatListViewer extends JPanel {
 
     public InquiryChatListViewer(InquiryViewer inquiryViewer,
                                  TextAreaHeightCalculatorService textAreaHeightCalculatorService,
-                                 OpenAiModelService openAiModelService,
                                  PromptContextServiceFactory promptContextServiceFactory,
+                                 CodactorToolWindowService codactorToolWindowService,
                                  MultiFileCreateDialogFactory multiFileCreateDialogFactory) {
         this.inquiryViewer = inquiryViewer;
         this.textAreaHeightCalculatorService = textAreaHeightCalculatorService;
-        this.openAiModelService = openAiModelService;
+        this.openAiModelService = new OpenAiModelServiceImpl(codactorToolWindowService);
         this.promptContextServiceFactory = promptContextServiceFactory;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         initComponents();
@@ -546,5 +548,9 @@ public class InquiryChatListViewer extends JPanel {
 
     public JBMenuItem getPreviousChat() {
         return previousChat;
+    }
+
+    public OpenAiModelService getOpenAiModelService() {
+        return openAiModelService;
     }
 }

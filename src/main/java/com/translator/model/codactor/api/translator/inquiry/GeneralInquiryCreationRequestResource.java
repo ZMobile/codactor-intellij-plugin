@@ -1,27 +1,61 @@
 package com.translator.model.codactor.api.translator.inquiry;
 
+import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 
 import java.util.List;
 
 public class GeneralInquiryCreationRequestResource {
+
+    public static class Builder {
+        private String question;
+        private String openAiApiKey;
+        private String model;
+        private List<HistoricalContextObjectHolder> priorContext;
+        private List<ChatGptFunction> functions;
+
+        public Builder withQuestion(String question) {
+            this.question = question;
+            return this;
+        }
+
+        public Builder withOpenAiApiKey(String openAiApiKey) {
+            this.openAiApiKey = openAiApiKey;
+            return this;
+        }
+
+        public Builder withModel(String model) {
+            this.model = model;
+            return this;
+        }
+
+        public Builder withPriorContext(List<HistoricalContextObjectHolder> priorContext) {
+            this.priorContext = priorContext;
+            return this;
+        }
+
+        public Builder withFunctions(List<ChatGptFunction> functions) {
+            this.functions = functions;
+            return this;
+        }
+
+        public GeneralInquiryCreationRequestResource build() {
+            return new GeneralInquiryCreationRequestResource(question, openAiApiKey, model, priorContext, functions);
+        }
+    }
+
     private String question;
     private String openAiApiKey;
     private String model;
     private List<HistoricalContextObjectHolder> priorContext;
+    private List<ChatGptFunction> functions;
 
-    public GeneralInquiryCreationRequestResource(String question, String openAiApiKey, String model) {
-        this.question = question;
-        this.openAiApiKey = openAiApiKey;
-        this.model = model;
-        this.priorContext = null;
-    }
-
-    public GeneralInquiryCreationRequestResource(String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext) {
+    public GeneralInquiryCreationRequestResource(String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions) {
         this.question = question;
         this.openAiApiKey = openAiApiKey;
         this.model = model;
         this.priorContext = priorContext;
+        this.functions = functions;
     }
 
     public String getQuestion() {
@@ -54,5 +88,13 @@ public class GeneralInquiryCreationRequestResource {
 
     public void setPriorContext(List<HistoricalContextObjectHolder> priorContext) {
         this.priorContext = priorContext;
+    }
+
+    public List<ChatGptFunction> getFunctions() {
+        return functions;
+    }
+
+    public void setFunctions(List<ChatGptFunction> functions) {
+        this.functions = functions;
     }
 }

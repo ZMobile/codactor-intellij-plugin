@@ -25,7 +25,7 @@ public class CodeModificationHistoryDaoImpl implements CodeModificationHistoryDa
 
     public DesktopCodeModificationHistoryResponseResource getRecentModifications() {
         try {
-            URL url = new URL("https://api.codactor.com/projects/desktop/recent");
+            URL url = new URL("http" /*s://api.codactor.com*/ + "://localHost:8080/projects/desktop/recent");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());

@@ -101,7 +101,7 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                     FileModification fileModification = queuedFileModificationObjectHolder.getFileModification();
                     fileOpenerService.openFileInEditor(fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset());
                     if (fileModification.isError()) {
-                        FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModification.getId(), fileModification.getFilePath(), null, fileModification.getModificationType());
+                        FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModification.getId(), fileModification.getFilePath(), "", fileModification.getModificationType());
                         fileModificationErrorDialog.setVisible(true);
                     }
                     if (fileModification.isDone()) {

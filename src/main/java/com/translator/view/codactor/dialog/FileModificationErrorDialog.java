@@ -82,7 +82,7 @@ public class FileModificationErrorDialog extends JDialog {
         // Add JComboBox modelComboBox
         ComboBox<String> modelComboBox = new ComboBox<>();
         // Populate modelComboBox with items
-        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
+        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314", "gpt-3.5-turbo-0613", "gpt-4-0613"});
 // Get the index of the selected element
 
 // Get the index of the selected element
@@ -115,6 +115,14 @@ public class FileModificationErrorDialog extends JDialog {
             // Set the selected index to 0
             modelComboBox.setSelectedIndex(0);
         }
+
+        modelComboBox.addActionListener(e -> {
+            JComboBox<String> cb = (JComboBox<String>) e.getSource();
+            String model = (String) cb.getSelectedItem();
+            if (model != null) {
+                openAiModelService.setSelectedOpenAiModel(model);
+            }
+        });
 
         JButton reenterButton = new JButton("Re-enter openAi Api Key");
         reenterButton.addActionListener(new ActionListener() {

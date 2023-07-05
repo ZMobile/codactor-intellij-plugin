@@ -82,9 +82,8 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                        MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                        InquiryService inquiryService,
                                        PromptContextServiceFactory promptContextServiceFactory,
-                                       TextAreaHeightCalculatorService textAreaHeightCalculatorService,
-                                       OpenAiModelService openAiModelService) {
-        return new InquiryViewer(project, codactorToolWindowService, multiFileCreateDialogFactory, inquiryService, promptContextServiceFactory, textAreaHeightCalculatorService, openAiModelService);
+                                       TextAreaHeightCalculatorService textAreaHeightCalculatorService) {
+        return new InquiryViewer(project, codactorToolWindowService, multiFileCreateDialogFactory, inquiryService, promptContextServiceFactory, textAreaHeightCalculatorService);
     }
 
     @Singleton

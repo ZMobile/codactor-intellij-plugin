@@ -249,7 +249,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     } else {
                         fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                         if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                            FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(null, filePath, null, ModificationType.MODIFY);
+                            FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(null, filePath, "", ModificationType.MODIFY);
                             fileModificationErrorDialog.setVisible(true);
                         } else {
                             FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.MODIFY);
@@ -309,7 +309,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         } else {
                             fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                             if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
-                                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(null, filePath, null, ModificationType.MODIFY);
+                                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(null, filePath, "", ModificationType.MODIFY);
                                 fileModificationErrorDialog.setVisible(true);
                             } else {
                                 FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(null, filePath, desktopCodeModificationResponseResource.getError(), ModificationType.MODIFY);

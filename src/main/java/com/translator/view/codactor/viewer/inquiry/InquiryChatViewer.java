@@ -10,6 +10,7 @@ import com.intellij.openapi.editor.highlighter.EditorHighlighter;
 import com.intellij.openapi.editor.highlighter.EditorHighlighterFactory;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeManager;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
@@ -17,6 +18,7 @@ import com.translator.service.codactor.editor.DiffEditorGeneratorService;
 import com.translator.service.codactor.editor.DiffEditorGeneratorServiceImpl;
 import com.translator.service.codactor.editor.GptToLanguageTransformerService;
 import com.translator.service.codactor.editor.GptToLanguageTransformerServiceImpl;
+import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.view.codactor.panel.FixedHeightPanel;
 
 import javax.swing.*;
@@ -141,10 +143,11 @@ public class InquiryChatViewer extends JPanel {
 
         jToolBar1.add(jLabel1);
         addComponent(jToolBar1, 0, 0);
-
+        FixedHeightPanel fixedHeightPanel = createFunctionCallsPanel(functionCalls);
+        addComponent(fixedHeightPanel, 1, 0);
         if (inquiryChat.getMessage() != null) {
             List<Component> components = createComponentsFromMessage(inquiryChat.getMessage());
-            int gridy = 1;
+            int gridy = 2;
             for (Component component : components) {
                 addComponent(component, gridy++, 0);
             }
@@ -192,6 +195,30 @@ public class InquiryChatViewer extends JPanel {
         });
 
         return textArea;
+    }
+
+    private FixedHeightPanel createFunctionCallsPanel(List<InquiryChat> functionCalls) {
+        // Add the function call names as vertical list
+        int height = 0;
+        List<JLabel> functionCallLabels = new ArrayList<>();
+        for (InquiryChat functionCall : functionCalls) {
+            JLabel functionCallLabel = new JLabel(functionCall.getMessage());
+            functionCallLabels.add(functionCallLabel);
+            height += functionCallLabel.getPreferredSize().getHeight();
+        }
+        FixedHeightPanel functionCallsPanel = new FixedHeightPanel(height);
+        for (JLabel functionCallLabel : functionCallLabels) {
+            functionCallsPanel.add(functionCallLabel);
+        }
+        functionCallsPanel.setLayout(new BoxLayout(functionCallsPanel, BoxLayout.Y_AXIS));
+        functionCallsPanel.setBackground(JBColor.WHITE);
+
+        // Add the function call names as vertical list
+        for (InquiryChat functionCall : functionCalls) {
+            JLabel functionCallLabel = new JLabel(functionCall.getMessage());
+            functionCallsPanel.add(functionCallLabel);
+        }
+        return functionCallsPanel;
     }
 
     private FixedHeightPanel createCodeEditor(String code) {

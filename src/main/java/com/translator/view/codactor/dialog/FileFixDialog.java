@@ -159,7 +159,7 @@ public class FileFixDialog extends JDialog {
 // Modify the northPanel layout
         northPanel.add(toggleButtonsPanel, BorderLayout.SOUTH);
 
-        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314"});
+        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314", "gpt-3.5-turbo-0613", "gpt-4-0613"});
         modelComboBox.addActionListener(e -> {
             ComboBox<String> cb = (ComboBox<String>) e.getSource();
             String model = (String) cb.getSelectedItem();

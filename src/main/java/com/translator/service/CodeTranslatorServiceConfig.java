@@ -16,6 +16,8 @@ import com.translator.service.codactor.copy.DirectoryCopierServiceImpl;
 import com.translator.service.codactor.factory.CodeFileGeneratorServiceFactory;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.*;
+import com.translator.service.codactor.functions.CodactorFunctionGeneratorService;
+import com.translator.service.codactor.functions.CodactorFunctionGeneratorServiceImpl;
 import com.translator.service.codactor.inquiry.InquiryService;
 import com.translator.service.codactor.inquiry.InquiryServiceImpl;
 import com.translator.service.codactor.line.LineCounterService;
@@ -104,6 +106,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer.class).to(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformerImpl.class);
         bind(DiffEditorGeneratorService.class).to(DiffEditorGeneratorServiceImpl.class);
         bind(FileModificationSuggestionDiffViewerService.class).to(FileModificationSuggestionDiffViewerServiceImpl.class);
+        bind(CodactorFunctionGeneratorService.class).to(CodactorFunctionGeneratorServiceImpl.class);
     }
 
     @Singleton
