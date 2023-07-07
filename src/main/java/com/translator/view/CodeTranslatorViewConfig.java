@@ -1,5 +1,6 @@
 package com.translator.view;
 
+import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -10,7 +11,8 @@ import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.CodeTranslatorServiceConfig;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
-import com.translator.service.codactor.inquiry.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.inquiry.functions.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.inquiry.functions.InquiryFunctionCallProcessorService;
 import com.translator.service.codactor.modification.AutomaticCodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.modification.FileModificationSuggestionDiffViewerService;
@@ -26,13 +28,11 @@ import com.translator.view.uml.factory.CodactorUmlBuilderApplicationModelFactory
 import com.translator.view.uml.factory.CodactorUmlBuilderViewFactory;
 import com.translator.view.uml.factory.adapter.CustomMouseAdapterFactory;
 import com.translator.view.uml.factory.dialog.PromptNodeDialogFactory;
-import com.translator.service.codactor.file.MassCodeFileGeneratorService;
 import com.translator.service.codactor.file.FileOpenerService;
 import com.translator.service.codactor.file.FileReaderService;
 import com.translator.service.codactor.file.SelectedFileFetcherService;
 import com.translator.service.codactor.inquiry.InquiryService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
-import com.translator.service.codactor.openai.OpenAiApiKeyService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.console.CodactorConsole;
@@ -78,14 +78,16 @@ public class CodeTranslatorViewConfig extends AbstractModule {
 
     @Singleton
     @Provides
-    public InquiryViewer inquiryViewer(Project project,
+    public InquiryViewer inquiryViewer(Gson gson,
+                                       Project project,
                                        CodactorToolWindowService codactorToolWindowService,
                                        MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                        InquiryService inquiryService,
                                        PromptContextServiceFactory promptContextServiceFactory,
                                        TextAreaHeightCalculatorService textAreaHeightCalculatorService,
-                                       InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService) {
-        return new InquiryViewer(project, codactorToolWindowService, multiFileCreateDialogFactory, inquiryService, promptContextServiceFactory, textAreaHeightCalculatorService, inquiryChatListFunctionCallCompressorService);
+                                       InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService,
+                                       InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService) {
+        return new InquiryViewer(gson, project, codactorToolWindowService, multiFileCreateDialogFactory, inquiryService, promptContextServiceFactory, textAreaHeightCalculatorService, inquiryChatListFunctionCallCompressorService, inquiryFunctionCallProcessorService);
     }
 
     @Singleton

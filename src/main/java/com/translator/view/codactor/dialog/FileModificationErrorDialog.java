@@ -44,7 +44,7 @@ public class FileModificationErrorDialog extends JDialog {
 
         JBPanel messagePanel = new JBPanel();
         if (error != null) {
-            messagePanel.add(new JBLabel("Failed to generate File Modification: " + modificationType + " " + filePath + " + " + error));
+            messagePanel.add(new JBLabel("Failed to generate File Modification: " + modificationType + " " + filePath + ": " + error));
         } else {
             messagePanel.add(new JBLabel("Failed to generate File Modification: " + modificationType + " " + filePath));
         }

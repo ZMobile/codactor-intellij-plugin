@@ -12,6 +12,7 @@ import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.model.codactor.modification.FileModification;
 import com.translator.model.codactor.modification.FileModificationSuggestion;
+import com.translator.model.codactor.modification.ModificationType;
 import com.translator.service.codactor.file.FileOpenerService;
 import com.translator.service.codactor.modification.FileModificationSuggestionDiffViewerService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
@@ -209,13 +210,21 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         DefaultListModel<CodeSnippetViewer> model = new DefaultListModel<>();
         //for (int i = 0; i < numFileModifications; i++) {
             FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
-            CodeSnippetViewer viewer = new CodeSnippetViewer(fileModificationSuggestion.getDiffEditor());
-            //if (i == 0) {
-                viewer.setBackground(Color.decode("#228B22"));
+        CodeSnippetViewer viewer;
+        if (fileModification.getModificationType() == ModificationType.MODIFY
+            || fileModification.getModificationType() == ModificationType.MODIFY_SELECTION
+            || fileModification.getModificationType() == ModificationType.FIX
+            || fileModification.getModificationType() == ModificationType.FIX_SELECTION) {
+            viewer = new CodeSnippetViewer(fileModificationSuggestion.getDiffEditor());
+        } else {
+            viewer = new CodeSnippetViewer(fileModificationSuggestion.getSuggestedCodeEditor());
+        }
+        //if (i == 0) {
+        viewer.setBackground(Color.decode("#228B22"));
             //} else {
                 //viewer.setBackground(Color.LIGHT_GRAY);
             //}
-            model.addElement(viewer);
+        model.addElement(viewer);
         //}
         codeSnippetList.setModel(model);
         fileModificationId = fileModification.getId();

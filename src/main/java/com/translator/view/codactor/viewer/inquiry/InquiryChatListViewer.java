@@ -12,12 +12,14 @@ import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
+import com.translator.model.TestoObject;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
-import com.translator.service.codactor.inquiry.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.inquiry.functions.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.inquiry.functions.InquiryFunctionCallProcessorService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.openai.OpenAiModelServiceImpl;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
@@ -29,7 +31,6 @@ import com.translator.view.codactor.panel.FixedHeightPanel;
 import com.translator.view.codactor.renderer.InquiryChatRenderer;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class InquiryChatListViewer extends JPanel {
+    private Gson gson;
     private Inquiry inquiry;
     private InquiryViewer inquiryViewer;
     private JList<InquiryChatViewer> inquiryChatList;
@@ -58,25 +60,31 @@ public class InquiryChatListViewer extends JPanel {
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
     private OpenAiModelService openAiModelService;
     private InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService;
+    private InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService;
     private PromptContextServiceFactory promptContextServiceFactory;
     private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
 
-    public InquiryChatListViewer(InquiryViewer inquiryViewer,
+    public InquiryChatListViewer(Gson gson,
+                                 InquiryViewer inquiryViewer,
                                  TextAreaHeightCalculatorService textAreaHeightCalculatorService,
                                  PromptContextServiceFactory promptContextServiceFactory,
                                  CodactorToolWindowService codactorToolWindowService,
                                  InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService,
+                                 InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService,
                                  MultiFileCreateDialogFactory multiFileCreateDialogFactory) {
+        this.gson = gson;
         this.inquiryViewer = inquiryViewer;
         this.textAreaHeightCalculatorService = textAreaHeightCalculatorService;
         this.openAiModelService = new OpenAiModelServiceImpl(codactorToolWindowService);
         this.inquiryChatListFunctionCallCompressorService = inquiryChatListFunctionCallCompressorService;
         this.promptContextServiceFactory = promptContextServiceFactory;
+        this.inquiryFunctionCallProcessorService = inquiryFunctionCallProcessorService;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         initComponents();
-        Gson gson = new Gson();
+        //Gson gson = new Gson();
         Inquiry inquiry1 = gson.fromJson("{\"myId\":\"6eddb296-6e70-444b-a8bd-dc4f3752993f\",\"userId\":\"86715441-ccd9-4b77-b2f6-0ec09403f538\",\"creationTimestamp\":{\"date\":{\"year\":2023,\"month\":7,\"day\":5},\"time\":{\"hour\":21,\"minute\":45,\"second\":13,\"nano\":879990000}},\"modifiedTimestamp\":{\"date\":{\"year\":2023,\"month\":7,\"day\":5},\"time\":{\"hour\":21,\"minute\":45,\"second\":13,\"nano\":880119000}},\"initialQuestion\":\"Can you use your functions to see whats inside of package com.translator.listener.EditorListener?\",\"chats\":[{\"myId\":\"9997f001-a938-4df9-9594-1d223a915d70\",\"creationTimestamp\":{\"date\":{\"year\":2023,\"month\":7,\"day\":5},\"time\":{\"hour\":21,\"minute\":45,\"second\":17,\"nano\":762218000}},\"modifiedTimestamp\":{\"date\":{\"year\":2023,\"month\":7,\"day\":5},\"time\":{\"hour\":21,\"minute\":45,\"second\":17,\"nano\":762241000}},\"userId\":\"86715441-ccd9-4b77-b2f6-0ec09403f538\",\"inquiryId\":\"6eddb296-6e70-444b-a8bd-dc4f3752993f\",\"from\":\"User\",\"message\":\"Can you use your functions to see whats inside of package com.translator.listener.EditorListener?\",\"likelyCodeLanguage\":\"txt\",\"functions\":[{\"name\":\"read_file_at_path\",\"description\":\"Read the contents of a code or text file given its path\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"The path of the code file eg. /Users/user/IdeaProjects/code_project/src/code.java\"},\"startIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means 0\"},\"endIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means the end of the code file\"}},\"required\":[\"path\"]}},{\"name\":\"read_file_at_package\",\"description\":\"Read the contents of a code or text file given its package in the project directory\",\"parameters\":{\"type\":\"object\",\"properties\":{\"startIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means 0\"},\"package\":{\"type\":\"string\",\"description\":\"The package of the code file e.g. com.translator.view.uml.node.dialog.prompt\"},\"endIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means the end of the code file\"}},\"required\":[\"package\"]}},{\"name\":\"get_queued_modification_ids\",\"description\":\"Get the list of queued modification ids\",\"parameters\":{\"type\":\"object\",\"properties\":{},\"required\":[]}},{\"name\":\"read_modification_in_queue_at_position\",\"description\":\"Read the contents of a queued modification given its position in the queue\",\"parameters\":{\"type\":\"object\",\"properties\":{\"position\":{\"type\":\"integer\",\"description\":\"The position of the file modification in the queue\"}},\"required\":[\"position\"]}},{\"name\":\"read_modification_in_queue\",\"description\":\"Read the contents of a queued modification given its id\",\"parameters\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"description\":\"The id of the file modification in the queue\"}},\"required\":[\"id\"]}},{\"name\":\"retry_modification_in_queue\",\"description\":\"Retry a queued modification\",\"parameters\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"description\":\"The id of the file modification in the queue\"}},\"required\":[\"id\"]}},{\"name\":\"remove_modification_in_queue\",\"description\":\"Remove a queued modification\",\"parameters\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"description\":\"The id of the file modification in the queue\"}},\"required\":[\"id\"]}},{\"name\":\"request_file_modification\",\"description\":\"Request a new file modification to be processed by the file modifier LLM\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"The path of the code file eg. /Users/user/IdeaProjects/code_project/src/code.java\"},\"startIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means 0\"},\"endIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means the end of the code file\"},\"modificationType\":{\"type\":\"string\",\"description\":\"The type of file modification, e.g. modify, fix, create\"},\"description\":{\"type\":\"string\",\"description\":\"The description of the requested file modification to be enacted on the file\"}},\"required\":[\"path\",\"modificationType\",\"description\"]}},{\"name\":\"request_file_modification_and_wait_for_response\",\"description\":\"Request a new file modification to be processed and wait for response\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"The path of the code file eg. /Users/user/IdeaProjects/code_project/src/code.java\"},\"startIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means 0\"},\"endIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means the end of the code file\"},\"modificationType\":{\"type\":\"string\",\"description\":\"The type of file modification, e.g. modify, fix, create\"},\"description\":{\"type\":\"string\",\"description\":\"The description of the requested file modification to be enacted on the file\"}},\"required\":[\"path\",\"modificationType\",\"description\"]}},{\"name\":\"read_directory_structure_at_path\",\"description\":\"Read the file directory structure at the provided path\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"The path of the directory eg. /Users/user/IdeaProjects/code_project/src\"},\"depth\":{\"type\":\"integer\",\"description\":\"The depth of the directory structure returned. If set to 0, it will just return the files and directories immediately inside of the folder at the provided path. If set to 1, it will also return the files and directories immediately inside of its child directories one level deep, and so on.\"}},\"required\":[\"path\",\"depth\"]}},{\"name\":\"run_program\",\"description\":\"Run a program file and read its command line output\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"The path of the code file eg. /path/to/python/script.py\"},\"interpreter\":{\"type\":\"string\",\"description\":\"The interpreter language for the selected file eg. python\"}},\"required\":[\"path\",\"interpreter\"]}}]},{\"myId\":\"1ce7cbbb-d984-4ed8-8e7b-9a517b291c29\",\"creationTimestamp\":{\"date\":{\"year\":2023,\"month\":7,\"day\":5},\"time\":{\"hour\":21,\"minute\":45,\"second\":18,\"nano\":173649000}},\"modifiedTimestamp\":{\"date\":{\"year\":2023,\"month\":7,\"day\":5},\"time\":{\"hour\":21,\"minute\":45,\"second\":18,\"nano\":173671000}},\"userId\":\"86715441-ccd9-4b77-b2f6-0ec09403f538\",\"inquiryId\":\"6eddb296-6e70-444b-a8bd-dc4f3752993f\",\"previousInquiryChatId\":\"9997f001-a938-4df9-9594-1d223a915d70\",\"from\":\"Assistant\",\"likelyCodeLanguage\":\"txt\",\"functionCall\":{\"name\":\"read_file_at_package\",\"arguments\":\"{\\n  \\\"package\\\": \\\"com.translator.listener.EditorListener\\\"\\n}\"},\"functions\":[{\"name\":\"read_file_at_path\",\"description\":\"Read the contents of a code or text file given its path\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"The path of the code file eg. /Users/user/IdeaProjects/code_project/src/code.java\"},\"startIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means 0\"},\"endIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means the end of the code file\"}},\"required\":[\"path\"]}},{\"name\":\"read_file_at_package\",\"description\":\"Read the contents of a code or text file given its package in the project directory\",\"parameters\":{\"type\":\"object\",\"properties\":{\"startIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means 0\"},\"package\":{\"type\":\"string\",\"description\":\"The package of the code file e.g. com.translator.view.uml.node.dialog.prompt\"},\"endIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means the end of the code file\"}},\"required\":[\"package\"]}},{\"name\":\"get_queued_modification_ids\",\"description\":\"Get the list of queued modification ids\",\"parameters\":{\"type\":\"object\",\"properties\":{},\"required\":[]}},{\"name\":\"read_modification_in_queue_at_position\",\"description\":\"Read the contents of a queued modification given its position in the queue\",\"parameters\":{\"type\":\"object\",\"properties\":{\"position\":{\"type\":\"integer\",\"description\":\"The position of the file modification in the queue\"}},\"required\":[\"position\"]}},{\"name\":\"read_modification_in_queue\",\"description\":\"Read the contents of a queued modification given its id\",\"parameters\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"description\":\"The id of the file modification in the queue\"}},\"required\":[\"id\"]}},{\"name\":\"retry_modification_in_queue\",\"description\":\"Retry a queued modification\",\"parameters\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"description\":\"The id of the file modification in the queue\"}},\"required\":[\"id\"]}},{\"name\":\"remove_modification_in_queue\",\"description\":\"Remove a queued modification\",\"parameters\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"description\":\"The id of the file modification in the queue\"}},\"required\":[\"id\"]}},{\"name\":\"request_file_modification\",\"description\":\"Request a new file modification to be processed by the file modifier LLM\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"The path of the code file eg. /Users/user/IdeaProjects/code_project/src/code.java\"},\"startIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means 0\"},\"endIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means the end of the code file\"},\"modificationType\":{\"type\":\"string\",\"description\":\"The type of file modification, e.g. modify, fix, create\"},\"description\":{\"type\":\"string\",\"description\":\"The description of the requested file modification to be enacted on the file\"}},\"required\":[\"path\",\"modificationType\",\"description\"]}},{\"name\":\"request_file_modification_and_wait_for_response\",\"description\":\"Request a new file modification to be processed and wait for response\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"The path of the code file eg. /Users/user/IdeaProjects/code_project/src/code.java\"},\"startIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means 0\"},\"endIndex\":{\"type\":\"integer\",\"description\":\"The start index of the code to be read in the file. Can be null which means the end of the code file\"},\"modificationType\":{\"type\":\"string\",\"description\":\"The type of file modification, e.g. modify, fix, create\"},\"description\":{\"type\":\"string\",\"description\":\"The description of the requested file modification to be enacted on the file\"}},\"required\":[\"path\",\"modificationType\",\"description\"]}},{\"name\":\"read_directory_structure_at_path\",\"description\":\"Read the file directory structure at the provided path\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"The path of the directory eg. /Users/user/IdeaProjects/code_project/src\"},\"depth\":{\"type\":\"integer\",\"description\":\"The depth of the directory structure returned. If set to 0, it will just return the files and directories immediately inside of the folder at the provided path. If set to 1, it will also return the files and directories immediately inside of its child directories one level deep, and so on.\"}},\"required\":[\"path\",\"depth\"]}},{\"name\":\"run_program\",\"description\":\"Run a program file and read its command line output\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"The path of the code file eg. /path/to/python/script.py\"},\"interpreter\":{\"type\":\"string\",\"description\":\"The interpreter language for the selected file eg. python\"}},\"required\":[\"path\",\"interpreter\"]}}]}]}\n", Inquiry.class);
         updateInquiryContents(inquiry1);
+        //inquiryFunctionCallProcessorService.test();
     }
 
     private void initComponents() {
@@ -167,8 +175,10 @@ public class InquiryChatListViewer extends JPanel {
                         } else if (component1 instanceof FixedHeightPanel) {
                             FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
                             Editor editor = fixedHeightPanel.getEditor();
-                            text.append(editor.getDocument().getText());
-                            firstComponentCopied = true;
+                            if (editor != null) {
+                                text.append(editor.getDocument().getText());
+                                firstComponentCopied = true;
+                            }
                         }
                     }
                     new TextAreaWindow(text.toString());
@@ -287,7 +297,7 @@ public class InquiryChatListViewer extends JPanel {
         jToolBar.setVisible(false);
         jBScrollPane = new JBScrollPane(inquiryChatList);
         jBScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        jBScrollPane.setPreferredSize(new Dimension(getWidth(), getHeight()));
+
         add(jBScrollPane, BorderLayout.CENTER);
     }
 
@@ -308,7 +318,9 @@ public class InquiryChatListViewer extends JPanel {
                     } else if (component instanceof FixedHeightPanel) {
                         FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
                         Editor editor = fixedHeightPanel.getEditor();
-                        editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                        if (editor != null) {
+                            editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                        }
                     }
                 }
                 continue;
@@ -320,7 +332,9 @@ public class InquiryChatListViewer extends JPanel {
                 } else if (component instanceof FixedHeightPanel) {
                     FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
                     Editor editor = fixedHeightPanel.getEditor();
-                    editor.getMarkupModel().removeAllHighlighters();
+                    if (editor != null) {
+                        editor.getMarkupModel().removeAllHighlighters();
+                    }
                 }
             }
         }
@@ -354,7 +368,6 @@ public class InquiryChatListViewer extends JPanel {
         if (inquiry.getBeforeCode() == null && inquiry.getSubjectRecordId() != null) {
             inquiry.setBeforeCode("");
         }
-        int totalHeight = 0;
         if (inquiry.getDescription() != null) {
             String text = inquiry.getModificationType() + ": " + inquiry.getDescription().trim();
             InquiryChatViewer descriptionViewer = new InquiryChatViewer.Builder()
@@ -422,53 +435,25 @@ public class InquiryChatListViewer extends JPanel {
             jToolBar.setVisible(true);
         }
         Collections.reverse(finalizedChatList);
-        List<InquiryChatViewer> inquiryChatViewers = new ArrayList<>();
-        for (InquiryChat chat : finalizedChatList) {
-            InquiryChatViewer chatViewer = new InquiryChatViewer.Builder()
-                    .withInquiryChat(chat)
-                    .build();
-            inquiryChatViewers.add(chatViewer);
-        }
-        List<InquiryChatViewer> compressedInquiryChatViewers = inquiryChatListFunctionCallCompressorService.compress(inquiryChatViewers);
+        List<InquiryChatViewer> compressedInquiryChatViewers = inquiryChatListFunctionCallCompressorService.compress(finalizedChatList);
+        List<TestoObject> compressedInquiryChats = new ArrayList<>();
         for (InquiryChatViewer inquiryChatListViewer : compressedInquiryChatViewers) {
+            compressedInquiryChats.add(new TestoObject(inquiryChatListViewer.getInquiryChat(), inquiryChatListViewer.getFunctionCalls()));
             model.addElement(inquiryChatListViewer);
         }
+        System.out.println("Compressed: " + gson.toJson(compressedInquiryChats));
         ComponentListener componentListener = new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 InquiryChatListViewer.this.componentResized(model);
             }
         };
-        for (int i = 0; i < model.size(); i++) {
-            InquiryChatViewer chatViewer = model.getElementAt(i);
-            //chatViewer.setSize(Integer.MAX_VALUE, chatViewer.getHeight());
-            for (Component component : chatViewer.getComponents()) {
-                if (component instanceof JBTextArea) {
-                    JBTextArea chatDisplay = (JBTextArea) component;
-                    int newHeight = 0;
-                    int newWidth = getWidth();
-                    if (chatViewer.getInquiryChat().getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
-                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
-                    } else {
-                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
-                    }
-                    Dimension preferredSize = new Dimension(newWidth, newHeight);
-                    chatDisplay.setPreferredSize(preferredSize);
-                    chatDisplay.setMaximumSize(preferredSize);
-                    chatDisplay.setSize(preferredSize);
-                    totalHeight += newHeight + chatViewer.getComponent(0).getHeight();
-                } else if (component instanceof FixedHeightPanel) {
-                    FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                    totalHeight += fixedHeightPanel.getHeight();
-                }
-                totalHeight += chatViewer.getComponent(0).getHeight();
-            }
-        }
-        inquiryChatList.setPreferredSize(new Dimension(jBScrollPane.getWidth(), totalHeight));
         this.addComponentListener(componentListener);
         ApplicationManager.getApplication().invokeLater(() -> {
             inquiryChatList.setModel(model);
             jBScrollPane.setViewportView(inquiryChatList);
+            JScrollBar verticalScrollBar = jBScrollPane.getVerticalScrollBar();
+            verticalScrollBar.setValue(verticalScrollBar.getMaximum());
             this.componentResized();
         });
     }

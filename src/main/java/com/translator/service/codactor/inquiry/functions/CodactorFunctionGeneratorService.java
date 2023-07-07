@@ -1,4 +1,4 @@
-package com.translator.service.codactor.functions;
+package com.translator.service.codactor.inquiry.functions;
 
 import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunction;
 

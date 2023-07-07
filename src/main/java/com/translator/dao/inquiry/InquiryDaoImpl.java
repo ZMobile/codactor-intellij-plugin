@@ -7,10 +7,10 @@ import com.translator.model.codactor.api.translator.inquiry.InquiryContinuationR
 import com.translator.model.codactor.api.translator.inquiry.InquiryCreationRequestResource;
 import com.translator.model.codactor.api.translator.inquiry.InquiryListResponseResource;
 import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunction;
+import com.translator.model.codactor.api.translator.inquiry.function.FunctionCallResponseRequestResource;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.modification.RecordType;
-import com.translator.service.codactor.functions.CodactorFunctionGeneratorService;
 import org.apache.commons.io.IOUtils;
 
 import javax.inject.Inject;
@@ -312,6 +312,43 @@ public class InquiryDaoImpl implements InquiryDao {
             con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             con.setDoOutput(true);
             String requestBody = gson.toJson(inquiryContinuationRequestResource);
+
+            OutputStream os = con.getOutputStream();
+            os.write(requestBody.getBytes());
+            os.flush();
+            os.close();
+            int responseCode = con.getResponseCode();
+            System.out.println("Response Code : " + responseCode);
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                InputStream inputStream = con.getInputStream();
+                String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                System.out.println(response);
+                return gson.fromJson(response, Inquiry.class);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public Inquiry respondToFunctionCall(String previousInquiryChatId, String functionName, String content, String openAiApiKey, String model, List<ChatGptFunction> functions) {
+        FunctionCallResponseRequestResource functionCallResponseRequestResource = new FunctionCallResponseRequestResource.Builder()
+                .withPreviousInquiryChatId(previousInquiryChatId)
+                .withFunctionName(functionName)
+                .withContent(content)
+                .withOpenAiApiKey(openAiApiKey)
+                .withModel(model)
+                .withFunctions(functions)
+                .build();
+        try {
+            URL url = new URL("http" /*s://api.codactor.com*/ + "://localHost:8080/projects/desktop/inquiries/continue/function");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
+            con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            con.setDoOutput(true);
+            String requestBody = gson.toJson(functionCallResponseRequestResource);
 
             OutputStream os = con.getOutputStream();
             os.write(requestBody.getBytes());

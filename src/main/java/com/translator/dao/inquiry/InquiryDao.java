@@ -29,4 +29,6 @@ public interface InquiryDao {
     Inquiry continueInquiry(String previousInquiryChatId, String question, String openAiApiKey, String model);
 
     Inquiry continueInquiry(String previousInquiryChatId, String question, String openAiApiKey, String model, List<ChatGptFunction> functions);
+
+    Inquiry respondToFunctionCall(String previousInquiryChatId, String functionName, String content, String openAiApiKey, String model, List<ChatGptFunction> functions);
 }

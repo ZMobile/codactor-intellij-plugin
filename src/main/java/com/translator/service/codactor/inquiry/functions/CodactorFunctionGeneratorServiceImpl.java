@@ -1,13 +1,11 @@
-package com.translator.service.codactor.functions;
+package com.translator.service.codactor.inquiry.functions;
 
 import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.api.translator.inquiry.function.Parameters;
 import com.translator.model.codactor.api.translator.inquiry.function.Property;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGeneratorService {
 

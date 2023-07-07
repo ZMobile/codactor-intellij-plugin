@@ -1,5 +1,6 @@
 package com.translator.view.codactor.viewer.inquiry;
 
+import com.google.gson.Gson;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -10,15 +11,13 @@ import com.intellij.openapi.editor.highlighter.EditorHighlighter;
 import com.intellij.openapi.editor.highlighter.EditorHighlighterFactory;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeManager;
-import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
-import com.translator.service.codactor.editor.DiffEditorGeneratorService;
-import com.translator.service.codactor.editor.DiffEditorGeneratorServiceImpl;
 import com.translator.service.codactor.editor.GptToLanguageTransformerService;
 import com.translator.service.codactor.editor.GptToLanguageTransformerServiceImpl;
-import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.service.codactor.inquiry.functions.CodactorFunctionToLabelMapperService;
+import com.translator.service.codactor.inquiry.functions.CodactorFunctionToLabelMapperServiceImpl;
 import com.translator.view.codactor.panel.FixedHeightPanel;
 
 import javax.swing.*;
@@ -26,6 +25,7 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -116,10 +116,12 @@ public class InquiryChatViewer extends JPanel {
     private String headerString;
     private String message;
     private GptToLanguageTransformerService gptToLanguageTransformerService;
+    private CodactorFunctionToLabelMapperService codactorFunctionToLabelMapperService;
     private List<Editor> editorList;
 
     private InquiryChatViewer(InquiryChat inquiryChat, String headerString, List<InquiryChat> functionCalls) {
         this.gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
+        this.codactorFunctionToLabelMapperService = new CodactorFunctionToLabelMapperServiceImpl(new Gson());
         this.inquiryChat = inquiryChat;
         this.editorList = new ArrayList<>();
         this.headerString = headerString;
@@ -146,10 +148,12 @@ public class InquiryChatViewer extends JPanel {
 
         jToolBar1.add(jLabel1);
         addComponent(jToolBar1, 0, 0);
-        if (inquiryChat.getFunctionCall() != null || inquiryChat.getFunctionName() != null) {
-            functionCalls.add(inquiryChat);
+        ArrayList<InquiryChat> newFunctionCalls = new ArrayList<>(functionCalls);
+        if ((inquiryChat.getFunctionCall() != null || inquiryChat.getFrom().equalsIgnoreCase("function"))
+        && !newFunctionCalls.contains(inquiryChat)) {
+            newFunctionCalls.add(inquiryChat);
         }
-        FixedHeightPanel fixedHeightPanel = createFunctionCallsPanel(functionCalls);
+        FixedHeightPanel fixedHeightPanel = createFunctionCallsPanel(newFunctionCalls);
         addComponent(fixedHeightPanel, 1, 0);
         if (inquiryChat.getMessage() != null) {
             List<Component> components = createComponentsFromMessage(inquiryChat.getMessage());
@@ -208,7 +212,7 @@ public class InquiryChatViewer extends JPanel {
         int height = 0;
         List<JLabel> functionCallLabels = new ArrayList<>();
         for (InquiryChat functionCall : functionCalls) {
-            JLabel functionCallLabel = new JLabel(functionCall.getMessage());
+            JLabel functionCallLabel = new JLabel(codactorFunctionToLabelMapperService.getLabel(functionCall));
             functionCallLabels.add(functionCallLabel);
             height += functionCallLabel.getPreferredSize().getHeight();
         }
@@ -217,23 +221,29 @@ public class InquiryChatViewer extends JPanel {
             functionCallsPanel.add(functionCallLabel);
         }
         functionCallsPanel.setLayout(new BoxLayout(functionCallsPanel, BoxLayout.Y_AXIS));
-        functionCallsPanel.setBackground(JBColor.WHITE);
-
-        // Add the function call names as vertical list
-        for (InquiryChat functionCall : functionCalls) {
-            JLabel functionCallLabel = new JLabel(functionCall.getMessage());
-            functionCallsPanel.add(functionCallLabel);
-        }
+        //functionCallsPanel.setBackground(JBColor.WHITE);
         return functionCallsPanel;
     }
 
     private FixedHeightPanel createCodeEditor(String code) {
         final FixedHeightPanel[] fixedHeightPanel = new FixedHeightPanel[1];
         EditorFactory editorFactory = EditorFactory.getInstance();
-        if (inquiryChat.getLikelyCodeLanguage() == null) {
-            inquiryChat.setLikelyCodeLanguage("text");
+        String extension = null;
+        if (inquiryChat.getLikelyCodeLanguage() == null
+        || Objects.equals(inquiryChat.getLikelyCodeLanguage(), "txt")
+        || Objects.equals(inquiryChat.getLikelyCodeLanguage(), "text")) {
+            String[] words = code.split(" ");
+            String word = words[0];
+            String firstWordInCode = word.split("\n")[0].trim();
+            extension = gptToLanguageTransformerService.getExtensionFromLanguage(firstWordInCode.toLowerCase());
+            if (extension == null) {
+                inquiryChat.setLikelyCodeLanguage("text");
+            } else {
+                inquiryChat.setLikelyCodeLanguage(firstWordInCode);
+            }
+        } else {
+            extension = gptToLanguageTransformerService.getExtensionFromLanguage(inquiryChat.getLikelyCodeLanguage());
         }
-        String extension = gptToLanguageTransformerService.getExtensionFromLanguage(inquiryChat.getLikelyCodeLanguage());
         if (extension == null) {
             extension = "txt";
         }

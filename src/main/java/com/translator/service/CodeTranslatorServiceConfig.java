@@ -16,12 +16,8 @@ import com.translator.service.codactor.copy.DirectoryCopierServiceImpl;
 import com.translator.service.codactor.factory.CodeFileGeneratorServiceFactory;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.*;
-import com.translator.service.codactor.functions.CodactorFunctionGeneratorService;
-import com.translator.service.codactor.functions.CodactorFunctionGeneratorServiceImpl;
-import com.translator.service.codactor.inquiry.InquiryChatListFunctionCallCompressorService;
-import com.translator.service.codactor.inquiry.InquiryChatListFunctionCallCompressorServiceImpl;
-import com.translator.service.codactor.inquiry.InquiryService;
-import com.translator.service.codactor.inquiry.InquiryServiceImpl;
+import com.translator.service.codactor.inquiry.functions.*;
+import com.translator.service.codactor.inquiry.*;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
 import com.translator.service.codactor.modification.*;
@@ -109,7 +105,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(DiffEditorGeneratorService.class).to(DiffEditorGeneratorServiceImpl.class);
         bind(FileModificationSuggestionDiffViewerService.class).to(FileModificationSuggestionDiffViewerServiceImpl.class);
         bind(CodactorFunctionGeneratorService.class).to(CodactorFunctionGeneratorServiceImpl.class);
+        bind(CodactorFunctionToLabelMapperService.class).to(CodactorFunctionToLabelMapperServiceImpl.class);
         bind(InquiryChatListFunctionCallCompressorService.class).to(InquiryChatListFunctionCallCompressorServiceImpl.class);
+        bind(InquiryFunctionCallProcessorService.class).to(InquiryFunctionCallProcessorServiceImpl.class);
     }
 
     @Singleton

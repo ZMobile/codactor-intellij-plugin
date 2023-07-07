@@ -6,17 +6,14 @@ import com.google.inject.Injector;
 import com.intellij.openapi.project.Project;
 import com.translator.CodactorInjector;
 import com.translator.model.codactor.inquiry.Inquiry;
-import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
-import com.translator.service.codactor.file.MassCodeFileGeneratorService;
-import com.translator.service.codactor.inquiry.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.inquiry.functions.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.inquiry.functions.InquiryFunctionCallProcessorService;
 import com.translator.service.codactor.inquiry.InquiryService;
-import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
-import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;
 
 import javax.swing.*;
@@ -42,17 +39,19 @@ public class InquiryViewer extends JPanel {
     private HistoricalModificationListViewer historicalModificationListViewer;
 
     @Inject
-    public InquiryViewer(Project project,
+    public InquiryViewer(Gson gson,
+                         Project project,
                          CodactorToolWindowService codactorToolWindowService,
                          MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                          InquiryService inquiryService,
                          PromptContextServiceFactory promptContextServiceFactory,
                          TextAreaHeightCalculatorService textAreaHeightCalculatorService,
-                         InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService) {
+                         InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService,
+                         InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService) {
         this.project = project;
         this.inquiryService = inquiryService;
         this.codactorToolWindowService = codactorToolWindowService;
-        this.inquiryChatListViewer = new InquiryChatListViewer(this, textAreaHeightCalculatorService, promptContextServiceFactory, codactorToolWindowService, inquiryChatListFunctionCallCompressorService, multiFileCreateDialogFactory);
+        this.inquiryChatListViewer = new InquiryChatListViewer(gson, this, textAreaHeightCalculatorService, promptContextServiceFactory, codactorToolWindowService, inquiryChatListFunctionCallCompressorService, inquiryFunctionCallProcessorService, multiFileCreateDialogFactory);
         this.inquiryChatBoxViewer = new InquiryChatBoxViewer(this);
         initComponents();
     }

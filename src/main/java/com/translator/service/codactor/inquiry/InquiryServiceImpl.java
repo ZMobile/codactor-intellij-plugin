@@ -1,5 +1,6 @@
 package com.translator.service.codactor.inquiry;
 
+import com.google.gson.Gson;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
@@ -12,9 +13,9 @@ import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.service.codactor.editor.GptToLanguageTransformerService;
 import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.functions.CodactorFunctionGeneratorService;
+import com.translator.service.codactor.inquiry.functions.CodactorFunctionGeneratorService;
+import com.translator.service.codactor.inquiry.functions.InquiryFunctionCallProcessorService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
-import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import org.jetbrains.annotations.NotNull;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class InquiryServiceImpl implements InquiryService {
+    private Gson gson;
     private Project project;
     private InquiryDao inquiryDao;
     private CodactorToolWindowService codactorToolWindowService;
@@ -33,15 +35,19 @@ public class InquiryServiceImpl implements InquiryService {
     private PromptContextService promptContextService;
     private GptToLanguageTransformerService gptToLanguageTransformerService;
     private CodactorFunctionGeneratorService codactorFunctionGeneratorService;
+    private InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService;
 
     @Inject
-    public InquiryServiceImpl(Project project,
+    public InquiryServiceImpl(Gson gson,
+                              Project project,
                               InquiryDao inquiryDao,
                               CodactorToolWindowService codactorToolWindowService,
                               OpenAiApiKeyService openAiApiKeyService,
                               PromptContextService promptContextService,
                               GptToLanguageTransformerService gptToLanguageTransformerService,
-                              CodactorFunctionGeneratorService codactorFunctionGeneratorService) {
+                              CodactorFunctionGeneratorService codactorFunctionGeneratorService,
+                              InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService) {
+        this.gson = gson;
         this.project = project;
         this.inquiryDao = inquiryDao;
         this.codactorToolWindowService = codactorToolWindowService;
@@ -49,6 +55,7 @@ public class InquiryServiceImpl implements InquiryService {
         this.promptContextService = promptContextService;
         this.gptToLanguageTransformerService = gptToLanguageTransformerService;
         this.codactorFunctionGeneratorService = codactorFunctionGeneratorService;
+        this.inquiryFunctionCallProcessorService = inquiryFunctionCallProcessorService;
     }
 
     @Override
@@ -76,6 +83,7 @@ public class InquiryServiceImpl implements InquiryService {
                 Inquiry inquiry = inquiryDao.createInquiry(subjectRecordId, recordType, question, openAiApiKey, model, new ArrayList<>(), functions);
                 if (inquiry != null) {
                     inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
+                    processPossibleFunctionCalls(inquiryViewer, inquiry, openAiApiKey, model, functions);
                 }
                 inquiryViewer.setLoadingChat(false);
             }
@@ -106,6 +114,7 @@ public class InquiryServiceImpl implements InquiryService {
                 }
                 Inquiry inquiry = inquiryDao.createInquiry(filePath, code, question, openAiApiKey, model, priorContext, functions);
                 inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
+                processPossibleFunctionCalls(inquiryViewer, inquiry, openAiApiKey, model, functions);
                 inquiryViewer.setLoadingChat(false);
                 promptContextService.clearPromptContext();
             }
@@ -140,6 +149,7 @@ public class InquiryServiceImpl implements InquiryService {
                 if (inquiry != null) {
                     inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                     inquiryViewer.getInquiryChatListViewer().componentResized();
+                    processPossibleFunctionCalls(inquiryViewer, inquiry, openAiApiKey, model, functions);
                 }
                 inquiryViewer.setLoadingChat(false);
             }
@@ -179,6 +189,7 @@ public class InquiryServiceImpl implements InquiryService {
                 inquiry.getChats().addAll(response.getChats());
                 inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                 inquiryViewer.getInquiryChatListViewer().componentResized();
+                processPossibleFunctionCalls(inquiryViewer, inquiry, openAiApiKey, model, functions);
                 inquiryViewer.setLoadingChat(false);
             }
         };
@@ -198,5 +209,24 @@ public class InquiryServiceImpl implements InquiryService {
                 .map(InquiryChat::getId)
                 .collect(Collectors.toList());
         inquiryChat.setAlternateInquiryChatIds(alternateInquiryChatIds);
+    }
+
+    private InquiryChat getLatestInquiryChat(List<InquiryChat> inquiryChats) {
+        return inquiryChats.stream().max(Comparator.comparing(InquiryChat::getCreationTimestamp))
+                .orElse(null);
+    }
+
+    private void processPossibleFunctionCalls(InquiryViewer inquiryViewer, Inquiry inquiry, String openAiApiKey, String model, List<ChatGptFunction> functions) {
+        InquiryChat latestInquiryChat = getLatestInquiryChat(inquiry.getChats());
+        if (latestInquiryChat.getFunctionCall() != null) {
+            while (latestInquiryChat.getFunctionCall() != null) {
+                String functionCallResponse = inquiryFunctionCallProcessorService.processFunctionCall(latestInquiryChat.getFunctionCall());
+                Inquiry inquiry1 = inquiryDao.respondToFunctionCall(latestInquiryChat.getId(), latestInquiryChat.getFunctionCall().getName(), functionCallResponse, openAiApiKey, model, functions);
+                inquiry.getChats().addAll(inquiry1.getChats());
+                inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
+                inquiryViewer.getInquiryChatListViewer().componentResized();
+                latestInquiryChat = getLatestInquiryChat(inquiry1.getChats());
+            }
+        }
     }
 }

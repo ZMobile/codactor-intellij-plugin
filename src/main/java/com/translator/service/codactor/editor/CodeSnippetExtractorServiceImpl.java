@@ -23,9 +23,6 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
     private final Project project;
 
     @Inject
-    public CodeSnippetExtractorService codeSnippetExtractorService;
-
-    @Inject
     public CodeSnippetExtractorServiceImpl(Project project) {
         this.project = project;
     }
@@ -51,6 +48,19 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
         return snippet.get();
     }
 
+    @Override
+    public Document getDocument(String filePath) {
+        // Convert the file path to a VirtualFile instance
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+
+        if (virtualFile != null) {
+            // Get the Document instance corresponding to the VirtualFile
+            return FileDocumentManager.getInstance().getDocument(virtualFile);
+        } else {
+            return null;
+        }
+    }
+
     public String getAllText(String filePath) {
         Path path = Paths.get(filePath);
         try {
@@ -58,6 +68,30 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public String getAllTextAtPackage(String filePackage) {
+        VirtualFile virtualFile = getVirtualFileFromPackage(filePackage);
+
+        if (virtualFile != null) {
+            Path path = Paths.get(virtualFile.getPath());
+            try {
+                return Files.readString(path, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public VirtualFile getVirtualFileFromPackage(String filePackage) {
+        String packagePath = filePackage.replace('.', '/') + ".java";
+        String baseProjectDirectory = project.getBasePath();
+        String srcCodePath = baseProjectDirectory + "/src/main/java/";
+        String filePath = srcCodePath + packagePath;
+        return LocalFileSystem.getInstance().findFileByPath(filePath);
     }
 
     @Override

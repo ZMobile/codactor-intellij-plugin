@@ -21,12 +21,15 @@ import java.util.Objects;
 public class GuardedBlockServiceImpl implements GuardedBlockService {
     private final Project project;
     private final FileModificationTrackerService fileModificationTrackerService;
+    private final CodeSnippetExtractorService codeSnippetExtractorService;
     private final Map<String, RangeMarker> guardedBlocks;
 
     @Inject
     public GuardedBlockServiceImpl(Project project,
+                                   CodeSnippetExtractorService codeSnippetExtractorService,
                                    FileModificationTrackerService fileModificationTrackerService) {
         this.project = project;
+        this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.guardedBlocks = new HashMap<>();
     }
@@ -40,7 +43,7 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
             return;
         }
 
-        Document document = PsiDocumentManager.getInstance(project).getDocument(Objects.requireNonNull(PsiManager.getInstance(project).findFile(virtualFile)));
+        Document document = codeSnippetExtractorService.getDocument(filePath);
         if (document == null) {
             throw new IllegalStateException("Could not get document for file: " + filePath);
         }

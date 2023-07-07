@@ -18,11 +18,15 @@ public class TextAreaWindow {
 
     private TextAreaWindowActionListener listener;
     private String text;
-
     // other constructors omitted for brevity
 
     public TextAreaWindow(String initialText) {
-        this(initialText, null);
+        this(initialText, new TextAreaWindowActionListener() {
+            @Override
+            public void onOk(String text) {
+
+            }
+        });
     }
 
 

@@ -1,12 +1,20 @@
 package com.translator.service.codactor.editor;
 
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
+import com.intellij.openapi.vfs.VirtualFile;
 
 public interface CodeSnippetExtractorService {
     String getSnippet(String filePath, int startIndex, int endIndex);
 
     String getAllText(String filePath);
+
+    String getAllTextAtPackage(String filePackage);
+
+    VirtualFile getVirtualFileFromPackage(String filePackage);
+
+    Document getDocument(String filePath);
 
     SelectionModel getSelectedText(String filePath);
 
