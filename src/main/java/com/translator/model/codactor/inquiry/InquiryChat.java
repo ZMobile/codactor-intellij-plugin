@@ -1,7 +1,7 @@
 package com.translator.model.codactor.inquiry;
 
-import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunction;
-import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunctionCall;
+import com.translator.model.codactor.inquiry.function.ChatGptFunction;
+import com.translator.model.codactor.inquiry.function.ChatGptFunctionCall;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;

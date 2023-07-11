@@ -2,7 +2,6 @@ package com.translator.model.codactor.modification;
 
 import com.intellij.openapi.editor.RangeMarker;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
 
 import java.util.ArrayList;
 import java.util.List;

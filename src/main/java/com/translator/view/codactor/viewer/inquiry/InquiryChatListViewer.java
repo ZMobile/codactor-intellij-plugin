@@ -441,7 +441,6 @@ public class InquiryChatListViewer extends JPanel {
             compressedInquiryChats.add(new TestoObject(inquiryChatListViewer.getInquiryChat(), inquiryChatListViewer.getFunctionCalls()));
             model.addElement(inquiryChatListViewer);
         }
-        System.out.println("Compressed: " + gson.toJson(compressedInquiryChats));
         ComponentListener componentListener = new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {

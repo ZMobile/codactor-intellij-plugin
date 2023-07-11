@@ -1,0 +1,12 @@
+package com.translator.service.codactor.transformer;
+
+import com.translator.model.codactor.modification.queued.QueuedFileModificationObjectHolder;
+import com.translator.model.codactor.modification.queued.QueuedFileModificationObjectReferenceHolder;
+
+import java.util.List;
+
+public interface QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService {
+    QueuedFileModificationObjectReferenceHolder convert(QueuedFileModificationObjectHolder queuedFileModificationObjectHolder);
+
+    List<QueuedFileModificationObjectReferenceHolder> convert(List<QueuedFileModificationObjectHolder> queuedFileModificationObjectHolders);
+}

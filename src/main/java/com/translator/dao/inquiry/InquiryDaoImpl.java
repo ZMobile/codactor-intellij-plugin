@@ -6,8 +6,8 @@ import com.translator.model.codactor.api.translator.inquiry.GeneralInquiryCreati
 import com.translator.model.codactor.api.translator.inquiry.InquiryContinuationRequestResource;
 import com.translator.model.codactor.api.translator.inquiry.InquiryCreationRequestResource;
 import com.translator.model.codactor.api.translator.inquiry.InquiryListResponseResource;
-import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunction;
-import com.translator.model.codactor.api.translator.inquiry.function.FunctionCallResponseRequestResource;
+import com.translator.model.codactor.inquiry.function.ChatGptFunction;
+import com.translator.model.codactor.inquiry.function.FunctionCallResponseRequestResource;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.modification.RecordType;
@@ -37,7 +37,7 @@ public class InquiryDaoImpl implements InquiryDao {
     @Override
     public List<Inquiry> getRecentInquiries() {
         try {
-            URL url = new URL("http" /*s://api.codactor.com*/ + "://localHost:8080/projects/desktop/inquiries/recent");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/recent");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -64,7 +64,7 @@ public class InquiryDaoImpl implements InquiryDao {
     @Override
     public Inquiry getInquiry(String inquiryId) {
         try {
-            URL url = new URL("http" /*s://api.codactor.com*/ + "://localHost:8080/projects/desktop/inquiries/chats");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/chats");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -90,7 +90,7 @@ public class InquiryDaoImpl implements InquiryDao {
     }
 
     @Override
-    public Inquiry createInquiry(String subjectRecordId, RecordType recordType, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext) {
+    public Inquiry createInquiry(String subjectRecordId, RecordType recordType, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, String systemMessage) {
         InquiryCreationRequestResource inquiryCreationRequestResource = new InquiryCreationRequestResource.Builder()
                 .withSubjectRecordId(subjectRecordId)
                 .withRecordType(recordType)
@@ -98,12 +98,13 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withOpenAiApiKey(openAiApiKey)
                 .withModel(model)
                 .withPriorContext(priorContext)
+                .withSystemMessage(systemMessage)
                 .build();
         if (inquiryCreationRequestResource.getPriorContext() == null) {
             inquiryCreationRequestResource.setPriorContext(new ArrayList<>());
         }
         try {
-            URL url = new URL("http" /*s://api.codactor.com*/ + "://localHost:8080/projects/desktop/inquiries/new");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -130,7 +131,7 @@ public class InquiryDaoImpl implements InquiryDao {
     }
 
     @Override
-    public Inquiry createInquiry(String subjectRecordId, RecordType recordType, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> chatGptFunctions) {
+    public Inquiry createInquiry(String subjectRecordId, RecordType recordType, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> chatGptFunctions, String systemMessage) {
         InquiryCreationRequestResource inquiryCreationRequestResource = new InquiryCreationRequestResource.Builder()
                 .withSubjectRecordId(subjectRecordId)
                 .withRecordType(recordType)
@@ -139,12 +140,13 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withModel(model)
                 .withPriorContext(priorContext)
                 .withFunctions(chatGptFunctions)
+                .withSystemMessage(systemMessage)
                 .build();
         if (inquiryCreationRequestResource.getPriorContext() == null) {
             inquiryCreationRequestResource.setPriorContext(new ArrayList<>());
         }
         try {
-            URL url = new URL("http" /*s://api.codactor.com*/ + "://localHost:8080/projects/desktop/inquiries/new");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -171,7 +173,7 @@ public class InquiryDaoImpl implements InquiryDao {
     }
 
     @Override
-    public Inquiry createInquiry(String filePath, String code, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext) {
+    public Inquiry createInquiry(String filePath, String code, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, String systemMessage) {
         InquiryCreationRequestResource inquiryCreationRequestResource = new InquiryCreationRequestResource.Builder()
                 .withFilePath(filePath)
                 .withCode(code)
@@ -179,9 +181,10 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withOpenAiApiKey(openAiApiKey)
                 .withModel(model)
                 .withPriorContext(priorContext)
+                .withSystemMessage(systemMessage)
                 .build();
         try {
-            URL url = new URL("http" /*s://api.codactor.com*/ + "://localHost:8080/projects/desktop/inquiries/new");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -208,7 +211,7 @@ public class InquiryDaoImpl implements InquiryDao {
     }
 
     @Override
-    public Inquiry createInquiry(String filePath, String code, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions) {
+    public Inquiry createInquiry(String filePath, String code, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions, String systemMessage) {
         InquiryCreationRequestResource inquiryCreationRequestResource = new InquiryCreationRequestResource.Builder()
                 .withFilePath(filePath)
                 .withCode(code)
@@ -217,9 +220,10 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withModel(model)
                 .withPriorContext(priorContext)
                 .withFunctions(functions)
+                .withSystemMessage(systemMessage)
                 .build();
         try {
-            URL url = new URL("http" /*s://api.codactor.com*/ + "://localHost:8080/projects/desktop/inquiries/new");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -246,26 +250,27 @@ public class InquiryDaoImpl implements InquiryDao {
     }
 
     @Override
-    public Inquiry createGeneralInquiry(String question, String openAiApiKey, String model) {
-        return createGeneralInquiry(question, openAiApiKey, model, new ArrayList<>());
+    public Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, String systemMessage) {
+        return createGeneralInquiry(question, openAiApiKey, model, new ArrayList<>(), systemMessage);
     }
 
     @Override
-    public Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext) {
-        return createGeneralInquiry(question, openAiApiKey, model, priorContext, null);
+    public Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, String systemMessage) {
+        return createGeneralInquiry(question, openAiApiKey, model, priorContext, null, systemMessage);
     }
 
     @Override
-    public Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions) {
+    public Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions, String systemMessage) {
         GeneralInquiryCreationRequestResource inquiryCreationRequestResource = new GeneralInquiryCreationRequestResource.Builder()
                 .withQuestion(question)
                 .withOpenAiApiKey(openAiApiKey)
                 .withModel(model)
                 .withPriorContext(priorContext)
                 .withFunctions(functions)
+                .withSystemMessage(systemMessage)
                 .build();
         try {
-            URL url = new URL("http" /*s://api.codactor.com*/ + "://localHost:8080/projects/desktop/inquiries/new/general");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new/general");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -305,7 +310,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withFunctions(functions)
                 .build();
         try {
-            URL url = new URL("http" /*s://api.codactor.com*/ + "://localHost:8080/projects/desktop/inquiries/continue");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/continue");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -342,7 +347,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withFunctions(functions)
                 .build();
         try {
-            URL url = new URL("http" /*s://api.codactor.com*/ + "://localHost:8080/projects/desktop/inquiries/continue/function");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/continue/function");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());

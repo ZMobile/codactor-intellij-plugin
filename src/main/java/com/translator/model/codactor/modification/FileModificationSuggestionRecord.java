@@ -14,6 +14,7 @@ public class FileModificationSuggestionRecord {
     private final String modificationId;
     private final ModificationType modificationType;
     private final String filePath;
+    private final String subjectLine;
     private final String beforeCode;
     private final String modification;
     private final String suggestedCode;
@@ -24,6 +25,7 @@ public class FileModificationSuggestionRecord {
                                             String modificationId,
                                             ModificationType modificationType,
                                             String filePath,
+                                            String subjectLine,
                                             String beforeCode,
                                             String modification,
                                             String suggestedCode) {
@@ -34,6 +36,7 @@ public class FileModificationSuggestionRecord {
         this.modificationId = modificationId;
         this.modificationType = modificationType;
         this.filePath = filePath;
+        this.subjectLine = subjectLine;
         this.beforeCode = beforeCode;
         this.modification = modification;
         this.suggestedCode = suggestedCode;
@@ -59,6 +62,10 @@ public class FileModificationSuggestionRecord {
 
     public String getFilePath() {
         return filePath;
+    }
+
+    public String getSubjectLine() {
+        return subjectLine;
     }
 
     public String getBeforeCode() {

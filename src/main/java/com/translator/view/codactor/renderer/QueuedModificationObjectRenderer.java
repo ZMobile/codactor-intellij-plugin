@@ -3,6 +3,8 @@ package com.translator.view.codactor.renderer;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.translator.model.codactor.modification.*;
+import com.translator.model.codactor.modification.queued.QueuedFileModificationObjectHolder;
+import com.translator.model.codactor.modification.queued.QueuedModificationObjectType;
 import com.translator.service.codactor.file.FileReaderService;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;

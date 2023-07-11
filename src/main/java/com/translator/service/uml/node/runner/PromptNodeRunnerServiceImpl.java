@@ -13,6 +13,7 @@ import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.model.uml.node.Node;
 import com.translator.model.uml.node.PromptNode;
 import com.translator.model.uml.prompt.Prompt;
+import com.translator.service.codactor.inquiry.InquirySystemMessageGeneratorService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
 import com.translator.service.uml.node.NodeDialogWindowMapperService;
 import com.translator.service.uml.node.query.ConnectionQueryService;
@@ -31,6 +32,7 @@ public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
     private final NodeQueryService nodeQueryService;
     private final ConnectionQueryService connectionQueryService;
     private final NodeDialogWindowMapperService nodeDialogWindowMapperService;
+    private final InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService;
     private final Gson gson;
 
     @Inject
@@ -40,6 +42,7 @@ public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
                                        NodeQueryService nodeQueryService,
                                        ConnectionQueryService connectionQueryService,
                                        NodeDialogWindowMapperService nodeDialogWindowMapperService,
+                                        InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
                                        Gson gson) {
         this.project = project;
         this.inquiryDao = inquiryDao;
@@ -47,6 +50,7 @@ public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
         this.nodeQueryService = nodeQueryService;
         this.connectionQueryService = connectionQueryService;
         this.nodeDialogWindowMapperService = nodeDialogWindowMapperService;
+        this.inquirySystemMessageGeneratorService = inquirySystemMessageGeneratorService;
         this.gson = gson;
     }
 
@@ -94,7 +98,7 @@ public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
                 prompt.setProcessed(false);
                 Inquiry newInquiry;
                 if (i == 0) {
-                    newInquiry = inquiryDao.createGeneralInquiry(newPrompt, openAiApiKeyService.getOpenAiApiKey(), promptNode.getModel());
+                    newInquiry = inquiryDao.createGeneralInquiry(newPrompt, openAiApiKeyService.getOpenAiApiKey(), promptNode.getModel(), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                     inquiry = newInquiry;
                     previousInquiryChat = newInquiry.getChats().stream()
                             .max(Comparator.comparing(InquiryChat::getCreationTimestamp))

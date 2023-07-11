@@ -12,9 +12,9 @@ import com.intellij.openapi.editor.highlighter.EditorHighlighterFactory;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.project.Project;
-import com.translator.service.codactor.editor.DiffEditorGeneratorService;
 import com.translator.service.codactor.editor.GptToLanguageTransformerService;
 import com.translator.service.codactor.editor.GptToLanguageTransformerServiceImpl;
+import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
 
 import java.util.Objects;
 

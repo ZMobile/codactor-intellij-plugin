@@ -352,7 +352,6 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                 assert modificationTypeComboBox.getSelectedItem() != null;
                 if (modificationTypeComboBox.getSelectedItem().toString().equals("Modify")) {
                     String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
-                    System.out.println("Code.length: " + code.length());
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
                         automaticCodeModificationService.getModifiedCode(fileItem.getFilePath(), textArea.getText(), ModificationType.MODIFY, promptContextService.getPromptContext());

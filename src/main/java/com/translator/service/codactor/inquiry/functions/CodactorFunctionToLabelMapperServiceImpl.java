@@ -2,7 +2,7 @@ package com.translator.service.codactor.inquiry.functions;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunctionCall;
+import com.translator.model.codactor.inquiry.function.ChatGptFunctionCall;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.service.codactor.json.JsonExtractorService;
 

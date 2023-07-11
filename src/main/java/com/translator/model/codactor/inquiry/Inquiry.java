@@ -18,6 +18,7 @@ public class Inquiry {
         private String subjectRecordId;
         private RecordType subjectRecordType;
         private String filePath;
+        private String subjectLine;
         private String beforeCode;
         private String afterCode;
         private String subjectCode;
@@ -48,6 +49,11 @@ public class Inquiry {
 
         public Builder withFilePath(String filePath) {
             this.filePath = filePath;
+            return this;
+        }
+
+        public Builder withSubjectLine(String subjectLine) {
+            this.subjectLine = subjectLine;
             return this;
         }
 
@@ -87,7 +93,7 @@ public class Inquiry {
         }
 
         public Inquiry build() {
-            return new Inquiry(userId, modificationId, subjectRecordId, subjectRecordType, filePath, beforeCode, afterCode, subjectCode, initialQuestion, description, modificationType, priorContext);
+            return new Inquiry(userId, modificationId, subjectRecordId, subjectRecordType, filePath, subjectLine, beforeCode, afterCode, subjectCode, initialQuestion, description, modificationType, priorContext);
         }
     }
 
@@ -99,6 +105,7 @@ public class Inquiry {
     private String subjectRecordId;
     private RecordType subjectRecordType;
     private String filePath;
+    private String subjectLine;
     private String beforeCode;
     private String description;
     private String afterCode;
@@ -113,6 +120,7 @@ public class Inquiry {
                    String subjectRecordId,
                    RecordType subjectRecordType,
                    String filePath,
+                   String subjectLine,
                    String beforeCode,
                    String afterCode,
                    String subjectCode,
@@ -128,6 +136,7 @@ public class Inquiry {
         this.subjectRecordId = subjectRecordId;
         this.subjectRecordType = subjectRecordType;
         this.filePath = filePath;
+        this.subjectLine = subjectLine;
         this.beforeCode = beforeCode;
         this.afterCode = afterCode;
         this.subjectCode = subjectCode;
@@ -188,6 +197,14 @@ public class Inquiry {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public String getSubjectLine() {
+        return subjectLine;
+    }
+
+    public void setSubjectLine(String subjectLine) {
+        this.subjectLine = subjectLine;
     }
 
     public String getBeforeCode() {

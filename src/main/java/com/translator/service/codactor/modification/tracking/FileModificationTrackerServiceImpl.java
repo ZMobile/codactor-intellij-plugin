@@ -2,10 +2,11 @@ package com.translator.service.codactor.modification.tracking;
 
 import com.google.inject.Injector;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.translator.CodactorInjector;
+import com.translator.model.codactor.modification.queued.QueuedFileModificationObjectHolder;
 import com.translator.service.codactor.editor.*;
+import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
 import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.modification.*;

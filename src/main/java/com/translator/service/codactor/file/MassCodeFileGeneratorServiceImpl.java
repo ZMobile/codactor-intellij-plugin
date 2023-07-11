@@ -14,6 +14,7 @@ import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.modification.ModificationType;
 import com.translator.model.codactor.modification.RecordType;
+import com.translator.service.codactor.inquiry.InquirySystemMessageGeneratorService;
 import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
@@ -37,6 +38,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
     private final OpenAiApiKeyService openAiApiKeyService;
     private final OpenAiModelService openAiModelService;
     private final FileCreatorService fileCreatorService;
+    private final InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService;
 
     @Inject
     public MassCodeFileGeneratorServiceImpl(Project project,
@@ -45,7 +47,8 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                             FileModificationTrackerService fileModificationTrackerService,
                                             OpenAiApiKeyService openAiApiKeyService,
                                             OpenAiModelService openAiModelService,
-                                            FileCreatorService fileCreatorService) {
+                                            FileCreatorService fileCreatorService,
+                                            InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService) {
         this.project = project;
         this.inquiryDao = inquiryDao;
         this.codeModificationService = codeModificationService;
@@ -53,6 +56,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
         this.openAiApiKeyService = openAiApiKeyService;
         this.openAiModelService = openAiModelService;
         this.fileCreatorService = fileCreatorService;
+        this.inquirySystemMessageGeneratorService = inquirySystemMessageGeneratorService;
     }
 
     @Override
@@ -74,7 +78,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                 if (inquiryChat != null) {
                     newInquiry = inquiryDao.continueInquiry(inquiryChat.getId(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                 } else {
-                    newInquiry = inquiryDao.createInquiry(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
+                    newInquiry = inquiryDao.createInquiry(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>(), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 }
                 if (newInquiry != null) {
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
@@ -165,7 +169,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                 if (inquiryChat != null) {
                     newInquiry = inquiryDao.continueInquiry(inquiryChat.getId(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                 } else {
-                    newInquiry = inquiryDao.createInquiry(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
+                    newInquiry = inquiryDao.createInquiry(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>(), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 }
                 if (newInquiry != null) {
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
@@ -271,7 +275,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
             protected Void doInBackground() {
                 String question = "I need to create a potentially multi-file " + language + " program with the following description: \"" + description + "\".  What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
-                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), finalPriorContext);
+                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), finalPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 if (newInquiry != null) {
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
@@ -371,7 +375,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
             protected Void doInBackground() {
                 String question = "I need to create a potentially multi-file " + language + " program with the following description: \"" + description + "\".  What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
-                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), finalPriorContext);
+                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), finalPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 if (newInquiry != null) {
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1.5/3) Ordering File Names");
@@ -397,7 +401,6 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         if (newInquiry != null) {
                             InquiryChat mostRecentInquiryChat3 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                             fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
-                            System.out.println("This gets called 4");
                             List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat3.getMessage());
                             List<String> completedSuggestionIds = new ArrayList<>();
                             for (int i = 0; i < newFiles.size(); i++) {

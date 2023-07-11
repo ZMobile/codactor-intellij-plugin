@@ -1,6 +1,6 @@
 package com.translator.model.codactor.api.translator.inquiry;
 
-import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunction;
+import com.translator.model.codactor.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 
 import java.util.List;
@@ -13,6 +13,7 @@ public class GeneralInquiryCreationRequestResource {
         private String model;
         private List<HistoricalContextObjectHolder> priorContext;
         private List<ChatGptFunction> functions;
+        private String systemMessage;
 
         public Builder withQuestion(String question) {
             this.question = question;
@@ -39,8 +40,13 @@ public class GeneralInquiryCreationRequestResource {
             return this;
         }
 
+        public Builder withSystemMessage(String systemMessage) {
+            this.systemMessage = systemMessage;
+            return this;
+        }
+
         public GeneralInquiryCreationRequestResource build() {
-            return new GeneralInquiryCreationRequestResource(question, openAiApiKey, model, priorContext, functions);
+            return new GeneralInquiryCreationRequestResource(question, openAiApiKey, model, priorContext, functions, systemMessage);
         }
     }
 
@@ -49,13 +55,15 @@ public class GeneralInquiryCreationRequestResource {
     private String model;
     private List<HistoricalContextObjectHolder> priorContext;
     private List<ChatGptFunction> functions;
+    private String systemMessage;
 
-    public GeneralInquiryCreationRequestResource(String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions) {
+    public GeneralInquiryCreationRequestResource(String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions, String systemMessage) {
         this.question = question;
         this.openAiApiKey = openAiApiKey;
         this.model = model;
         this.priorContext = priorContext;
         this.functions = functions;
+        this.systemMessage = systemMessage;
     }
 
     public String getQuestion() {
@@ -96,5 +104,13 @@ public class GeneralInquiryCreationRequestResource {
 
     public void setFunctions(List<ChatGptFunction> functions) {
         this.functions = functions;
+    }
+
+    public String getSystemMessage() {
+        return systemMessage;
+    }
+
+    public void setSystemMessage(String systemMessage) {
+        this.systemMessage = systemMessage;
     }
 }

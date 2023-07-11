@@ -1,7 +1,7 @@
 package com.translator.model.codactor.api.translator.inquiry;
 
 
-import com.translator.model.codactor.api.translator.inquiry.function.ChatGptFunction;
+import com.translator.model.codactor.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.modification.RecordType;
 
@@ -19,6 +19,7 @@ public class InquiryCreationRequestResource {
         private String model;
         private List<ChatGptFunction> functions;
         private List<HistoricalContextObjectHolder> priorContext;
+        private String systemMessage;
 
         public Builder withSubjectRecordId(String subjectRecordId) {
             this.subjectRecordId = subjectRecordId;
@@ -65,8 +66,13 @@ public class InquiryCreationRequestResource {
             return this;
         }
 
+        public Builder withSystemMessage(String systemMessage) {
+            this.systemMessage = systemMessage;
+            return this;
+        }
+
         public InquiryCreationRequestResource build() {
-            return new InquiryCreationRequestResource(subjectRecordId, recordType, filePath, code, question, openAiApiKey, model, functions, priorContext);
+            return new InquiryCreationRequestResource(subjectRecordId, recordType, filePath, code, question, openAiApiKey, model, functions, priorContext, systemMessage);
         }
     }
 
@@ -79,6 +85,7 @@ public class InquiryCreationRequestResource {
     private String model;
     private List<ChatGptFunction> functions;
     private List<HistoricalContextObjectHolder> priorContext;
+    private String systemMessage;
 
     public InquiryCreationRequestResource(String subjectRecordId,
                                           RecordType recordType,
@@ -88,7 +95,8 @@ public class InquiryCreationRequestResource {
                                           String openAiApiKey,
                                           String model,
                                           List<ChatGptFunction> functions,
-                                          List<HistoricalContextObjectHolder> priorContext) {
+                                          List<HistoricalContextObjectHolder> priorContext,
+                                          String systemMessage) {
         this.subjectRecordId = subjectRecordId;
         this.recordType = recordType;
         this.filePath = filePath;
@@ -98,6 +106,7 @@ public class InquiryCreationRequestResource {
         this.model = model;
         this.functions = functions;
         this.priorContext = priorContext;
+        this.systemMessage = systemMessage;
     }
 
     public String getSubjectRecordId() {
@@ -170,5 +179,13 @@ public class InquiryCreationRequestResource {
 
     public void setPriorContext(List<HistoricalContextObjectHolder> priorContext) {
         this.priorContext = priorContext;
+    }
+
+    public String getSystemMessage() {
+        return systemMessage;
+    }
+
+    public void setSystemMessage(String systemMessage) {
+        this.systemMessage = systemMessage;
     }
 }

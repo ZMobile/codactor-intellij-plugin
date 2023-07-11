@@ -6,10 +6,13 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -88,10 +91,21 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
     @Override
     public VirtualFile getVirtualFileFromPackage(String filePackage) {
         String packagePath = filePackage.replace('.', '/') + ".java";
-        String baseProjectDirectory = project.getBasePath();
-        String srcCodePath = baseProjectDirectory + "/src/main/java/";
-        String filePath = srcCodePath + packagePath;
-        return LocalFileSystem.getInstance().findFileByPath(filePath);
+        ModuleManager moduleManager = ModuleManager.getInstance(project);
+        Module @NotNull [] modules = moduleManager.getModules();
+
+        for(Module module : modules) {
+            String modulePath = module.getModuleFilePath();
+            //remove the .iml file
+            modulePath = modulePath.substring(0, modulePath.lastIndexOf("/"));
+            String srcCodePath = modulePath + "/src/main/java/";
+            String filePath = srcCodePath + packagePath;
+            VirtualFile file = LocalFileSystem.getInstance().findFileByPath(filePath);
+            if (file != null) {
+                return file;
+            }
+        }
+        return null;
     }
 
     @Override

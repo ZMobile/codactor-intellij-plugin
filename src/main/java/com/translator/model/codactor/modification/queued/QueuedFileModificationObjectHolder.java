@@ -1,4 +1,8 @@
-package com.translator.model.codactor.modification;
+package com.translator.model.codactor.modification.queued;
+
+import com.translator.model.codactor.modification.FileModification;
+import com.translator.model.codactor.modification.FileModificationSuggestionModification;
+import com.translator.model.codactor.modification.MultiFileModification;
 
 public class QueuedFileModificationObjectHolder {
     private FileModification fileModification;

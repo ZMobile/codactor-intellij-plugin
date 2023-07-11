@@ -307,8 +307,6 @@ public class PromptContextBuilderDialog extends JDialog {
             dispose();
         });
         this.historicalContextObjectListChatViewer.getSaveChangesButton().addActionListener(e -> {
-            System.out.println("Saving changes: " + promptContextService);
-            System.out.println("Saving changes: " + historicalContextObjectListViewer.getContextObjectArrayList());
             promptContextService.savePromptContext(historicalContextObjectListViewer.getContextObjectArrayList());
             dispose();
         });

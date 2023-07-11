@@ -78,7 +78,6 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getModificationSuggestions());
             } else {
                 fileModificationTrackerService.errorFileModification(modificationId);
-                System.out.println("testo: " + desktopCodeModificationResponseResource.getError());
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
@@ -104,7 +103,6 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
-        System.out.println("Code.length 2: " + code.length());
         String modificationId = fileModificationTrackerService.addModification(filePath, modification, 0, code.length(), modificationType, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();

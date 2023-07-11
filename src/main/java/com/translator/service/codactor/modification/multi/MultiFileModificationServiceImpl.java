@@ -25,6 +25,7 @@ import com.translator.model.codactor.modification.ModificationType;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.model.codactor.thread.BooleanWaiter;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.inquiry.InquirySystemMessageGeneratorService;
 import com.translator.service.codactor.json.JsonExtractorService;
 import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
@@ -47,6 +48,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
     private CodeSnippetExtractorService codeSnippetExtractorService;
     private OpenAiApiKeyService openAiApiKeyService;
     private OpenAiModelService openAiModelService;
+    private InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService;
     private FileModificationErrorDialogFactory fileModificationErrorDialogFactory;
     private Gson gson;
 
@@ -59,6 +61,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                                             CodeSnippetExtractorService codeSnippetExtractorService,
                                             OpenAiApiKeyService openAiApiKeyService,
                                             OpenAiModelService openAiModelService,
+                                            InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
                                             FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                             Gson gson) {
         this.project = project;
@@ -70,6 +73,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
         this.openAiApiKeyService = openAiApiKeyService;
         this.openAiModelService = openAiModelService;
         this.fileModificationErrorDialogFactory = fileModificationErrorDialogFactory;
+        this.inquirySystemMessageGeneratorService = inquirySystemMessageGeneratorService;
         this.gson = gson;
     }
 
@@ -118,7 +122,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     if (modificationIdMap.containsKey(filePath)) {
                         String code = codeMap.get(filePath);
                         String question = "I'm looking to implement the following modification(s) to my program: \"" + modification + "\". First things first, what is the percentage likelihood that this specific code file has anything to do with this modification and/or will be affected by the provided modification(s): \"" + code + "\". Please provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0";
-                        Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                        Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                         InquiryChat latestInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         String json = JsonExtractorService.extractJsonObject(latestInquiryChat.getMessage());
                         if (filePathPercentageMap.containsKey(filePath)) {
@@ -170,7 +174,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 String initialFilePath = sortedFilePaths.get(0);
                 String code = codeMap.get(initialFilePath);
                 String initialQuestion = "I'm looking to implement the following modification to my program: \"" + modification + "\". First things first, Yes or No: Will you be able to achieve this modification completely solely by changing the code I provide here at " + sortedFilePaths.get(0) + ": \"" + code + "\". Please provide the answer in the following JSON format: \"{ modificationAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if modificationAchievable is false.";
-                Inquiry newInquiry = inquiryDao.createGeneralInquiry(initialQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                Inquiry newInquiry = inquiryDao.createGeneralInquiry(initialQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 InquiryChat mostRecentInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                 String json = JsonExtractorService.extractJsonObject(mostRecentInquiryChat.getMessage());
                 HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat.getId(), null, false, null);
@@ -275,10 +279,10 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 for (String filePath : filesToProcess) {
                     String fileCode = codeMap.get(filePath);
                     String question = "Analyze this code: \"" + fileCode + "\" at " + filePath + "\". Does this file need to be changed in order to fulfill the requested modification: \"" + modification + "\"  Yes or No? Please provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\".";
-                    Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext);
+                    Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                     InquiryChat latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
                     if (latestInquiryChat.getMessage() == null) {
-                        finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext);
+                        finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                         latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
                     }
                     String json2 = JsonExtractorService.extractJsonObject(latestInquiryChat.getMessage());
@@ -373,7 +377,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     if (modificationIdMap.containsKey(filePath)) {
                         String code = codeMap.get(filePath);
                         String question = "I'm having the following problem/error with my program: \"" + error + "\". First things first, what is the percentage likelihood that this specific code file has anything to do with this error and/or will needed to be modified to fix the above error?: \"" + code + "\". Please provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0";
-                        Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                        Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                         InquiryChat latestInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         String json = JsonExtractorService.extractJsonObject(latestInquiryChat.getMessage());
                         if (filePathPercentageMap.containsKey(filePath)) {
@@ -425,7 +429,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 String initialFilePath = sortedFilePaths.get(0);
                 String code = codeMap.get(initialFilePath);
                 String initialQuestion = "I'm having the following problem/error with my program: \"" + error + "\". First things first, Yes or No: Will you be able to fix this problem/error solely by changing the code I provide here at " + sortedFilePaths.get(0) + "?: \"" + code + "\". Please provide the answer in the following JSON format: \"{ fixAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if fixAchievable is false.";
-                Inquiry newInquiry = inquiryDao.createGeneralInquiry(initialQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                Inquiry newInquiry = inquiryDao.createGeneralInquiry(initialQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 InquiryChat mostRecentInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                 String json = JsonExtractorService.extractJsonObject(mostRecentInquiryChat.getMessage());
                 HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat.getId(), null, false, null);
@@ -529,10 +533,10 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 for (String filePath : filesToProcess) {
                     String fileCode = codeMap.get(filePath);
                     String question = "Analyze this code: \"" + fileCode + "\" at " + filePath + "\". Does this file need to be changed in order to fix the above error/problem: \"" + error + "\"  Yes or No? Please provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\".";
-                    Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext);
+                    Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                     InquiryChat latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
                     if (latestInquiryChat.getMessage() == null) {
-                        finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext);
+                        finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                         latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
                     }
                     String json2 = JsonExtractorService.extractJsonObject(latestInquiryChat.getMessage());

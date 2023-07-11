@@ -13,6 +13,10 @@ import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.context.PromptContextServiceImpl;
 import com.translator.service.codactor.copy.DirectoryCopierService;
 import com.translator.service.codactor.copy.DirectoryCopierServiceImpl;
+import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
+import com.translator.service.codactor.editor.diff.DiffEditorGeneratorServiceImpl;
+import com.translator.service.codactor.editor.diff.GitDiffStingGeneratorService;
+import com.translator.service.codactor.editor.diff.GitDiffStingGeneratorServiceImpl;
 import com.translator.service.codactor.factory.CodeFileGeneratorServiceFactory;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.*;
@@ -36,6 +40,8 @@ import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.codactor.task.BackgroundTaskMapperServiceImpl;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformerImpl;
+import com.translator.service.codactor.transformer.QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService;
+import com.translator.service.codactor.transformer.QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerServiceImpl;
 import com.translator.service.codactor.ui.ModificationQueueListButtonService;
 import com.translator.service.codactor.ui.ModificationQueueListButtonServiceImpl;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
@@ -108,6 +114,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(CodactorFunctionToLabelMapperService.class).to(CodactorFunctionToLabelMapperServiceImpl.class);
         bind(InquiryChatListFunctionCallCompressorService.class).to(InquiryChatListFunctionCallCompressorServiceImpl.class);
         bind(InquiryFunctionCallProcessorService.class).to(InquiryFunctionCallProcessorServiceImpl.class);
+        bind(QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService.class).to(QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerServiceImpl.class);
+        bind(GitDiffStingGeneratorService.class).to(GitDiffStingGeneratorServiceImpl.class);
+        bind(InquirySystemMessageGeneratorService.class).to(InquirySystemMessageGeneratorServiceImpl.class);
     }
 
     @Singleton
@@ -139,8 +148,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                     FileModificationTrackerService fileModificationTrackerService,
                                                                     OpenAiApiKeyService openAiApiKeyService,
                                                                     OpenAiModelService openAiModelService,
-                                                                    FileCreatorService fileCreatorService) {
-        return new MassCodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationService, fileModificationTrackerService, openAiApiKeyService, openAiModelService, fileCreatorService);
+                                                                    FileCreatorService fileCreatorService,
+                                                                    InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService) {
+        return new MassCodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationService, fileModificationTrackerService, openAiApiKeyService, openAiModelService, fileCreatorService, inquirySystemMessageGeneratorService);
     }
 
     @Singleton
@@ -153,8 +163,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                      CodeSnippetExtractorService codeSnippetExtractorService,
                                                                      OpenAiApiKeyService openAiApiKeyService,
                                                                      OpenAiModelService openAiModelService,
+                                                                     InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
                                                                      FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                                                      Gson gson) {
-        return new MultiFileModificationServiceImpl(project, inquiryDao, fileModificationTrackerService, fileModificationRestarterService, codeModificationService, codeSnippetExtractorService, openAiApiKeyService, openAiModelService, fileModificationErrorDialogFactory, gson);
+        return new MultiFileModificationServiceImpl(project, inquiryDao, fileModificationTrackerService, fileModificationRestarterService, codeModificationService, codeSnippetExtractorService, openAiApiKeyService, openAiModelService, inquirySystemMessageGeneratorService, fileModificationErrorDialogFactory, gson);
     }
 }

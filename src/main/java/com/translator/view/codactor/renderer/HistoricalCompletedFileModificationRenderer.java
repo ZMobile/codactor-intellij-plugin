@@ -63,12 +63,12 @@ public class HistoricalCompletedFileModificationRenderer extends JPanel implemen
     public Component getListCellRendererComponent(JList<? extends HistoricalContextModificationDataHolder> list, HistoricalContextModificationDataHolder value, int index, boolean isSelected, boolean cellHasFocus) {
         if (value.getRecordType() != null && value.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
             filePathLabel.setText("File: (SUB) " + value.getFileModificationSuggestionModificationRecord().getFilePath());
-            modificationTypeLabel.setText("Type: " + value.getFileModificationSuggestionModificationRecord().getModificationType() + " Timestamp: " + value.getFileModificationSuggestionModificationRecord().getCreationTimestamp());
+            modificationTypeLabel.setText("Type: " + value.getFileModificationSuggestionModificationRecord().getModificationType() + " Subject: " + value.getFileModificationSuggestionModificationRecord().getSubjectLine());
             lineRangeLabel.setText("Lines: " + lineCounterService.countLines(value.getFileModificationSuggestionModificationRecord().getEditedCode().trim(), value.getFileModificationSuggestionModificationRecord().getEditedCode().trim().length()));
             setBackground(Color.decode("#228B22"));
         } else if (value.getRecordType() != null && value.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
             filePathLabel.setText("File: " + value.getFileModificationSuggestionRecord().getFilePath());
-            modificationTypeLabel.setText("Type: " + value.getFileModificationSuggestionRecord().getModificationType() + " Timestamp: " + value.getFileModificationSuggestionRecord().getCreationTimestamp());
+            modificationTypeLabel.setText("Type: " + value.getFileModificationSuggestionRecord().getModificationType() + " Subject: " + value.getFileModificationSuggestionRecord().getSubjectLine());
             lineRangeLabel.setText("Lines: " + lineCounterService.countLines(value.getFileModificationSuggestionRecord().getSuggestedCode().trim(), value.getFileModificationSuggestionRecord().getSuggestedCode().trim().length()));
             setBackground(Color.decode("#228B22"));
         } else if (value.getRecordType() == null) {

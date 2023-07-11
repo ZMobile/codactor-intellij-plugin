@@ -14,6 +14,7 @@ public class DesktopCodeCreationResponseResource {
     private final String myId;
     private final String userId;
     private String filePath;
+    private String subjectLine;
     private String description;
     private List<FileModificationSuggestionRecord> modificationSuggestions;
     private String model;
@@ -66,6 +67,14 @@ public class DesktopCodeCreationResponseResource {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public String getSubjectLine() {
+        return subjectLine;
+    }
+
+    public void setSubjectLine(String subjectLine) {
+        this.subjectLine = subjectLine;
     }
 
     public String getDescription() {

@@ -15,6 +15,7 @@ public class DesktopCodeModificationResponseResource {
     private final String myId;
     private final String userId;
     private String filePath;
+    private String subjectLine;
     private String beforeText;
     private String modification;
     private ModificationType modificationType;
@@ -62,6 +63,14 @@ public class DesktopCodeModificationResponseResource {
 
     public void updateModifiedTimestamp() {
         this.modifiedTimestamp = LocalDateTime.now(ZoneOffset.UTC);
+    }
+
+    public String getSubjectLine() {
+        return subjectLine;
+    }
+
+    public void setSubjectLine(String subjectLine) {
+        this.subjectLine = subjectLine;
     }
 
     public String getFilePath() {

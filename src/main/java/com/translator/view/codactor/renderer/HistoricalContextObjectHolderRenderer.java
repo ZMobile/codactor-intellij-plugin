@@ -68,11 +68,11 @@ public class HistoricalContextObjectHolderRenderer extends JPanel implements Lis
             HistoricalContextModificationDataHolder historicalContextModificationDataHolder = value.getHistoricalCompletedModificationDataHolder();
             if (historicalContextModificationDataHolder.getRecordType() != null && historicalContextModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
                 leftLabelOne.setText("File: (SUB) " + historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getFilePath());
-                leftLabelTwo.setText("Type: " + historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getModificationType() + " Timestamp: " + historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getCreationTimestamp());
+                leftLabelTwo.setText("Type: " + historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getModificationType() + " Subject: " + historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getSubjectLine());
                 labelThree.setText("Lines: " + lineCounterService.countLines(historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode().trim(), historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode().trim().length()));
             } else if (historicalContextModificationDataHolder.getRecordType() != null && historicalContextModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
                 leftLabelOne.setText("File: " + historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getFilePath());
-                leftLabelTwo.setText("Type: " + historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getModificationType() + " Timestamp: " + historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getCreationTimestamp());
+                leftLabelTwo.setText("Type: " + historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getModificationType() + " Subject: " + historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getSubjectLine());
                 labelThree.setText("Lines: " + lineCounterService.countLines(historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim(), historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim().length()));
             }
             if (isSelected) {

@@ -1,4 +1,4 @@
-package com.translator.service.codactor.editor;
+package com.translator.service.codactor.editor.diff;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.patch.AbstractDelta;

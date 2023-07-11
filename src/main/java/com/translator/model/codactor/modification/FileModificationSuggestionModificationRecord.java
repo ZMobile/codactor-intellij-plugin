@@ -12,6 +12,7 @@ public class FileModificationSuggestionModificationRecord {
     private final String suggestionId;
     private String modificationSuggestionModificationId;
     private String filePath;
+    private String subjectLine;
     private String beforeText;
     private String modification;
     private String editedCode;
@@ -92,6 +93,14 @@ public class FileModificationSuggestionModificationRecord {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public String getSubjectLine() {
+        return subjectLine;
+    }
+
+    public void setSubjectLine(String subjectLine) {
+        this.subjectLine = subjectLine;
     }
 
     public String getBeforeText() {

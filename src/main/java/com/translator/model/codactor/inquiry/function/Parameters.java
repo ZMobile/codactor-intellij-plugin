@@ -1,4 +1,4 @@
-package com.translator.model.codactor.api.translator.inquiry.function;
+package com.translator.model.codactor.inquiry.function;
 
 import java.util.ArrayList;
 import java.util.HashMap;
