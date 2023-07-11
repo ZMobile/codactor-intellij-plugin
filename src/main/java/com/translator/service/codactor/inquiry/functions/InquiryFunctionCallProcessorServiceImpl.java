@@ -2,15 +2,21 @@ package com.translator.service.codactor.inquiry.functions;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.codactor.history.data.HistoricalInquiryDataHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
+import com.translator.model.codactor.inquiry.data.InquiryDataReferenceHolder;
 import com.translator.model.codactor.inquiry.function.ChatGptFunctionCall;
+import com.translator.model.codactor.modification.FileModification;
+import com.translator.model.codactor.modification.ModificationType;
 import com.translator.model.codactor.modification.data.FileModificationDataHolder;
 import com.translator.model.codactor.modification.data.FileModificationDataReferenceHolder;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.json.JsonExtractorService;
+import com.translator.service.codactor.modification.AutomaticCodeModificationService;
+import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.modification.history.FileModificationHistoryService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
@@ -31,6 +37,8 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     private final CodeSnippetExtractorService codeSnippetExtractorService;
     private final FileModificationTrackerService fileModificationTrackerService;
     private final FileModificationHistoryService fileModificationHistoryService;
+    private final FileModificationRestarterService fileModificationRestarterService;
+    private final AutomaticCodeModificationService automaticCodeModificationService;
     private final FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 
     @Inject
@@ -39,38 +47,45 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                                    CodeSnippetExtractorService codeSnippetExtractorService,
                                                    FileModificationTrackerService fileModificationTrackerService,
                                                    FileModificationHistoryService fileModificationHistoryService,
+                                                   FileModificationRestarterService fileModificationRestarterService,
+                                                   AutomaticCodeModificationService automaticCodeModificationService,
                                                    FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService) {
         this.gson = gson;
         this.inquiryDao = inquiryDao;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.fileModificationHistoryService = fileModificationHistoryService;
+        this.fileModificationRestarterService = fileModificationRestarterService;
+        this.automaticCodeModificationService = automaticCodeModificationService;
         this.fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService = fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
     }
 
     @Override
     public String processFunctionCall(ChatGptFunctionCall chatGptFunctionCall) {
-        if (chatGptFunctionCall.getName().equals("read_file_contents")) {
-            String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
+        if (chatGptFunctionCall.getName().equals("read_file_at_package")) {
             String packageName = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "package");
-            String content = null;
-            Map<String, Object> contentMap = new HashMap<>();
-            if (filePath != null) {
-                contentMap.put("filePath", filePath);
-                content = codeSnippetExtractorService.getAllText(filePath);
-            } else if (packageName != null) {
-                contentMap.put("filePackage", packageName);
-                VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
-                if (virtualFile != null) {
-                    Path path = Paths.get(virtualFile.getPath());
-                    try {
-                        content = Files.readString(path, StandardCharsets.UTF_8);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    contentMap.put("filePath", virtualFile.getPath());
+            VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
+            if (virtualFile != null) {
+                String content;
+                Path path = Paths.get(virtualFile.getPath());
+                try {
+                    content = Files.readString(path, StandardCharsets.UTF_8);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
+                Gson gson = new Gson();
+
+                Map<String, Object> contentMap = new HashMap<>();
+                contentMap.put("filePath", virtualFile.getPath());
+                contentMap.put("filePackage", packageName);
+                contentMap.put("content", content);
+                return gson.toJson(contentMap);
             }
+        } else if (chatGptFunctionCall.getName().equals("read_at_path")) {
+            String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
+            String content = codeSnippetExtractorService.getAllText(filePath);
+            Map<String, Object> contentMap = new HashMap<>();
+            contentMap.put("filePath", filePath);
             contentMap.put("content", content);
             return gson.toJson(contentMap);
         } else if (chatGptFunctionCall.getName().equals("get_recent_historical_modifications")) {
@@ -96,16 +111,117 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             return gson.toJson(fileModificationDataHolder);
         } else if (chatGptFunctionCall.getName().equals("get_recent_historical_inquiries")) {
             List<Inquiry> historicalInquiryList = inquiryDao.getRecentInquiries();
-            List<HistoricalInquiryDataHolder> historicalInquiryDataHolderList = new ArrayList<>();
+            List<InquiryDataReferenceHolder> inquiryDataReferenceHolders = new ArrayList<>();
             for (Inquiry inquiry : historicalInquiryList) {
-                HistoricalInquiryDataHolder historicalInquiryDataHolder = new HistoricalInquiryDataHolder(inquiry);
-                historicalInquiryDataHolderList.add(historicalInquiryDataHolder);
+                InquiryDataReferenceHolder inquiryDataReferenceHolder = new InquiryDataReferenceHolder(inquiry);
+                inquiryDataReferenceHolders.add(inquiryDataReferenceHolder);
             }
-            return gson.toJson(historicalInquiryDataHolderList);
+            return gson.toJson(inquiryDataReferenceHolders);
+        } else if (chatGptFunctionCall.getName().equals("read_inquiry")) {
+            String id = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "id");
+            Inquiry inquiry = inquiryDao.getInquiry(id);
+            return gson.toJson(inquiry);
         } else if (chatGptFunctionCall.getName().equals("retry_modification_in_queue")) {
+            String id = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "id");
+            FileModification fileModification = fileModificationTrackerService.getModification(id);
+            fileModificationTrackerService.removeModification(fileModification.getId());
+            fileModificationRestarterService.restartFileModification(fileModification);
         } else if (chatGptFunctionCall.getName().equals("remove_modification_in_queue")) {
+            String id = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "id");
+            FileModification fileModification = fileModificationTrackerService.getModification(id);
+            fileModificationTrackerService.removeModification(fileModification.getId());
         } else if (chatGptFunctionCall.getName().equals("request_file_modification")) {
+            String path = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
+            String description = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "description");
+            String startIndexString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "startIndex");
+            int startIndex;
+            if (startIndexString != null) {
+                startIndex = Integer.parseInt(startIndexString);
+            } else {
+                startIndex = 0;
+            }
+            String endIndexString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "endIndex");
+            int endIndex;
+            if (endIndexString != null) {
+                endIndex = Integer.parseInt(endIndexString);
+            } else {
+                String code = codeSnippetExtractorService.getAllText(path);
+                endIndex = code.length();
+            }
+            String modificationTypeString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "modificationType");
+            assert modificationTypeString != null;
+            ModificationType modificationType;
+            switch (modificationTypeString) {
+                case "modify":
+                    if (startIndexString == null && endIndexString == null) {
+                        modificationType = ModificationType.MODIFY;
+                        automaticCodeModificationService.getModifiedCode(path, description, modificationType, new ArrayList<>());
+                    } else {
+                        modificationType = ModificationType.MODIFY_SELECTION;
+                        automaticCodeModificationService.getModifiedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>());
+                    }
+                    break;
+                case "fix":
+                    if (startIndexString == null && endIndexString == null) {
+                        modificationType = ModificationType.FIX;
+                        automaticCodeModificationService.getFixedCode(path, description, modificationType, new ArrayList<>());
+                    } else {
+                        modificationType = ModificationType.FIX_SELECTION;
+                        automaticCodeModificationService.getFixedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>());
+                    }
+                    break;
+                case "create":
+                    automaticCodeModificationService.getCreatedCode(path, description, new ArrayList<>());
+                    break;
+            }
+            return "{" +
+                    "\"message\": \"Modification requested successfully!\"" +
+                    "}";
         } else if (chatGptFunctionCall.getName().equals("request_file_modification_and_wait_for_response")) {
+            String path = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
+            String description = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "description");
+            String startIndexString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "startIndex");
+            int startIndex;
+            if (startIndexString != null) {
+                startIndex = Integer.parseInt(startIndexString);
+            } else {
+                startIndex = 0;
+            }
+            String endIndexString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "endIndex");
+            int endIndex;
+            if (endIndexString != null) {
+                endIndex = Integer.parseInt(endIndexString);
+            } else {
+                String code = codeSnippetExtractorService.getAllText(path);
+                endIndex = code.length();
+            }
+            String modificationTypeString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "modificationType");
+            assert modificationTypeString != null;
+            ModificationType modificationType;
+            switch (modificationTypeString) {
+                case "modify":
+                    if (startIndexString == null && endIndexString == null) {
+                        modificationType = ModificationType.MODIFY;
+                        automaticCodeModificationService.getModifiedCode(path, description, modificationType, new ArrayList<>());
+                    } else {
+                        modificationType = ModificationType.MODIFY_SELECTION;
+                        automaticCodeModificationService.getModifiedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>());
+                    }
+                    break;
+                case "fix":
+                    if (startIndexString == null && endIndexString == null) {
+                        modificationType = ModificationType.FIX;
+                        automaticCodeModificationService.getFixedCode(path, description, modificationType, new ArrayList<>());
+                    } else {
+                        modificationType = ModificationType.FIX_SELECTION;
+                        automaticCodeModificationService.getFixedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>());
+                    }
+                    break;
+                case "create":
+                    automaticCodeModificationService.getCreatedCode(path, description, new ArrayList<>());
+                    break;
+
+            }
         } else if (chatGptFunctionCall.getName().equals("request_file_creation")) {
         } else if (chatGptFunctionCall.getName().equals("request_file_creation_and_wait_for_response")) {
         } else if (chatGptFunctionCall.getName().equals("request_file_deletion")) {

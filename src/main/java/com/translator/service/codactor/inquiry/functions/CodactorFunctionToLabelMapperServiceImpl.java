@@ -17,12 +17,39 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
     @Override
     public String getLabel(InquiryChat inquiryChat) {
         if (inquiryChat.getFrom().equalsIgnoreCase("function")) {
-            return "Done";
+            if (inquiryChat.getMessage() != null) {
+                return "Done";
+            } else {
+                return "Error";
+            }
         }
         ChatGptFunctionCall functionCall = inquiryChat.getFunctionCall();
-        if (functionCall.getName().equals("read_file_at_package")) {
+        if (functionCall.getName().equals("read_file_at_path")) {
+            String filePath = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            return "Reading file at " + filePath + "...";
+        } else if (functionCall.getName().equals("read_file_at_package")) {
             String packageName = JsonExtractorService.extractField(functionCall.getArguments(), "package");
-            return "Reading file at package " + packageName + "...";
+            return "Reading package at " + packageName + "...";
+        } else if (functionCall.getName().equals("get_recent_historical_modifications")) {
+            return "Retrieving recent modifications...";
+        } else if (functionCall.getName().equals("read_modification")) {
+            String id = JsonExtractorService.extractField(functionCall.getArguments(), "id");
+            return "Reading modification id " + id + "...";
+        } else if (functionCall.getName().equals("get_queued_modifications")) {
+            return "Retrieving queued modifications...";
+        } else if (functionCall.getName().equals("read_modification_in_queue_at_position")) {
+            String position = JsonExtractorService.extractField(functionCall.getArguments(), "position");
+            return "Reading modification in queue at position " + position + "...";
+        } else if (functionCall.getName().equals("get_recent_historical_inquiries")) {
+            return "Retrieving recent inquiries...";
+        } else if (functionCall.getName().equals("read_inquiry")) {
+            String id = JsonExtractorService.extractField(functionCall.getArguments(), "id");
+            return "Reading inquiry id " + id + "...";
+        } else if (functionCall.getName().equals("retry_modification_in_queue")) {
+            String id = JsonExtractorService.extractField(functionCall.getArguments(), "id");
+            return "Retrying modification id " + id + "...";
+        } else if (functionCall.getName().equals("request_file_modification")) {
+            return "Requesting file modification...";
         }
         return null;
     }

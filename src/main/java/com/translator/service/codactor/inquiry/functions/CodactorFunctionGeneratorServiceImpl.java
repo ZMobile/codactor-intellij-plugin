@@ -12,21 +12,31 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
     @Override
     public List<ChatGptFunction> generateCodactorFunctions() {
         List<ChatGptFunction> codactorFunctions = new ArrayList<>();
-
-        // Create ChatGptFunction for "read_file_contents"
-        Parameters readFileContentsParams = new Parameters("object");
+// Create ChatGptFunction for "read_file_at_path"
+        Parameters readFileAtPathParams = new Parameters("object");
         Property pathProperty = new Property("string", "The path of the code file eg. /Users/user/IdeaProjects/code_project/src/code.java", null, null);
-        Property optionalPathProperty = new Property("string", "The path of the code file eg. /Users/user/IdeaProjects/code_project/src/code.java -Either this or the file package must be provided to locate a file.", null, null);
-        Property optionalPackageProperty = new Property("string", "The package of the code file e.g. com.translator.view.uml.node.dialog.prompt -Either this or the file path must be provided to locate a file.", null, null);
         Property startIndexProperty = new Property("integer", "The start index of the code to be read in the file. Can be null which means 0", null, null);
         Property endIndexProperty = new Property("integer", "The start index of the code to be read in the file. Can be null which means the end of the code file", null, null);
-        readFileContentsParams.getProperties().put("path", optionalPathProperty);
-        readFileContentsParams.getProperties().put("package", optionalPackageProperty);
-        readFileContentsParams.getProperties().put("startIndex", startIndexProperty);
-        readFileContentsParams.getProperties().put("endIndex", endIndexProperty);
+        readFileAtPathParams.getProperties().put("path", pathProperty);
+        readFileAtPathParams.getProperties().put("startIndex", startIndexProperty);
+        readFileAtPathParams.getProperties().put("endIndex", endIndexProperty);
+        readFileAtPathParams.getRequired().add("path");
 
-        ChatGptFunction readFileContents = new ChatGptFunction("read_file_contents", "Read the contents of a code or text file given its path", readFileContentsParams);
-        codactorFunctions.add(readFileContents);
+        ChatGptFunction readFileAtPath = new ChatGptFunction("read_file_at_path", "Read the contents of a code or text file given its path", readFileAtPathParams);
+        codactorFunctions.add(readFileAtPath);
+
+        // Create ChatGptFunction for "read_file_at_package"
+        Parameters readFileAtPackageParams = new Parameters("object");
+        Property packageProperty = new Property("string", "The package of the code file e.g. com.translator.view.uml.node.dialog.prompt", null, null);
+        Property startIndexProperty2 = new Property("integer", "The start index of the code to be read in the file. Can be null which means 0", null, null);
+        Property endIndexProperty2 = new Property("integer", "The start index of the code to be read in the file. Can be null which means the end of the code file", null, null);
+        readFileAtPackageParams.getProperties().put("package", packageProperty);
+        readFileAtPackageParams.getProperties().put("startIndex", startIndexProperty2);
+        readFileAtPackageParams.getProperties().put("endIndex", endIndexProperty2);
+        readFileAtPackageParams.getRequired().add("package");
+
+        ChatGptFunction readFileAtPackage = new ChatGptFunction("read_file_at_package", "Read the contents and file path of a code or text file given its package in the project directory", readFileAtPackageParams);
+        codactorFunctions.add(readFileAtPackage);
 
         // Create ChatGptFunction for "get_recent_historical_modifications"
         Parameters getHistoricalModificationParams = new Parameters("object");
@@ -105,12 +115,12 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         modificationTypes.add("create");
         Property modificationTypeProperty = new Property("string", "The type of file modification", modificationTypes, null);
         Property descriptionProperty = new Property("string", "The description of the requested file modification to be enacted on the file", null, null);
-        requestFileModificationParams.getProperties().put("path", optionalPathProperty);
-        requestFileModificationParams.getProperties().put("package", optionalPackageProperty);
+        requestFileModificationParams.getProperties().put("path", pathProperty);
         requestFileModificationParams.getProperties().put("modificationType", modificationTypeProperty);
         requestFileModificationParams.getProperties().put("description", descriptionProperty);
         requestFileModificationParams.getProperties().put("startIndex", startIndexProperty);
         requestFileModificationParams.getProperties().put("endIndex", endIndexProperty);
+        requestFileModificationParams.getRequired().add("path");
         requestFileModificationParams.getRequired().add("modificationType");
         requestFileModificationParams.getRequired().add("description");
 
@@ -142,8 +152,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
 
         // Create ChatGptFunction for "request_file_deletion"
         Parameters requestFileDeletionParams = new Parameters("object");
-        requestFileDeletionParams.getProperties().put("path", optionalPathProperty);
-        requestFileDeletionParams.getProperties().put("package", optionalPackageProperty);
+        requestFileDeletionParams.getProperties().put("path", pathProperty);
         requestFileDeletionParams.getProperties().put("description", descriptionProperty);
         requestFileDeletionParams.getRequired().add("description");
 
