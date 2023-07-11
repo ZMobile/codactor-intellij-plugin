@@ -3,42 +3,49 @@ package com.translator.service.codactor.inquiry.functions;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.translator.dao.inquiry.InquiryDao;
+import com.translator.model.codactor.history.data.HistoricalInquiryDataHolder;
+import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.function.ChatGptFunctionCall;
 import com.translator.model.codactor.modification.data.FileModificationDataHolder;
 import com.translator.model.codactor.modification.data.FileModificationDataReferenceHolder;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
-import com.translator.service.codactor.editor.diff.GitDiffStingGeneratorService;
 import com.translator.service.codactor.json.JsonExtractorService;
+import com.translator.service.codactor.modification.history.FileModificationHistoryService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
-import com.translator.service.codactor.transformer.QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService;
+import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionCallProcessorService {
     private final Gson gson;
+    private final InquiryDao inquiryDao;
     private final CodeSnippetExtractorService codeSnippetExtractorService;
     private final FileModificationTrackerService fileModificationTrackerService;
-    private final GitDiffStingGeneratorService gitDiffStingGeneratorService;
-    private final QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService queuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService;
+    private final FileModificationHistoryService fileModificationHistoryService;
+    private final FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 
     @Inject
     public InquiryFunctionCallProcessorServiceImpl(Gson gson,
+                                                   InquiryDao inquiryDao,
                                                    CodeSnippetExtractorService codeSnippetExtractorService,
                                                    FileModificationTrackerService fileModificationTrackerService,
-                                                   GitDiffStingGeneratorService gitDiffStingGeneratorService,
-                                                   QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService queuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService) {
+                                                   FileModificationHistoryService fileModificationHistoryService,
+                                                   FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService) {
         this.gson = gson;
+        this.inquiryDao = inquiryDao;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.fileModificationTrackerService = fileModificationTrackerService;
-        this.gitDiffStingGeneratorService = gitDiffStingGeneratorService;
-        this.queuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService = queuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService;
+        this.fileModificationHistoryService = fileModificationHistoryService;
+        this.fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService = fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
     }
 
     @Override
@@ -67,14 +74,16 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             contentMap.put("content", content);
             return gson.toJson(contentMap);
         } else if (chatGptFunctionCall.getName().equals("get_recent_historical_modifications")) {
-            List<FileModificationDataHolder> fileModificationDataHolderList = fileModificationTrackerService.getQueuedFileModificationObjectHolders();
-            List<FileModificationDataReferenceHolder> fileModificationDataReferenceHolderList = queuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService.convert(fileModificationDataHolderList);
+            List<FileModificationDataHolder> fileModificationDataHolderList = fileModificationHistoryService.getRecentHistoricalFileModifications();
+            List<FileModificationDataReferenceHolder> fileModificationDataReferenceHolderList = fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService.convert(fileModificationDataHolderList);
             return gson.toJson(fileModificationDataReferenceHolderList);
         } else if (chatGptFunctionCall.getName().equals("read_modification")) {
             String id = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "id");
+            FileModificationDataHolder fileModificationDataHolder = fileModificationHistoryService.getModification(id);
+            return gson.toJson(fileModificationDataHolder);
         } else if (chatGptFunctionCall.getName().equals("get_queued_modifications")) {
             List<FileModificationDataHolder> fileModificationDataHolderList = fileModificationTrackerService.getQueuedFileModificationObjectHolders();
-            List<FileModificationDataReferenceHolder> fileModificationDataReferenceHolderList = queuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService.convert(fileModificationDataHolderList);
+            List<FileModificationDataReferenceHolder> fileModificationDataReferenceHolderList = fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService.convert(fileModificationDataHolderList);
             return gson.toJson(fileModificationDataReferenceHolderList);
         } else if (chatGptFunctionCall.getName().equals("read_modification_in_queue_at_position")) {
             String position = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "position");
@@ -86,9 +95,13 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             FileModificationDataHolder fileModificationDataHolder = fileModificationDataHolderList.get(Integer.parseInt(position));
             return gson.toJson(fileModificationDataHolder);
         } else if (chatGptFunctionCall.getName().equals("get_recent_historical_inquiries")) {
-            List<FileModificationDataHolder> fileModificationDataHolderList = fileModificationTrackerService.getQueuedFileModificationObjectHolders();
-            List<FileModificationDataReferenceHolder> fileModificationDataReferenceHolderList = queuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService.convert(fileModificationDataHolderList);
-            return gson.toJson(fileModificationDataReferenceHolderList);
+            List<Inquiry> historicalInquiryList = inquiryDao.getRecentInquiries();
+            List<HistoricalInquiryDataHolder> historicalInquiryDataHolderList = new ArrayList<>();
+            for (Inquiry inquiry : historicalInquiryList) {
+                HistoricalInquiryDataHolder historicalInquiryDataHolder = new HistoricalInquiryDataHolder(inquiry);
+                historicalInquiryDataHolderList.add(historicalInquiryDataHolder);
+            }
+            return gson.toJson(historicalInquiryDataHolderList);
         } else if (chatGptFunctionCall.getName().equals("retry_modification_in_queue")) {
         } else if (chatGptFunctionCall.getName().equals("remove_modification_in_queue")) {
         } else if (chatGptFunctionCall.getName().equals("request_file_modification")) {

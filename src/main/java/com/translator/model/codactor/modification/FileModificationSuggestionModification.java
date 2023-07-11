@@ -13,8 +13,10 @@ public class FileModificationSuggestionModification {
     private final String suggestionId;
     private final String beforeText;
     private final ModificationType modificationType;
+    private String subjectLine;
     private String editedCode;
     private boolean error;
+    private boolean done;
 
     public FileModificationSuggestionModification(String filePath,
                                                   String modificationId,
@@ -30,6 +32,7 @@ public class FileModificationSuggestionModification {
         this.beforeText = beforeText;
         this.modificationType = modificationType;
         this.error = false;
+        this.done = false;
     }
 
     public String getId() {
@@ -71,7 +74,14 @@ public class FileModificationSuggestionModification {
     public ModificationType getModificationType() {
         return modificationType;
     }
-    
+
+    public String getSubjectLine() {
+        return subjectLine;
+    }
+
+    public void setSubjectLine(String subjectLine) {
+        this.subjectLine = subjectLine;
+    }
 
     public void setEditedCode(String editedCode) {
         this.editedCode = editedCode;
@@ -95,5 +105,13 @@ public class FileModificationSuggestionModification {
 
     public void setError(boolean error) {
         this.error = error;
+    }
+
+    public boolean isDone() {
+        return done;
+    }
+
+    public void setDone(boolean done) {
+        this.done = done;
     }
 }

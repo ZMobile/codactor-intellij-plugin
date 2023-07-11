@@ -6,6 +6,10 @@ import com.translator.model.codactor.modification.FileModificationSuggestionModi
 public class FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerServiceImpl implements FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerService {
     @Override
     public FileModificationSuggestionModification convert(FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord) {
-        return new FileModificationSuggestionModification(fileModificationSuggestionModificationRecord.getFilePath(), fileModificationSuggestionModificationRecord.getModificationId(), fileModificationSuggestionModificationRecord.getSuggestionId(), null, fileModificationSuggestionModificationRecord.getBeforeText(), fileModificationSuggestionModificationRecord.getModificationType());
+        FileModificationSuggestionModification fileModificationSuggestionModification = new FileModificationSuggestionModification(fileModificationSuggestionModificationRecord.getFilePath(), fileModificationSuggestionModificationRecord.getModificationId(), fileModificationSuggestionModificationRecord.getSuggestionId(), null, fileModificationSuggestionModificationRecord.getBeforeText(), fileModificationSuggestionModificationRecord.getModificationType());
+        fileModificationSuggestionModification.setError(fileModificationSuggestionModification.isError());
+        fileModificationSuggestionModification.setDone(fileModificationSuggestionModification.isDone());
+        fileModificationSuggestionModification.setSubjectLine(fileModificationSuggestionModificationRecord.getSubjectLine());
+        return fileModificationSuggestionModification;
     }
 }

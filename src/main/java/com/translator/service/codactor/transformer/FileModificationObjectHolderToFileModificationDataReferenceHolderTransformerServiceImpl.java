@@ -7,7 +7,7 @@ import com.translator.model.codactor.modification.data.ModificationObjectType;
 import java.util.ArrayList;
 import java.util.List;
 
-public class QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerServiceImpl implements QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService {
+public class FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerServiceImpl implements FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService {
     @Override
     public FileModificationDataReferenceHolder convert(FileModificationDataHolder fileModificationDataHolder) {
         if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION) {

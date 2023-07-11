@@ -5,7 +5,7 @@ import com.translator.model.codactor.modification.data.FileModificationDataRefer
 
 import java.util.List;
 
-public interface QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService {
+public interface FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService {
     FileModificationDataReferenceHolder convert(FileModificationDataHolder fileModificationDataHolder);
 
     List<FileModificationDataReferenceHolder> convert(List<FileModificationDataHolder> fileModificationDataHolders);

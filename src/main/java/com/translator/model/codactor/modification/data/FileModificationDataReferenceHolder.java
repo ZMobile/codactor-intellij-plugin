@@ -6,15 +6,18 @@ import com.translator.model.codactor.modification.MultiFileModification;
 
 public class FileModificationDataReferenceHolder {
     private String id;
+    private String subjectLine;
     private ModificationObjectType modificationObjectType;
 
     public FileModificationDataReferenceHolder(FileModification fileModification) {
         this.id = fileModification.getId();
+        this.subjectLine = fileModification.getSubjectLine();
         this.modificationObjectType = ModificationObjectType.FILE_MODIFICATION;
     }
 
     public FileModificationDataReferenceHolder(FileModificationSuggestionModification fileModificationSuggestionModification) {
         this.id = fileModificationSuggestionModification.getId();
+        this.subjectLine = fileModificationSuggestionModification.getSubjectLine();
         this.modificationObjectType = ModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION;
     }
 
@@ -29,6 +32,14 @@ public class FileModificationDataReferenceHolder {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getSubjectLine() {
+        return subjectLine;
+    }
+
+    public void setSubjectLine(String subjectLine) {
+        this.subjectLine = subjectLine;
     }
 
     public ModificationObjectType getQueuedModificationObjectType() {

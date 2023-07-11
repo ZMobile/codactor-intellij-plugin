@@ -7,8 +7,6 @@ import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.intellij.openapi.project.Project;
 import com.translator.dao.CodeTranslatorDaoConfig;
-import com.translator.dao.history.CodeModificationHistoryDao;
-import com.translator.dao.history.CodeModificationHistoryDaoImpl;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.codactor.editor.*;
 import com.translator.service.codactor.context.PromptContextService;
@@ -27,6 +25,8 @@ import com.translator.service.codactor.inquiry.*;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
 import com.translator.service.codactor.modification.*;
+import com.translator.service.codactor.modification.history.FileModificationHistoryService;
+import com.translator.service.codactor.modification.history.FileModificationHistoryServiceImpl;
 import com.translator.service.codactor.modification.multi.MultiFileModificationService;
 import com.translator.service.codactor.modification.multi.MultiFileModificationServiceImpl;
 import com.translator.service.codactor.modification.tracking.CodeRangeTrackerService;
@@ -42,8 +42,8 @@ import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.codactor.task.BackgroundTaskMapperServiceImpl;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformerImpl;
-import com.translator.service.codactor.transformer.QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService;
-import com.translator.service.codactor.transformer.QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerServiceImpl;
+import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
+import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerServiceImpl;
 import com.translator.service.codactor.transformer.modification.*;
 import com.translator.service.codactor.ui.ModificationQueueListButtonService;
 import com.translator.service.codactor.ui.ModificationQueueListButtonServiceImpl;
@@ -117,12 +117,13 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(CodactorFunctionToLabelMapperService.class).to(CodactorFunctionToLabelMapperServiceImpl.class);
         bind(InquiryChatListFunctionCallCompressorService.class).to(InquiryChatListFunctionCallCompressorServiceImpl.class);
         bind(InquiryFunctionCallProcessorService.class).to(InquiryFunctionCallProcessorServiceImpl.class);
-        bind(QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService.class).to(QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerServiceImpl.class);
+        bind(FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService.class).to(FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerServiceImpl.class);
         bind(GitDiffStingGeneratorService.class).to(GitDiffStingGeneratorServiceImpl.class);
         bind(InquirySystemMessageGeneratorService.class).to(InquirySystemMessageGeneratorServiceImpl.class);
         bind(HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService.class).to(HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerServiceImpl.class);
         bind(FileModificationSuggestionRecordToFileModificationTransformerService.class).to(FileModificationSuggestionRecordToFileModificationTransformerServiceImpl.class);
         bind(FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerService.class).to(FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerServiceImpl.class);
+        bind(FileModificationHistoryService.class).to(FileModificationHistoryServiceImpl.class);
     }
 
     @Singleton
@@ -134,7 +135,6 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
     @Singleton
     @Provides
     public FileModificationTrackerService getFileModificationTrackerService(Project project,
-                                                                            CodeModificationHistoryDao codeModificationHistoryDao,
                                                                             CodeHighlighterService codeHighlighterService,
                                                                             CodeSnippetExtractorService codeSnippetExtractorService,
                                                                             CodeRangeTrackerService codeRangeTrackerService,
@@ -143,9 +143,8 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                             EditorClickHandlerService editorClickHandlerService,
                                                                             RenameFileService renameFileService,
                                                                             BackgroundTaskMapperService backgroundTaskMapperService,
-                                                                            DiffEditorGeneratorService diffEditorGeneratorService,
-                                                                            HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService historicalFileModificationDataHolderToFileModificationDataHolderTransformerService) {
-        return new FileModificationTrackerServiceImpl(project, codeModificationHistoryDao, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService, historicalFileModificationDataHolderToFileModificationDataHolderTransformerService);
+                                                                            DiffEditorGeneratorService diffEditorGeneratorService) {
+        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService);
     }
 
     @Singleton

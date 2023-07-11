@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface FileModificationTrackerService {
-    List<FileModificationDataHolder> getHistoricalFileModifications();
-
     String addModification(String filePath, String modification, int startIndex, int endIndex, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext);
 
     String addModificationSuggestionModification(String filePath, String suggestionId, int startIndex, int endIndex, ModificationType modificationType);

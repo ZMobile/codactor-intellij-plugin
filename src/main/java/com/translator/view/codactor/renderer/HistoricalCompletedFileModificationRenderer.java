@@ -63,7 +63,7 @@ public class HistoricalCompletedFileModificationRenderer extends JPanel implemen
     public Component getListCellRendererComponent(JList<? extends HistoricalFileModificationDataHolder> list, HistoricalFileModificationDataHolder value, int index, boolean isSelected, boolean cellHasFocus) {
         if (value.getRecordType() != null && value.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
             filePathLabel.setText("File: (SUB) " + value.getFileModificationSuggestionModificationRecord().getFilePath());
-            modificationTypeLabel.setText("Type: " + value.getFileModificationSuggestionModificationRecord().getModificationType() + " Subject: " + value.getFileModificationSuggestionModificationRecord().getSubjectLine());
+            modificationTypeLabel.setText("Type: " + value.getFileModificationSuggestionModificationRecord().getModificationType());
             lineRangeLabel.setText("Lines: " + lineCounterService.countLines(value.getFileModificationSuggestionModificationRecord().getEditedCode().trim(), value.getFileModificationSuggestionModificationRecord().getEditedCode().trim().length()));
             setBackground(Color.decode("#228B22"));
         } else if (value.getRecordType() != null && value.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
