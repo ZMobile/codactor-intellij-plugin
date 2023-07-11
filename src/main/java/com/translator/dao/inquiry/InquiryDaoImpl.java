@@ -6,9 +6,9 @@ import com.translator.model.codactor.api.translator.inquiry.GeneralInquiryCreati
 import com.translator.model.codactor.api.translator.inquiry.InquiryContinuationRequestResource;
 import com.translator.model.codactor.api.translator.inquiry.InquiryCreationRequestResource;
 import com.translator.model.codactor.api.translator.inquiry.InquiryListResponseResource;
+import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.inquiry.function.FunctionCallResponseRequestResource;
-import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.modification.RecordType;
 import org.apache.commons.io.IOUtils;

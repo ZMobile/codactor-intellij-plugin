@@ -4,8 +4,8 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.CodeModificationHistoryDao;
-import com.translator.model.codactor.api.translator.history.DesktopCodeModificationHistoryResponseResource;
-import com.translator.model.codactor.history.data.HistoricalContextModificationDataHolder;
+import com.translator.model.codactor.api.translator.history.DesktopCompletedCodeModificationHistoryResponseResource;
+import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.modification.FileModificationSuggestionModificationRecord;
 import com.translator.model.codactor.modification.FileModificationSuggestionRecord;
@@ -25,7 +25,7 @@ import java.util.List;
 
 public class HistoricalModificationListViewer extends JPanel {
     private Project project;
-    private JList<HistoricalContextModificationDataHolder> modificationList;
+    private JList<HistoricalFileModificationDataHolder> modificationList;
     private JBScrollPane modificationListScrollPane;
     private JToolBar jToolBar2;
     private JButton otherInquiriesButton;
@@ -102,10 +102,10 @@ public class HistoricalModificationListViewer extends JPanel {
                     codactorToolWindowService.openInquiryViewerToolWindow();
                     return;
                 }
-                HistoricalContextModificationDataHolder historicalContextModificationDataHolder = modificationList.getModel().getElementAt(index);
+                HistoricalFileModificationDataHolder historicalFileModificationDataHolder = modificationList.getModel().getElementAt(index);
                 Inquiry temporaryInquiry;
-                if (historicalContextModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
-                    FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord();
+                if (historicalFileModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
+                    FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord();
                     temporaryInquiry = new Inquiry.Builder()
                             .withModificationId(fileModificationSuggestionModificationRecord.getModificationId())
                             .withSubjectRecordId(fileModificationSuggestionModificationRecord.getId())
@@ -117,7 +117,7 @@ public class HistoricalModificationListViewer extends JPanel {
                             .withModificationType(fileModificationSuggestionModificationRecord.getModificationType())
                             .build();
                 } else {
-                    FileModificationSuggestionRecord fileModificationSuggestionRecord = historicalContextModificationDataHolder.getFileModificationSuggestionRecord();
+                    FileModificationSuggestionRecord fileModificationSuggestionRecord = historicalFileModificationDataHolder.getFileModificationSuggestionRecord();
                     temporaryInquiry = new Inquiry.Builder()
                             .withModificationId(fileModificationSuggestionRecord.getModificationId())
                             .withSubjectRecordId(fileModificationSuggestionRecord.getId())
@@ -137,11 +137,11 @@ public class HistoricalModificationListViewer extends JPanel {
 
     public void updateModificationList() {
         //Clear current list
-        DefaultListModel<HistoricalContextModificationDataHolder> model = new DefaultListModel<>();
-        model.addElement(new HistoricalContextModificationDataHolder());
+        DefaultListModel<HistoricalFileModificationDataHolder> model = new DefaultListModel<>();
+        model.addElement(new HistoricalFileModificationDataHolder());
         modificationList.setModel(model);
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            DesktopCodeModificationHistoryResponseResource modifications = codeModificationHistoryDao.getRecentModifications();
+            DesktopCompletedCodeModificationHistoryResponseResource modifications = codeModificationHistoryDao.getRecentModifications();
             if (modifications != null) {
                 updateModificationList(modifications.getModificationHistory());
             } else {
@@ -152,11 +152,11 @@ public class HistoricalModificationListViewer extends JPanel {
         });
     }
 
-    public void updateModificationList(List<HistoricalContextModificationDataHolder> fileModifications) {
-        DefaultListModel<HistoricalContextModificationDataHolder> model = new DefaultListModel<>();
-        model.addElement(new HistoricalContextModificationDataHolder());
-        for (HistoricalContextModificationDataHolder historicalContextModificationDataHolder : fileModifications) {
-            model.addElement(historicalContextModificationDataHolder);
+    public void updateModificationList(List<HistoricalFileModificationDataHolder> fileModifications) {
+        DefaultListModel<HistoricalFileModificationDataHolder> model = new DefaultListModel<>();
+        model.addElement(new HistoricalFileModificationDataHolder());
+        for (HistoricalFileModificationDataHolder historicalFileModificationDataHolder : fileModifications) {
+            model.addElement(historicalFileModificationDataHolder);
         }
         modificationList.setModel(model);
     }

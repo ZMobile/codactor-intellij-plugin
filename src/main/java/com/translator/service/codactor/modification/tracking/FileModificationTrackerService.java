@@ -1,8 +1,8 @@
 package com.translator.service.codactor.modification.tracking;
 
-import com.translator.model.codactor.modification.queued.QueuedFileModificationObjectHolder;
-import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
+import com.translator.model.codactor.modification.data.FileModificationDataHolder;
+import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
 import com.translator.model.codactor.modification.*;
 import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
 
@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface FileModificationTrackerService {
+    List<FileModificationDataHolder> getHistoricalFileModifications();
+
     String addModification(String filePath, String modification, int startIndex, int endIndex, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext);
 
     String addModificationSuggestionModification(String filePath, String suggestionId, int startIndex, int endIndex, ModificationType modificationType);
@@ -53,7 +55,7 @@ public interface FileModificationTrackerService {
 
     //List<FileModification> getAllFileModificationsAndModificationSuggestionModifications();
 
-    List<QueuedFileModificationObjectHolder> getQueuedFileModificationObjectHolders();
+    List<FileModificationDataHolder> getQueuedFileModificationObjectHolders();
 
     void setModificationQueueViewer(ModificationQueueViewer modificationQueueViewer);
 

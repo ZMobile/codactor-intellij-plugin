@@ -1,7 +1,10 @@
 package com.translator.service.codactor.modification;
 
 import com.translator.model.codactor.api.translator.modification.*;
+import com.translator.model.codactor.modification.FileModification;
 import com.translator.model.codactor.modification.FileModificationSuggestionModificationRecord;
+
+import java.util.List;
 
 public interface CodeModificationService {
     DesktopCodeModificationResponseResource getModifiedCode(DesktopCodeModificationRequestResource desktopCodeModificationRequestResource);

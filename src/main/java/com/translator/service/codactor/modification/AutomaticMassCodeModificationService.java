@@ -1,7 +1,6 @@
 package com.translator.service.codactor.modification;
 
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
 
 import java.util.List;
 

@@ -1,13 +1,14 @@
 package com.translator.view.codactor.viewer.context;
 
+import com.google.gson.Gson;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.inquiry.InquiryDao;
-import com.translator.model.codactor.history.data.HistoricalContextInquiryDataHolder;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
+import com.translator.model.codactor.history.data.HistoricalInquiryDataHolder;
+import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
-import com.translator.view.codactor.renderer.HistoricalContextObjectHolderRenderer;
+import com.translator.view.codactor.renderer.HistoricalObjectDataHolderRenderer;
 import com.translator.view.codactor.renderer.SeparatorListCellRenderer;
 
 import javax.swing.*;
@@ -19,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HistoricalContextInquiryListViewer extends JPanel {
-    private JList<HistoricalContextObjectDataHolder> inquiryList;
+    private JList<HistoricalObjectDataHolder> inquiryList;
     private JBScrollPane inquiryListScrollPane;
     private JToolBar jToolBar2;
     private JToolBar jToolBar3;
@@ -66,7 +67,7 @@ public class HistoricalContextInquiryListViewer extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (inquiryList.getSelectedIndex() != -1) {
-                    HistoricalContextObjectDataHolder selectedInquiry = inquiryList.getSelectedValue();
+                    HistoricalObjectDataHolder selectedInquiry = inquiryList.getSelectedValue();
                     historicalContextObjectListViewer.addContextObject(selectedInquiry);
                     inquiryList.clearSelection();
                 }
@@ -81,7 +82,7 @@ public class HistoricalContextInquiryListViewer extends JPanel {
 
         // Add a horizontal line to separate each FileModification
         inquiryList.setFixedCellHeight(80);
-        inquiryList.setCellRenderer(new SeparatorListCellRenderer<>(new HistoricalContextObjectHolderRenderer()));
+        inquiryList.setCellRenderer(new SeparatorListCellRenderer<>(new HistoricalObjectDataHolderRenderer()));
 
         GroupLayout layout = new GroupLayout(this);
         setLayout(layout);
@@ -104,7 +105,7 @@ public class HistoricalContextInquiryListViewer extends JPanel {
         updateInquiryList(new ArrayList<>());
 
         inquiryList.addListSelectionListener(e -> {
-            JList<HistoricalContextObjectDataHolder> modificationList = historicalContextModificationListViewer.getModificationList();
+            JList<HistoricalObjectDataHolder> modificationList = historicalContextModificationListViewer.getModificationList();
             ListSelectionListener[] listSelectionListeners = modificationList.getListSelectionListeners();
             for (ListSelectionListener listSelectionListener : listSelectionListeners) {
                 modificationList.removeListSelectionListener(listSelectionListener);
@@ -113,7 +114,7 @@ public class HistoricalContextInquiryListViewer extends JPanel {
             for (ListSelectionListener listSelectionListener : listSelectionListeners) {
                 modificationList.addListSelectionListener(listSelectionListener);
             }
-            JList<HistoricalContextObjectDataHolder> contextObjectList = historicalContextObjectListViewer.getContextObjectList();
+            JList<HistoricalObjectDataHolder> contextObjectList = historicalContextObjectListViewer.getContextObjectList();
             listSelectionListeners = contextObjectList.getListSelectionListeners();
             for (ListSelectionListener listSelectionListener : listSelectionListeners) {
                 contextObjectList.removeListSelectionListener(listSelectionListener);
@@ -127,8 +128,11 @@ public class HistoricalContextInquiryListViewer extends JPanel {
                 if (index == -1) {
                     return;
                 }
-                HistoricalContextObjectDataHolder historicalContextObjectDataHolder = inquiryList.getModel().getElementAt(index);
-                historicalContextObjectViewer.updateHistoricalContextObjectHolder(historicalContextObjectDataHolder);
+                HistoricalObjectDataHolder historicalObjectDataHolder = inquiryList.getModel().getElementAt(index);
+                System.out.println("This gets called:");
+                Gson gson = new Gson();
+                System.out.println(gson.toJson(historicalObjectDataHolder));
+                historicalContextObjectViewer.updateHistoricalContextObjectHolder(historicalObjectDataHolder);
             }
         });
     }
@@ -136,6 +140,9 @@ public class HistoricalContextInquiryListViewer extends JPanel {
     public void updateInquiryList() {
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             List<Inquiry> inquiries = inquiryDao.getRecentInquiries();
+            System.out.println("Testo: ");
+            Gson gson = new Gson();
+            System.out.println(gson.toJson(inquiries.get(0)));
             if (inquiries != null) {
                 updateInquiryList(inquiries);
             } else {
@@ -146,11 +153,11 @@ public class HistoricalContextInquiryListViewer extends JPanel {
     }
 
     public void updateInquiryList(List<Inquiry> inquiries) {
-        DefaultListModel<HistoricalContextObjectDataHolder> model = new DefaultListModel<>();
+        DefaultListModel<HistoricalObjectDataHolder> model = new DefaultListModel<>();
         for (Inquiry inquiry : inquiries) {
-            HistoricalContextInquiryDataHolder historicalContextInquiryDataHolder = new HistoricalContextInquiryDataHolder(inquiry);
-            HistoricalContextObjectDataHolder historicalContextObjectDataHolder = new HistoricalContextObjectDataHolder(historicalContextInquiryDataHolder);
-            model.addElement(historicalContextObjectDataHolder);
+            HistoricalInquiryDataHolder historicalInquiryDataHolder = new HistoricalInquiryDataHolder(inquiry);
+            HistoricalObjectDataHolder historicalObjectDataHolder = new HistoricalObjectDataHolder(historicalInquiryDataHolder);
+            model.addElement(historicalObjectDataHolder);
         }
         inquiryList.setModel(model);
     }
@@ -159,7 +166,7 @@ public class HistoricalContextInquiryListViewer extends JPanel {
         this.historicalContextModificationListViewer = historicalContextModificationListViewer;
     }
 
-    public JList<HistoricalContextObjectDataHolder> getInquiryList() {
+    public JList<HistoricalObjectDataHolder> getInquiryList() {
         return inquiryList;
     }
 }

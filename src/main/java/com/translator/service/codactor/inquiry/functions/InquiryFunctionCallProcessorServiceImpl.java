@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.model.codactor.inquiry.function.ChatGptFunctionCall;
-import com.translator.model.codactor.modification.queued.QueuedFileModificationObjectHolder;
-import com.translator.model.codactor.modification.queued.QueuedFileModificationObjectReferenceHolder;
+import com.translator.model.codactor.modification.data.FileModificationDataHolder;
+import com.translator.model.codactor.modification.data.FileModificationDataReferenceHolder;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.editor.diff.GitDiffStingGeneratorService;
 import com.translator.service.codactor.json.JsonExtractorService;
@@ -67,18 +67,18 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             contentMap.put("content", content);
             return gson.toJson(contentMap);
         } else if (chatGptFunctionCall.getName().equals("get_queued_modification_ids")) {
-            List<QueuedFileModificationObjectHolder> queuedFileModificationObjectHolderList = fileModificationTrackerService.getQueuedFileModificationObjectHolders();
-            List<QueuedFileModificationObjectReferenceHolder> queuedFileModificationObjectReferenceHolderList = queuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService.convert(queuedFileModificationObjectHolderList);
-            return gson.toJson(queuedFileModificationObjectReferenceHolderList);
+            List<FileModificationDataHolder> fileModificationDataHolderList = fileModificationTrackerService.getQueuedFileModificationObjectHolders();
+            List<FileModificationDataReferenceHolder> fileModificationDataReferenceHolderList = queuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService.convert(fileModificationDataHolderList);
+            return gson.toJson(fileModificationDataReferenceHolderList);
         } else if (chatGptFunctionCall.getName().equals("read_modification_in_queue_at_position")) {
             String position = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "position");
-            List<QueuedFileModificationObjectHolder> queuedFileModificationObjectHolderList = fileModificationTrackerService.getQueuedFileModificationObjectHolders();
+            List<FileModificationDataHolder> fileModificationDataHolderList = fileModificationTrackerService.getQueuedFileModificationObjectHolders();
             assert position != null;
-            if (queuedFileModificationObjectHolderList.size() <= Integer.parseInt(position)) {
+            if (fileModificationDataHolderList.size() <= Integer.parseInt(position)) {
                 return "Error: Invalid position";
             }
-            QueuedFileModificationObjectHolder queuedFileModificationObjectHolder = queuedFileModificationObjectHolderList.get(Integer.parseInt(position));
-            return gson.toJson(queuedFileModificationObjectHolder);
+            FileModificationDataHolder fileModificationDataHolder = fileModificationDataHolderList.get(Integer.parseInt(position));
+            return gson.toJson(fileModificationDataHolder);
         } else if (chatGptFunctionCall.getName().equals("read_modification")) {
             String id = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "id");
         } else if (chatGptFunctionCall.getName().equals("retry_modification_in_queue")) {

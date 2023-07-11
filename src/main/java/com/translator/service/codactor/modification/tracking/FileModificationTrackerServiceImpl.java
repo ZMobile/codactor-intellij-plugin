@@ -4,11 +4,16 @@ import com.google.inject.Injector;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.translator.CodactorInjector;
-import com.translator.model.codactor.modification.queued.QueuedFileModificationObjectHolder;
+import com.translator.dao.history.CodeModificationHistoryDao;
+import com.translator.model.codactor.api.translator.history.DesktopCompletedCodeModificationHistoryResponseResource;
+import com.translator.model.codactor.history.HistoricalContextObjectHolder;
+import com.translator.model.codactor.modification.data.FileModificationDataHolder;
+import com.translator.model.codactor.modification.data.ModificationObjectType;
 import com.translator.service.codactor.editor.*;
 import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
+import com.translator.service.codactor.transformer.FileModificationSuggestionRecordToFileModificationTransformerService;
+import com.translator.service.codactor.transformer.HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService;
 import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
-import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.modification.*;
 import com.translator.service.codactor.file.RenameFileService;
 import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerService;
@@ -18,6 +23,7 @@ import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
 import javax.inject.Inject;
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FileModificationTrackerServiceImpl implements FileModificationTrackerService {
     private Project project;
@@ -25,6 +31,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     private Map<String, FileModificationSuggestionModificationTracker> activeModificationSuggestionModifications;
     private Map<String, List<ProvisionalModificationCustomizerDialog>> provisionalModificationCustomizerMap;
     private List<MultiFileModification> activeMultiFileModifications;
+    private CodeModificationHistoryDao codeModificationHistoryDao;
     private CodeHighlighterService codeHighlighterService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
     private CodeRangeTrackerService codeRangeTrackerService;
@@ -34,10 +41,12 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     private RenameFileService renameFileService;
     private BackgroundTaskMapperService backgroundTaskMapperService;
     private DiffEditorGeneratorService diffEditorGeneratorService;
+    private HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService historicalFileModificationDataHolderToFileModificationDataHolderTransformerService;
     private ModificationQueueViewer modificationQueueViewer;
 
     @Inject
     public FileModificationTrackerServiceImpl(Project project,
+                                              CodeModificationHistoryDao codeModificationHistoryDao,
                                               CodeHighlighterService codeHighlighterService,
                                               CodeSnippetExtractorService codeSnippetExtractorService,
                                               CodeRangeTrackerService codeRangeTrackerService,
@@ -46,8 +55,10 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                                               EditorClickHandlerService editorClickHandlerService,
                                               RenameFileService renameFileService,
                                               BackgroundTaskMapperService backgroundTaskMapperService,
-                                              DiffEditorGeneratorService diffEditorGeneratorService) {
+                                              DiffEditorGeneratorService diffEditorGeneratorService,
+                                              HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService historicalFileModificationDataHolderToFileModificationDataHolderTransformerService) {
         this.project = project;
+        this.codeModificationHistoryDao = codeModificationHistoryDao;
         this.activeModificationFiles = new HashMap<>();
         this.activeModificationSuggestionModifications = new HashMap<>();
         this.activeMultiFileModifications = new ArrayList<>();
@@ -61,6 +72,43 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         this.renameFileService = renameFileService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
         this.diffEditorGeneratorService = diffEditorGeneratorService;
+        this.historicalFileModificationDataHolderToFileModificationDataHolderTransformerService = historicalFileModificationDataHolderToFileModificationDataHolderTransformerService;
+    }
+
+    @Override
+    public List<FileModificationDataHolder> getHistoricalFileModifications() {
+        DesktopCompletedCodeModificationHistoryResponseResource desktopCompletedCodeModificationHistoryResponseResource = codeModificationHistoryDao.getRecentModifications();
+        List<FileModificationDataHolder> completedFileModificationObjects = historicalFileModificationDataHolderToFileModificationDataHolderTransformerService.convert(desktopCompletedCodeModificationHistoryResponseResource.getModificationHistory());
+        List<FileModificationDataHolder> queuedModificationObjects = getQueuedFileModificationObjectHolders();
+        Map<String, FileModificationDataHolder> mergedModificationObjects = new HashMap<>();
+        for (FileModificationDataHolder fileModificationDataHolder : queuedModificationObjects) {
+            if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION) {
+                FileModification fileModification = fileModificationDataHolder.getFileModification();
+                if (!fileModification.getModificationOptions().isEmpty()) {
+                    FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
+                    //Before code is already present in the file modification object, so it's removed for json object brevity.
+                    fileModificationSuggestion.setBeforeCode(null);
+                }
+                mergedModificationObjects.put(fileModification.getId(), fileModificationDataHolder);
+            } else if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
+                FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationDataHolder.getFileModificationSuggestionModification();
+                mergedModificationObjects.put(fileModificationSuggestionModification.getId(), fileModificationDataHolder);
+            }
+        }
+        for (FileModificationDataHolder fileModificationDataHolder : completedFileModificationObjects) {
+            if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION) {
+                FileModification fileModification = fileModificationDataHolder.getFileModification();
+                if (!mergedModificationObjects.containsKey(fileModification.getId())) {
+                    mergedModificationObjects.put(fileModification.getId(), fileModificationDataHolder);
+                }
+            } else if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
+                FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationDataHolder.getFileModificationSuggestionModification();
+                if (!mergedModificationObjects.containsKey(fileModificationSuggestionModification.getId())) {
+                    mergedModificationObjects.put(fileModificationSuggestionModification.getId(), fileModificationDataHolder);
+                }
+            }
+        }
+        return new ArrayList<>(mergedModificationObjects.values());
     }
 
     public String addModification(String filePath, String modification, int startIndex, int endIndex, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
@@ -332,23 +380,23 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         return fileModificationSuggestionModifications;
     }
 
-    public List<QueuedFileModificationObjectHolder> getQueuedFileModificationObjectHolders() {
-        List<QueuedFileModificationObjectHolder> queuedFileModificationObjectHolders = new ArrayList<>();
+    public List<FileModificationDataHolder> getQueuedFileModificationObjectHolders() {
+        List<FileModificationDataHolder> fileModificationDataHolders = new ArrayList<>();
         List<FileModification> fileModifications = new ArrayList<>(getAllFileModifications());
         for (FileModification fileModification : fileModifications) {
-            QueuedFileModificationObjectHolder queuedFileModificationObjectHolder = new QueuedFileModificationObjectHolder(fileModification);
-            queuedFileModificationObjectHolders.add(queuedFileModificationObjectHolder);
+            FileModificationDataHolder fileModificationDataHolder = new FileModificationDataHolder(fileModification);
+            fileModificationDataHolders.add(fileModificationDataHolder);
         }
         List<FileModificationSuggestionModification> fileModificationSuggestionModifications = new ArrayList<>(getAllFileModificationSuggestionModifications());
         for (FileModificationSuggestionModification fileModificationSuggestionModification : fileModificationSuggestionModifications) {
-            QueuedFileModificationObjectHolder queuedFileModificationObjectHolder = new QueuedFileModificationObjectHolder(fileModificationSuggestionModification);
-            queuedFileModificationObjectHolders.add(queuedFileModificationObjectHolder);
+            FileModificationDataHolder fileModificationDataHolder = new FileModificationDataHolder(fileModificationSuggestionModification);
+            fileModificationDataHolders.add(fileModificationDataHolder);
         }
         for (MultiFileModification multiFileModification : activeMultiFileModifications) {
-            QueuedFileModificationObjectHolder queuedFileModificationObjectHolder = new QueuedFileModificationObjectHolder(multiFileModification);
-            queuedFileModificationObjectHolders.add(queuedFileModificationObjectHolder);
+            FileModificationDataHolder fileModificationDataHolder = new FileModificationDataHolder(multiFileModification);
+            fileModificationDataHolders.add(fileModificationDataHolder);
         }
-        return queuedFileModificationObjectHolders;
+        return fileModificationDataHolders;
     }
 
 

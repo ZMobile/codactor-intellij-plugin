@@ -1,6 +1,6 @@
 package com.translator.model.codactor.history;
 
-public enum HistoricalContextObjectType {
+public enum HistoricalObjectType {
     INQUIRY,
     FILE_MODIFICATION,
 }

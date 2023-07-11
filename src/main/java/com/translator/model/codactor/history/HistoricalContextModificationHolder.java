@@ -1,7 +1,7 @@
 package com.translator.model.codactor.history;
 
 
-import com.translator.model.codactor.history.data.HistoricalContextModificationDataHolder;
+import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.modification.RecordType;
 
@@ -21,14 +21,14 @@ public class HistoricalContextModificationHolder {
         this.requestedChats = requestedChats;
     }
 
-    public HistoricalContextModificationHolder(HistoricalContextModificationDataHolder historicalContextModificationDataHolder) {
-        if (historicalContextModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
-            this.subjectRecordId = historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getId();
-        } else if (historicalContextModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
-            this.subjectRecordId = historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getId();
+    public HistoricalContextModificationHolder(HistoricalFileModificationDataHolder historicalFileModificationDataHolder) {
+        if (historicalFileModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
+            this.subjectRecordId = historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getId();
+        } else if (historicalFileModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
+            this.subjectRecordId = historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getId();
         }
-        this.recordType = historicalContextModificationDataHolder.getRecordType();
-        this.includePreviousContext = historicalContextModificationDataHolder.includesPreviousContext();
+        this.recordType = historicalFileModificationDataHolder.getRecordType();
+        this.includePreviousContext = historicalFileModificationDataHolder.includesPreviousContext();
         this.requestedChats = new ArrayList<>();
     }
 

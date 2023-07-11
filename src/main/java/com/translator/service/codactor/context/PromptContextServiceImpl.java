@@ -1,28 +1,26 @@
 package com.translator.service.codactor.context;
 
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
-import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
+import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
 
 import javax.inject.Inject;
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PromptContextServiceImpl implements PromptContextService {
-    private List<HistoricalContextObjectDataHolder> context;
-    private HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer historicalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
+    private List<HistoricalObjectDataHolder> context;
     private JLabel statusLabel;
 
     @Inject
-    public PromptContextServiceImpl(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer historicalContextObjectDataHolderToHistoricalContextObjectHolderTransformer) {
-        this.historicalContextObjectDataHolderToHistoricalContextObjectHolderTransformer = historicalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
+    public PromptContextServiceImpl() {
         this.context = null;
         this.statusLabel = new JLabel();
         updateStatusLabel();
     }
 
     @Override
-    public void savePromptContext(List<HistoricalContextObjectDataHolder> context) {
+    public void savePromptContext(List<HistoricalObjectDataHolder> context) {
         this.context = context;
         updateStatusLabel();
     }
@@ -35,11 +33,16 @@ public class PromptContextServiceImpl implements PromptContextService {
         if (context.isEmpty()) {
             return null;
         }
-        return historicalContextObjectDataHolderToHistoricalContextObjectHolderTransformer.convert(context);
+        List<HistoricalContextObjectHolder> convertedContext = new ArrayList<>();
+        for (HistoricalObjectDataHolder historicalObjectDataHolder : context) {
+            HistoricalContextObjectHolder historicalContextObjectHolder = new HistoricalContextObjectHolder(historicalObjectDataHolder);
+            convertedContext.add(historicalContextObjectHolder);
+        }
+        return convertedContext;
     }
 
     @Override
-    public List<HistoricalContextObjectDataHolder> getPromptContextData() {
+    public List<HistoricalObjectDataHolder> getPromptContextData() {
         if (context == null) {
             return null;
         }

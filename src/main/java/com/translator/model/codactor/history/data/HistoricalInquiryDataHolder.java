@@ -2,23 +2,23 @@ package com.translator.model.codactor.history.data;
 
 import com.translator.model.codactor.inquiry.Inquiry;
 
-public class HistoricalContextInquiryDataHolder {
+public class HistoricalInquiryDataHolder {
     private Inquiry inquiry;
     private String previousChatId;
     private String startingChatId;
     private boolean includePreviousContext;
 
-    public HistoricalContextInquiryDataHolder(Inquiry inquiry,
-                                          String previousChatId,
-                                          String startingChatId,
-                                          boolean includePreviousContext) {
+    public HistoricalInquiryDataHolder(Inquiry inquiry,
+                                       String previousChatId,
+                                       String startingChatId,
+                                       boolean includePreviousContext) {
         this.inquiry = inquiry;
         this.previousChatId = previousChatId;
         this.startingChatId = startingChatId;
         this.includePreviousContext = includePreviousContext;
     }
 
-    public HistoricalContextInquiryDataHolder(Inquiry inquiry) {
+    public HistoricalInquiryDataHolder(Inquiry inquiry) {
         this.inquiry = inquiry;
     }
 

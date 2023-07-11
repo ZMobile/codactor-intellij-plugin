@@ -12,6 +12,7 @@ public class FileModification {
     private String modificationRecordId;
     private String filePath;
     private RangeMarker rangeMarker;
+    private String subjectLine;
     private String beforeText;
     private String modification;
     private ModificationType modificationType;
@@ -61,6 +62,14 @@ public class FileModification {
 
     public void setRangeMarker(RangeMarker rangeMarker) {
         this.rangeMarker = rangeMarker;
+    }
+
+    public String getSubjectLine() {
+        return subjectLine;
+    }
+
+    public void setSubjectLine(String subjectLine) {
+        this.subjectLine = subjectLine;
     }
 
     public String getBeforeText() {

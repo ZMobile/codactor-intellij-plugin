@@ -18,11 +18,9 @@ import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.model.codactor.task.CustomBackgroundTask;
 import com.translator.view.codactor.dialog.FileModificationErrorDialog;
 import com.translator.view.codactor.dialog.LoginDialog;
-import com.translator.view.codactor.dialog.OpenAiApiKeyDialog;
 import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFactory;
 
 import javax.inject.Inject;
-import javax.swing.*;
 import java.util.List;
 
 public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModificationService {

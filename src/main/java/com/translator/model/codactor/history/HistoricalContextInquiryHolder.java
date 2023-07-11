@@ -1,6 +1,6 @@
 package com.translator.model.codactor.history;
 
-import com.translator.model.codactor.history.data.HistoricalContextInquiryDataHolder;
+import com.translator.model.codactor.history.data.HistoricalInquiryDataHolder;
 import com.translator.model.codactor.inquiry.InquiryChat;
 
 import java.util.ArrayList;
@@ -25,11 +25,11 @@ public class HistoricalContextInquiryHolder {
         this.requestedChats = requestedChats;
     }
 
-    public HistoricalContextInquiryHolder(HistoricalContextInquiryDataHolder historicalContextInquiryDataHolder) {
-        this.inquiryId = historicalContextInquiryDataHolder.getInquiry().getId();
-        this.previousChatId = historicalContextInquiryDataHolder.getPreviousChatId();
-        this.startingChatId = historicalContextInquiryDataHolder.getStartingChatId();
-        this.includePreviousContext = historicalContextInquiryDataHolder.includesPreviousContext();
+    public HistoricalContextInquiryHolder(HistoricalInquiryDataHolder historicalInquiryDataHolder) {
+        this.inquiryId = historicalInquiryDataHolder.getInquiry().getId();
+        this.previousChatId = historicalInquiryDataHolder.getPreviousChatId();
+        this.startingChatId = historicalInquiryDataHolder.getStartingChatId();
+        this.includePreviousContext = historicalInquiryDataHolder.includesPreviousContext();
         this.requestedChats = new ArrayList<>();
     }
 

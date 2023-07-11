@@ -9,8 +9,8 @@ import com.translator.dao.history.ContextQueryDao;
 import com.translator.model.codactor.history.HistoricalContextInquiryHolder;
 import com.translator.model.codactor.history.HistoricalContextModificationHolder;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.history.HistoricalContextObjectType;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
+import com.translator.model.codactor.history.HistoricalObjectType;
+import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
@@ -244,24 +244,24 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
     }
 
     private void updateChatContentsWithContextInstalled() {
-        JList<HistoricalContextObjectDataHolder> historicalContextObjectDataHolders = historicalContextObjectListViewer.getContextObjectList();
+        JList<HistoricalObjectDataHolder> historicalObjectDataHolders = historicalContextObjectListViewer.getContextObjectList();
         List<InquiryChat> inquiryChats = new ArrayList<>();
         String filePath = null;
-        for (int i = 0; i < historicalContextObjectDataHolders.getModel().getSize(); i++) {
-            HistoricalContextObjectDataHolder historicalContextObjectDataHolder = historicalContextObjectDataHolders.getModel().getElementAt(i);
-            HistoricalContextObjectHolder historicalContextObjectHolder = getHistoricalContextObjectHolder(historicalContextObjectDataHolder);
+        for (int i = 0; i < historicalObjectDataHolders.getModel().getSize(); i++) {
+            HistoricalObjectDataHolder historicalObjectDataHolder = historicalObjectDataHolders.getModel().getElementAt(i);
+            HistoricalContextObjectHolder historicalContextObjectHolder = getHistoricalContextObjectHolder(historicalObjectDataHolder);
             if (historicalContextObjectHolder == null) {
                 continue;
             }
-            if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
-                if (historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
-                    filePath = historicalContextObjectDataHolder.getHistoricalCompletedModificationDataHolder().getFileModificationSuggestionRecord().getFilePath();
+            if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalObjectType.FILE_MODIFICATION) {
+                if (historicalContextObjectHolder.getHistoricalContextModificationHolder().getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
+                    filePath = historicalObjectDataHolder.getHistoricalModificationDataHolder().getFileModificationSuggestionRecord().getFilePath();
                 } else {
-                    filePath = historicalContextObjectDataHolder.getHistoricalCompletedModificationDataHolder().getFileModificationSuggestionModificationRecord().getFilePath();
+                    filePath = historicalObjectDataHolder.getHistoricalModificationDataHolder().getFileModificationSuggestionModificationRecord().getFilePath();
                 }
-                inquiryChats.addAll(historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRequestedChats());
+                inquiryChats.addAll(historicalContextObjectHolder.getHistoricalContextModificationHolder().getRequestedChats());
             } else {
-                filePath = historicalContextObjectDataHolder.getHistoricalContextInquiryDataHolder().getInquiry().getFilePath();
+                filePath = historicalObjectDataHolder.getHistoricalContextInquiryDataHolder().getInquiry().getFilePath();
                 inquiryChats.addAll(historicalContextObjectHolder.getHistoricalContextInquiryHolder().getRequestedChats());
             }
         }
@@ -270,11 +270,11 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
     }
 
     public void updateChatContents() {
-        JList<HistoricalContextObjectDataHolder> historicalContextObjectDataHolders = historicalContextObjectListViewer.getContextObjectList();
+        JList<HistoricalObjectDataHolder> historicalObjectDataHolders = historicalContextObjectListViewer.getContextObjectList();
         List<HistoricalContextObjectHolder> newistoricalContextObjectHolderList = new ArrayList<>();
-        for (int i = 0; i < historicalContextObjectDataHolders.getModel().getSize(); i++) {
-            HistoricalContextObjectDataHolder historicalContextObjectDataHolder = historicalContextObjectDataHolders.getModel().getElementAt(i);
-            HistoricalContextObjectHolder historicalContextObjectHolder = new HistoricalContextObjectHolder(historicalContextObjectDataHolder);
+        for (int i = 0; i < historicalObjectDataHolders.getModel().getSize(); i++) {
+            HistoricalObjectDataHolder historicalObjectDataHolder = historicalObjectDataHolders.getModel().getElementAt(i);
+            HistoricalContextObjectHolder historicalContextObjectHolder = new HistoricalContextObjectHolder(historicalObjectDataHolder);
             newistoricalContextObjectHolderList.add(historicalContextObjectHolder);
         }
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
@@ -290,34 +290,34 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         });
     }
 
-    private HistoricalContextObjectHolder getHistoricalContextObjectHolder(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {
+    private HistoricalContextObjectHolder getHistoricalContextObjectHolder(HistoricalObjectDataHolder historicalObjectDataHolder) {
         HistoricalContextObjectHolder historicalContextObjectHolder = null;
-        if (historicalContextObjectDataHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
-            if (historicalContextObjectDataHolder.getHistoricalCompletedModificationDataHolder().getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
-                FileModificationSuggestionRecord fileModificationSuggestionRecord = historicalContextObjectDataHolder.getHistoricalCompletedModificationDataHolder().getFileModificationSuggestionRecord();
+        if (historicalObjectDataHolder.getHistoricalContextObjectType() == HistoricalObjectType.FILE_MODIFICATION) {
+            if (historicalObjectDataHolder.getHistoricalModificationDataHolder().getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
+                FileModificationSuggestionRecord fileModificationSuggestionRecord = historicalObjectDataHolder.getHistoricalModificationDataHolder().getFileModificationSuggestionRecord();
                 historicalContextObjectHolder = historicalContextObjectHolderList.stream()
                         .filter(historicalContextObjectHolderQuery -> {
-                            HistoricalContextModificationHolder historicalCompletedModificationHolder = historicalContextObjectHolderQuery.getHistoricalCompletedModificationHolder();
-                            if (historicalCompletedModificationHolder == null) {
+                            HistoricalContextModificationHolder historicalContextModificationHolder = historicalContextObjectHolderQuery.getHistoricalContextModificationHolder();
+                            if (historicalContextModificationHolder == null) {
                                 return false;
                             }
                             return historicalContextObjectHolderQuery
-                                    .getHistoricalCompletedModificationHolder()
+                                    .getHistoricalContextModificationHolder()
                                     .getSubjectRecordId()
                                     .equals(fileModificationSuggestionRecord.getId());
                         })
                         .findFirst()
                         .orElse(null);
             } else {
-                FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = historicalContextObjectDataHolder.getHistoricalCompletedModificationDataHolder().getFileModificationSuggestionModificationRecord();
+                FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = historicalObjectDataHolder.getHistoricalModificationDataHolder().getFileModificationSuggestionModificationRecord();
                 historicalContextObjectHolder = historicalContextObjectHolderList.stream()
                         .filter(historicalContextObjectHolderQuery -> {
-                            HistoricalContextModificationHolder historicalCompletedModificationHolder = historicalContextObjectHolderQuery.getHistoricalCompletedModificationHolder();
-                            if (historicalCompletedModificationHolder == null) {
+                            HistoricalContextModificationHolder historicalContextModificationHolder = historicalContextObjectHolderQuery.getHistoricalContextModificationHolder();
+                            if (historicalContextModificationHolder == null) {
                                 return false;
                             }
                             return historicalContextObjectHolderQuery
-                                    .getHistoricalCompletedModificationHolder()
+                                    .getHistoricalContextModificationHolder()
                                     .getSubjectRecordId()
                                     .equals(fileModificationSuggestionModificationRecord.getId());
                         })
@@ -325,7 +325,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                         .orElse(null);
             }
         } else {
-            Inquiry inquiry = historicalContextObjectDataHolder.getHistoricalContextInquiryDataHolder().getInquiry();
+            Inquiry inquiry = historicalObjectDataHolder.getHistoricalContextInquiryDataHolder().getInquiry();
             historicalContextObjectHolder = historicalContextObjectHolderList.stream()
                     .filter(historicalContextObjectHolderQuery -> {
                         HistoricalContextInquiryHolder historicalContextInquiryHolder = historicalContextObjectHolderQuery.getHistoricalContextInquiryHolder();
@@ -390,8 +390,8 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         jBScrollPane1.setViewportView(jList1);
     }
 
-    public void addContextObject(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {
-        HistoricalContextObjectHolder historicalContextObjectHolder = new HistoricalContextObjectHolder(historicalContextObjectDataHolder);
+    public void addContextObject(HistoricalObjectDataHolder historicalObjectDataHolder) {
+        HistoricalContextObjectHolder historicalContextObjectHolder = new HistoricalContextObjectHolder(historicalObjectDataHolder);
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             HistoricalContextObjectHolder response = contextQueryDao.queryHistoricalContextObject(historicalContextObjectHolder);
@@ -406,8 +406,8 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         });
     }
 
-    public void removeContextObject(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {
-        historicalContextObjectHolderList.remove(getHistoricalContextObjectHolder(historicalContextObjectDataHolder));
+    public void removeContextObject(HistoricalObjectDataHolder historicalObjectDataHolder) {
+        historicalContextObjectHolderList.remove(getHistoricalContextObjectHolder(historicalObjectDataHolder));
         updateChatContentsWithContextInstalled();
     }
 

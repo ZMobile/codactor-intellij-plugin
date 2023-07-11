@@ -1,0 +1,11 @@
+package com.translator.service.codactor.transformer;
+
+import com.translator.model.codactor.modification.FileModificationSuggestionModification;
+import com.translator.model.codactor.modification.FileModificationSuggestionModificationRecord;
+
+public class FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerServiceImpl implements FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerService {
+    @Override
+    public FileModificationSuggestionModification convert(FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord) {
+        return new FileModificationSuggestionModification(fileModificationSuggestionModificationRecord.getFilePath(), fileModificationSuggestionModificationRecord.getModificationId(), fileModificationSuggestionModificationRecord.getSuggestionId(), null, fileModificationSuggestionModificationRecord.getBeforeText(), fileModificationSuggestionModificationRecord.getModificationType());
+    }
+}

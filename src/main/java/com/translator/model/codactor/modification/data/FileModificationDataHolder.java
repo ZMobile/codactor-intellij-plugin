@@ -1,28 +1,28 @@
-package com.translator.model.codactor.modification.queued;
+package com.translator.model.codactor.modification.data;
 
 import com.translator.model.codactor.modification.FileModification;
 import com.translator.model.codactor.modification.FileModificationSuggestionModification;
 import com.translator.model.codactor.modification.MultiFileModification;
 
-public class QueuedFileModificationObjectHolder {
+public class FileModificationDataHolder {
     private FileModification fileModification;
     private FileModificationSuggestionModification fileModificationSuggestionModification;
     private MultiFileModification multiFileModification;
-    private QueuedModificationObjectType queuedModificationObjectType;
+    private ModificationObjectType modificationObjectType;
 
-    public QueuedFileModificationObjectHolder(FileModification fileModification) {
+    public FileModificationDataHolder(FileModification fileModification) {
         this.fileModification = fileModification;
-        this.queuedModificationObjectType = QueuedModificationObjectType.FILE_MODIFICATION;
+        this.modificationObjectType = ModificationObjectType.FILE_MODIFICATION;
     }
 
-    public QueuedFileModificationObjectHolder(FileModificationSuggestionModification fileModificationSuggestionModification) {
+    public FileModificationDataHolder(FileModificationSuggestionModification fileModificationSuggestionModification) {
         this.fileModificationSuggestionModification = fileModificationSuggestionModification;
-        this.queuedModificationObjectType = QueuedModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION;
+        this.modificationObjectType = ModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION;
     }
 
-    public QueuedFileModificationObjectHolder(MultiFileModification multiFileModification) {
+    public FileModificationDataHolder(MultiFileModification multiFileModification) {
         this.multiFileModification = multiFileModification;
-        this.queuedModificationObjectType = QueuedModificationObjectType.MULTI_FILE_MODIFICATION;
+        this.modificationObjectType = ModificationObjectType.MULTI_FILE_MODIFICATION;
     }
 
     public FileModification getFileModification() {
@@ -49,11 +49,11 @@ public class QueuedFileModificationObjectHolder {
         this.multiFileModification = multiFileModification;
     }
 
-    public QueuedModificationObjectType getQueuedModificationObjectType() {
-        return queuedModificationObjectType;
+    public ModificationObjectType getQueuedModificationObjectType() {
+        return modificationObjectType;
     }
 
-    public void setQueuedModificationObjectType(QueuedModificationObjectType queuedModificationObjectType) {
-        this.queuedModificationObjectType = queuedModificationObjectType;
+    public void setQueuedModificationObjectType(ModificationObjectType modificationObjectType) {
+        this.modificationObjectType = modificationObjectType;
     }
 }

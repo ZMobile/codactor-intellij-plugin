@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.intellij.openapi.project.Project;
 import com.translator.dao.CodeTranslatorDaoConfig;
+import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.codactor.editor.*;
 import com.translator.service.codactor.context.PromptContextService;
@@ -38,10 +39,7 @@ import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.openai.OpenAiModelServiceImpl;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.codactor.task.BackgroundTaskMapperServiceImpl;
-import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
-import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformerImpl;
-import com.translator.service.codactor.transformer.QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService;
-import com.translator.service.codactor.transformer.QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerServiceImpl;
+import com.translator.service.codactor.transformer.*;
 import com.translator.service.codactor.ui.ModificationQueueListButtonService;
 import com.translator.service.codactor.ui.ModificationQueueListButtonServiceImpl;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
@@ -107,7 +105,6 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(NodeRunnerManagerService.class).to(NodeRunnerManagerServiceImpl.class);
         bind(PromptNodeRunnerService.class).to(PromptNodeRunnerServiceImpl.class);
         bind(FileModificationRestarterService.class).to(FileModificationRestarterServiceImpl.class);
-        bind(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer.class).to(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformerImpl.class);
         bind(DiffEditorGeneratorService.class).to(DiffEditorGeneratorServiceImpl.class);
         bind(FileModificationSuggestionDiffViewerService.class).to(FileModificationSuggestionDiffViewerServiceImpl.class);
         bind(CodactorFunctionGeneratorService.class).to(CodactorFunctionGeneratorServiceImpl.class);
@@ -117,6 +114,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerService.class).to(QueuedFileModificationObjectHolderToQueuedFileModificationObjectReferenceHolderTransformerServiceImpl.class);
         bind(GitDiffStingGeneratorService.class).to(GitDiffStingGeneratorServiceImpl.class);
         bind(InquirySystemMessageGeneratorService.class).to(InquirySystemMessageGeneratorServiceImpl.class);
+        bind(HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService.class).to(HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerServiceImpl.class);
+        bind(FileModificationSuggestionRecordToFileModificationTransformerService.class).to(FileModificationSuggestionRecordToFileModificationTransformerServiceImpl.class);
+        bind(FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerService.class).to(FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerServiceImpl.class);
     }
 
     @Singleton
@@ -128,6 +128,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
     @Singleton
     @Provides
     public FileModificationTrackerService getFileModificationTrackerService(Project project,
+                                                                            CodeModificationHistoryDao codeModificationHistoryDao,
                                                                             CodeHighlighterService codeHighlighterService,
                                                                             CodeSnippetExtractorService codeSnippetExtractorService,
                                                                             CodeRangeTrackerService codeRangeTrackerService,
@@ -136,8 +137,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                             EditorClickHandlerService editorClickHandlerService,
                                                                             RenameFileService renameFileService,
                                                                             BackgroundTaskMapperService backgroundTaskMapperService,
-                                                                            DiffEditorGeneratorService diffEditorGeneratorService) {
-        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService);
+                                                                            DiffEditorGeneratorService diffEditorGeneratorService,
+                                                                            HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService historicalFileModificationDataHolderToFileModificationDataHolderTransformerService) {
+        return new FileModificationTrackerServiceImpl(project, codeModificationHistoryDao, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService, historicalFileModificationDataHolderToFileModificationDataHolderTransformerService);
     }
 
     @Singleton

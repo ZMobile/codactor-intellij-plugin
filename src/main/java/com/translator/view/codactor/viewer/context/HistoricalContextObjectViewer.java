@@ -12,8 +12,8 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.history.HistoricalContextObjectType;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
+import com.translator.model.codactor.history.HistoricalObjectType;
+import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
@@ -21,6 +21,9 @@ import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorServic
 import com.translator.view.codactor.menu.TextAreaWindow;
 import com.translator.view.codactor.panel.FixedHeightPanel;
 import com.translator.view.codactor.renderer.InquiryChatRenderer;
+import com.translator.view.codactor.viewer.context.HistoricalContextInquiryListViewer;
+import com.translator.view.codactor.viewer.context.HistoricalContextModificationListViewer;
+import com.translator.view.codactor.viewer.context.HistoricalContextObjectListViewer;
 import com.translator.view.codactor.viewer.inquiry.InquiryChatViewer;
 
 import javax.swing.*;
@@ -181,11 +184,11 @@ public class HistoricalContextObjectViewer extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (historicalContextModificationListViewer.getModificationList().getSelectedIndex() != -1) {
-                    HistoricalContextObjectDataHolder selectedInquiry = historicalContextModificationListViewer.getModificationList().getSelectedValue();
+                    HistoricalObjectDataHolder selectedInquiry = historicalContextModificationListViewer.getModificationList().getSelectedValue();
                     historicalContextObjectListViewer.addContextObject(selectedInquiry);
                     historicalContextModificationListViewer.getModificationList().clearSelection();
                 } else if (historicalContextInquiryListViewer.getInquiryList().getSelectedIndex() != -1) {
-                    HistoricalContextObjectDataHolder selectedInquiry = historicalContextInquiryListViewer.getInquiryList().getSelectedValue();
+                    HistoricalObjectDataHolder selectedInquiry = historicalContextInquiryListViewer.getInquiryList().getSelectedValue();
                     historicalContextObjectListViewer.addContextObject(selectedInquiry);
                     historicalContextInquiryListViewer.getInquiryList().clearSelection();
                 }
@@ -260,25 +263,25 @@ public class HistoricalContextObjectViewer extends JPanel {
 
     public void updateHistoricalContextObjectHolder(HistoricalContextObjectHolder historicalContextObjectHolder) {
         this.historicalContextObjectHolder = historicalContextObjectHolder;
-        if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.INQUIRY) {
+        if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalObjectType.INQUIRY) {
             updateChatContents(historicalContextObjectHolder.getHistoricalContextInquiryHolder().getRequestedChats());
-        } else if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
-            updateChatContents(historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRequestedChats());
+        } else if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalObjectType.FILE_MODIFICATION) {
+            updateChatContents(historicalContextObjectHolder.getHistoricalContextModificationHolder().getRequestedChats());
         }
         JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
         vertical.setValue(vertical.getMaximum());
     }
 
-    public void updateHistoricalContextObjectHolder(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {
-        HistoricalContextObjectHolder newHistoricalContextObjectHolder = new HistoricalContextObjectHolder(historicalContextObjectDataHolder);
+    public void updateHistoricalContextObjectHolder(HistoricalObjectDataHolder historicalObjectDataHolder) {
+        HistoricalContextObjectHolder newHistoricalContextObjectHolder = new HistoricalContextObjectHolder(historicalObjectDataHolder);
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             HistoricalContextObjectHolder response = contextQueryDao.queryHistoricalContextObject(newHistoricalContextObjectHolder);
             if (response != null) {
                 historicalContextObjectHolder = response;
-                if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.INQUIRY) {
+                if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalObjectType.INQUIRY) {
                     updateChatContents(historicalContextObjectHolder.getHistoricalContextInquiryHolder().getRequestedChats());
-                } else if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
-                    updateChatContents(historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRequestedChats());
+                } else if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalObjectType.FILE_MODIFICATION) {
+                    updateChatContents(historicalContextObjectHolder.getHistoricalContextModificationHolder().getRequestedChats());
                 }
                 JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
                 vertical.setValue(vertical.getMaximum());
@@ -342,7 +345,7 @@ public class HistoricalContextObjectViewer extends JPanel {
     }
 
     public void setHistoricalContextModificationListViewer(HistoricalContextModificationListViewer historicalContextModificationListViewer) {
-            this.historicalContextModificationListViewer = historicalContextModificationListViewer;
+        this.historicalContextModificationListViewer = historicalContextModificationListViewer;
     }
 
     public void setHistoricalContextObjectListViewer(HistoricalContextObjectListViewer historicalContextObjectListViewer) {

@@ -19,8 +19,8 @@ import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
 import java.util.Objects;
 
 public class FileModificationSuggestion implements Disposable {
-    private final DiffEditorGeneratorService diffEditorGeneratorService;
-    private final Project project;
+    private DiffEditorGeneratorService diffEditorGeneratorService;
+    private Project project;
     private final String filePath;
     private final String modificationId;
     private final String myId;
@@ -28,6 +28,13 @@ public class FileModificationSuggestion implements Disposable {
     private String suggestedCode;
     private Editor diffEditor;
     private Editor suggestedCodeEditor;
+
+    public FileModificationSuggestion(String id, String filePath, String modificationId, String suggestedCode) {
+        this.myId = id;
+        this.filePath = filePath;
+        this.modificationId = modificationId;
+        this.suggestedCode = suggestedCode;
+    }
 
     public FileModificationSuggestion(DiffEditorGeneratorService diffEditorGeneratorService, Project project, String id, String filePath, String modificationId, String beforeCode, String suggestedCode) {
         this.diffEditorGeneratorService = diffEditorGeneratorService;
@@ -95,6 +102,10 @@ public class FileModificationSuggestion implements Disposable {
 
     public String getModificationId() {
         return modificationId;
+    }
+
+    public void setBeforeCode(String beforeCode) {
+        this.beforeCode = beforeCode;
     }
 
     public String getBeforeCode() {

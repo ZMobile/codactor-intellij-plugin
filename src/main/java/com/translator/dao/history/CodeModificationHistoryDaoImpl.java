@@ -2,7 +2,7 @@ package com.translator.dao.history;
 
 import com.google.gson.Gson;
 import com.translator.dao.firebase.FirebaseTokenService;
-import com.translator.model.codactor.api.translator.history.DesktopCodeModificationHistoryResponseResource;
+import com.translator.model.codactor.api.translator.history.DesktopCompletedCodeModificationHistoryResponseResource;
 import org.apache.commons.io.IOUtils;
 
 import javax.inject.Inject;
@@ -23,7 +23,7 @@ public class CodeModificationHistoryDaoImpl implements CodeModificationHistoryDa
         this.firebaseTokenService = firebaseTokenService;
     }
 
-    public DesktopCodeModificationHistoryResponseResource getRecentModifications() {
+    public DesktopCompletedCodeModificationHistoryResponseResource getRecentModifications() {
         try {
             URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/recent");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -40,7 +40,7 @@ public class CodeModificationHistoryDaoImpl implements CodeModificationHistoryDa
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                return gson.fromJson(response, DesktopCodeModificationHistoryResponseResource.class);
+                return gson.fromJson(response, DesktopCompletedCodeModificationHistoryResponseResource.class);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
