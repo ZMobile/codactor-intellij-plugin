@@ -68,7 +68,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         ChatGptFunction readDirectoryStructureAtPath = new ChatGptFunction("read_directory_structure_at_path", "Read the file directory structure at the provided path", readDirectoryStructureAtPathParams);
         codactorFunctions.add(readDirectoryStructureAtPath);
 
-        // Create ChatGptFunction for "get_queued_modification_ids"
+        // Create ChatGptFunction for "get_queued_modifications"
         Parameters getQueuedModificationIdsParams = new Parameters("object");
         ChatGptFunction getQueuedModificationIds = new ChatGptFunction("get_queued_modification_ids", "Get the list of queued modification ids", getQueuedModificationIdsParams);
         codactorFunctions.add(getQueuedModificationIds);

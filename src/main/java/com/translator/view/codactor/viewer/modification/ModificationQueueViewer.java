@@ -8,8 +8,8 @@ import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.model.codactor.modification.*;
-import com.translator.model.codactor.modification.queued.QueuedFileModificationObjectHolder;
-import com.translator.model.codactor.modification.queued.QueuedModificationObjectType;
+import com.translator.model.codactor.modification.data.FileModificationDataHolder;
+import com.translator.model.codactor.modification.data.ModificationObjectType;
 import com.translator.service.codactor.file.FileOpenerService;
 import com.translator.service.codactor.file.FileReaderService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
@@ -18,7 +18,7 @@ import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.FileModificationErrorDialog;
 import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFactory;
-import com.translator.view.codactor.renderer.QueuedModificationObjectRenderer;
+import com.translator.view.codactor.renderer.ModificationRenderer;
 import com.translator.view.codactor.renderer.SeparatorListCellRenderer;
 
 import javax.swing.*;
@@ -31,7 +31,7 @@ import java.util.List;
 
 public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
 
-    private JBList<QueuedFileModificationObjectHolder> modificationList;
+    private JBList<FileModificationDataHolder> modificationList;
     private JBScrollPane modificationListScrollPane;
     private JBPopupMenu jBPopupMenu;
     private ProvisionalModificationViewer provisionalModificationViewer;
@@ -73,7 +73,7 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
 
         // Add a horizontal line to separate each FileModification
         modificationList.setFixedCellHeight(80);
-        modificationList.setCellRenderer(new SeparatorListCellRenderer<>(new QueuedModificationObjectRenderer(project, fileReaderService)));
+        modificationList.setCellRenderer(new SeparatorListCellRenderer<>(new ModificationRenderer(project, fileReaderService)));
 
         jBPopupMenu = new JBPopupMenu();
 
@@ -96,9 +96,9 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                 if (index == -1) {
                     return;
                 }
-                QueuedFileModificationObjectHolder queuedFileModificationObjectHolder = modificationList.getModel().getElementAt(index);
-                if (queuedFileModificationObjectHolder.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION) {
-                    FileModification fileModification = queuedFileModificationObjectHolder.getFileModification();
+                FileModificationDataHolder fileModificationDataHolder = modificationList.getModel().getElementAt(index);
+                if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION) {
+                    FileModification fileModification = fileModificationDataHolder.getFileModification();
                     fileOpenerService.openFileInEditor(fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset());
                     if (fileModification.isError()) {
                         FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModification.getId(), fileModification.getFilePath(), "", fileModification.getModificationType());
@@ -123,13 +123,13 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                 JBMenuItem pauseItem = new JBMenuItem("Pause");
                 JBMenuItem retryItem = new JBMenuItem("Retry");
                 JBMenuItem removeItem = new JBMenuItem("Remove");
-                QueuedFileModificationObjectHolder queuedFileModificationObjectHolder = null;
+                FileModificationDataHolder fileModificationDataHolder = null;
                 if (e.getButton() == MouseEvent.BUTTON3) {
                     int selectedIndex = modificationList.locationToIndex(e.getPoint());
-                    queuedFileModificationObjectHolder = modificationList.getModel().getElementAt(selectedIndex);
+                    fileModificationDataHolder = modificationList.getModel().getElementAt(selectedIndex);
                     modificationList.setSelectedIndex(selectedIndex);
-                    if (queuedFileModificationObjectHolder.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION) {
-                        FileModification fileModification = queuedFileModificationObjectHolder.getFileModification();
+                    if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION) {
+                        FileModification fileModification = fileModificationDataHolder.getFileModification();
                         if (!fileModification.isDone()) {
                             if (fileModification.isError()) {
                                 showRetry = true;
@@ -157,15 +157,15 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                                 fileModificationTrackerService.removeModification(fileModification.getId());
                             }
                         });
-                    } else if (queuedFileModificationObjectHolder.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
-                        FileModificationSuggestionModification fileModificationSuggestionModification = queuedFileModificationObjectHolder.getFileModificationSuggestionModification();
+                    } else if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
+                        FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationDataHolder.getFileModificationSuggestionModification();
                         if (fileModificationSuggestionModification.isError()) {
                             showRetry = true;
                         } else {
                             showPause = true;
                         }
                         showRemove = true;
-                    } else if (queuedFileModificationObjectHolder.getQueuedModificationObjectType() == QueuedModificationObjectType.MULTI_FILE_MODIFICATION) {
+                    } else if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.MULTI_FILE_MODIFICATION) {
                         showRemove = true;
                     }
                     removeItem.setVisible(showRemove);
@@ -187,10 +187,10 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
         });
     }
 
-    public void updateModificationList(List<QueuedFileModificationObjectHolder> queuedFileModificationObjectHolders) {
-        DefaultListModel<QueuedFileModificationObjectHolder> model = new DefaultListModel<>();
-        for (QueuedFileModificationObjectHolder queuedFileModificationObjectHolder : queuedFileModificationObjectHolders) {
-            model.addElement(queuedFileModificationObjectHolder);
+    public void updateModificationList(List<FileModificationDataHolder> fileModificationDataHolders) {
+        DefaultListModel<FileModificationDataHolder> model = new DefaultListModel<>();
+        for (FileModificationDataHolder fileModificationDataHolder : fileModificationDataHolders) {
+            model.addElement(fileModificationDataHolder);
         }
         modificationList.setModel(model);
     }

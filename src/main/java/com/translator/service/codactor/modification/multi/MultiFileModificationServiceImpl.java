@@ -17,7 +17,7 @@ import com.translator.model.codactor.ai.ModificationNeededResponse;
 import com.translator.model.codactor.api.translator.modification.DesktopCodeModificationRequestResource;
 import com.translator.model.codactor.api.translator.modification.DesktopCodeModificationResponseResource;
 import com.translator.model.codactor.history.HistoricalContextInquiryHolder;
-import com.translator.model.codactor.history.HistoricalContextModificationHolder;
+import com.translator.model.codactor.history.HistoricalContextFileModificationHolder;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
@@ -244,9 +244,9 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modificationForThisFile, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                     DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
                     if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
-                        fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getModificationSuggestions());
+                        fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
                         String suggestionId = desktopCodeModificationResponseResource.getModificationSuggestions().get(0).getId();
-                        HistoricalContextModificationHolder modificationContext = new HistoricalContextModificationHolder(suggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
+                        HistoricalContextFileModificationHolder modificationContext = new HistoricalContextFileModificationHolder(suggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
                         priorContextObject = new HistoricalContextObjectHolder(modificationContext);
                         priorContext.add(priorContextObject);
                         modificationsPriorContext.add(priorContextObject);
@@ -309,7 +309,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, fileCode, modificationForThisFile, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
                         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
                         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
-                            fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getModificationSuggestions());
+                            fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
                         } else {
                             fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                             if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
@@ -498,9 +498,9 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                     DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
                     if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
-                        fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getModificationSuggestions());
+                        fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
                         String suggestionId = desktopCodeModificationResponseResource.getModificationSuggestions().get(0).getId();
-                        HistoricalContextModificationHolder modificationContext = new HistoricalContextModificationHolder(suggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
+                        HistoricalContextFileModificationHolder modificationContext = new HistoricalContextFileModificationHolder(suggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
                         priorContextObject = new HistoricalContextObjectHolder(modificationContext);
                         priorContext.add(priorContextObject);
                         modificationsPriorContext.add(priorContextObject);
@@ -562,7 +562,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, fileCode, error, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
                         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
                         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
-                            fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getModificationSuggestions());
+                            fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
                         } else {
                             fileModificationTrackerService.errorFileModification(modificationIdMap.get(filePath));
                             if (desktopCodeModificationResponseResource.getError().equals("null: null")) {

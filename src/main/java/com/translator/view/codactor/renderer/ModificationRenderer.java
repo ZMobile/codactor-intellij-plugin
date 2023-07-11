@@ -3,8 +3,8 @@ package com.translator.view.codactor.renderer;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.translator.model.codactor.modification.*;
-import com.translator.model.codactor.modification.queued.QueuedFileModificationObjectHolder;
-import com.translator.model.codactor.modification.queued.QueuedModificationObjectType;
+import com.translator.model.codactor.modification.data.FileModificationDataHolder;
+import com.translator.model.codactor.modification.data.ModificationObjectType;
 import com.translator.service.codactor.file.FileReaderService;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
@@ -12,7 +12,7 @@ import com.translator.service.codactor.line.LineCounterServiceImpl;
 import javax.swing.*;
 import java.awt.*;
 
-public class QueuedModificationObjectRenderer extends JPanel implements ListCellRenderer<QueuedFileModificationObjectHolder> {
+public class ModificationRenderer extends JPanel implements ListCellRenderer<FileModificationDataHolder> {
     private Project project;
     private FileReaderService fileReaderService;
     private LineCounterService lineCounterService;
@@ -21,8 +21,8 @@ public class QueuedModificationObjectRenderer extends JPanel implements ListCell
     private JLabel statusLabel;
     private JLabel filePathLabel;
 
-    public QueuedModificationObjectRenderer(Project project,
-                                            FileReaderService fileReaderService) {
+    public ModificationRenderer(Project project,
+                                FileReaderService fileReaderService) {
         this.project = project;
         this.fileReaderService = fileReaderService;
         this.lineCounterService = new LineCounterServiceImpl();
@@ -69,16 +69,16 @@ public class QueuedModificationObjectRenderer extends JPanel implements ListCell
     }
 
     @Override
-    public Component getListCellRendererComponent(JList<? extends QueuedFileModificationObjectHolder> list, QueuedFileModificationObjectHolder value, int index, boolean isSelected, boolean cellHasFocus) {
+    public Component getListCellRendererComponent(JList<? extends FileModificationDataHolder> list, FileModificationDataHolder value, int index, boolean isSelected, boolean cellHasFocus) {
         String lineRangeText = "";
         String statusText = "";
-        if (value.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
+        if (value.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
             FileModificationSuggestionModification fileModificationSuggestionModification = value.getFileModificationSuggestionModification();
             filePathLabel.setText("File: (SUB) " + fileModificationSuggestionModification.getFilePath());
             lineRangeText = "Index: " + fileModificationSuggestionModification.getRangeMarker().getStartOffset() + " - " + fileModificationSuggestionModification.getRangeMarker().getEndOffset();
             statusText = "(Queued)";
             setBackground(Color.decode("#009688"));
-        } else if (value.getQueuedModificationObjectType() == QueuedModificationObjectType.FILE_MODIFICATION) {
+        } else if (value.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION) {
             FileModification fileModification = value.getFileModification();
             filePathLabel.setText("File: " + fileModification.getFilePath());
             String fileContent = fileReaderService.readFileContent(project, fileModification.getFilePath());
@@ -98,7 +98,7 @@ public class QueuedModificationObjectRenderer extends JPanel implements ListCell
             } else {
                 setBackground(fileModification.isDone() ? Color.decode("#228B22") : Color.decode("#009688"));
             }
-        } else if (value.getQueuedModificationObjectType() == QueuedModificationObjectType.MULTI_FILE_MODIFICATION) {
+        } else if (value.getQueuedModificationObjectType() == ModificationObjectType.MULTI_FILE_MODIFICATION) {
             MultiFileModification multiFileModification = value.getMultiFileModification();
             lineRangeText = "Multi-File Mod";
             if (multiFileModification.getStage() != null && !multiFileModification.getStage().equals("")) {

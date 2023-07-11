@@ -5,9 +5,9 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.model.codactor.api.translator.history.DesktopCodeModificationHistoryResponseResource;
-import com.translator.model.codactor.history.data.HistoricalContextModificationDataHolder;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
-import com.translator.view.codactor.renderer.HistoricalContextObjectHolderRenderer;
+import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
+import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
+import com.translator.view.codactor.renderer.HistoricalObjectDataHolderRenderer;
 import com.translator.view.codactor.renderer.SeparatorListCellRenderer;
 
 import javax.swing.*;
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HistoricalContextModificationListViewer extends JPanel {
-    private JList<HistoricalContextObjectDataHolder> modificationList;
+    private JList<HistoricalObjectDataHolder> modificationList;
     private JBScrollPane modificationListScrollPane;
     private JToolBar jToolBar2;
     private JToolBar jToolBar3;
@@ -67,7 +67,7 @@ public class HistoricalContextModificationListViewer extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (modificationList.getSelectedIndex() != -1) {
-                    HistoricalContextObjectDataHolder selectedModification = modificationList.getSelectedValue();
+                    HistoricalObjectDataHolder selectedModification = modificationList.getSelectedValue();
                     historicalContextObjectListViewer.addContextObject(selectedModification);
                     modificationList.clearSelection();
                 }
@@ -82,7 +82,7 @@ public class HistoricalContextModificationListViewer extends JPanel {
 
         // Add a horizontal line to separate each FileModification
         modificationList.setFixedCellHeight(80);
-        modificationList.setCellRenderer(new SeparatorListCellRenderer<>(new HistoricalContextObjectHolderRenderer()));
+        modificationList.setCellRenderer(new SeparatorListCellRenderer<>(new HistoricalObjectDataHolderRenderer()));
 
         GroupLayout layout = new GroupLayout(this);
         setLayout(layout);
@@ -105,7 +105,7 @@ public class HistoricalContextModificationListViewer extends JPanel {
         updateModificationList(new ArrayList<>());
 
         modificationList.addListSelectionListener(e -> {
-            JList<HistoricalContextObjectDataHolder> inquiryList = historicalContextInquiryListViewer.getInquiryList();
+            JList<HistoricalObjectDataHolder> inquiryList = historicalContextInquiryListViewer.getInquiryList();
             ListSelectionListener[] listSelectionListeners = inquiryList.getListSelectionListeners();
             for (ListSelectionListener listSelectionListener : listSelectionListeners) {
                 inquiryList.removeListSelectionListener(listSelectionListener);
@@ -114,7 +114,7 @@ public class HistoricalContextModificationListViewer extends JPanel {
             for (ListSelectionListener listSelectionListener : listSelectionListeners) {
                 inquiryList.addListSelectionListener(listSelectionListener);
             }
-            JList<HistoricalContextObjectDataHolder> contextObjectList = historicalContextObjectListViewer.getContextObjectList();
+            JList<HistoricalObjectDataHolder> contextObjectList = historicalContextObjectListViewer.getContextObjectList();
             listSelectionListeners = contextObjectList.getListSelectionListeners();
             for (ListSelectionListener listSelectionListener : listSelectionListeners) {
                 contextObjectList.removeListSelectionListener(listSelectionListener);
@@ -129,8 +129,8 @@ public class HistoricalContextModificationListViewer extends JPanel {
                     return;
                 }
                 //Set the background of the object at this index in the jlist to blue:
-                HistoricalContextObjectDataHolder historicalContextObjectDataHolder = modificationList.getModel().getElementAt(index);
-                historicalContextObjectViewer.updateHistoricalContextObjectHolder(historicalContextObjectDataHolder);
+                HistoricalObjectDataHolder historicalObjectDataHolder = modificationList.getModel().getElementAt(index);
+                historicalContextObjectViewer.updateHistoricalContextObjectHolder(historicalObjectDataHolder);
             }
         });
     }
@@ -147,11 +147,11 @@ public class HistoricalContextModificationListViewer extends JPanel {
         });
     }
 
-    public void updateModificationList(List<HistoricalContextModificationDataHolder> fileModifications) {
-        DefaultListModel<HistoricalContextObjectDataHolder> model = new DefaultListModel<>();
-        for (HistoricalContextModificationDataHolder historicalContextModificationDataHolder : fileModifications) {
-            HistoricalContextObjectDataHolder historicalContextObjectDataHolder = new HistoricalContextObjectDataHolder(historicalContextModificationDataHolder);
-            model.addElement(historicalContextObjectDataHolder);
+    public void updateModificationList(List<HistoricalFileModificationDataHolder> fileModifications) {
+        DefaultListModel<HistoricalObjectDataHolder> model = new DefaultListModel<>();
+        for (HistoricalFileModificationDataHolder historicalFileModificationDataHolder : fileModifications) {
+            HistoricalObjectDataHolder historicalObjectDataHolder = new HistoricalObjectDataHolder(historicalFileModificationDataHolder);
+            model.addElement(historicalObjectDataHolder);
         }
         modificationList.setModel(model);
     }
@@ -160,7 +160,7 @@ public class HistoricalContextModificationListViewer extends JPanel {
         this.historicalContextInquiryListViewer = historicalContextInquiryListViewer;
     }
 
-    public JList<HistoricalContextObjectDataHolder> getModificationList() {
+    public JList<HistoricalObjectDataHolder> getModificationList() {
         return modificationList;
     }
 }

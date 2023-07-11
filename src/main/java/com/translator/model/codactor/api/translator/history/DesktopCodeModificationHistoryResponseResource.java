@@ -1,17 +1,17 @@
 package com.translator.model.codactor.api.translator.history;
 
-import com.translator.model.codactor.history.data.HistoricalContextModificationDataHolder;
+import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
 
 import java.util.List;
 
 public class DesktopCodeModificationHistoryResponseResource {
-    private List<HistoricalContextModificationDataHolder> modificationHistory;
+    private List<HistoricalFileModificationDataHolder> modificationHistory;
 
-    public DesktopCodeModificationHistoryResponseResource(List<HistoricalContextModificationDataHolder> modificationHistory) {
+    public DesktopCodeModificationHistoryResponseResource(List<HistoricalFileModificationDataHolder> modificationHistory) {
         this.modificationHistory = modificationHistory;
     }
 
-    public List<HistoricalContextModificationDataHolder> getModificationHistory() {
+    public List<HistoricalFileModificationDataHolder> getModificationHistory() {
         return modificationHistory;
     }
 }

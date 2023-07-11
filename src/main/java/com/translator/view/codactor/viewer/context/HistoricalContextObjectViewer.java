@@ -13,7 +13,7 @@ import com.intellij.ui.components.JBTextArea;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.history.HistoricalContextObjectType;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
+import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
@@ -181,11 +181,11 @@ public class HistoricalContextObjectViewer extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (historicalContextModificationListViewer.getModificationList().getSelectedIndex() != -1) {
-                    HistoricalContextObjectDataHolder selectedInquiry = historicalContextModificationListViewer.getModificationList().getSelectedValue();
+                    HistoricalObjectDataHolder selectedInquiry = historicalContextModificationListViewer.getModificationList().getSelectedValue();
                     historicalContextObjectListViewer.addContextObject(selectedInquiry);
                     historicalContextModificationListViewer.getModificationList().clearSelection();
                 } else if (historicalContextInquiryListViewer.getInquiryList().getSelectedIndex() != -1) {
-                    HistoricalContextObjectDataHolder selectedInquiry = historicalContextInquiryListViewer.getInquiryList().getSelectedValue();
+                    HistoricalObjectDataHolder selectedInquiry = historicalContextInquiryListViewer.getInquiryList().getSelectedValue();
                     historicalContextObjectListViewer.addContextObject(selectedInquiry);
                     historicalContextInquiryListViewer.getInquiryList().clearSelection();
                 }
@@ -263,14 +263,14 @@ public class HistoricalContextObjectViewer extends JPanel {
         if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.INQUIRY) {
             updateChatContents(historicalContextObjectHolder.getHistoricalContextInquiryHolder().getRequestedChats());
         } else if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
-            updateChatContents(historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRequestedChats());
+            updateChatContents(historicalContextObjectHolder.getHistoricalModificationHolder().getRequestedChats());
         }
         JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
         vertical.setValue(vertical.getMaximum());
     }
 
-    public void updateHistoricalContextObjectHolder(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {
-        HistoricalContextObjectHolder newHistoricalContextObjectHolder = new HistoricalContextObjectHolder(historicalContextObjectDataHolder);
+    public void updateHistoricalContextObjectHolder(HistoricalObjectDataHolder historicalObjectDataHolder) {
+        HistoricalContextObjectHolder newHistoricalContextObjectHolder = new HistoricalContextObjectHolder(historicalObjectDataHolder);
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             HistoricalContextObjectHolder response = contextQueryDao.queryHistoricalContextObject(newHistoricalContextObjectHolder);
             if (response != null) {
@@ -278,7 +278,7 @@ public class HistoricalContextObjectViewer extends JPanel {
                 if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.INQUIRY) {
                     updateChatContents(historicalContextObjectHolder.getHistoricalContextInquiryHolder().getRequestedChats());
                 } else if (historicalContextObjectHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
-                    updateChatContents(historicalContextObjectHolder.getHistoricalCompletedModificationHolder().getRequestedChats());
+                    updateChatContents(historicalContextObjectHolder.getHistoricalModificationHolder().getRequestedChats());
                 }
                 JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
                 vertical.setValue(vertical.getMaximum());

@@ -1,8 +1,8 @@
 package com.translator.view.codactor.renderer;
 
 import com.translator.model.codactor.history.HistoricalContextObjectType;
-import com.translator.model.codactor.history.data.HistoricalContextModificationDataHolder;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
+import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
+import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.service.codactor.line.LineCounterService;
@@ -11,14 +11,14 @@ import com.translator.service.codactor.line.LineCounterServiceImpl;
 import javax.swing.*;
 import java.awt.*;
 
-public class HistoricalContextObjectHolderRenderer extends JPanel implements ListCellRenderer<HistoricalContextObjectDataHolder> {
+public class HistoricalObjectDataHolderRenderer extends JPanel implements ListCellRenderer<HistoricalObjectDataHolder> {
     private LineCounterService lineCounterService;
     private JLabel leftLabelOne;
     private JLabel leftLabelTwo;
     private JLabel labelThree;
     private JLabel statusLabel;
 
-    public HistoricalContextObjectHolderRenderer() {
+    public HistoricalObjectDataHolderRenderer() {
         lineCounterService = new LineCounterServiceImpl();
         setOpaque(true);
         setPreferredSize(new Dimension(100, 40));
@@ -63,17 +63,17 @@ public class HistoricalContextObjectHolderRenderer extends JPanel implements Lis
     }
 
     @Override
-    public Component getListCellRendererComponent(JList<? extends HistoricalContextObjectDataHolder> list, HistoricalContextObjectDataHolder value, int index, boolean isSelected, boolean cellHasFocus) {
+    public Component getListCellRendererComponent(JList<? extends HistoricalObjectDataHolder> list, HistoricalObjectDataHolder value, int index, boolean isSelected, boolean cellHasFocus) {
         if (value.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
-            HistoricalContextModificationDataHolder historicalContextModificationDataHolder = value.getHistoricalCompletedModificationDataHolder();
-            if (historicalContextModificationDataHolder.getRecordType() != null && historicalContextModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
-                leftLabelOne.setText("File: (SUB) " + historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getFilePath());
-                leftLabelTwo.setText("Type: " + historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getModificationType() + " Subject: " + historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getSubjectLine());
-                labelThree.setText("Lines: " + lineCounterService.countLines(historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode().trim(), historicalContextModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode().trim().length()));
-            } else if (historicalContextModificationDataHolder.getRecordType() != null && historicalContextModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
-                leftLabelOne.setText("File: " + historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getFilePath());
-                leftLabelTwo.setText("Type: " + historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getModificationType() + " Subject: " + historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getSubjectLine());
-                labelThree.setText("Lines: " + lineCounterService.countLines(historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim(), historicalContextModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim().length()));
+            HistoricalFileModificationDataHolder historicalFileModificationDataHolder = value.getHistoricalModificationDataHolder();
+            if (historicalFileModificationDataHolder.getRecordType() != null && historicalFileModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
+                leftLabelOne.setText("File: (SUB) " + historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getFilePath());
+                leftLabelTwo.setText("Type: " + historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getModificationType() + " Subject: " + historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getSubjectLine());
+                labelThree.setText("Lines: " + lineCounterService.countLines(historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode().trim(), historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode().trim().length()));
+            } else if (historicalFileModificationDataHolder.getRecordType() != null && historicalFileModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
+                leftLabelOne.setText("File: " + historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getFilePath());
+                leftLabelTwo.setText("Type: " + historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getModificationType() + " Subject: " + historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSubjectLine());
+                labelThree.setText("Lines: " + lineCounterService.countLines(historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim(), historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim().length()));
             }
             if (isSelected) {
                 setBackground(Color.decode("#228B22").darker());
@@ -83,16 +83,18 @@ public class HistoricalContextObjectHolderRenderer extends JPanel implements Lis
         } else {
             Inquiry inquiry = value.getHistoricalContextInquiryDataHolder().getInquiry();
             if (inquiry.getSubjectRecordId() != null) {
-                leftLabelOne.setText("Path: " + inquiry.getFilePath());
-                leftLabelOne.setText("Modification Inquiry (Creation timestamp UTC): " + inquiry.getCreationTimestamp().toString());
+                leftLabelOne.setText("Modification Inquiry");
+                leftLabelTwo.setText(value.getHistoricalContextInquiryDataHolder().getInquiry().getSubjectLine());
+                labelThree.setText("Path: " + inquiry.getFilePath());
             } else if (inquiry.getSubjectCode() != null) {
-                leftLabelOne.setText("Path: " + inquiry.getFilePath());
-                leftLabelOne.setText("Code Inquiry (Creation timestamp UTC): " + inquiry.getCreationTimestamp().toString());
+                leftLabelTwo.setText("Code Inquiry");
+                leftLabelOne.setText(value.getHistoricalContextInquiryDataHolder().getInquiry().getSubjectLine());
+                labelThree.setText("Path: " + inquiry.getFilePath());
             } else {
-                leftLabelOne.setText("General Inquiry (Creation timestamp UTC): " + inquiry.getCreationTimestamp().toString());
+                leftLabelOne.setText("General Inquiry");
+                leftLabelTwo.setText(value.getHistoricalContextInquiryDataHolder().getInquiry().getSubjectLine());
+                labelThree.setText("");
             }
-            leftLabelTwo.setText("");
-            labelThree.setText("");
             if (isSelected) {
                 setBackground(Color.decode("#AA00FF").darker());
             } else {

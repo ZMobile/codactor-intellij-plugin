@@ -1,0 +1,8 @@
+package com.translator.service.codactor.transformer.modification;
+
+import com.translator.model.codactor.modification.FileModificationSuggestionModification;
+import com.translator.model.codactor.modification.FileModificationSuggestionModificationRecord;
+
+public interface FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerService {
+    FileModificationSuggestionModification convert(FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord);
+}

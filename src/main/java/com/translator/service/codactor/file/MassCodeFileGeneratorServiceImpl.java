@@ -8,7 +8,7 @@ import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.codactor.api.translator.modification.DesktopCodeCreationRequestResource;
 import com.translator.model.codactor.api.translator.modification.DesktopCodeCreationResponseResource;
 import com.translator.model.codactor.history.HistoricalContextInquiryHolder;
-import com.translator.model.codactor.history.HistoricalContextModificationHolder;
+import com.translator.model.codactor.history.HistoricalContextFileModificationHolder;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
@@ -210,7 +210,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                     HistoricalContextObjectHolder priorContextObject = new HistoricalContextObjectHolder(inquiryContext);
                                     priorContext.add(priorContextObject);
                                     for (String completedSuggestionId : completedSuggestionIds) {
-                                        HistoricalContextModificationHolder modificationContext = new HistoricalContextModificationHolder(completedSuggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
+                                        HistoricalContextFileModificationHolder modificationContext = new HistoricalContextFileModificationHolder(completedSuggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
                                         HistoricalContextObjectHolder priorContextObject2 = new HistoricalContextObjectHolder(modificationContext);
                                         priorContext.add(priorContextObject2);
                                     }
@@ -414,7 +414,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                     HistoricalContextObjectHolder priorContextObject = new HistoricalContextObjectHolder(inquiryContext);
                                     priorContext2.add(priorContextObject);
                                     for (String completedSuggestionId : completedSuggestionIds) {
-                                        HistoricalContextModificationHolder modificationContext = new HistoricalContextModificationHolder(completedSuggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
+                                        HistoricalContextFileModificationHolder modificationContext = new HistoricalContextFileModificationHolder(completedSuggestionId, RecordType.FILE_MODIFICATION_SUGGESTION, false, null);
                                         HistoricalContextObjectHolder priorContextObject2 = new HistoricalContextObjectHolder(modificationContext);
                                         priorContext2.add(priorContextObject2);
                                     }

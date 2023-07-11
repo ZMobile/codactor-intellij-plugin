@@ -1,6 +1,6 @@
 package com.translator.view.codactor.renderer;
 
-import com.translator.model.codactor.history.data.HistoricalContextModificationDataHolder;
+import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
@@ -8,7 +8,7 @@ import com.translator.service.codactor.line.LineCounterServiceImpl;
 import javax.swing.*;
 import java.awt.*;
 
-public class HistoricalCompletedFileModificationRenderer extends JPanel implements ListCellRenderer<HistoricalContextModificationDataHolder> {
+public class HistoricalCompletedFileModificationRenderer extends JPanel implements ListCellRenderer<HistoricalFileModificationDataHolder> {
     private LineCounterService lineCounterService;
     private JLabel modificationTypeLabel;
     private JLabel lineRangeLabel;
@@ -60,7 +60,7 @@ public class HistoricalCompletedFileModificationRenderer extends JPanel implemen
     }
 
     @Override
-    public Component getListCellRendererComponent(JList<? extends HistoricalContextModificationDataHolder> list, HistoricalContextModificationDataHolder value, int index, boolean isSelected, boolean cellHasFocus) {
+    public Component getListCellRendererComponent(JList<? extends HistoricalFileModificationDataHolder> list, HistoricalFileModificationDataHolder value, int index, boolean isSelected, boolean cellHasFocus) {
         if (value.getRecordType() != null && value.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
             filePathLabel.setText("File: (SUB) " + value.getFileModificationSuggestionModificationRecord().getFilePath());
             modificationTypeLabel.setText("Type: " + value.getFileModificationSuggestionModificationRecord().getModificationType() + " Subject: " + value.getFileModificationSuggestionModificationRecord().getSubjectLine());

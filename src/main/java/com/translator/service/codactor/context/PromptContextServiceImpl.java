@@ -1,7 +1,7 @@
 package com.translator.service.codactor.context;
 
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
+import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
 
 import javax.inject.Inject;
@@ -9,7 +9,7 @@ import javax.swing.*;
 import java.util.List;
 
 public class PromptContextServiceImpl implements PromptContextService {
-    private List<HistoricalContextObjectDataHolder> context;
+    private List<HistoricalObjectDataHolder> context;
     private HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer historicalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
     private JLabel statusLabel;
 
@@ -22,7 +22,7 @@ public class PromptContextServiceImpl implements PromptContextService {
     }
 
     @Override
-    public void savePromptContext(List<HistoricalContextObjectDataHolder> context) {
+    public void savePromptContext(List<HistoricalObjectDataHolder> context) {
         this.context = context;
         updateStatusLabel();
     }
@@ -39,7 +39,7 @@ public class PromptContextServiceImpl implements PromptContextService {
     }
 
     @Override
-    public List<HistoricalContextObjectDataHolder> getPromptContextData() {
+    public List<HistoricalObjectDataHolder> getPromptContextData() {
         if (context == null) {
             return null;
         }

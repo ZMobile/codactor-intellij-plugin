@@ -106,9 +106,10 @@ public class FileModificationTracker {
         }
     }
 
-    public void readyFileModificationUpdate(String modificationId, List<FileModificationSuggestionRecord> modificationOptions) {
+    public void readyFileModificationUpdate(String modificationId, String subjectLine, List<FileModificationSuggestionRecord> modificationOptions) {
         FileModification fileModification = getModification(modificationId);
         if (fileModification != null) {
+            fileModification.setSubjectLine(subjectLine);
             fileModification.setModificationRecordId(modificationOptions.get(0).getModificationId());
             List<FileModificationSuggestion> suggestions = new ArrayList<>();
             for (FileModificationSuggestionRecord modificationOption : modificationOptions) {

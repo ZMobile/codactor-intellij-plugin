@@ -1,39 +1,39 @@
 package com.translator.model.codactor.history;
 
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
+import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
 
 public class HistoricalContextObjectHolder {
     private HistoricalContextInquiryHolder historicalContextInquiryHolder;
-    private HistoricalContextModificationHolder historicalContextModificationHolder;
+    private HistoricalContextFileModificationHolder historicalContextFileModificationHolder;
     private HistoricalContextObjectType historicalContextObjectType;
 
     public HistoricalContextObjectHolder(HistoricalContextInquiryHolder historicalContextInquiryHolder) {
         this.historicalContextInquiryHolder = historicalContextInquiryHolder;
-        this.historicalContextModificationHolder = null;
+        this.historicalContextFileModificationHolder = null;
         this.historicalContextObjectType = HistoricalContextObjectType.INQUIRY;
     }
 
-    public HistoricalContextObjectHolder(HistoricalContextModificationHolder historicalContextModificationHolder) {
-        this.historicalContextModificationHolder = historicalContextModificationHolder;
+    public HistoricalContextObjectHolder(HistoricalContextFileModificationHolder historicalContextFileModificationHolder) {
+        this.historicalContextFileModificationHolder = historicalContextFileModificationHolder;
         this.historicalContextInquiryHolder = null;
         this.historicalContextObjectType = HistoricalContextObjectType.FILE_MODIFICATION;
     }
 
     public HistoricalContextObjectHolder() {
         this.historicalContextInquiryHolder = null;
-        this.historicalContextModificationHolder = null;
+        this.historicalContextFileModificationHolder = null;
         this.historicalContextObjectType = null;
     }
 
-    public HistoricalContextObjectHolder(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {
-        if (historicalContextObjectDataHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
-            this.historicalContextModificationHolder = new HistoricalContextModificationHolder(historicalContextObjectDataHolder.getHistoricalCompletedModificationDataHolder());
+    public HistoricalContextObjectHolder(HistoricalObjectDataHolder historicalObjectDataHolder) {
+        if (historicalObjectDataHolder.getHistoricalContextObjectType() == HistoricalContextObjectType.FILE_MODIFICATION) {
+            this.historicalContextFileModificationHolder = new HistoricalContextFileModificationHolder(historicalObjectDataHolder.getHistoricalModificationDataHolder());
             this.historicalContextInquiryHolder = null;
         } else {
-            this.historicalContextInquiryHolder = new HistoricalContextInquiryHolder(historicalContextObjectDataHolder.getHistoricalContextInquiryDataHolder());
-            this.historicalContextModificationHolder = null;
+            this.historicalContextInquiryHolder = new HistoricalContextInquiryHolder(historicalObjectDataHolder.getHistoricalContextInquiryDataHolder());
+            this.historicalContextFileModificationHolder = null;
         }
-        this.historicalContextObjectType = historicalContextObjectDataHolder.getHistoricalContextObjectType();
+        this.historicalContextObjectType = historicalObjectDataHolder.getHistoricalContextObjectType();
     }
 
     public HistoricalContextInquiryHolder getHistoricalContextInquiryHolder() {
@@ -44,12 +44,12 @@ public class HistoricalContextObjectHolder {
         this.historicalContextInquiryHolder = historicalContextInquiryHolder;
     }
 
-    public HistoricalContextModificationHolder getHistoricalCompletedModificationHolder() {
-        return historicalContextModificationHolder;
+    public HistoricalContextFileModificationHolder getHistoricalModificationHolder() {
+        return historicalContextFileModificationHolder;
     }
 
-    public void setHistoricalCompletedModificationHolder(HistoricalContextModificationHolder historicalContextModificationHolder) {
-        this.historicalContextModificationHolder = historicalContextModificationHolder;
+    public void setHistoricalModificationHolder(HistoricalContextFileModificationHolder historicalContextFileModificationHolder) {
+        this.historicalContextFileModificationHolder = historicalContextFileModificationHolder;
     }
 
     public HistoricalContextObjectType getHistoricalContextObjectType() {

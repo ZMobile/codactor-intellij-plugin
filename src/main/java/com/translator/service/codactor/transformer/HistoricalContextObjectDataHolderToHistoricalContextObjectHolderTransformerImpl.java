@@ -1,22 +1,22 @@
 package com.translator.service.codactor.transformer;
 
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.history.data.HistoricalContextObjectDataHolder;
+import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformerImpl implements HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer {
     @Override
-    public HistoricalContextObjectHolder convert(HistoricalContextObjectDataHolder historicalContextObjectDataHolder) {
-        return new HistoricalContextObjectHolder(historicalContextObjectDataHolder);
+    public HistoricalContextObjectHolder convert(HistoricalObjectDataHolder historicalObjectDataHolder) {
+        return new HistoricalContextObjectHolder(historicalObjectDataHolder);
     }
 
     @Override
-    public List<HistoricalContextObjectHolder> convert(List<HistoricalContextObjectDataHolder> historicalContextObjectDataHolders) {
+    public List<HistoricalContextObjectHolder> convert(List<HistoricalObjectDataHolder> historicalObjectDataHolders) {
         List<HistoricalContextObjectHolder> historicalContextObjectHolders = new ArrayList<>();
-        if (historicalContextObjectDataHolders != null) {
-            for (HistoricalContextObjectDataHolder data : historicalContextObjectDataHolders) {
+        if (historicalObjectDataHolders != null) {
+            for (HistoricalObjectDataHolder data : historicalObjectDataHolders) {
                 historicalContextObjectHolders.add(new HistoricalContextObjectHolder(data));
             }
         }
