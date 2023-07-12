@@ -37,7 +37,7 @@ public class InquiryDaoImpl implements InquiryDao {
     @Override
     public List<Inquiry> getRecentInquiries() {
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/recent");
+            URL url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/projects/desktop/inquiries/recent");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -64,7 +64,7 @@ public class InquiryDaoImpl implements InquiryDao {
     @Override
     public Inquiry getInquiry(String inquiryId) {
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/chats");
+            URL url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/projects/desktop/inquiries/chats");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -104,7 +104,7 @@ public class InquiryDaoImpl implements InquiryDao {
             inquiryCreationRequestResource.setPriorContext(new ArrayList<>());
         }
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
+            URL url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -146,7 +146,7 @@ public class InquiryDaoImpl implements InquiryDao {
             inquiryCreationRequestResource.setPriorContext(new ArrayList<>());
         }
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
+            URL url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -184,7 +184,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withSystemMessage(systemMessage)
                 .build();
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
+            URL url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -223,7 +223,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withSystemMessage(systemMessage)
                 .build();
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
+            URL url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -270,7 +270,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withSystemMessage(systemMessage)
                 .build();
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new/general");
+            URL url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/projects/desktop/inquiries/new/general");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -310,7 +310,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withFunctions(functions)
                 .build();
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/continue");
+            URL url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/projects/desktop/inquiries/continue");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -338,6 +338,7 @@ public class InquiryDaoImpl implements InquiryDao {
 
     @Override
     public Inquiry respondToFunctionCall(String previousInquiryChatId, String functionName, String content, String openAiApiKey, String model, List<ChatGptFunction> functions) {
+        System.out.println("Early testo function name: " + functionName);
         FunctionCallResponseRequestResource functionCallResponseRequestResource = new FunctionCallResponseRequestResource.Builder()
                 .withPreviousInquiryChatId(previousInquiryChatId)
                 .withFunctionName(functionName)
@@ -347,7 +348,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withFunctions(functions)
                 .build();
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/continue/function");
+            URL url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/projects/desktop/inquiries/continue/function");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());

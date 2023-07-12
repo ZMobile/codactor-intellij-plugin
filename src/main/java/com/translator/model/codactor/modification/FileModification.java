@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class FileModification {
-    private final String myId;
+    private String myId;
     private String modificationRecordId;
     private String filePath;
     private RangeMarker rangeMarker;
@@ -147,5 +147,9 @@ public class FileModification {
 
     public void setError(boolean error) {
         this.error = error;
+    }
+
+    public void setMyId(String myId) {
+        this.myId = myId;
     }
 }

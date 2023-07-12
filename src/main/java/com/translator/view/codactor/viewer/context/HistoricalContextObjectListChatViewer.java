@@ -1,5 +1,6 @@
 package com.translator.view.codactor.viewer.context;
 
+import com.google.gson.Gson;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.ui.components.JBLabel;
@@ -100,7 +101,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         jList1.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                //If Cntrl + C is pressed (or command for mac users)
+                //If Ctrl + C is pressed (or command for mac users)
                 if (e.getKeyCode() == KeyEvent.VK_C && (e.isControlDown() || e.isMetaDown())) {
                     if (selectedChat != -1) {
                         //Copy the selected text to the clipboard
@@ -271,14 +272,14 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
 
     public void updateChatContents() {
         JList<HistoricalObjectDataHolder> historicalContextObjectDataHolders = historicalContextObjectListViewer.getContextObjectList();
-        List<HistoricalContextObjectHolder> newistoricalContextObjectHolderList = new ArrayList<>();
+        List<HistoricalContextObjectHolder> newHistoricalContextObjectHolderList = new ArrayList<>();
         for (int i = 0; i < historicalContextObjectDataHolders.getModel().getSize(); i++) {
             HistoricalObjectDataHolder historicalObjectDataHolder = historicalContextObjectDataHolders.getModel().getElementAt(i);
             HistoricalContextObjectHolder historicalContextObjectHolder = new HistoricalContextObjectHolder(historicalObjectDataHolder);
-            newistoricalContextObjectHolderList.add(historicalContextObjectHolder);
+            newHistoricalContextObjectHolderList.add(historicalContextObjectHolder);
         }
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            List<HistoricalContextObjectHolder> response = contextQueryDao.queryHistoricalContextObjects(newistoricalContextObjectHolderList);
+            List<HistoricalContextObjectHolder> response = contextQueryDao.queryHistoricalContextObjects(newHistoricalContextObjectHolderList);
             if (response != null) {
                 historicalContextObjectHolderList.addAll(response);
                 updateChatContentsWithContextInstalled();

@@ -72,7 +72,7 @@ public class HistoricalObjectDataHolderRenderer extends JPanel implements ListCe
                 labelThree.setText("Lines: " + lineCounterService.countLines(historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode().trim(), historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode().trim().length()));
             } else if (historicalFileModificationDataHolder.getRecordType() != null && historicalFileModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
                 leftLabelOne.setText("File: " + historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getFilePath());
-                leftLabelTwo.setText("Type: " + historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getModificationType() + " Subject: " + historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSubjectLine());
+                leftLabelTwo.setText("Type: " + historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getModificationType() + " Subject: " + historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getModificationId()/*historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSubjectLine()*/);
                 labelThree.setText("Lines: " + lineCounterService.countLines(historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim(), historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim().length()));
             }
             if (isSelected) {

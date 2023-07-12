@@ -9,6 +9,7 @@ public class FileModificationSuggestionRecordToFileModificationTransformerServic
     public FileModification convert(FileModificationSuggestionRecord fileModificationSuggestionRecord) {
         FileModification fileModification = new FileModification(fileModificationSuggestionRecord.getFilePath(), fileModificationSuggestionRecord.getModification(), null, fileModificationSuggestionRecord.getBeforeCode(), fileModificationSuggestionRecord.getModificationType(), null);
         fileModification.setSubjectLine(fileModificationSuggestionRecord.getSubjectLine());
+        fileModification.setModificationRecordId(fileModificationSuggestionRecord.getModificationId());
         fileModification.setDone(true);
         fileModification.setError(false);
         FileModificationSuggestion fileModificationSuggestion = new FileModificationSuggestion(fileModificationSuggestionRecord.getId(), fileModificationSuggestionRecord.getFilePath(), fileModificationSuggestionRecord.getModificationId(), fileModificationSuggestionRecord.getSuggestedCode());

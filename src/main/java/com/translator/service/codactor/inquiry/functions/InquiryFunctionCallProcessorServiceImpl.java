@@ -73,8 +73,6 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                Gson gson = new Gson();
-
                 Map<String, Object> contentMap = new HashMap<>();
                 contentMap.put("filePath", virtualFile.getPath());
                 contentMap.put("filePackage", packageName);

@@ -5,7 +5,7 @@ import com.intellij.openapi.editor.RangeMarker;
 import java.util.UUID;
 
 public class FileModificationSuggestionModification {
-    private final String myId;
+    private String myId;
     private String modificationRecordId;
     private final String filePath;
     private RangeMarker rangeMarker;
@@ -113,5 +113,9 @@ public class FileModificationSuggestionModification {
 
     public void setDone(boolean done) {
         this.done = done;
+    }
+
+    public void setMyId(String myId) {
+        this.myId = myId;
     }
 }

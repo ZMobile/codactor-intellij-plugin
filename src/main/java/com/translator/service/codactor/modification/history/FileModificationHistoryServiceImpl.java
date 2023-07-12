@@ -67,7 +67,6 @@ public class FileModificationHistoryServiceImpl implements FileModificationHisto
 
     public FileModificationDataHolder getModification(String id) {
         List<FileModificationDataHolder> queuedModificationObjects = fileModificationTrackerService.getQueuedFileModificationObjectHolders();
-
         return queuedModificationObjects.stream()
                 .filter(modificationObject ->
                         (modificationObject.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION

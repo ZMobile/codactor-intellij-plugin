@@ -10,13 +10,13 @@ public class FileModificationDataReferenceHolder {
     private ModificationObjectType modificationObjectType;
 
     public FileModificationDataReferenceHolder(FileModification fileModification) {
-        this.id = fileModification.getId();
+        this.id = fileModification.getModificationRecordId();
         this.subjectLine = fileModification.getSubjectLine();
         this.modificationObjectType = ModificationObjectType.FILE_MODIFICATION;
     }
 
     public FileModificationDataReferenceHolder(FileModificationSuggestionModification fileModificationSuggestionModification) {
-        this.id = fileModificationSuggestionModification.getId();
+        this.id = fileModificationSuggestionModification.getModificationSuggestionModificationRecordId();
         this.subjectLine = fileModificationSuggestionModification.getSubjectLine();
         this.modificationObjectType = ModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION;
     }

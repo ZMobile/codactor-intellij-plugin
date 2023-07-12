@@ -7,6 +7,7 @@ public class FileModificationSuggestionModificationRecordToFileModificationSugge
     @Override
     public FileModificationSuggestionModification convert(FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord) {
         FileModificationSuggestionModification fileModificationSuggestionModification = new FileModificationSuggestionModification(fileModificationSuggestionModificationRecord.getFilePath(), fileModificationSuggestionModificationRecord.getModificationId(), fileModificationSuggestionModificationRecord.getSuggestionId(), null, fileModificationSuggestionModificationRecord.getBeforeText(), fileModificationSuggestionModificationRecord.getModificationType());
+        fileModificationSuggestionModification.setModificationSuggestionModificationRecordId(fileModificationSuggestionModificationRecord.getId());
         fileModificationSuggestionModification.setError(fileModificationSuggestionModification.isError());
         fileModificationSuggestionModification.setDone(fileModificationSuggestionModification.isDone());
         fileModificationSuggestionModification.setSubjectLine(fileModificationSuggestionModificationRecord.getSubjectLine());

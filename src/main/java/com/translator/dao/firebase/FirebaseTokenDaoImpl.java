@@ -31,7 +31,7 @@ public class FirebaseTokenDaoImpl implements FirebaseTokenDao {
     public FirebaseAuthLoginResponseResource login(String username, String password) {
         URL url = null;
         try {
-            url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/users/login");
+            url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/users/login");
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
@@ -76,7 +76,7 @@ public class FirebaseTokenDaoImpl implements FirebaseTokenDao {
     public FirebaseToken getFirebaseToken(String refreshToken) {
         URL url = null;
         try {
-            url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/users/id_token");
+            url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/users/id_token");
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
