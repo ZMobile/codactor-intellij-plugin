@@ -293,8 +293,10 @@ public class InquiryChatViewer extends JPanel {
         for (Component component : getComponents()) {
             if (component instanceof FixedHeightPanel) {
                 FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                Editor editor = (Editor) fixedHeightPanel.getComponent(0);
-                editor.getComponent().setSize(new Dimension(fixedHeightPanel.getWidth(), fixedHeightPanel.getHeight()));
+                if (fixedHeightPanel.getEditor() != null) {
+                    Editor editor = (Editor) fixedHeightPanel.getComponent(0);
+                    editor.getComponent().setSize(new Dimension(fixedHeightPanel.getWidth(), fixedHeightPanel.getHeight()));
+                }
             }
         }
     }

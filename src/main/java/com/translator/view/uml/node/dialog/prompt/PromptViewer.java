@@ -129,9 +129,11 @@ public class PromptViewer extends JPanel {
                             firstComponentCopied = true;
                         } else if (component1 instanceof FixedHeightPanel) {
                             FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
-                            Editor editor = fixedHeightPanel.getEditor();
-                            text.append(editor.getDocument().getText());
-                            firstComponentCopied = true;
+                            if (fixedHeightPanel.getEditor() != null) {
+                                Editor editor = fixedHeightPanel.getEditor();
+                                text.append(editor.getDocument().getText());
+                                firstComponentCopied = true;
+                            }
                         }
                     }
                     if (promptNode.isProcessed()) {
@@ -245,9 +247,11 @@ public class PromptViewer extends JPanel {
                         }
                     } else if (component instanceof FixedHeightPanel) {
                         FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                        Editor editor = fixedHeightPanel.getEditor();
-                        editor.getMarkupModel().removeAllHighlighters();
-                        editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                        if (fixedHeightPanel.getEditor() != null) {
+                            Editor editor = fixedHeightPanel.getEditor();
+                            editor.getMarkupModel().removeAllHighlighters();
+                            editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                        }
                     }
                 }
                 promptHighlighterService.highlightPromptsWithoutRemoval(promptNodeDialog);
@@ -259,8 +263,10 @@ public class PromptViewer extends JPanel {
                     jBTextArea.getHighlighter().removeAllHighlights();
                 } else if (component instanceof FixedHeightPanel) {
                     FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                    Editor editor = fixedHeightPanel.getEditor();
-                    editor.getMarkupModel().removeAllHighlighters();
+                    if (fixedHeightPanel.getEditor() != null) {
+                        Editor editor = fixedHeightPanel.getEditor();
+                        editor.getMarkupModel().removeAllHighlighters();
+                    }
                 }
             }
             promptHighlighterService.highlightPromptsWithoutRemoval(promptNodeDialog);

@@ -15,6 +15,7 @@ import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.codactor.context.PromptContextService;
+import com.translator.service.codactor.inquiry.functions.InquiryChatListFunctionCallCompressorService;
 import com.translator.view.codactor.viewer.context.*;
 
 import javax.inject.Inject;
@@ -29,6 +30,7 @@ public class PromptContextBuilderDialog extends JDialog {
     private ContextQueryDao contextQueryDao;
     private InquiryDao inquiryDao;
     private PromptContextService promptContextService;
+    private InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService;
     private HistoricalContextObjectViewer historicalContextObjectViewer;
     private HistoricalContextModificationListViewer historicalContextModificationListViewer;
     private HistoricalContextInquiryListViewer historicalContextInquiryListViewer;
@@ -42,6 +44,7 @@ public class PromptContextBuilderDialog extends JDialog {
     public PromptContextBuilderDialog(ContextQueryDao contextQueryDao,
                                       InquiryDao inquiryDao,
                                       CodeModificationHistoryDao codeModificationHistoryDao,
+                                      InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService,
                                       @Assisted PromptContextService promptContextService) {
         setModal(false);
         setModalityType(ModalityType.APPLICATION_MODAL);
@@ -50,13 +53,13 @@ public class PromptContextBuilderDialog extends JDialog {
         this.contextQueryDao = contextQueryDao;
         this.inquiryDao = inquiryDao;
         this.promptContextService = promptContextService;
-        this.historicalContextObjectViewer = new HistoricalContextObjectViewer(contextQueryDao);
+        this.historicalContextObjectViewer = new HistoricalContextObjectViewer(contextQueryDao, inquiryChatListFunctionCallCompressorService);
         this.historicalContextObjectListViewer = new HistoricalContextObjectListViewer(historicalContextObjectViewer);
         this.historicalContextModificationListViewer = new HistoricalContextModificationListViewer(historicalContextObjectViewer, historicalContextObjectListViewer, codeModificationHistoryDao);
         this.historicalContextInquiryListViewer = new HistoricalContextInquiryListViewer(inquiryDao, historicalContextObjectViewer, historicalContextObjectListViewer);
 
         // Set dependencies between the components
-        setDependencies();
+        setDependencies(inquiryChatListFunctionCallCompressorService);
 
         if (promptContextService.getPromptContext() != null) {
             this.historicalContextObjectListViewer.updateContextObjectList(promptContextService.getPromptContextData());
@@ -65,7 +68,7 @@ public class PromptContextBuilderDialog extends JDialog {
         initComponents();
     }
 
-    private void setDependencies() {
+    private void setDependencies(InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService) {
         historicalContextModificationListViewer.setHistoricalContextInquiryListViewer(historicalContextInquiryListViewer);
         historicalContextInquiryListViewer.setHistoricalContextModificationListViewer(historicalContextModificationListViewer);
         historicalContextObjectListViewer.setHistoricalContextModificationListViewer(historicalContextModificationListViewer);
@@ -73,7 +76,7 @@ public class PromptContextBuilderDialog extends JDialog {
         historicalContextObjectViewer.setHistoricalContextModificationListViewer(historicalContextModificationListViewer);
         historicalContextObjectViewer.setHistoricalContextInquiryListViewer(historicalContextInquiryListViewer);
         historicalContextObjectViewer.setHistoricalContextObjectListViewer(historicalContextObjectListViewer);
-        historicalContextObjectListChatViewer = new HistoricalContextObjectListChatViewer(contextQueryDao, promptContextService, historicalContextObjectListViewer);
+        historicalContextObjectListChatViewer = new HistoricalContextObjectListChatViewer(contextQueryDao, promptContextService, inquiryChatListFunctionCallCompressorService, historicalContextObjectListViewer);
         historicalContextObjectListViewer.setHistoricalContextObjectListChatViewer(historicalContextObjectListChatViewer);
     }
 

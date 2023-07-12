@@ -434,8 +434,8 @@ public class InquiryChatListViewer extends JPanel {
         ApplicationManager.getApplication().invokeLater(() -> {
             inquiryChatList.setModel(model);
             jBScrollPane.setViewportView(inquiryChatList);
-            JScrollBar verticalScrollBar = jBScrollPane.getVerticalScrollBar();
-            verticalScrollBar.setValue(verticalScrollBar.getMaximum());
+            //JScrollBar verticalScrollBar = jBScrollPane.getVerticalScrollBar();
+            //verticalScrollBar.setValue(verticalScrollBar.getMaximum());
             this.componentResized();
         });
     }

@@ -35,9 +35,11 @@ public class PromptHighlighterServiceImpl implements PromptHighlighterService {
                         highlightTextArea(selectedJBTextArea, promptInputs);
                     } else if (component instanceof FixedHeightPanel) {
                         FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                        Editor editor = fixedHeightPanel.getEditor();
-                        editor.getMarkupModel().removeAllHighlighters();
-                        highlightEditor(editor, promptInputs);
+                        if (fixedHeightPanel.getEditor() != null) {
+                            Editor editor = fixedHeightPanel.getEditor();
+                            editor.getMarkupModel().removeAllHighlighters();
+                            highlightEditor(editor, promptInputs);
+                        }
                     }
                 }
             }
@@ -58,8 +60,10 @@ public class PromptHighlighterServiceImpl implements PromptHighlighterService {
                         highlightTextArea(selectedJBTextArea, promptInputs);
                     } else if (component instanceof FixedHeightPanel) {
                         FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                        Editor editor = fixedHeightPanel.getEditor();
-                        highlightEditor(editor, promptInputs);
+                        if (fixedHeightPanel.getEditor() != null) {
+                            Editor editor = fixedHeightPanel.getEditor();
+                            highlightEditor(editor, promptInputs);
+                        }
                     }
                 }
             }

@@ -121,6 +121,10 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                     JOptionPane.ERROR_MESSAGE);
             return null;
         }
+        if (modificationQueueViewer == null) {
+            Injector injector = CodactorInjector.getInstance().getInjector(project);
+            this.modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
+        }
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         guardedBlockService.addFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModificationId, startIndex, endIndex);
         //jTreeHighlighterService.repaint();
