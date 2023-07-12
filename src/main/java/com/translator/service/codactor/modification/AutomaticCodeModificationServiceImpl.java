@@ -5,10 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.translator.dao.firebase.FirebaseTokenService;
 import com.translator.model.codactor.api.translator.modification.*;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.modification.FileModification;
-import com.translator.model.codactor.modification.FileModificationSuggestion;
-import com.translator.model.codactor.modification.FileModificationSuggestionModificationRecord;
-import com.translator.model.codactor.modification.ModificationType;
+import com.translator.model.codactor.modification.*;
 import com.translator.model.codactor.task.CancellableRunnable;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
@@ -23,6 +20,7 @@ import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFa
 
 import javax.inject.Inject;
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModificationService {
@@ -95,6 +93,33 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     }
 
     @Override
+    public void getModifiedCodeAndWait(String filePath, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
+        String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
+        String modificationId = fileModificationTrackerService.addModification(filePath, modification, startIndex, endIndex, modificationType, priorContext);
+        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+        DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
+        if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+        } else {
+            fileModificationTrackerService.errorFileModification(modificationId);
+            if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
+                fileModificationErrorDialog.setVisible(true);
+            } else {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeModificationResponseResource.getError(), modificationType);
+                fileModificationErrorDialog.setVisible(true);
+            }
+        }
+    }
+
+    @Override
     public void getModifiedCode(String filePath, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
             LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
@@ -126,6 +151,33 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+    }
+
+    @Override
+    public void getModifiedCodeAndWait(String filePath, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
+        String code = codeSnippetExtractorService.getAllText(filePath);
+        String modificationId = fileModificationTrackerService.addModification(filePath, modification, 0, code.length(), modificationType, priorContext);
+        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+        DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
+        if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+        } else {
+            fileModificationTrackerService.errorFileModification(modificationId);
+            if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
+                fileModificationErrorDialog.setVisible(true);
+            } else {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeModificationResponseResource.getError(), modificationType);
+                fileModificationErrorDialog.setVisible(true);
+            }
+        }
     }
 
     @Override
@@ -198,6 +250,33 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     }
 
     @Override
+    public void getFixedCodeAndWait(String filePath, int startIndex, int endIndex, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
+        String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
+        String modificationId = fileModificationTrackerService.addModification(filePath, error, startIndex, endIndex, modificationType, priorContext);
+        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+        DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
+        if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+        } else {
+            fileModificationTrackerService.errorFileModification(modificationId);
+            if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
+                fileModificationErrorDialog.setVisible(true);
+            } else {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeModificationResponseResource.getError(), modificationType);
+                fileModificationErrorDialog.setVisible(true);
+            }
+        }
+    }
+
+    @Override
     public void getFixedCode(String filePath, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
             LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
@@ -229,6 +308,33 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+    }
+
+    @Override
+    public void getFixedCodeAndWait(String filePath, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
+        String code = codeSnippetExtractorService.getAllText(filePath);
+        String modificationId = fileModificationTrackerService.addModification(filePath, error, 0, code.length(), modificationType, priorContext);
+        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+        DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
+        if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+        } else {
+            fileModificationTrackerService.errorFileModification(modificationId);
+            if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
+                fileModificationErrorDialog.setVisible(true);
+            } else {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeModificationResponseResource.getError(), modificationType);
+                fileModificationErrorDialog.setVisible(true);
+            }
+        }
     }
 
     @Override
@@ -297,6 +403,110 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.CREATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+    }
+
+    @Override
+    public void getCreatedCodeAndWait(String filePath, String description, List<HistoricalContextObjectHolder> priorContext) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
+        String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
+        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+        DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
+        if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
+        } else {
+            fileModificationTrackerService.errorFileModification(modificationId);
+            if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
+                fileModificationErrorDialog.setVisible(true);
+            } else {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.CREATE);
+                fileModificationErrorDialog.setVisible(true);
+            }
+        }
+    }
+
+    @Override
+    public void getDeletedCodeFile(String filePath) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
+        String modificationId = fileModificationTrackerService.addModification(filePath, "Delete this code file", 0, 0, ModificationType.DELETE, new ArrayList<>());
+        FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
+        fileModification.setFileDeletionAtFilePathOnAcceptance(true);
+        List<FileModificationSuggestionRecord> fileModificationSuggestionRecords = new ArrayList<>();
+        FileModificationSuggestionRecord fileModificationSuggestionRecord = new FileModificationSuggestionRecord(firebaseTokenService.getFirebaseToken().getUserId(), fileModification.getId(), ModificationType.DELETE, filePath, "Delete this code file", fileModification.getBeforeText(), "Delete this code file", "");
+        fileModificationSuggestionRecords.add(fileModificationSuggestionRecord);
+        fileModificationTrackerService.readyFileModificationUpdate(modificationId, "Delete this code file", fileModificationSuggestionRecords);
+    }
+
+    @Override
+    public void getCreatedCodeFile(String filePath, String description) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
+        String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, new ArrayList<>());
+        FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
+        fileModification.setFileCreationAtFilePathOnAcceptance(true);
+        CancellableRunnable task = customProgressIndicator -> {
+            String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
+            DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
+            if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
+            } else {
+                fileModificationTrackerService.errorFileModification(modificationId);
+                if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
+                    fileModificationErrorDialog.setVisible(true);
+                } else {
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.CREATE);
+                    fileModificationErrorDialog.setVisible(true);
+                }
+            }
+            backgroundTaskMapperService.removeTask(modificationId);
+        };
+        Runnable cancelTask = () -> {};
+        CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.CREATE + ")", task, cancelTask);
+        ProgressManager.getInstance().run(backgroundTask);
+        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+    }
+
+    @Override
+    public void getCreatedCodeFileAndWait(String filePath, String description) {
+        if (firebaseTokenService.getFirebaseToken() == null) {
+            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            if (firebaseTokenService.getFirebaseToken() == null) {
+                return;
+            }
+        }
+        String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, new ArrayList<>());
+        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
+        DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
+        if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
+        } else {
+            fileModificationTrackerService.errorFileModification(modificationId);
+            if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
+                fileModificationErrorDialog.setVisible(true);
+            } else {
+                FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.CREATE);
+                fileModificationErrorDialog.setVisible(true);
+            }
+        }
     }
 
     @Override

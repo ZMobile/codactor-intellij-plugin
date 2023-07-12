@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class FileModification {
-    private String myId;
+    private final String myId;
     private String modificationRecordId;
     private String filePath;
     private RangeMarker rangeMarker;
@@ -20,18 +20,22 @@ public class FileModification {
     private List<FileModificationSuggestion> modificationOptions;
     private String newLanguage;
     private String newFileType;
+    private boolean fileCreationAtFilePathOnAcceptance;
+    private boolean fileDeletionAtFilePathOnAcceptance;
     private boolean done;
     private boolean error;
 
     public FileModification(String filePath, String modification, RangeMarker rangeMarker, String beforeText, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         this.filePath = filePath;
         this.myId = UUID.randomUUID().toString();
-        this.rangeMarker = rangeMarker;
         this.beforeText = beforeText;
         this.modification = modification;
+        this.rangeMarker = rangeMarker;
         this.priorContext = priorContext;
         this.modificationType = modificationType;
         this.modificationOptions = new ArrayList<>();
+        this.fileCreationAtFilePathOnAcceptance = false;
+        this.fileDeletionAtFilePathOnAcceptance = false;
         this.done = false;
         this.error = false;
     }
@@ -56,14 +60,6 @@ public class FileModification {
         this.filePath = filePath;
     }
 
-    public RangeMarker getRangeMarker() {
-        return rangeMarker;
-    }
-
-    public void setRangeMarker(RangeMarker rangeMarker) {
-        this.rangeMarker = rangeMarker;
-    }
-
     public String getSubjectLine() {
         return subjectLine;
     }
@@ -86,6 +82,14 @@ public class FileModification {
 
     public void setModification(String modification) {
         this.modification = modification;
+    }
+
+    public RangeMarker getRangeMarker() {
+        return rangeMarker;
+    }
+
+    public void setRangeMarker(RangeMarker rangeMarker) {
+        this.rangeMarker = rangeMarker;
     }
 
     public List<HistoricalContextObjectHolder> getPriorContext() {
@@ -133,6 +137,22 @@ public class FileModification {
         this.newFileType = newFileType;
     }
 
+    public boolean isFileCreationAtFilePathOnAcceptance() {
+        return fileCreationAtFilePathOnAcceptance;
+    }
+
+    public void setFileCreationAtFilePathOnAcceptance(boolean fileCreationAtFilePathOnAcceptance) {
+        this.fileCreationAtFilePathOnAcceptance = fileCreationAtFilePathOnAcceptance;
+    }
+
+    public boolean isFileDeletionAtFilePathOnAcceptance() {
+        return fileDeletionAtFilePathOnAcceptance;
+    }
+
+    public void setFileDeletionAtFilePathOnAcceptance(boolean fileDeletionAtFilePathOnAcceptance) {
+        this.fileDeletionAtFilePathOnAcceptance = fileDeletionAtFilePathOnAcceptance;
+    }
+
     public boolean isDone() {
         return done;
     }
@@ -147,9 +167,5 @@ public class FileModification {
 
     public void setError(boolean error) {
         this.error = error;
-    }
-
-    public void setMyId(String myId) {
-        this.myId = myId;
     }
 }

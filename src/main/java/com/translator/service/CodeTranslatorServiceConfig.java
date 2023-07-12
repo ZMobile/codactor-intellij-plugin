@@ -8,6 +8,8 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.intellij.openapi.project.Project;
 import com.translator.dao.CodeTranslatorDaoConfig;
 import com.translator.dao.inquiry.InquiryDao;
+import com.translator.service.codactor.directory.FileDirectoryStructureQueryService;
+import com.translator.service.codactor.directory.FileDirectoryStructureQueryServiceImpl;
 import com.translator.service.codactor.editor.*;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.context.PromptContextServiceImpl;
@@ -38,6 +40,8 @@ import com.translator.service.codactor.openai.OpenAiApiKeyService;
 import com.translator.service.codactor.openai.OpenAiApiKeyServiceImpl;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.openai.OpenAiModelServiceImpl;
+import com.translator.service.codactor.runner.CodeRunnerService;
+import com.translator.service.codactor.runner.CodeRunnerServiceImpl;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.codactor.task.BackgroundTaskMapperServiceImpl;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
@@ -59,6 +63,8 @@ import com.translator.service.uml.node.query.ConnectionQueryServiceImpl;
 import com.translator.service.uml.node.query.NodeQueryService;
 import com.translator.service.uml.node.query.NodeQueryServiceImpl;
 import com.translator.service.uml.node.runner.*;
+import com.translator.service.util.SelectedFileViewerService;
+import com.translator.service.util.SelectedFileViewerServiceImpl;
 import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFactory;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
@@ -82,6 +88,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(OpenAiApiKeyService.class).to(OpenAiApiKeyServiceImpl.class).asEagerSingleton();
         bind(OpenAiModelService.class).to(OpenAiModelServiceImpl.class).asEagerSingleton();
         bind(FileCreatorService.class).to(FileCreatorServiceImpl.class);
+        bind(FileRemoverService.class).to(FileRemoverServiceImpl.class);
         bind(FileReaderService.class).to(FileReaderServiceImpl.class);
         bind(FileOpenerService.class).to(FileOpenerServiceImpl.class);
         bind(SelectedFileFetcherService.class).to(SelectedFileFetcherServiceImpl.class);
@@ -124,6 +131,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(FileModificationSuggestionRecordToFileModificationTransformerService.class).to(FileModificationSuggestionRecordToFileModificationTransformerServiceImpl.class);
         bind(FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerService.class).to(FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerServiceImpl.class);
         bind(FileModificationHistoryService.class).to(FileModificationHistoryServiceImpl.class);
+        bind(CodeRunnerService.class).to(CodeRunnerServiceImpl.class);
+        bind(FileDirectoryStructureQueryService.class).to(FileDirectoryStructureQueryServiceImpl.class);
+        bind(SelectedFileViewerService.class).to(SelectedFileViewerServiceImpl.class);
     }
 
     @Singleton
@@ -143,8 +153,10 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                             EditorClickHandlerService editorClickHandlerService,
                                                                             RenameFileService renameFileService,
                                                                             BackgroundTaskMapperService backgroundTaskMapperService,
-                                                                            DiffEditorGeneratorService diffEditorGeneratorService) {
-        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService);
+                                                                            DiffEditorGeneratorService diffEditorGeneratorService,
+                                                                            FileCreatorService fileCreatorService,
+                                                                            FileRemoverService fileRemoverService) {
+        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService, fileCreatorService, fileRemoverService);
     }
 
     @Singleton

@@ -90,7 +90,9 @@ public class HistoricalContextObjectViewer extends JPanel {
                                 } else if (component instanceof FixedHeightPanel) {
                                     FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
                                     Editor editor = fixedHeightPanel.getEditor();
-                                    editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                                    if (editor != null) {
+                                        editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                                    }
                                 }
                             }
                             continue;

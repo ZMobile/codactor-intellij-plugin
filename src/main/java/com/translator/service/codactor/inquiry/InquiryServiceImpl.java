@@ -230,6 +230,9 @@ public class InquiryServiceImpl implements InquiryService {
             while (latestInquiryChat.getFunctionCall() != null) {
                 String functionCallResponse = inquiryFunctionCallProcessorService.processFunctionCall(latestInquiryChat.getFunctionCall());
                 Inquiry inquiry1 = inquiryDao.respondToFunctionCall(latestInquiryChat.getId(), latestInquiryChat.getFunctionCall().getName(), functionCallResponse, openAiApiKey, model, functions);
+                if (inquiry1 == null) {
+                    break;
+                }
                 inquiry.getChats().addAll(inquiry1.getChats());
                 inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                 inquiryViewer.getInquiryChatListViewer().componentResized();

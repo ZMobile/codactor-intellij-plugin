@@ -12,7 +12,18 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
     @Override
     public List<ChatGptFunction> generateCodactorFunctions() {
         List<ChatGptFunction> codactorFunctions = new ArrayList<>();
-// Create ChatGptFunction for "read_file_at_path"
+
+        // Create ChatGptFunction for "read_current_selected_file_in_editor"
+        Parameters readCurrentSelectedFileInEditorParams = new Parameters("object");
+        ChatGptFunction readCurrentSelectedFileInEditor = new ChatGptFunction("read_current_selected_file_in_editor", "Read the contents and file path of the currently selected code file in the Intellij code editor", readCurrentSelectedFileInEditorParams);
+        codactorFunctions.add(readCurrentSelectedFileInEditor);
+
+        // Create ChatGptFunction for "read_current_selected_file_in_tree_view"
+        Parameters readCurrentSelectedFileInTreeViewParams = new Parameters("object");
+        ChatGptFunction readCurrentSelectedFileInTreeView = new ChatGptFunction("read_current_selected_file_in_tree_view", "Read the file path of the currently selected file or directory in the Intellij directory tree view", readCurrentSelectedFileInTreeViewParams);
+        codactorFunctions.add(readCurrentSelectedFileInTreeView);
+
+        // Create ChatGptFunction for "read_file_at_path"
         Parameters readFileAtPathParams = new Parameters("object");
         Property pathProperty = new Property("string", "The path of the code file eg. /Users/user/IdeaProjects/code_project/src/code.java", null, null);
         Property startIndexProperty = new Property("integer", "The start index of the code to be read in the file. Can be null which means 0", null, null);
@@ -27,7 +38,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
 
         // Create ChatGptFunction for "read_file_at_package"
         Parameters readFileAtPackageParams = new Parameters("object");
-        Property packageProperty = new Property("string", "The package of the code file e.g. com.translator.view.uml.node.dialog.prompt", null, null);
+        Property packageProperty = new Property("string", "The class package of the code file e.g. com.translator.view.uml.node.dialog.prompt", null, null);
         Property startIndexProperty2 = new Property("integer", "The start index of the code to be read in the file. Can be null which means 0", null, null);
         Property endIndexProperty2 = new Property("integer", "The start index of the code to be read in the file. Can be null which means the end of the code file", null, null);
         readFileAtPackageParams.getProperties().put("package", packageProperty);
@@ -113,14 +124,16 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         modificationTypes.add("modify");
         modificationTypes.add("fix");
         modificationTypes.add("create");
-        Property modificationTypeProperty = new Property("string", "The type of file modification", modificationTypes, null);
+        Property optionalPathProperty = new Property("string", "The path of the file to be modified. If not provided, the file modifier will attempt to find the file to be modified based on the provided description. Either this or the package must be provided for a modification", null, null);
+        Property optionalPackageProperty = new Property("string", "The class package of the file to be modified. If not provided, the file modifier will attempt to find the file to be modified based on the provided description. Either this or the path must be provided for a modification", null, null);
+        Property modificationTypeProperty = new Property("string", "The type of file modification types to choose from are 'modify' for modifying code in a file, 'fix' for reporting and fixing an error (like modify but for complaining), and 'create' for creating new code where none existed before, so it will ignore the startIndex and endIndex, placing its created code at index 0.", modificationTypes, null);
         Property descriptionProperty = new Property("string", "The description of the requested file modification to be enacted on the file", null, null);
-        requestFileModificationParams.getProperties().put("path", pathProperty);
+        requestFileModificationParams.getProperties().put("path", optionalPathProperty);
+        requestFileModificationParams.getProperties().put("package", optionalPackageProperty);
         requestFileModificationParams.getProperties().put("modificationType", modificationTypeProperty);
         requestFileModificationParams.getProperties().put("description", descriptionProperty);
         requestFileModificationParams.getProperties().put("startIndex", startIndexProperty);
         requestFileModificationParams.getProperties().put("endIndex", endIndexProperty);
-        requestFileModificationParams.getRequired().add("path");
         requestFileModificationParams.getRequired().add("modificationType");
         requestFileModificationParams.getRequired().add("description");
 

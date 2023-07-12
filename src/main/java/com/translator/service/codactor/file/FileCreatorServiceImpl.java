@@ -1,5 +1,14 @@
 package com.translator.service.codactor.file;
 
+import com.google.inject.Inject;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDirectory;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,6 +20,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FileCreatorServiceImpl implements FileCreatorService {
+    private final Project project;
+
+    @Inject
+    public FileCreatorServiceImpl(Project project) {
+        this.project = project;
+    }
 
     public List<File> createFilesFromInput(String directoryPath, String input) {
         List<File> files = new ArrayList<>();
@@ -61,7 +76,7 @@ public class FileCreatorServiceImpl implements FileCreatorService {
         return fileNames;
     }
 
-    private File createFile(String directoryPath, String fileName) throws IOException {
+    public File createFile(String directoryPath, String fileName) throws IOException {
         Files.createDirectories(Paths.get(directoryPath));
         File file = new File(directoryPath, fileName);
         //Create the directory if it doesn't exist
@@ -77,5 +92,31 @@ public class FileCreatorServiceImpl implements FileCreatorService {
             System.out.println("File already exists: " + file.getAbsolutePath());
         }
         return file;
+    }
+
+    @Override
+    public PsiFile createAndReturnPsiFile(String filePath) {
+        File file = null;
+        String directoryPath = getDirectoryPathFromFilePath(filePath);
+        String fileName = getFileNameFilePath(filePath);
+        try {
+            file = createFile(directoryPath, fileName);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        LocalFileSystem localFileSystem = LocalFileSystem.getInstance();
+        VirtualFile newVirtualFile = localFileSystem.refreshAndFindFileByIoFile(file);
+        PsiManager psiManager = PsiManager.getInstance(project);
+
+        assert newVirtualFile != null;
+        return psiManager.findFile(newVirtualFile);
+    }
+
+    private String getDirectoryPathFromFilePath(String filePath) {
+        return filePath.substring(0, filePath.lastIndexOf("/"));
+    }
+
+    private String getFileNameFilePath(String filePath) {
+        return filePath.substring(filePath.lastIndexOf("/") + 1);
     }
 }

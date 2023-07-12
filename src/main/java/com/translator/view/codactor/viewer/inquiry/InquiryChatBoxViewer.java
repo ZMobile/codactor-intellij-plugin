@@ -23,6 +23,9 @@ public class InquiryChatBoxViewer extends JPanel {
     private JBTextArea promptInput;
     private JButton askButton;
     private JButton microphoneButton;
+    private JButton whatWasChangedButton;
+    private JButton whatDoesThisDoButton;
+    private JButton whatCanYourFunctionsDoButton;
 
     public InquiryChatBoxViewer(InquiryViewer inquiryViewer) {
         this.inquiryViewer = inquiryViewer;
@@ -127,27 +130,58 @@ public class InquiryChatBoxViewer extends JPanel {
             JComboBox<String> cb = (JComboBox<String>) e.getSource();
             String model = (String) cb.getSelectedItem();
             if (model != null) {
+                whatCanYourFunctionsDoButton.setVisible(model.equals("gpt-3.5-turbo-0613") || model.equals("gpt-4-0613"));
                 openAiModelService.setSelectedOpenAiModel(model);
             }
         });
         toolBar.add(modelComboBox);
-        toolBar.addSeparator();
+        //toolBar.addSeparator();
 
-        JButton whatWasChangedButton = new JButton("\"What was changed?\"");
+        whatWasChangedButton = new JButton("\"What was changed?\"");
         whatWasChangedButton.setFocusable(false);
         whatWasChangedButton.setHorizontalTextPosition(SwingConstants.CENTER);
         whatWasChangedButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         whatWasChangedButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        whatWasChangedButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                inquiryViewer.askInquiryQuestion(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), "What was changed in this modification?", inquiry.getFilePath());
+            }
+        });
+        whatWasChangedButton.setVisible(false);
         toolBar.add(whatWasChangedButton);
-        toolBar.addSeparator();
+        //toolBar.addSeparator();
 
-        JButton whatDoesThisDoButton = new JButton("\"What does this do?\"");
+        whatDoesThisDoButton = new JButton("\"What does this do?\"");
         whatDoesThisDoButton.setFocusable(false);
         whatDoesThisDoButton.setHorizontalTextPosition(SwingConstants.CENTER);
         whatDoesThisDoButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         whatDoesThisDoButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        whatDoesThisDoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                inquiryViewer.askInquiryQuestion(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), "What does this code do?", inquiry.getFilePath());
+            }
+        });
+        whatDoesThisDoButton.setVisible(false);
         toolBar.add(whatDoesThisDoButton);
         toolBar.setVisible(true);
+
+        //toolBar.addSeparator();
+
+        whatCanYourFunctionsDoButton = new JButton("\"What can your functions do?\"");
+        whatCanYourFunctionsDoButton.setFocusable(false);
+        whatCanYourFunctionsDoButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        whatCanYourFunctionsDoButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        whatCanYourFunctionsDoButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        whatCanYourFunctionsDoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                inquiryViewer.askNewGeneralInquiryQuestion("What can you do with your functions?");
+            }
+        });
+        whatCanYourFunctionsDoButton.setVisible(false);
+        toolBar.add(whatCanYourFunctionsDoButton);
     }
 
     private void addComponents() {
@@ -190,6 +224,18 @@ public class InquiryChatBoxViewer extends JPanel {
 
     public JButton getAskButton() {
         return askButton;
+    }
+
+    public JButton getWhatWasChangedButton() {
+        return whatWasChangedButton;
+    }
+
+    public JButton getWhatDoesThisDoButton() {
+        return whatDoesThisDoButton;
+    }
+
+    public JButton getWhatCanYourFunctionsDoButton() {
+        return whatCanYourFunctionsDoButton;
     }
 
     public void setInquiry(Inquiry inquiry) {

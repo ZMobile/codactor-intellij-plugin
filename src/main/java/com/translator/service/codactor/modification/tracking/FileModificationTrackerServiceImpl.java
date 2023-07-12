@@ -2,7 +2,10 @@ package com.translator.service.codactor.modification.tracking;
 
 import com.google.inject.Injector;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiFile;
+import com.intellij.ui.components.JBTextArea;
 import com.translator.CodactorInjector;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.model.codactor.api.translator.history.DesktopCodeModificationHistoryResponseResource;
@@ -10,6 +13,8 @@ import com.translator.model.codactor.modification.data.FileModificationDataHolde
 import com.translator.model.codactor.modification.data.ModificationObjectType;
 import com.translator.service.codactor.editor.*;
 import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
+import com.translator.service.codactor.file.FileCreatorService;
+import com.translator.service.codactor.file.FileRemoverService;
 import com.translator.service.codactor.transformer.modification.HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService;
 import com.translator.service.codactor.transformer.modification.HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerServiceImpl;
 import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
@@ -21,7 +26,9 @@ import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
 
 import javax.inject.Inject;
+import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 public class FileModificationTrackerServiceImpl implements FileModificationTrackerService {
@@ -39,6 +46,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     private RenameFileService renameFileService;
     private BackgroundTaskMapperService backgroundTaskMapperService;
     private DiffEditorGeneratorService diffEditorGeneratorService;
+    private FileCreatorService fileCreatorService;
+    private FileRemoverService fileRemoverService;
     private ModificationQueueViewer modificationQueueViewer;
 
     @Inject
@@ -51,7 +60,9 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                                               EditorClickHandlerService editorClickHandlerService,
                                               RenameFileService renameFileService,
                                               BackgroundTaskMapperService backgroundTaskMapperService,
-                                              DiffEditorGeneratorService diffEditorGeneratorService) {
+                                              DiffEditorGeneratorService diffEditorGeneratorService,
+                                              FileCreatorService fileCreatorService,
+                                              FileRemoverService fileRemoverService) {
         this.project = project;
         this.activeModificationFiles = new HashMap<>();
         this.activeModificationSuggestionModifications = new HashMap<>();
@@ -66,6 +77,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         this.renameFileService = renameFileService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
         this.diffEditorGeneratorService = diffEditorGeneratorService;
+        this.fileCreatorService = fileCreatorService;
+        this.fileRemoverService = fileRemoverService;
     }
 
     public String addModification(String filePath, String modification, int startIndex, int endIndex, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
@@ -79,9 +92,9 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         }
         String fileModificationId = fileModificationTracker.addModification(modification, startIndex, endIndex, modificationType, priorContext);
         if (fileModificationId == null) {
-            //JBTextArea display = displayMap.get(newFilePath);
-            /*JOptionPane.showMessageDialog(display, "Can't modify code that is already being modified", "Error",
-                    JOptionPane.ERROR_MESSAGE);*/
+            JOptionPane.showMessageDialog(null, "Can't modify code that is already being modified", "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return null;
         }
         if (modificationType != ModificationType.CREATE) {
             editorClickHandlerService.addEditorClickHandler(newFilePath);
@@ -104,9 +117,9 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         }
         String fileModificationSuggestionModificationId = fileModificationSuggestionModificationTracker.addModificationSuggestionModification(newFilePath, startIndex, endIndex, modificationType);
         if (fileModificationSuggestionModificationId == null) {
-            /*JBTextArea display = fileModificationSuggestion.getDisplay();
-            JOptionPane.showMessageDialog(display, "Can't modify code that is already being modified", "Error",
-                    JOptionPane.ERROR_MESSAGE);*/
+            JOptionPane.showMessageDialog(null, "Can't modify code that is already being modified", "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return null;
         }
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         guardedBlockService.addFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModificationId, startIndex, endIndex);
@@ -206,6 +219,12 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             return;
         }
         FileModification fileModification = fileModificationTracker.getModification(modificationId);
+        if (fileModification.isFileCreationAtFilePathOnAcceptance()) {
+            PsiFile createdFile = fileCreatorService.createAndReturnPsiFile(fileModification.getFilePath());
+            if (createdFile != null) {
+                FileEditorManager.getInstance(project).openFile(createdFile.getVirtualFile(), true);
+            }
+        }
         for (FileModificationSuggestion fileModificationSuggestion : fileModification.getModificationOptions()) {
             ApplicationManager.getApplication().invokeLater(fileModificationSuggestion::dispose);
             FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = getModificationSuggestionModificationTracker(fileModificationSuggestion.getId());
@@ -236,6 +255,9 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             }
             String newFileName = fileNameWithoutExtension + newFileType;
             renameFileService.renameFile(fileModification.getFilePath(), newFileName);
+        }
+        if (fileModification.isFileDeletionAtFilePathOnAcceptance()) {
+            fileRemoverService.deleteCodeFile(fileModification.getFilePath());
         }
     }
 

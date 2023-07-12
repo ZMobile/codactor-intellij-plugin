@@ -24,7 +24,11 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
             }
         }
         ChatGptFunctionCall functionCall = inquiryChat.getFunctionCall();
-        if (functionCall.getName().equals("read_file_at_path")) {
+        if (functionCall.getName().equals("read_current_selected_file_in_editor")) {
+            return "Reading current selected file in editor...";
+        } else if (functionCall.getName().equals("read_current_selected_file_in_tree_view")) {
+            return "Viewing current selected file in tree view...";
+        } else if (functionCall.getName().equals("read_file_at_path")) {
             String filePath = JsonExtractorService.extractField(functionCall.getArguments(), "path");
             return "Reading file at " + filePath + "...";
         } else if (functionCall.getName().equals("read_file_at_package")) {
@@ -49,7 +53,27 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
             String id = JsonExtractorService.extractField(functionCall.getArguments(), "id");
             return "Retrying modification id " + id + "...";
         } else if (functionCall.getName().equals("request_file_modification")) {
-            return "Requesting file modification...";
+            String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            String location = path;
+            if (location == null) {
+                location = JsonExtractorService.extractField(functionCall.getArguments(), "package");
+            }
+            return "Requesting file modification for " + location + "...";
+        } else if (functionCall.getName().equals("request_file_modification_and_wait_for_response")) {
+            String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            return "Requesting file modification for " + path + " and waiting for response...";
+        } else if (functionCall.getName().equals("request_file_creation")) {
+            String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            return "Requesting file creation for " + path + "...";
+        } else if (functionCall.getName().equals("request_file_creation_and_wait_for_response")) {
+            String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            return "Requesting file creation for " + path + " and waiting for response...";
+        } else if (functionCall.getName().equals("request_file_deletion")) {
+            String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            return "Requesting file deletion of " + path + "...";
+        } else if (functionCall.getName().equals("run_program")) {
+            String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            return "Running program " + path + "...";
         }
         return null;
     }

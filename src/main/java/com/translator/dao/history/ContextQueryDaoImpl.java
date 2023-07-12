@@ -30,7 +30,7 @@ public class ContextQueryDaoImpl implements ContextQueryDao {
     @Override
     public HistoricalContextObjectHolder queryHistoricalContextObject(HistoricalContextObjectHolder historicalContextObjectHolder) {
         try {
-            URL url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/projects/desktop/context");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/context");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -61,7 +61,7 @@ public class ContextQueryDaoImpl implements ContextQueryDao {
             return new ArrayList<>();
         }
         try {
-            URL url = new URL("http" + /*s://api.codactor.com*/ "://localHost:8080/projects/desktop/context/list");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/context/list");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());

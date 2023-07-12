@@ -7,5 +7,6 @@ public enum ModificationType {
     FIX_SELECTION,
     CREATE,
     CREATE_SAVED,
-    TRANSLATE
+    TRANSLATE,
+    DELETE
 }
