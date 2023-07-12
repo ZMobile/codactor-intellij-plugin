@@ -21,6 +21,7 @@ import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -86,7 +87,7 @@ public class InquiryServiceImpl implements InquiryService {
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
                 Inquiry inquiry = inquiryDao.createInquiry(subjectRecordId, recordType, question, openAiApiKey, model, new ArrayList<>(), functions, systemMessage);
-                if (inquiry != null) {
+                if (inquiry != null && inquiry.getError() == null) {
                     inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                     processPossibleFunctionCalls(inquiryViewer, inquiry, openAiApiKey, model, functions);
                 }
@@ -120,6 +121,11 @@ public class InquiryServiceImpl implements InquiryService {
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
                 Inquiry inquiry = inquiryDao.createInquiry(filePath, code, question, openAiApiKey, model, priorContext, functions, systemMessage);
+                if (inquiry.getError() != null) {
+                    JOptionPane.showMessageDialog(null, inquiry.getError(), "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                 processPossibleFunctionCalls(inquiryViewer, inquiry, openAiApiKey, model, functions);
                 inquiryViewer.setLoadingChat(false);
@@ -155,6 +161,11 @@ public class InquiryServiceImpl implements InquiryService {
                 }
                 Inquiry inquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, new ArrayList<>(), functions, systemMessage);
                 if (inquiry != null) {
+                    if (inquiry.getError() != null) {
+                        JOptionPane.showMessageDialog(null, inquiry.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                     inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                     inquiryViewer.getInquiryChatListViewer().componentResized();
                     processPossibleFunctionCalls(inquiryViewer, inquiry, openAiApiKey, model, functions);
@@ -190,9 +201,13 @@ public class InquiryServiceImpl implements InquiryService {
                 List<ChatGptFunction> functions = null;
                 if (model.equals("gpt-3.5-turbo-0613") || model.equals("gpt-4-0613")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
-
                 }
                 Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, model, functions);
+                if (response.getError() != null) {
+                    JOptionPane.showMessageDialog(null, response.getError(), "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 inquiry.getChats().remove(inquiryChat);
                 inquiry.getChats().addAll(response.getChats());
                 inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
@@ -231,6 +246,10 @@ public class InquiryServiceImpl implements InquiryService {
                 String functionCallResponse = inquiryFunctionCallProcessorService.processFunctionCall(latestInquiryChat.getFunctionCall());
                 Inquiry inquiry1 = inquiryDao.respondToFunctionCall(latestInquiryChat.getId(), latestInquiryChat.getFunctionCall().getName(), functionCallResponse, openAiApiKey, model, functions);
                 if (inquiry1 == null) {
+                    break;
+                } else if (inquiry1.getError() != null){
+                    JOptionPane.showMessageDialog(null, inquiry1.getError(), "Error",
+                            JOptionPane.ERROR_MESSAGE);
                     break;
                 }
                 inquiry.getChats().addAll(inquiry1.getChats());

@@ -37,6 +37,7 @@ import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFa
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import javax.swing.*;
 import java.util.*;
 
 public class MultiFileModificationServiceImpl implements MultiFileModificationService {
@@ -123,6 +124,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         String code = codeMap.get(filePath);
                         String question = "I'm looking to implement the following modification(s) to my program: \"" + modification + "\". First things first, what is the percentage likelihood that this specific code file has anything to do with this modification and/or will be affected by the provided modification(s): \"" + code + "\". Please provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0";
                         Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                        if (newInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                         InquiryChat latestInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         String json = JsonExtractorService.extractJsonObject(latestInquiryChat.getMessage());
                         if (filePathPercentageMap.containsKey(filePath)) {
@@ -141,6 +147,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                             if (badJson) {
                                 String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0?";
                                 Inquiry fixInquiry = inquiryDao.continueInquiry(latestInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                                if (fixInquiry.getError() != null) {
+                                    JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                    return;
+                                }
                                 InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
                                 String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
                                 likelihoodResponse = gson.fromJson(fixJson, LikelihoodResponse.class);
@@ -175,6 +186,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 String code = codeMap.get(initialFilePath);
                 String initialQuestion = "I'm looking to implement the following modification to my program: \"" + modification + "\". First things first, Yes or No: Will you be able to achieve this modification completely solely by changing the code I provide here at " + sortedFilePaths.get(0) + ": \"" + code + "\". Please provide the answer in the following JSON format: \"{ modificationAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if modificationAchievable is false.";
                 Inquiry newInquiry = inquiryDao.createGeneralInquiry(initialQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                if (newInquiry.getError() != null) {
+                    JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 InquiryChat mostRecentInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                 String json = JsonExtractorService.extractJsonObject(mostRecentInquiryChat.getMessage());
                 HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat.getId(), null, false, null);
@@ -190,6 +206,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 if (badJson) {
                     String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0?";
                     Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                    if (newInquiry.getError() != null) {
+                        JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                     InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
                     String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
                     HistoricalContextInquiryHolder inquiryContext2 = new HistoricalContextInquiryHolder(fixInquiry.getId(), fixInquiryChat.getId(), null, false, null);
@@ -206,6 +227,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         code = codeMap.get(filePath);
                         String question = "What about if I add this code at " + filePath + " to that condition: \"" + code + "\". Could I achieve implementing the entire modification now? Yes or No? Please provide the answer in the following JSON format: \"{ modificationAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if modificationAchievable is false.";
                         newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                        if (newInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                         mostRecentInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         String json2 = JsonExtractorService.extractJsonObject(mostRecentInquiryChat.getMessage());
                         inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat.getId(), null, false, null);
@@ -221,6 +247,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         if (badJson2) {
                             String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ modificationAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if modificationAchievable is false?";
                             Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                            if (fixInquiry.getError() != null) {
+                                JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
                             InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
                             String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
                             HistoricalContextInquiryHolder inquiryContext2 = new HistoricalContextInquiryHolder(fixInquiry.getId(), fixInquiryChat.getId(), null, false, null);
@@ -280,9 +311,19 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     String fileCode = codeMap.get(filePath);
                     String question = "Analyze this code: \"" + fileCode + "\" at " + filePath + "\". Does this file need to be changed in order to fulfill the requested modification: \"" + modification + "\"  Yes or No? Please provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\".";
                     Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                    if (finalInquiry.getError() != null) {
+                        JOptionPane.showMessageDialog(null, finalInquiry.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                     InquiryChat latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
                     if (latestInquiryChat.getMessage() == null) {
                         finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                        if (finalInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, finalInquiry.getError(), "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                         latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
                     }
                     String json2 = JsonExtractorService.extractJsonObject(latestInquiryChat.getMessage());
@@ -300,6 +341,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     if (badJson2) {
                         String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\"?";
                         Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                        if (fixInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                         InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
                         String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
                         modificationNeededResponse = gson.fromJson(fixJson, ModificationNeededResponse.class);
@@ -378,6 +424,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         String code = codeMap.get(filePath);
                         String question = "I'm having the following problem/error with my program: \"" + error + "\". First things first, what is the percentage likelihood that this specific code file has anything to do with this error and/or will needed to be modified to fix the above error?: \"" + code + "\". Please provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0";
                         Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                        if (newInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                         InquiryChat latestInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         String json = JsonExtractorService.extractJsonObject(latestInquiryChat.getMessage());
                         if (filePathPercentageMap.containsKey(filePath)) {
@@ -396,6 +447,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                             if (badJson) {
                                 String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0?";
                                 Inquiry fixInquiry = inquiryDao.continueInquiry(latestInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                                if (fixInquiry.getError() != null) {
+                                    JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                    return;
+                                }
                                 InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
                                 String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
                                 likelihoodResponse = gson.fromJson(fixJson, LikelihoodResponse.class);
@@ -430,6 +486,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 String code = codeMap.get(initialFilePath);
                 String initialQuestion = "I'm having the following problem/error with my program: \"" + error + "\". First things first, Yes or No: Will you be able to fix this problem/error solely by changing the code I provide here at " + sortedFilePaths.get(0) + "?: \"" + code + "\". Please provide the answer in the following JSON format: \"{ fixAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if fixAchievable is false.";
                 Inquiry newInquiry = inquiryDao.createGeneralInquiry(initialQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                if (newInquiry.getError() != null) {
+                    JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 InquiryChat mostRecentInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                 String json = JsonExtractorService.extractJsonObject(mostRecentInquiryChat.getMessage());
                 HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat.getId(), null, false, null);
@@ -445,6 +506,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 if (badJson) {
                     String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0?";
                     Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                    if (fixInquiry.getError() != null) {
+                        JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                     InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
                     String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
                     HistoricalContextInquiryHolder inquiryContext2 = new HistoricalContextInquiryHolder(fixInquiry.getId(), fixInquiryChat.getId(), null, false, null);
@@ -461,6 +527,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         code = codeMap.get(filePath);
                         String question = "What about if I add this code at " + filePath + " to that condition: \"" + code + "\". Could I achieve implementing the entire modification now? Yes or No? Please provide the answer in the following JSON format: \"{ fixAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if fixAchievable is false.";
                         newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                        if (newInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                         mostRecentInquiryChat = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         String json2 = JsonExtractorService.extractJsonObject(mostRecentInquiryChat.getMessage());
                         inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat.getId(), null, false, null);
@@ -476,6 +547,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         if (badJson2) {
                             String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ fixAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if fixAchievable is false?";
                             Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                            if (fixInquiry.getError() != null) {
+                                JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
                             InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
                             String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
                             HistoricalContextInquiryHolder inquiryContext2 = new HistoricalContextInquiryHolder(fixInquiry.getId(), fixInquiryChat.getId(), null, false, null);
@@ -534,9 +610,19 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     String fileCode = codeMap.get(filePath);
                     String question = "Analyze this code: \"" + fileCode + "\" at " + filePath + "\". Does this file need to be changed in order to fix the above error/problem: \"" + error + "\"  Yes or No? Please provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\".";
                     Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                    if (finalInquiry.getError() != null) {
+                        JOptionPane.showMessageDialog(null, finalInquiry.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                     InquiryChat latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
                     if (latestInquiryChat.getMessage() == null) {
                         finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                        if (finalInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, finalInquiry.getError(), "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                         latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
                     }
                     String json2 = JsonExtractorService.extractJsonObject(latestInquiryChat.getMessage());
@@ -554,6 +640,11 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     if (badJson2) {
                         String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\"?";
                         Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                        if (fixInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                         InquiryChat fixInquiryChat = newInquiry.getChats().get(fixInquiry.getChats().size() - 1);
                         String fixJson = JsonExtractorService.extractJsonObject(fixInquiryChat.getMessage());
                         modificationNeededResponse = gson.fromJson(fixJson, ModificationNeededResponse.class);

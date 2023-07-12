@@ -114,6 +114,7 @@ public class Inquiry {
     private String initialQuestion;
     private List<InquiryChat> chats;
     private List<HistoricalContextObjectHolder> priorContext;
+    private String error;
 
     private Inquiry(String userId,
                    String modificationId,
@@ -257,5 +258,9 @@ public class Inquiry {
 
     public List<InquiryChat> getChats() {
         return chats;
+    }
+
+    public String getError() {
+        return error;
     }
 }

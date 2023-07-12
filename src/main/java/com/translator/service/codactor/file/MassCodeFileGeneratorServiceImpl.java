@@ -81,14 +81,29 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                     newInquiry = inquiryDao.createInquiry(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>(), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 }
                 if (newInquiry != null) {
+                    if (newInquiry.getError() != null) {
+                        JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
                     String question2 = "Can you provide the terminal commands for creating these " + language + " files in " + filePath + "?";
                     newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                     if (newInquiry != null) {
+                        if (newInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, newInquiry, "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                         InquiryChat mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         if (mostRecentInquiryChat2 == null) {
                             newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                            if (newInquiry.getError() != null) {
+                                JOptionPane.showMessageDialog(null, newInquiry, "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
                             mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         }
                         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
@@ -172,6 +187,11 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                     newInquiry = inquiryDao.createInquiry(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>(), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 }
                 if (newInquiry != null) {
+                    if (newInquiry.getError() != null) {
+                        JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1.5/3) Ordering File Names");
                     String question2 = "What would be the ideal order to create these files such that I make the simplest ones first, and then the more complex ones that depend on the previous ones later?";
@@ -183,6 +203,11 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                     }
                     newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                     if (newInquiry != null) {
+                        if (newInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, newInquiry, "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                         InquiryChat mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
                         String question3 = "Can you provide the terminal commands for creating those " + language + " files in " + filePath + "? Can you provide them in the order you specified above?";
@@ -194,6 +219,11 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         }
                         newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat2.getId(), question3, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                         if (newInquiry != null) {
+                            if (newInquiry.getError() != null) {
+                                JOptionPane.showMessageDialog(null, newInquiry, "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
                             InquiryChat mostRecentInquiryChat3 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                             fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
                             List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat3.getMessage());
@@ -277,6 +307,10 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
                 Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), finalPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 if (newInquiry != null) {
+                    if (newInquiry.getError() != null) {
+                        JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
                     String question2 = "Can you provide the terminal commands for creating those " + language + " files in " + filePath + "?";
@@ -287,11 +321,18 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         e.printStackTrace();
                     }
                     newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
-
                     if (newInquiry != null) {
+                        if (newInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, newInquiry, "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
                         InquiryChat mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         if (mostRecentInquiryChat2 == null) {
                             newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                            if (newInquiry.getError() != null) {
+                                JOptionPane.showMessageDialog(null, newInquiry, "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
                             mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         }
                         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
@@ -377,6 +418,10 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
                 Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), finalPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 if (newInquiry != null) {
+                    if (newInquiry.getError() != null) {
+                        JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1.5/3) Ordering File Names");
                     String question2 = "What would be the ideal order to create these files such that I make the simplest ones first, and then the more complex ones that depend on the previous ones later?";
@@ -388,6 +433,10 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                     }
                     newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                     if (newInquiry != null) {
+                        if (newInquiry.getError() != null) {
+                            JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
                         InquiryChat mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
                         String question3 = "Can you provide the terminal commands for creating those " + language + " files in " + filePath + "? Can you provide them in the order you specified above?";
@@ -399,6 +448,10 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         }
                         newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat2.getId(), question3, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
                         if (newInquiry != null) {
+                            if (newInquiry.getError() != null) {
+                                JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
                             InquiryChat mostRecentInquiryChat3 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                             fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
                             List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat3.getMessage());

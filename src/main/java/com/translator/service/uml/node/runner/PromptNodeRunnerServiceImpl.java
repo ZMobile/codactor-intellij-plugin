@@ -22,6 +22,7 @@ import com.translator.view.uml.node.dialog.prompt.PromptNodeDialog;
 import org.jhotdraw.draw.Drawing;
 import org.jhotdraw.draw.Figure;
 
+import javax.swing.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -99,12 +100,22 @@ public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
                 Inquiry newInquiry;
                 if (i == 0) {
                     newInquiry = inquiryDao.createGeneralInquiry(newPrompt, openAiApiKeyService.getOpenAiApiKey(), promptNode.getModel(), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                    if (newInquiry.getError() != null) {
+                        JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                     inquiry = newInquiry;
                     previousInquiryChat = newInquiry.getChats().stream()
                             .max(Comparator.comparing(InquiryChat::getCreationTimestamp))
                             .orElseThrow();
                 } else {
                     newInquiry = inquiryDao.continueInquiry(previousInquiryChat.getId(), prompt.getPrompt(), openAiApiKeyService.getOpenAiApiKey(), promptNode.getModel());
+                    if (newInquiry.getError() != null) {
+                        JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                     previousInquiryChat = newInquiry.getChats().stream()
                             .max(Comparator.comparing(InquiryChat::getCreationTimestamp))
                             .orElseThrow();
