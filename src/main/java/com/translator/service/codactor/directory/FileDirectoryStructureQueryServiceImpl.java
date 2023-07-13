@@ -42,4 +42,34 @@ public class FileDirectoryStructureQueryServiceImpl implements FileDirectoryStru
         }
         return structure;
     }
+
+    public String searchForChildDirectory(String filePath, String childName, int depth) {
+        File rootDirectory = new File(filePath);
+        return searchForChildDirectory(rootDirectory, childName, depth);
+    }
+
+    private String searchForChildDirectory(File rootDirectory, String childName, int depth) {
+        if (depth < 0) {
+            return null; // If we have reached the maximum depth, return null
+        }
+
+        if (rootDirectory.isDirectory()) {
+            File[] children = rootDirectory.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    if (child.isDirectory() && child.getName().equals(childName)) {
+                        return child.getAbsolutePath(); // Found the child directory, return its path
+                    } else if (child.isDirectory()) {
+                        String path = searchForChildDirectory(child, childName, depth - 1);
+                        if (path != null) {
+                            return path; // Child directory found in a deeper layer, return its path
+                        }
+                    }
+                }
+            }
+        }
+
+        return null; // Child directory not found
+    }
+
 }

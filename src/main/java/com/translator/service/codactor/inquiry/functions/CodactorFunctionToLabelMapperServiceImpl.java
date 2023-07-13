@@ -28,6 +28,9 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
             return "Reading current selected file in editor...";
         } else if (functionCall.getName().equals("read_current_selected_file_in_tree_view")) {
             return "Viewing current selected file in tree view...";
+        } else if (functionCall.getName().equals("read_directory_structure_at_path")) {
+            String filePath = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            return "Reading directory structure at " + filePath + "...";
         } else if (functionCall.getName().equals("read_file_at_path")) {
             String filePath = JsonExtractorService.extractField(functionCall.getArguments(), "path");
             return "Reading file at " + filePath + "...";
@@ -75,6 +78,6 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
             String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
             return "Running program " + path + "...";
         }
-        return null;
+        return "Running function " + functionCall.getName() + "...";
     }
 }

@@ -92,6 +92,8 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         } else if (chatGptFunctionCall.getName().equals("read_file_at_package")) {
             String packageName = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "package");
             VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
+            System.out.println("Testo 1: " + packageName);
+            System.out.println("Testo 2: " + virtualFile);
             if (virtualFile != null) {
                 String content;
                 Path path = Paths.get(virtualFile.getPath());
@@ -162,7 +164,6 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             FileModification fileModification = fileModificationTrackerService.getModification(id);
             fileModificationTrackerService.removeModification(fileModification.getId());
         } else if (chatGptFunctionCall.getName().equals("request_file_modification")) {
-            System.out.println("Testo: " + chatGptFunctionCall.getArguments());
             String path = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
             if (path == null) {
                 String packageName = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "package");
@@ -192,7 +193,6 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             ModificationType modificationType;
             switch (modificationTypeString) {
                 case "modify":
-                    System.out.println("Testo 2");
                     if (startIndexString == null && endIndexString == null) {
                         modificationType = ModificationType.MODIFY;
                         automaticCodeModificationService.getModifiedCode(path, description, modificationType, new ArrayList<>());
@@ -215,7 +215,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                     break;
             }
             return "{" +
-                    "\"message\": \"Modification requested successfully!\"" +
+                    "\"message\": \"Modification requested\"" +
                     "}";
         } else if (chatGptFunctionCall.getName().equals("request_file_modification_and_wait_for_response")) {
             String path = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
