@@ -16,8 +16,8 @@ import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
 import com.translator.service.codactor.editor.GptToLanguageTransformerService;
 import com.translator.service.codactor.editor.GptToLanguageTransformerServiceImpl;
-import com.translator.service.codactor.inquiry.functions.CodactorFunctionToLabelMapperService;
-import com.translator.service.codactor.inquiry.functions.CodactorFunctionToLabelMapperServiceImpl;
+import com.translator.service.codactor.functions.CodactorFunctionToLabelMapperService;
+import com.translator.service.codactor.functions.CodactorFunctionToLabelMapperServiceImpl;
 import com.translator.view.codactor.panel.FixedHeightPanel;
 
 import javax.swing.*;

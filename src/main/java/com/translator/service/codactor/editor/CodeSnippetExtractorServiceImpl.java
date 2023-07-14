@@ -51,8 +51,9 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
 
                 if (document != null) {
                     // Retrieve the text from the document using the start and end indices
+                    int newStartIndex = Math.max(startIndex, 0);
                     int newEndIndex = Math.min(endIndex, document.getTextLength());
-                    snippet.set(document.getText(new TextRange(startIndex, newEndIndex)));
+                    snippet.set(document.getText(new TextRange(newStartIndex, newEndIndex)));
                 }
             }
 
@@ -78,7 +79,7 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
         try {
             return Files.readString(path, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            return null;
         }
     }
 

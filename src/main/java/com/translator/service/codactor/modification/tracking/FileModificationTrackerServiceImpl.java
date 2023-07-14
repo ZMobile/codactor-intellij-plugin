@@ -101,6 +101,10 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             guardedBlockService.addFileModificationGuardedBlock(fileModificationId, startIndex, endIndex);
             codeHighlighterService.highlightTextArea(fileModificationTracker);
         }
+        if (modificationQueueViewer == null) {
+            Injector injector = CodactorInjector.getInstance().getInjector(project);
+            this.modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
+        }
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         return fileModificationId;
     }

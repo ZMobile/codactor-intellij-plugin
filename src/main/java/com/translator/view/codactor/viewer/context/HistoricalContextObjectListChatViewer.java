@@ -1,6 +1,5 @@
 package com.translator.view.codactor.viewer.context;
 
-import com.google.gson.Gson;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.markup.EffectType;
@@ -23,7 +22,7 @@ import com.translator.model.codactor.modification.FileModificationSuggestionModi
 import com.translator.model.codactor.modification.FileModificationSuggestionRecord;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.inquiry.functions.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.functions.InquiryChatListFunctionCallCompressorService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorServiceImpl;
 import com.translator.view.codactor.menu.TextAreaWindow;

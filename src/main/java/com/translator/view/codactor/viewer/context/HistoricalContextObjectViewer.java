@@ -1,6 +1,5 @@
 package com.translator.view.codactor.viewer.context;
 
-import com.google.gson.Gson;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.markup.EffectType;
@@ -12,13 +11,12 @@ import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.dao.history.ContextQueryDao;
-import com.translator.model.TestoObject;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.history.HistoricalContextObjectType;
 import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
-import com.translator.service.codactor.inquiry.functions.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.functions.InquiryChatListFunctionCallCompressorService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorServiceImpl;
 import com.translator.view.codactor.menu.TextAreaWindow;
@@ -35,7 +33,6 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class HistoricalContextObjectViewer extends JPanel {

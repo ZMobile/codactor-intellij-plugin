@@ -1,12 +1,10 @@
-package com.translator.service.codactor.inquiry.functions;
+package com.translator.service.codactor.functions;
 
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.view.codactor.viewer.inquiry.InquiryChatViewer;
-import jnr.ffi.annotations.In;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class InquiryChatListFunctionCallCompressorServiceImpl implements InquiryChatListFunctionCallCompressorService {
     @Override
@@ -15,7 +13,7 @@ public class InquiryChatListFunctionCallCompressorServiceImpl implements Inquiry
         List<InquiryChat> functionCallOrResponseChats = new ArrayList<>();
 
         for (InquiryChat currentChat : inquiryChats) {
-            if (currentChat.getFunctionCall() != null
+            if ((currentChat.getFunctionCall() != null && currentChat.getMessage() == null)
                     || currentChat.getFrom().equalsIgnoreCase("function")) {
                 functionCallOrResponseChats.add(currentChat);
             } else {

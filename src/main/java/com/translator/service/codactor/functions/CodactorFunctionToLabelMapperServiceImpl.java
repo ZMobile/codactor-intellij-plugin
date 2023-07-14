@@ -1,4 +1,4 @@
-package com.translator.service.codactor.inquiry.functions;
+package com.translator.service.codactor.functions;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
@@ -17,10 +17,12 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
     @Override
     public String getLabel(InquiryChat inquiryChat) {
         if (inquiryChat.getFrom().equalsIgnoreCase("function")) {
-            if (inquiryChat.getMessage() != null) {
-                return "Done";
-            } else {
+            if (inquiryChat.getMessage() == null) {
                 return "Error";
+            } else if (inquiryChat.getMessage().toLowerCase().startsWith("error")) {
+                return inquiryChat.getMessage();
+            } else {
+                return null;
             }
         }
         ChatGptFunctionCall functionCall = inquiryChat.getFunctionCall();

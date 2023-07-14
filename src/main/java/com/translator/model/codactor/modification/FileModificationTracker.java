@@ -65,7 +65,7 @@ public class FileModificationTracker {
 
 
    public void removeModification(String modificationId) {
-        FileModification m = modifications.stream()
+       FileModification m = modifications.stream()
                 .filter(modification -> modification.getId().equals(modificationId))
                 .findFirst()
                 .orElse(null);
@@ -93,13 +93,12 @@ public class FileModificationTracker {
                     if (rangeMarker != null && rangeMarker.isValid()) {
                         int formerStartIndex = rangeMarker.getStartOffset();
                         int formerEndIndex = rangeMarker.getEndOffset();
-                        modifications.remove(m);
                         rangeReplaceService.replaceRange(filePath, formerStartIndex, formerEndIndex, modification, silent);
                         rangeMarker.dispose(); // Dispose the RangeMarker after it's no longer needed
                     } else if (m.getModificationType() == ModificationType.CREATE) {
-                        modifications.remove(m);
                         rangeReplaceService.replaceRange(filePath, 0, 0, modification, silent);
                     }
+                    modifications.remove(m);
                     break;
                 }
             }

@@ -15,7 +15,7 @@ import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.history.ContextQueryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.inquiry.functions.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.functions.InquiryChatListFunctionCallCompressorService;
 import com.translator.view.codactor.viewer.context.*;
 
 import javax.inject.Inject;

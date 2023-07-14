@@ -1,11 +1,9 @@
-package com.translator.service.codactor.inquiry.functions;
+package com.translator.service.codactor.functions;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.dao.inquiry.InquiryDao;
-import com.translator.model.codactor.history.data.HistoricalInquiryDataHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.data.InquiryDataReferenceHolder;
 import com.translator.model.codactor.inquiry.function.ChatGptFunctionCall;
@@ -15,6 +13,7 @@ import com.translator.model.codactor.modification.data.FileModificationDataHolde
 import com.translator.model.codactor.modification.data.FileModificationDataReferenceHolder;
 import com.translator.service.codactor.directory.FileDirectoryStructureQueryService;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.editor.CodeSnippetIndexGetterService;
 import com.translator.service.codactor.json.JsonExtractorService;
 import com.translator.service.codactor.modification.AutomaticCodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
@@ -39,6 +38,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     private final Gson gson;
     private final InquiryDao inquiryDao;
     private final CodeSnippetExtractorService codeSnippetExtractorService;
+    private final CodeSnippetIndexGetterService codeSnippetIndexGetterService;
     private final FileModificationTrackerService fileModificationTrackerService;
     private final FileModificationHistoryService fileModificationHistoryService;
     private final FileModificationRestarterService fileModificationRestarterService;
@@ -52,6 +52,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     public InquiryFunctionCallProcessorServiceImpl(Gson gson,
                                                    InquiryDao inquiryDao,
                                                    CodeSnippetExtractorService codeSnippetExtractorService,
+                                                   CodeSnippetIndexGetterService codeSnippetIndexGetterService,
                                                    FileModificationTrackerService fileModificationTrackerService,
                                                    FileModificationHistoryService fileModificationHistoryService,
                                                    FileModificationRestarterService fileModificationRestarterService,
@@ -63,6 +64,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         this.gson = gson;
         this.inquiryDao = inquiryDao;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
+        this.codeSnippetIndexGetterService = codeSnippetIndexGetterService;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.fileModificationHistoryService = fileModificationHistoryService;
         this.fileModificationRestarterService = fileModificationRestarterService;
@@ -173,27 +175,49 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 }
             }
             String description = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "description");
-            String startIndexString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "startIndex");
             int startIndex;
-            if (startIndexString != null) {
-                startIndex = Integer.parseInt(startIndexString);
-            } else {
-                startIndex = 0;
-            }
-            String endIndexString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "endIndex");
             int endIndex;
-            if (endIndexString != null) {
-                endIndex = Integer.parseInt(endIndexString);
+            String code = codeSnippetExtractorService.getAllText(path);
+            String codeSnippetString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "codeSnippet");
+            String startSnippetString = null;
+            String endSnippetString = null;
+            if (codeSnippetString != null) {
+                startIndex = codeSnippetIndexGetterService.getStartIndex(code, codeSnippetString);
+                endIndex = codeSnippetIndexGetterService.getEndIndex(code, codeSnippetString);
             } else {
-                String code = codeSnippetExtractorService.getAllText(path);
-                endIndex = code.length();
+                System.out.println("Testo: " + chatGptFunctionCall.getArguments());
+                startSnippetString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "startBoundary");
+                if (startSnippetString != null) {
+                    try {
+                        startIndex = codeSnippetIndexGetterService.getStartIndex(code, startSnippetString);
+                    } catch (NumberFormatException e) {
+                        startIndex = 0;
+                    }
+                } else {
+                    startIndex = 0;
+                }
+                endSnippetString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "endBoundary");
+                if (endSnippetString != null) {
+                    try {
+                        endIndex = codeSnippetIndexGetterService.getEndIndex(code, endSnippetString);
+                    } catch (NumberFormatException e) {
+                        endIndex = code.length();
+                    }
+                } else {
+                    endIndex = code.length();
+                }
             }
             String modificationTypeString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "modificationType");
             assert modificationTypeString != null;
             ModificationType modificationType;
+            System.out.println(startSnippetString);
+            System.out.println(startIndex);
+            System.out.println(endSnippetString);
+            System.out.println(endIndex);
+            System.out.println(codeSnippetString);
             switch (modificationTypeString) {
                 case "modify":
-                    if (startIndexString == null && endIndexString == null) {
+                    if (startSnippetString == null && endSnippetString == null) {
                         modificationType = ModificationType.MODIFY;
                         automaticCodeModificationService.getModifiedCode(path, description, modificationType, new ArrayList<>());
                     } else {
@@ -202,7 +226,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                     }
                     break;
                 case "fix":
-                    if (startIndexString == null && endIndexString == null) {
+                    if (startSnippetString == null && endSnippetString == null) {
                         modificationType = ModificationType.FIX;
                         automaticCodeModificationService.getFixedCode(path, description, modificationType, new ArrayList<>());
                     } else {
@@ -227,27 +251,43 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 }
             }
             String description = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "description");
-            String startIndexString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "startIndex");
             int startIndex;
-            if (startIndexString != null) {
-                startIndex = Integer.parseInt(startIndexString);
-            } else {
-                startIndex = 0;
-            }
-            String endIndexString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "endIndex");
             int endIndex;
-            if (endIndexString != null) {
-                endIndex = Integer.parseInt(endIndexString);
+            String code = codeSnippetExtractorService.getAllText(path);
+            String codeSnippetString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "codeSnippet");
+            String startSnippetString = null;
+            String endSnippetString = null;
+            if (codeSnippetString != null) {
+                startIndex = codeSnippetIndexGetterService.getStartIndex(code, codeSnippetString);
+                endIndex = codeSnippetIndexGetterService.getEndIndex(code, codeSnippetString);
             } else {
-                String code = codeSnippetExtractorService.getAllText(path);
-                endIndex = code.length();
+                startSnippetString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "startBoundary");
+                if (startSnippetString != null) {
+                    try {
+                        startIndex = codeSnippetIndexGetterService.getStartIndex(code, startSnippetString);
+                    } catch (NumberFormatException e) {
+                        startIndex = 0;
+                    }
+                } else {
+                    startIndex = 0;
+                }
+                endSnippetString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "endBoundary");
+                if (endSnippetString != null) {
+                    try {
+                        endIndex = codeSnippetIndexGetterService.getEndIndex(code, endSnippetString);
+                    } catch (NumberFormatException e) {
+                        endIndex = code.length();
+                    }
+                } else {
+                    endIndex = code.length();
+                }
             }
             String modificationTypeString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "modificationType");
             assert modificationTypeString != null;
             ModificationType modificationType;
             switch (modificationTypeString) {
                 case "modify":
-                    if (startIndexString == null && endIndexString == null) {
+                    if (startSnippetString == null && endSnippetString == null) {
                         modificationType = ModificationType.MODIFY;
                         automaticCodeModificationService.getModifiedCodeAndWait(path, description, modificationType, new ArrayList<>());
                     } else {
@@ -256,7 +296,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                     }
                     break;
                 case "fix":
-                    if (startIndexString == null && endIndexString == null) {
+                    if (startSnippetString == null && endSnippetString == null) {
                         modificationType = ModificationType.FIX;
                         automaticCodeModificationService.getFixedCodeAndWait(path, description, modificationType, new ArrayList<>());
                     } else {

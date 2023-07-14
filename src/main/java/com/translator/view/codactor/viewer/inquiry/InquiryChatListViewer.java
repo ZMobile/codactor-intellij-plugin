@@ -18,8 +18,8 @@ import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
-import com.translator.service.codactor.inquiry.functions.InquiryChatListFunctionCallCompressorService;
-import com.translator.service.codactor.inquiry.functions.InquiryFunctionCallProcessorService;
+import com.translator.service.codactor.functions.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.functions.InquiryFunctionCallProcessorService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.openai.OpenAiModelServiceImpl;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
@@ -419,9 +419,7 @@ public class InquiryChatListViewer extends JPanel {
         }
         Collections.reverse(finalizedChatList);
         List<InquiryChatViewer> compressedInquiryChatViewers = inquiryChatListFunctionCallCompressorService.compress(finalizedChatList);
-        List<TestoObject> compressedInquiryChats = new ArrayList<>();
         for (InquiryChatViewer inquiryChatListViewer : compressedInquiryChatViewers) {
-            compressedInquiryChats.add(new TestoObject(inquiryChatListViewer.getInquiryChat(), inquiryChatListViewer.getFunctionCalls()));
             model.addElement(inquiryChatListViewer);
         }
         ComponentListener componentListener = new ComponentAdapter() {

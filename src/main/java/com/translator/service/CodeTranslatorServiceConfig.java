@@ -22,7 +22,7 @@ import com.translator.service.codactor.editor.diff.GitDiffStingGeneratorServiceI
 import com.translator.service.codactor.factory.CodeFileGeneratorServiceFactory;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.*;
-import com.translator.service.codactor.inquiry.functions.*;
+import com.translator.service.codactor.functions.*;
 import com.translator.service.codactor.inquiry.*;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
@@ -103,6 +103,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(EditorExtractorService.class).to(EditorExtractorServiceImpl.class);
         bind(CodeHighlighterService.class).to(CodeHighlighterServiceImpl.class);
         bind(CodeSnippetExtractorService.class).to(CodeSnippetExtractorServiceImpl.class);
+        bind(CodeSnippetIndexGetterService.class).to(CodeSnippetIndexGetterServiceImpl.class);
         bind(CodeRangeTrackerService.class).to(CodeRangeTrackerServiceImpl.class);
         bind(GptToLanguageTransformerService.class).to(GptToLanguageTransformerServiceImpl.class);
         bind(GuardedBlockService.class).to(GuardedBlockServiceImpl.class);

@@ -1,4 +1,4 @@
-package com.translator.service.codactor.inquiry.functions;
+package com.translator.service.codactor.functions;
 
 import com.translator.model.codactor.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.inquiry.function.Parameters;
@@ -26,11 +26,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         // Create ChatGptFunction for "read_file_at_path"
         Parameters readFileAtPathParams = new Parameters("object");
         Property pathProperty = new Property("string", "The path of the code file eg. /Users/user/IdeaProjects/code_project/src/code.java", null, null);
-        Property startIndexProperty = new Property("integer", "The start index of the code to be read in the file. Can be null which means 0", null, null);
-        Property endIndexProperty = new Property("integer", "The start index of the code to be read in the file. Can be null which means the end of the code file", null, null);
         readFileAtPathParams.getProperties().put("path", pathProperty);
-        readFileAtPathParams.getProperties().put("startIndex", startIndexProperty);
-        readFileAtPathParams.getProperties().put("endIndex", endIndexProperty);
         readFileAtPathParams.getRequired().add("path");
 
         ChatGptFunction readFileAtPath = new ChatGptFunction("read_file_at_path", "Read the contents of a code or text file given its path", readFileAtPathParams);
@@ -39,11 +35,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         // Create ChatGptFunction for "read_file_at_package"
         Parameters readFileAtPackageParams = new Parameters("object");
         Property packageProperty = new Property("string", "The class package of the code file e.g. com.translator.view.uml.node.dialog.prompt", null, null);
-        Property startIndexProperty2 = new Property("integer", "The start index of the code to be read in the file. Can be null which means 0", null, null);
-        Property endIndexProperty2 = new Property("integer", "The start index of the code to be read in the file. Can be null which means the end of the code file", null, null);
         readFileAtPackageParams.getProperties().put("package", packageProperty);
-        readFileAtPackageParams.getProperties().put("startIndex", startIndexProperty2);
-        readFileAtPackageParams.getProperties().put("endIndex", endIndexProperty2);
         readFileAtPackageParams.getRequired().add("package");
 
         ChatGptFunction readFileAtPackage = new ChatGptFunction("read_file_at_package", "Read the contents and file path of a code or text file given its package in the project directory", readFileAtPackageParams);
@@ -91,7 +83,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
 
         // Create ChatGptFunction for "get_queued_modifications"
         Parameters getQueuedModificationIdsParams = new Parameters("object");
-        ChatGptFunction getQueuedModificationIds = new ChatGptFunction("get_queued_modification_ids", "Get the list of queued modification ids", getQueuedModificationIdsParams);
+        ChatGptFunction getQueuedModificationIds = new ChatGptFunction("get_queued_modification_s", "Get the list of queued modification ids", getQueuedModificationIdsParams);
         codactorFunctions.add(getQueuedModificationIds);
 
         // Create ChatGptFunction for "read_modification_in_queue_at_position"
@@ -124,20 +116,24 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         modificationTypes.add("modify");
         modificationTypes.add("fix");
         modificationTypes.add("create");
+        Property startSnippetProperty = new Property("string", "A snippet of code from within the file marking the start boundary of the selection. Upon use, the start index of the modification will be at the start of this string. LLMs have limited token inputs so this can be useful for limiting the modification scope to specific areas of larger files. Ideally, the provided code snippet should include enough to make it unique so it can be used to find its location in the code with precision. If not utilized, it will automatically be set to the beginning of the file.", null, null);
+        Property endSnippetProperty = new Property("string", "A snippet of code from within the file marking the end boundary of the selection. Upon use, the end index of the modification will be at the start of this string. LLMs have limited token inputs so this can be useful for limiting the modification scope to specific areas of larger files. Ideally should include enough to make it unique so it can be used to find its location in the code with precision. If not utilized, it will automatically be set to the end of the file.", null, null);
+        Property codeSnippetProperty = new Property("string", "A snippet of code from within the file marking the start and end of the selection. LLMs have limited token inputs so this can be useful for limiting the modification scope to specific areas of larger files. This property overrides the startSnippet and endSnippet properties--it should not be used start snippet or end snippet are used.", null, null);
         Property optionalPathProperty = new Property("string", "The path of the file to be modified. If not provided, the file modifier will attempt to find the file to be modified based on the provided description. Either this or the package must be provided for a modification", null, null);
         Property optionalPackageProperty = new Property("string", "The class package of the file to be modified. If not provided, the file modifier will attempt to find the file to be modified based on the provided description. Either this or the path must be provided for a modification", null, null);
-        Property modificationTypeProperty = new Property("string", "The type of file modification types to choose from are 'modify' for modifying code in a file, 'fix' for reporting and fixing an error (like modify but for complaining), and 'create' for creating new code where none existed before, so it will ignore the startIndex and endIndex, placing its created code at index 0.", modificationTypes, null);
+        Property modificationTypeProperty = new Property("string", "The type of file modification types to choose from are 'modify' for modifying code in a file, 'fix' for reporting and fixing an error (like modify but for complaining), and 'create' for creating new code where none existed before, so it will ignore the startSnippet, endSnippet, and codeSnippet, placing its created code at index 0.", modificationTypes, null);
         Property descriptionProperty = new Property("string", "The description of the requested file modification to be enacted on the file", null, null);
         requestFileModificationParams.getProperties().put("path", optionalPathProperty);
         requestFileModificationParams.getProperties().put("package", optionalPackageProperty);
         requestFileModificationParams.getProperties().put("modificationType", modificationTypeProperty);
         requestFileModificationParams.getProperties().put("description", descriptionProperty);
-        requestFileModificationParams.getProperties().put("startIndex", startIndexProperty);
-        requestFileModificationParams.getProperties().put("endIndex", endIndexProperty);
+        requestFileModificationParams.getProperties().put("startBoundary", startSnippetProperty);
+        requestFileModificationParams.getProperties().put("endBoundary", endSnippetProperty);
+        requestFileModificationParams.getProperties().put("codeSnippet", codeSnippetProperty);
         requestFileModificationParams.getRequired().add("modificationType");
         requestFileModificationParams.getRequired().add("description");
 
-        ChatGptFunction requestFileModification = new ChatGptFunction("request_file_modification", "Request a new file modification to be processed by the file modifier LLM", requestFileModificationParams);
+        ChatGptFunction requestFileModification = new ChatGptFunction("request_file_modification", "Request a new file modification at a specified file and optionally a specified range within the file to be processed by the file modifier LLM. Warning: File modifications with overlapping ranges can not exist in the queue. File modifications can only exist in the same file if they don't overlap. A request for a modification with a range overlapping another existing modification currently in the queue will be automatically denied and return null.", requestFileModificationParams);
         codactorFunctions.add(requestFileModification);
 
         ChatGptFunction requestFileModificationAndWait = new ChatGptFunction("request_file_modification_and_wait_for_response", "Request a new file modification to be processed and wait for response", requestFileModificationParams);

@@ -1,4 +1,4 @@
-package com.translator.service.codactor.inquiry.functions;
+package com.translator.service.codactor.functions;
 
 import com.translator.model.codactor.inquiry.InquiryChat;
 
