@@ -26,7 +26,9 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
             }
         }
         ChatGptFunctionCall functionCall = inquiryChat.getFunctionCall();
-        if (functionCall.getName().equals("read_current_selected_file_in_editor")) {
+        if (functionCall.getName().equals("get_project_base_path")) {
+            return "Reading project base path...";
+        } else if (functionCall.getName().equals("read_current_selected_file_in_editor")) {
             return "Reading current selected file in editor...";
         } else if (functionCall.getName().equals("read_current_selected_file_in_tree_view")) {
             return "Viewing current selected file in tree view...";
@@ -36,6 +38,9 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
         } else if (functionCall.getName().equals("read_file_at_path")) {
             String filePath = JsonExtractorService.extractField(functionCall.getArguments(), "path");
             return "Reading file at " + filePath + "...";
+        } else if (functionCall.getName().equals("open_file_at_path_in_editor")) {
+            String filePath = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            return "Opening file at " + filePath + "...";
         } else if (functionCall.getName().equals("read_file_at_package")) {
             String packageName = JsonExtractorService.extractField(functionCall.getArguments(), "package");
             return "Reading package at " + packageName + "...";

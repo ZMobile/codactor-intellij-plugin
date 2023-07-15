@@ -2,18 +2,23 @@ package com.translator.service.codactor.functions;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.intellij.ide.bookmarks.Bookmark;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.data.InquiryDataReferenceHolder;
 import com.translator.model.codactor.inquiry.function.ChatGptFunctionCall;
 import com.translator.model.codactor.modification.FileModification;
+import com.translator.model.codactor.modification.FileModificationTracker;
 import com.translator.model.codactor.modification.ModificationType;
 import com.translator.model.codactor.modification.data.FileModificationDataHolder;
 import com.translator.model.codactor.modification.data.FileModificationDataReferenceHolder;
+import com.translator.model.codactor.modification.data.FileModificationRangeData;
 import com.translator.service.codactor.directory.FileDirectoryStructureQueryService;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.editor.CodeSnippetIndexGetterService;
+import com.translator.service.codactor.file.FileOpenerService;
 import com.translator.service.codactor.json.JsonExtractorService;
 import com.translator.service.codactor.modification.AutomaticCodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
@@ -22,6 +27,7 @@ import com.translator.service.codactor.modification.tracking.FileModificationTra
 import com.translator.service.codactor.runner.CodeRunnerService;
 import com.translator.service.codactor.runner.CodeRunnerServiceImpl;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
+import com.translator.service.codactor.transformer.modification.FileModificationTrackerToFileModificationRangeDataTransformerService;
 import com.translator.service.util.SelectedFileViewerService;
 
 import java.io.IOException;
@@ -36,6 +42,7 @@ import java.util.Map;
 
 public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionCallProcessorService {
     private final Gson gson;
+    private final Project project;
     private final InquiryDao inquiryDao;
     private final CodeSnippetExtractorService codeSnippetExtractorService;
     private final CodeSnippetIndexGetterService codeSnippetIndexGetterService;
@@ -46,10 +53,13 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     private final FileDirectoryStructureQueryService fileDirectoryStructureQueryService;
     private final CodeRunnerService codeRunnerService;
     private final SelectedFileViewerService selectedFileViewerService;
+    private final FileOpenerService fileOpenerService;
     private final FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
+    private final FileModificationTrackerToFileModificationRangeDataTransformerService fileModificationTrackerToFileModificationRangeDataTransformerService;
 
     @Inject
     public InquiryFunctionCallProcessorServiceImpl(Gson gson,
+                                                   Project project,
                                                    InquiryDao inquiryDao,
                                                    CodeSnippetExtractorService codeSnippetExtractorService,
                                                    CodeSnippetIndexGetterService codeSnippetIndexGetterService,
@@ -58,10 +68,13 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                                    FileModificationRestarterService fileModificationRestarterService,
                                                    AutomaticCodeModificationService automaticCodeModificationService,
                                                    FileDirectoryStructureQueryService fileDirectoryStructureQueryService,
-                                                   CodeRunnerServiceImpl codeRunnerService,
+                                                   CodeRunnerService codeRunnerService,
                                                    SelectedFileViewerService selectedFileViewerService,
-                                                   FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService) {
+                                                   FileOpenerService fileOpenerService,
+                                                   FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService,
+                                                   FileModificationTrackerToFileModificationRangeDataTransformerService fileModificationTrackerToFileModificationRangeDataTransformerService) {
         this.gson = gson;
+        this.project = project;
         this.inquiryDao = inquiryDao;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.codeSnippetIndexGetterService = codeSnippetIndexGetterService;
@@ -72,18 +85,27 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         this.fileDirectoryStructureQueryService = fileDirectoryStructureQueryService;
         this.codeRunnerService = codeRunnerService;
         this.selectedFileViewerService = selectedFileViewerService;
+        this.fileOpenerService = fileOpenerService;
         this.fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService = fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
+        this.fileModificationTrackerToFileModificationRangeDataTransformerService = fileModificationTrackerToFileModificationRangeDataTransformerService;
     }
 
     @Override
     public String processFunctionCall(ChatGptFunctionCall chatGptFunctionCall) {
-        if (chatGptFunctionCall.getName().equals("read_current_selected_file_in_editor")) {
+        if (chatGptFunctionCall.getName().equals("get_project_base_path")) {
+            return project.getBasePath();
+        } else if (chatGptFunctionCall.getName().equals("read_current_selected_file_in_editor")) {
             VirtualFile virtualFile = selectedFileViewerService.getSelectedFileInEditor();
             String filePath = virtualFile.getPath();
             String content = codeSnippetExtractorService.getAllText(filePath);
             Map<String, Object> contentMap = new HashMap<>();
             contentMap.put("filePath", filePath);
             contentMap.put("content", content);
+            FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(filePath);
+            if (fileModificationTracker != null) {
+                List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
+                contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
+            }
             return gson.toJson(contentMap);
         } else if (chatGptFunctionCall.getName().equals("read_current_selected_file_in_tree_view")) {
             VirtualFile virtualFile = selectedFileViewerService.getSelectedFileInTreeView();
@@ -94,8 +116,6 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         } else if (chatGptFunctionCall.getName().equals("read_file_at_package")) {
             String packageName = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "package");
             VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
-            System.out.println("Testo 1: " + packageName);
-            System.out.println("Testo 2: " + virtualFile);
             if (virtualFile != null) {
                 String content;
                 Path path = Paths.get(virtualFile.getPath());
@@ -108,6 +128,11 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 contentMap.put("filePath", virtualFile.getPath());
                 contentMap.put("filePackage", packageName);
                 contentMap.put("content", content);
+                FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(virtualFile.getPath());
+                if (fileModificationTracker != null) {
+                    List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
+                    contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
+                }
                 return gson.toJson(contentMap);
             }
         } else if (chatGptFunctionCall.getName().equals("read_file_at_path")) {
@@ -116,7 +141,17 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             Map<String, Object> contentMap = new HashMap<>();
             contentMap.put("filePath", filePath);
             contentMap.put("content", content);
+            FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(filePath);
+            if (fileModificationTracker != null) {
+                List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
+                contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
+            }
+
             return gson.toJson(contentMap);
+        } else if (chatGptFunctionCall.getName().equals("open_file_at_path_in_editor")) {
+            String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
+            fileOpenerService.openFileInEditor(filePath);
+            return "File opened in editor.";
         } else if (chatGptFunctionCall.getName().equals("read_directory_structure_at_path")) {
             String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
             String depth = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "depth");

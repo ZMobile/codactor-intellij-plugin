@@ -13,10 +13,15 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
     public List<ChatGptFunction> generateCodactorFunctions() {
         List<ChatGptFunction> codactorFunctions = new ArrayList<>();
 
+        Parameters getProjectBasePathParams = new Parameters("object");
+        ChatGptFunction getProjectBasePath = new ChatGptFunction("get_project_base_path", "Get the base path of the current opened project", getProjectBasePathParams);
+        codactorFunctions.add(getProjectBasePath);
+
         // Create ChatGptFunction for "read_current_selected_file_in_editor"
         Parameters readCurrentSelectedFileInEditorParams = new Parameters("object");
         ChatGptFunction readCurrentSelectedFileInEditor = new ChatGptFunction("read_current_selected_file_in_editor", "Read the contents and file path of the currently selected code file in the Intellij code editor", readCurrentSelectedFileInEditorParams);
         codactorFunctions.add(readCurrentSelectedFileInEditor);
+
 
         // Create ChatGptFunction for "read_current_selected_file_in_tree_view"
         Parameters readCurrentSelectedFileInTreeViewParams = new Parameters("object");
@@ -31,6 +36,14 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
 
         ChatGptFunction readFileAtPath = new ChatGptFunction("read_file_at_path", "Read the contents of a code or text file given its path", readFileAtPathParams);
         codactorFunctions.add(readFileAtPath);
+
+        // Create ChatGptFunction for "open_file_at_path_in_editor"
+        Parameters openFileAtPathInEditorParams = new Parameters("object");
+        openFileAtPathInEditorParams.getProperties().put("path", pathProperty);
+        openFileAtPathInEditorParams.getRequired().add("path");
+
+        ChatGptFunction openFileAtPathInEditor = new ChatGptFunction("open_file_at_path_in_editor", "Open a code file in the Intellij code editor given its path", openFileAtPathInEditorParams);
+        codactorFunctions.add(openFileAtPathInEditor);
 
         // Create ChatGptFunction for "read_file_at_package"
         Parameters readFileAtPackageParams = new Parameters("object");
@@ -116,9 +129,9 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         modificationTypes.add("modify");
         modificationTypes.add("fix");
         modificationTypes.add("create");
-        Property startSnippetProperty = new Property("string", "A snippet of code from within the file marking the start boundary of the selection. Upon use, the start index of the modification will be at the start of this string. LLMs have limited token inputs so this can be useful for limiting the modification scope to specific areas of larger files. Ideally, the provided code snippet should include enough to make it unique so it can be used to find its location in the code with precision. If not utilized, it will automatically be set to the beginning of the file.", null, null);
-        Property endSnippetProperty = new Property("string", "A snippet of code from within the file marking the end boundary of the selection. Upon use, the end index of the modification will be at the start of this string. LLMs have limited token inputs so this can be useful for limiting the modification scope to specific areas of larger files. Ideally should include enough to make it unique so it can be used to find its location in the code with precision. If not utilized, it will automatically be set to the end of the file.", null, null);
-        Property codeSnippetProperty = new Property("string", "A snippet of code from within the file marking the start and end of the selection. LLMs have limited token inputs so this can be useful for limiting the modification scope to specific areas of larger files. This property overrides the startSnippet and endSnippet properties--it should not be used start snippet or end snippet are used.", null, null);
+        Property startSnippetProperty = new Property("string", "A snippet of code from within the file marking the start boundary of the selection. Upon use, the start index of the modification will be at the start of this string. Ideally, the start snippet should include enough to make it unique so it can be used to find its location in the code with precision. If not utilized, it will automatically be set to the beginning of the file.", null, null);
+        Property endSnippetProperty = new Property("string", "A snippet of code from within the file marking the end boundary of the selection. Upon use, the end index of the modification will be at the start of this string. Ideally the end snippet should include enough to make it unique so it can be used to find its location in the code with precision. If not utilized, it will automatically be set to the end of the file.", null, null);
+        Property codeSnippetProperty = new Property("string", "A snippet of code from within the file marking the start and end of the selection. This property overrides the startSnippet and endSnippet properties--it should not be used start snippet or end snippet are used.", null, null);
         Property optionalPathProperty = new Property("string", "The path of the file to be modified. If not provided, the file modifier will attempt to find the file to be modified based on the provided description. Either this or the package must be provided for a modification", null, null);
         Property optionalPackageProperty = new Property("string", "The class package of the file to be modified. If not provided, the file modifier will attempt to find the file to be modified based on the provided description. Either this or the path must be provided for a modification", null, null);
         Property modificationTypeProperty = new Property("string", "The type of file modification types to choose from are 'modify' for modifying code in a file, 'fix' for reporting and fixing an error (like modify but for complaining), and 'create' for creating new code where none existed before, so it will ignore the startSnippet, endSnippet, and codeSnippet, placing its created code at index 0.", modificationTypes, null);
@@ -133,11 +146,11 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         requestFileModificationParams.getRequired().add("modificationType");
         requestFileModificationParams.getRequired().add("description");
 
-        ChatGptFunction requestFileModification = new ChatGptFunction("request_file_modification", "Request a new file modification at a specified file and optionally a specified range within the file to be processed by the file modifier LLM. Warning: File modifications with overlapping ranges can not exist in the queue. File modifications can only exist in the same file if they don't overlap. A request for a modification with a range overlapping another existing modification currently in the queue will be automatically denied and return null.", requestFileModificationParams);
+        ChatGptFunction requestFileModification = new ChatGptFunction("request_file_modification", "Request a new file modification at a specified file and optionally a specified range within the file to be processed by the file modifier LLM. Ideally you should have the modification range encapsulate the modification and potentially needed context as its all the modifier LLM sees in addition to the description, though not too big as the modifier LLM has limited a context window. Warning: File modifications with overlapping ranges can not exist in the queue. File modifications can only exist in the same file if they don't overlap. A request for a modification with a range overlapping another existing modification currently in the queue will be automatically denied and return null.", requestFileModificationParams);
         codactorFunctions.add(requestFileModification);
 
-        ChatGptFunction requestFileModificationAndWait = new ChatGptFunction("request_file_modification_and_wait_for_response", "Request a new file modification to be processed and wait for response", requestFileModificationParams);
-        codactorFunctions.add(requestFileModificationAndWait);
+        /*ChatGptFunction requestFileModificationAndWait = new ChatGptFunction("request_file_modification_and_wait_for_response", "Request a new file modification to be processed and wait for response", requestFileModificationParams);
+        codactorFunctions.add(requestFileModificationAndWait);*/
 
         // Create ChatGptFunction for "request_file_creation"
         Parameters requestFileCreationParams = new Parameters("object");
@@ -149,7 +162,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         ChatGptFunction requestFileCreation = new ChatGptFunction("request_file_creation", "Request a new file to be created following a provided description that will be processed by the file modifier LLM", requestFileCreationParams);
         codactorFunctions.add(requestFileCreation);
 
-        // Create ChatGptFunction for "request_file_creation_and_wait_for_response"
+        /* Create ChatGptFunction for "request_file_creation_and_wait_for_response"
         Parameters requestFileCreationAndWaitParams = new Parameters("object");
         requestFileCreationAndWaitParams.getProperties().put("path", pathProperty);
         requestFileCreationAndWaitParams.getProperties().put("description", descriptionProperty);
@@ -157,7 +170,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         requestFileCreationAndWaitParams.getRequired().add("description");
 
         ChatGptFunction requestFileCreationAndWait = new ChatGptFunction("request_file_creation_and_wait", "Request a new file to be created following a provided description that will be processed by the file modifier LLM, and wait to review the code it suggests.", requestFileCreationAndWaitParams);
-        codactorFunctions.add(requestFileCreationAndWait);
+        codactorFunctions.add(requestFileCreationAndWait);*/
 
         // Create ChatGptFunction for "request_file_deletion"
         Parameters requestFileDeletionParams = new Parameters("object");

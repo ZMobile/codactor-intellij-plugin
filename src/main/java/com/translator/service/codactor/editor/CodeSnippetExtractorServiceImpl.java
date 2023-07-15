@@ -199,4 +199,37 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
         // Get the SelectionModel and the selected text
         return editor.getSelectionModel();
     }
+
+    @Override
+    public String getCurrentAndNextLineCodeAfterIndex(String filePath, int startIndex) {
+        Document document = getDocument(filePath);
+        int lineEnd = document.getLineEndOffset(document.getLineNumber(startIndex));
+
+        String currentLine = document.getText(new TextRange(startIndex, lineEnd));
+        String restOfCode = document.getText(new TextRange(lineEnd + 1, document.getTextLength()));
+
+        String[] lines = restOfCode.split("\n", 2);
+        String nextLine = "";
+        if (lines.length > 1) {
+            nextLine = lines[0];
+        }
+
+        return currentLine + "\n" + nextLine;
+    }
+
+    @Override
+    public String getCurrentAndOneLinePreviousCodeBeforeIndex(String filePath, int endIndex) {
+        Document document = getDocument(filePath);
+        int lineStart = document.getLineStartOffset(document.getLineNumber(endIndex));
+
+        String restOfCode = document.getText(new TextRange(0, lineStart));
+        String previousLine = "";
+        if (!restOfCode.isEmpty()) {
+            previousLine = restOfCode.substring(restOfCode.lastIndexOf("\n") + 1);
+        }
+
+        String currentLine = document.getText(new TextRange(lineStart, endIndex));
+
+        return previousLine + "\n" + currentLine;
+    }
 }

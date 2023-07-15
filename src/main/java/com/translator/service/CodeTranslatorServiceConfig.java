@@ -132,6 +132,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(FileModificationSuggestionRecordToFileModificationTransformerService.class).to(FileModificationSuggestionRecordToFileModificationTransformerServiceImpl.class);
         bind(FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerService.class).to(FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerServiceImpl.class);
         bind(FileModificationHistoryService.class).to(FileModificationHistoryServiceImpl.class);
+        bind(FileModificationTrackerToFileModificationRangeDataTransformerService.class).to(FileModificationTrackerToFileModificationRangeDataTransformerServiceImpl.class);
         bind(CodeRunnerService.class).to(CodeRunnerServiceImpl.class);
         bind(FileDirectoryStructureQueryService.class).to(FileDirectoryStructureQueryServiceImpl.class);
         bind(SelectedFileViewerService.class).to(SelectedFileViewerServiceImpl.class);
