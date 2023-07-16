@@ -1,6 +1,7 @@
 package com.translator.service.codactor.modification;
 
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
+import com.translator.model.codactor.modification.FileModification;
 import com.translator.model.codactor.modification.ModificationType;
 
 import java.util.List;

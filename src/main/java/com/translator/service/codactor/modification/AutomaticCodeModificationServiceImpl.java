@@ -560,13 +560,13 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                 fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
                 fileModificationTrackerService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
             } else {
+                FileModificationErrorDialog fileModificationErrorDialog;
                 if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), "", ModificationType.CREATE);
-                    fileModificationErrorDialog.setVisible(true);
+                    fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), "", ModificationType.CREATE);
                 } else {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), ModificationType.CREATE);
-                    fileModificationErrorDialog.setVisible(true);
+                    fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), ModificationType.CREATE);
                 }
+                fileModificationErrorDialog.setVisible(true);
             }
             backgroundTaskMapperService.removeTask(modificationId);
         };

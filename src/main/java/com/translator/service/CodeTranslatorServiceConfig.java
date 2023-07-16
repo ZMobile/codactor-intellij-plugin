@@ -29,6 +29,8 @@ import com.translator.service.codactor.line.LineCounterServiceImpl;
 import com.translator.service.codactor.modification.*;
 import com.translator.service.codactor.modification.history.FileModificationHistoryService;
 import com.translator.service.codactor.modification.history.FileModificationHistoryServiceImpl;
+import com.translator.service.codactor.modification.json.FileModificationDataHolderJsonCompatibilityService;
+import com.translator.service.codactor.modification.json.FileModificationDataHolderJsonCompatibilityServiceImpl;
 import com.translator.service.codactor.modification.multi.MultiFileModificationService;
 import com.translator.service.codactor.modification.multi.MultiFileModificationServiceImpl;
 import com.translator.service.codactor.modification.tracking.CodeRangeTrackerService;
@@ -136,6 +138,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(CodeRunnerService.class).to(CodeRunnerServiceImpl.class);
         bind(FileDirectoryStructureQueryService.class).to(FileDirectoryStructureQueryServiceImpl.class);
         bind(SelectedFileViewerService.class).to(SelectedFileViewerServiceImpl.class);
+        bind(FileModificationDataHolderJsonCompatibilityService.class).to(FileModificationDataHolderJsonCompatibilityServiceImpl.class);
     }
 
     @Singleton

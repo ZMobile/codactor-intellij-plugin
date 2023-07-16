@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.codactor"
-version = "2.2-BETA"
+version = "2.3-BETA"
 
 repositories {
     mavenCentral()

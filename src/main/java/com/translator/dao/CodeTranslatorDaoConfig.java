@@ -28,7 +28,8 @@ public class CodeTranslatorDaoConfig extends AbstractModule {
 
     @Provides
     public Gson gson() {
-        return new GsonBuilder().create();
+        return new GsonBuilder()
+                .create();
     }
 
     @Provides

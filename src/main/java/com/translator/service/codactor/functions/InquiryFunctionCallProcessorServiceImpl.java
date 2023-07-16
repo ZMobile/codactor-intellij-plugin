@@ -23,6 +23,7 @@ import com.translator.service.codactor.json.JsonExtractorService;
 import com.translator.service.codactor.modification.AutomaticCodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.modification.history.FileModificationHistoryService;
+import com.translator.service.codactor.modification.json.FileModificationDataHolderJsonCompatibilityService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.runner.CodeRunnerService;
 import com.translator.service.codactor.runner.CodeRunnerServiceImpl;
@@ -56,6 +57,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     private final FileOpenerService fileOpenerService;
     private final FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
     private final FileModificationTrackerToFileModificationRangeDataTransformerService fileModificationTrackerToFileModificationRangeDataTransformerService;
+    private final FileModificationDataHolderJsonCompatibilityService fileModificationDataHolderJsonCompatibilityService;
 
     @Inject
     public InquiryFunctionCallProcessorServiceImpl(Gson gson,
@@ -72,7 +74,8 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                                    SelectedFileViewerService selectedFileViewerService,
                                                    FileOpenerService fileOpenerService,
                                                    FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService,
-                                                   FileModificationTrackerToFileModificationRangeDataTransformerService fileModificationTrackerToFileModificationRangeDataTransformerService) {
+                                                   FileModificationTrackerToFileModificationRangeDataTransformerService fileModificationTrackerToFileModificationRangeDataTransformerService,
+                                                   FileModificationDataHolderJsonCompatibilityService fileModificationDataHolderJsonCompatibilityService) {
         this.gson = gson;
         this.project = project;
         this.inquiryDao = inquiryDao;
@@ -88,6 +91,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         this.fileOpenerService = fileOpenerService;
         this.fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService = fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
         this.fileModificationTrackerToFileModificationRangeDataTransformerService = fileModificationTrackerToFileModificationRangeDataTransformerService;
+        this.fileModificationDataHolderJsonCompatibilityService = fileModificationDataHolderJsonCompatibilityService;
     }
 
     @Override
@@ -104,6 +108,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(filePath);
             if (fileModificationTracker != null) {
                 List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
+                System.out.println("BIG TESTO: " + gson.toJson(fileModificationRangeData));
                 contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
             }
             return gson.toJson(contentMap);
@@ -165,7 +170,8 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         } else if (chatGptFunctionCall.getName().equals("read_modification")) {
             String id = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "id");
             FileModificationDataHolder fileModificationDataHolder = fileModificationHistoryService.getModification(id);
-            return gson.toJson(fileModificationDataHolder);
+            FileModificationDataHolder newFileModificationDataHolder = fileModificationDataHolderJsonCompatibilityService.makeFileModificationDataHolderCompatibleWithJson(fileModificationDataHolder);
+            return gson.toJson(newFileModificationDataHolder);
         } else if (chatGptFunctionCall.getName().equals("get_queued_modifications")) {
             List<FileModificationDataHolder> fileModificationDataHolderList = fileModificationTrackerService.getQueuedFileModificationObjectHolders();
             List<FileModificationDataReferenceHolder> fileModificationDataReferenceHolderList = fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService.convert(fileModificationDataHolderList);
@@ -178,7 +184,8 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 return "Error: Invalid position";
             }
             FileModificationDataHolder fileModificationDataHolder = fileModificationDataHolderList.get(Integer.parseInt(position));
-            return gson.toJson(fileModificationDataHolder);
+            FileModificationDataHolder newFileModificationDataHolder = fileModificationDataHolderJsonCompatibilityService.makeFileModificationDataHolderCompatibleWithJson(fileModificationDataHolder);
+            return gson.toJson(newFileModificationDataHolder);
         } else if (chatGptFunctionCall.getName().equals("get_recent_historical_inquiries")) {
             List<Inquiry> historicalInquiryList = inquiryDao.getRecentInquiries();
             List<InquiryDataReferenceHolder> inquiryDataReferenceHolders = new ArrayList<>();
@@ -194,7 +201,6 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         } else if (chatGptFunctionCall.getName().equals("retry_modification_in_queue")) {
             String id = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "id");
             FileModification fileModification = fileModificationTrackerService.getModification(id);
-            fileModificationTrackerService.removeModification(fileModification.getId());
             fileModificationRestarterService.restartFileModification(fileModification);
         } else if (chatGptFunctionCall.getName().equals("remove_modification_in_queue")) {
             String id = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "id");

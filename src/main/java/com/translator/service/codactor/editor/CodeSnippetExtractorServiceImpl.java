@@ -64,23 +64,29 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
     @Override
     public Document getDocument(String filePath) {
         // Convert the file path to a VirtualFile instance
-        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+        AtomicReference<Document> documentRef = new AtomicReference<>();
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
 
-        if (virtualFile != null) {
-            // Get the Document instance corresponding to the VirtualFile
-            return FileDocumentManager.getInstance().getDocument(virtualFile);
-        } else {
-            return null;
-        }
+            if (virtualFile != null) {
+                // Get the Document instance corresponding to the VirtualFile
+                documentRef.set(FileDocumentManager.getInstance().getDocument(virtualFile));
+            }
+        });
+        return documentRef.get();
     }
 
     public String getAllText(String filePath) {
-        Path path = Paths.get(filePath);
-        try {
-            return Files.readString(path, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            return null;
-        }
+        AtomicReference<String> allTextRef = new AtomicReference<>();
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            Path path = Paths.get(filePath);
+            try {
+                allTextRef.set(Files.readString(path, StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                allTextRef.set(null);
+            }
+        });
+        return allTextRef.get();
     }
 
     public String getAllTextAtPackage(String filePackage) {
@@ -167,19 +173,23 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
 
     @Override
     public SelectionModel getSelectedText(String filePath) {
-        FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+        AtomicReference<SelectionModel> selectionModelRef = new AtomicReference<>();
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
 
-        // Get the Editor instance for the selected file
-        Editor editor = fileEditorManager.getSelectedTextEditor();
+            // Get the Editor instance for the selected file
+            Editor editor = fileEditorManager.getSelectedTextEditor();
 
-        if (editor != null) {
-            // Get the SelectionModel and the selected text
+            if (editor != null) {
+                // Get the SelectionModel and the selected text
 
-            // Do something with the selected text
-            return editor.getSelectionModel();
-        } else {
-            return null;
-        }
+                // Do something with the selected text
+                selectionModelRef.set(editor.getSelectionModel());
+            } else {
+                selectionModelRef.set(null);
+            }
+        });
+        return selectionModelRef.get();
     }
 
     @Override
@@ -232,4 +242,5 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
 
         return previousLine + "\n" + currentLine;
     }
+
 }

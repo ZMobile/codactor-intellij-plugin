@@ -351,6 +351,19 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
     }
 
+    public void undoReadyFileModification(String modificationId) {
+        FileModificationTracker fileModificationTracker = activeModificationFiles.values().stream()
+                .filter(m -> m.hasModification(modificationId))
+                .findFirst()
+                .orElse(null);
+        if (fileModificationTracker == null) {
+            return;
+        }
+        fileModificationTracker.undoReadyFileModification(modificationId);
+        codeHighlighterService.highlightTextArea(fileModificationTracker);
+        modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
+    }
+
     public List<FileModification> getAllFileModifications() {
         List<FileModification> fileModifications = new ArrayList<>();
         for (FileModificationTracker fileModificationTracker : activeModificationFiles.values()) {

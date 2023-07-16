@@ -124,6 +124,14 @@ public class FileModificationTracker {
         }
     }
 
+    public void undoReadyFileModification(String modificationId) {
+        FileModification fileModification = getModification(modificationId);
+        if (fileModification != null) {
+            fileModification.setDone(false);
+            fileModification.getModificationOptions().clear();
+        }
+    }
+
     public String getFilePath() {
         return filePath;
     }

@@ -32,6 +32,8 @@ public interface FileModificationTrackerService {
 
     void readyFileModificationUpdate(String modificationId, String subjectLine, List<FileModificationSuggestionRecord> modificationOptions);
 
+    void undoReadyFileModification(String modificationId);
+
     Map<String, FileModificationTracker> getActiveModificationFiles();
 
     Map<String, FileModificationSuggestionModificationTracker> getActiveModificationSuggestionModifications();

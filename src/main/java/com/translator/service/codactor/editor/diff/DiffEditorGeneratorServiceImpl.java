@@ -18,10 +18,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DiffEditorGeneratorServiceImpl implements DiffEditorGeneratorService {
-    private final EditorFactory editorFactory;
+
 
     public DiffEditorGeneratorServiceImpl() {
-        this.editorFactory = EditorFactory.getInstance();
     }
 
     public Editor createDiffEditor(String beforeCode, String afterCode) {
@@ -82,6 +81,8 @@ public class DiffEditorGeneratorServiceImpl implements DiffEditorGeneratorServic
             beforePosition++;
             afterPosition++;
         }
+
+        EditorFactory editorFactory = EditorFactory.getInstance();
 
         Document document = editorFactory.createDocument(merged.toString());
         Editor editor = editorFactory.createEditor(document);
@@ -230,6 +231,8 @@ public class DiffEditorGeneratorServiceImpl implements DiffEditorGeneratorServic
             beforePosition++;
             afterPosition++;
         }
+
+        EditorFactory editorFactory = EditorFactory.getInstance();
 
         Document document = editorFactory.createDocument(merged.toString());
         Editor editor = editorFactory.createEditor(document);

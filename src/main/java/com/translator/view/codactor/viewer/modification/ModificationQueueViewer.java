@@ -136,7 +136,6 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                                 retryItem.addActionListener(new ActionListener() {
                                     @Override
                                     public void actionPerformed(ActionEvent a) {
-                                        fileModificationTrackerService.removeModification(fileModification.getId());
                                         fileModificationRestarterService.restartFileModification(fileModification);
                                     }
                                 });

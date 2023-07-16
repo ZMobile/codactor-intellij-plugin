@@ -35,6 +35,21 @@ public class FileModificationSuggestionModification {
         this.done = false;
     }
 
+    public FileModificationSuggestionModification(FileModificationSuggestionModification fileModificationSuggestionModification) {
+        this.myId = fileModificationSuggestionModification.getId();
+        this.modificationRecordId = fileModificationSuggestionModification.getModificationRecordId();
+        this.filePath = fileModificationSuggestionModification.getFilePath();
+        this.rangeMarker = fileModificationSuggestionModification.getRangeMarker();
+        this.modificationId = fileModificationSuggestionModification.getModificationId();
+        this.suggestionId = fileModificationSuggestionModification.getSuggestionId();
+        this.beforeText = fileModificationSuggestionModification.getBeforeText();
+        this.modificationType = fileModificationSuggestionModification.getModificationType();
+        this.subjectLine = fileModificationSuggestionModification.getSubjectLine();
+        this.editedCode = fileModificationSuggestionModification.getEditedCode();
+        this.error = fileModificationSuggestionModification.isError();
+        this.done = fileModificationSuggestionModification.isDone();
+    }
+
     public String getId() {
         return myId;
     }

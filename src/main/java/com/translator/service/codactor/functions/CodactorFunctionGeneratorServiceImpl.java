@@ -96,7 +96,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
 
         // Create ChatGptFunction for "get_queued_modifications"
         Parameters getQueuedModificationIdsParams = new Parameters("object");
-        ChatGptFunction getQueuedModificationIds = new ChatGptFunction("get_queued_modification_s", "Get the list of queued modification ids", getQueuedModificationIdsParams);
+        ChatGptFunction getQueuedModificationIds = new ChatGptFunction("get_queued_modifications", "Get the list of queued modification ids", getQueuedModificationIdsParams);
         codactorFunctions.add(getQueuedModificationIds);
 
         // Create ChatGptFunction for "read_modification_in_queue_at_position"

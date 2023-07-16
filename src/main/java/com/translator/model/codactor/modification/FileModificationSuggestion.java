@@ -19,8 +19,6 @@ import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
 import java.util.Objects;
 
 public class FileModificationSuggestion implements Disposable {
-    private DiffEditorGeneratorService diffEditorGeneratorService;
-    private Project project;
     private final String filePath;
     private final String modificationId;
     private final String myId;
@@ -30,8 +28,6 @@ public class FileModificationSuggestion implements Disposable {
     private Editor suggestedCodeEditor;
 
     public FileModificationSuggestion(DiffEditorGeneratorService diffEditorGeneratorService, Project project, String id, String filePath, String modificationId, String beforeCode, String suggestedCode) {
-        this.diffEditorGeneratorService = diffEditorGeneratorService;
-        this.project = project;
         this.myId = id;
         this.filePath = filePath;
         this.modificationId = modificationId;
@@ -59,8 +55,6 @@ public class FileModificationSuggestion implements Disposable {
     }
 
     public FileModificationSuggestion(DiffEditorGeneratorService diffEditorGeneratorService, Project project, String id, String filePath, String modificationId, String beforeCode, String suggestedCode, String extension) {
-        this.diffEditorGeneratorService = diffEditorGeneratorService;
-        this.project = project;
         this.myId = id;
         this.filePath = filePath;
         this.modificationId = modificationId;
@@ -92,6 +86,16 @@ public class FileModificationSuggestion implements Disposable {
         this.suggestedCode = suggestedCode;
     }
 
+    public FileModificationSuggestion(FileModificationSuggestion fileModificationSuggestion) {
+        this.myId = fileModificationSuggestion.getId();
+        this.filePath = fileModificationSuggestion.getFilePath();
+        this.modificationId = fileModificationSuggestion.getModificationId();
+        this.beforeCode = fileModificationSuggestion.getBeforeCode();
+        this.suggestedCode = fileModificationSuggestion.getSuggestedCode();
+        this.diffEditor = fileModificationSuggestion.getDiffEditor();
+        this.suggestedCodeEditor = fileModificationSuggestion.getSuggestedCodeEditor();
+    }
+
     public String getFilePath() {
         return filePath;
     }
@@ -120,13 +124,25 @@ public class FileModificationSuggestion implements Disposable {
         return diffEditor;
     }
 
+    public void setDiffEditor(Editor diffEditor) {
+        this.diffEditor = diffEditor;
+    }
+
     public Editor getSuggestedCodeEditor() {
         return suggestedCodeEditor;
     }
 
+    public void setSuggestedCodeEditor(Editor suggestedCodeEditor) {
+        this.suggestedCodeEditor = suggestedCodeEditor;
+    }
+
     @Override
     public void dispose() {
-        EditorFactory.getInstance().releaseEditor(diffEditor);
-        EditorFactory.getInstance().releaseEditor(suggestedCodeEditor);
+        if (diffEditor != null) {
+            EditorFactory.getInstance().releaseEditor(diffEditor);
+        }
+        if (suggestedCodeEditor != null) {
+            EditorFactory.getInstance().releaseEditor(suggestedCodeEditor);
+        }
     }
 }

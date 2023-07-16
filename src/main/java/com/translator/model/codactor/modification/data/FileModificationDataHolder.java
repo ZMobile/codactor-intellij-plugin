@@ -15,6 +15,10 @@ public class FileModificationDataHolder {
         this.modificationObjectType = ModificationObjectType.FILE_MODIFICATION;
     }
 
+    public FileModificationDataHolder() {
+
+    }
+
     public FileModificationDataHolder(FileModificationSuggestionModification fileModificationSuggestionModification) {
         this.fileModificationSuggestionModification = fileModificationSuggestionModification;
         this.modificationObjectType = ModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION;

@@ -62,6 +62,9 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
         } else if (functionCall.getName().equals("retry_modification_in_queue")) {
             String id = JsonExtractorService.extractField(functionCall.getArguments(), "id");
             return "Retrying modification id " + id + "...";
+        } else if (functionCall.getName().equals("remove_modification_in_queue")) {
+        String id = JsonExtractorService.extractField(functionCall.getArguments(), "id");
+        return "Removing modification id " + id + "...";
         } else if (functionCall.getName().equals("request_file_modification")) {
             String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
             String location = path;

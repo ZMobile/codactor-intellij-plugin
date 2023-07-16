@@ -40,6 +40,25 @@ public class FileModification {
         this.error = false;
     }
 
+    public FileModification(FileModification fileModification) {
+        this.myId = fileModification.getId();
+        this.modificationRecordId = fileModification.getModificationRecordId();
+        this.filePath = fileModification.getFilePath();
+        this.rangeMarker = fileModification.getRangeMarker();
+        this.subjectLine = fileModification.getSubjectLine();
+        this.beforeText = fileModification.getBeforeText();
+        this.modification = fileModification.getModification();
+        this.modificationType = fileModification.getModificationType();
+        this.priorContext = fileModification.getPriorContext();
+        this.modificationOptions = fileModification.getModificationOptions();
+        this.newLanguage = fileModification.getNewLanguage();
+        this.newFileType = fileModification.getNewFileType();
+        this.fileCreationAtFilePathOnAcceptance = fileModification.isFileCreationAtFilePathOnAcceptance();
+        this.fileDeletionAtFilePathOnAcceptance = fileModification.isFileDeletionAtFilePathOnAcceptance();
+        this.done = fileModification.isDone();
+        this.error = fileModification.isError();
+    }
+
     public String getId() {
         return myId;
     }
@@ -167,5 +186,9 @@ public class FileModification {
 
     public void setError(boolean error) {
         this.error = error;
+    }
+
+    public void setPriorContext(List<HistoricalContextObjectHolder> priorContext) {
+        this.priorContext = priorContext;
     }
 }

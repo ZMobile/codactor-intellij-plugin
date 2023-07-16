@@ -73,7 +73,6 @@ public class FileModificationErrorDialog extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
-                fileModificationTrackerService.removeModification(modificationId);
                 fileModificationRestarterService.restartFileModification(fileModification);
                 dispose();
             }
