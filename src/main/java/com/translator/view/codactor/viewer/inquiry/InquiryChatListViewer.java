@@ -484,7 +484,7 @@ public class InquiryChatListViewer extends JPanel {
                     if (component instanceof JBTextArea) {
                         JBTextArea chatDisplay = (JBTextArea) component;
                         int newHeight = 0;
-                        int newWidth = getWidth();
+                        int newWidth = inquiryViewer.getWidth();
                         if (chatViewer.getInquiryChat().getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
                             newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
                         } else {

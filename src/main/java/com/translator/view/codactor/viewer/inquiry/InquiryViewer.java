@@ -121,19 +121,19 @@ public class InquiryViewer extends JPanel {
 
     public void askNewGeneralInquiryQuestion(String question) {
         String model = inquiryChatListViewer.getOpenAiModelService().getSelectedOpenAiModel();
-        inquiryService.createGeneralInquiry(question, model);
+        inquiryService.createGeneralInquiry(this, question, model);
     }
 
     public void askInquiryQuestion(String subjectRecordId, RecordType recordType, String question, String filePath) {
         inquiryChatBoxViewer.getToolBar().setVisible(false);
         String model = inquiryChatListViewer.getOpenAiModelService().getSelectedOpenAiModel();
-        inquiryService.createInquiry(subjectRecordId, recordType, question, filePath, model);
+        inquiryService.createInquiry(this, subjectRecordId, recordType, question, filePath, model);
     }
 
     public void askContinuedQuestion(String previousInquiryChatId, String question) {
         assert inquiry != null;
         String model = inquiryChatListViewer.getOpenAiModelService().getSelectedOpenAiModel();
-        inquiryService.continueInquiry(previousInquiryChatId, question, model);
+        inquiryService.continueInquiry(this, previousInquiryChatId, question, model);
     }
 
     public void setInquiry(Inquiry inquiry) {

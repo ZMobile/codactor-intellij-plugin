@@ -5,6 +5,7 @@ import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
+import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.renderer.InquiryRenderer;
 import com.translator.view.codactor.renderer.SeparatorListCellRenderer;
 import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;
@@ -21,19 +22,19 @@ public class InquiryListViewer extends JPanel {
     private JBScrollPane inquiryListScrollPane;
     private JToolBar jToolBar2;
     private JButton newInquiryButton;
-    private InquiryViewer inquiryViewer;
     private HistoricalModificationListViewer historicalModificationListViewer;
     private CodactorToolWindowService codactorToolWindowService;
     private InquiryDao inquiryDao;
+    private InquiryViewerFactory inquiryViewerFactory;
     private JPanel parentComponent = this;
 
-    public InquiryListViewer(InquiryViewer inquiryViewer,
-                             CodactorToolWindowService codactorToolWindowService,
-                             InquiryDao inquiryDao) {
-        this.inquiryViewer = inquiryViewer;
+    public InquiryListViewer(CodactorToolWindowService codactorToolWindowService,
+                             InquiryDao inquiryDao,
+                             InquiryViewerFactory inquiryViewerFactory) {
         this.historicalModificationListViewer = null;
         this.codactorToolWindowService = codactorToolWindowService;
         this.inquiryDao = inquiryDao;
+        this.inquiryViewerFactory = inquiryViewerFactory;
         initComponents();
     }
 
@@ -93,8 +94,9 @@ public class InquiryListViewer extends JPanel {
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
+                InquiryViewer inquiryViewer = inquiryViewerFactory.create();
                 inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiryWithChats);
-                codactorToolWindowService.openInquiryViewerToolWindow();
+                codactorToolWindowService.createInquiryViewerToolWindow(inquiryViewer);
             }
         });
     }

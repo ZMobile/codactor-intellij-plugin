@@ -13,7 +13,9 @@ import com.intellij.ui.components.*;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
+import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
+import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import com.translator.view.uml.factory.CodactorUmlBuilderApplicationModelFactory;
 import com.translator.view.uml.factory.CodactorUmlBuilderViewFactory;
 import com.translator.view.uml.*;
@@ -55,7 +57,6 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private JBTextField languageInputTextField;
     private JBLabel jLabel2;
     private JBTextField fileTypeTextField;
-
     private JButton advancedButton;
     private JLabel hiddenLabel;
     private PromptContextService promptContextService;
@@ -69,6 +70,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
     private CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory;
     private CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory;
+    private InquiryViewerFactory inquiryViewerFactory;
 
     @Inject
     public CodactorConsole(Project project,
@@ -82,7 +84,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                            CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory,
-                           CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory) {
+                           CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory,
+                           InquiryViewerFactory inquiryViewerFactory) {
         super(new BorderLayout());
         this.project = project;
         this.promptContextService = promptContextServiceFactory.create();
@@ -96,6 +99,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
         this.codactorUmlBuilderViewFactory = codactorUmlBuilderViewFactory;
         this.codactorUmlBuilderApplicationModelFactory = codactorUmlBuilderApplicationModelFactory;
+        this.inquiryViewerFactory = inquiryViewerFactory;
 
         textArea = new JBTextArea();
         textArea.setBackground(Color.BLACK);
@@ -403,7 +407,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     if (!textArea.getText().isEmpty()) {
                         String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                         String question = textArea.getText();
-                        inquiryService.createInquiry(fileItem.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
+                        InquiryViewer inquiryViewer = inquiryViewerFactory.create();
+                        inquiryService.createInquiry(inquiryViewer, fileItem.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire Selected")) {
@@ -413,7 +418,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                         code = selectionModel.getSelectedText();
                     }
                     String question = textArea.getText();
-                    inquiryService.createInquiry(fileItem.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
+                    InquiryViewer inquiryViewer = inquiryViewerFactory.create();
+                    inquiryService.createInquiry(inquiryViewer, fileItem.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
                     promptContextService.clearPromptContext();
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Translate")) {
                     codactorToolWindowService.openModificationQueueViewerToolWindow();

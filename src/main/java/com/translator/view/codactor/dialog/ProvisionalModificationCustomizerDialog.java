@@ -30,8 +30,10 @@ import com.translator.service.codactor.modification.AutomaticCodeModificationSer
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
+import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
+import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -56,6 +58,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
     private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
     private PromptContextServiceFactory promptContextServiceFactory;
+    private InquiryViewerFactory inquiryViewerFactory;
     private Editor defaultSolution;
     private Editor suggestedSolution;
     private Editor selectedEditor;
@@ -68,11 +71,12 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                                                    InquiryService inquiryService,
                                                    MassCodeFileGeneratorService massCodeFileGeneratorService,
                                                    AutomaticCodeModificationService automaticCodeModificationService,
+                                                   FileModificationTrackerService fileModificationTrackerService,
+                                                   OpenAiModelService openAiModelService,
                                                    MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                                    PromptContextServiceFactory promptContextServiceFactory,
                                                    PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
-                                                   FileModificationTrackerService fileModificationTrackerService,
-                                                   OpenAiModelService openAiModelService) {
+                                                   InquiryViewerFactory inquiryViewerFactory) {
         setModal(false);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this.project = project;
@@ -85,6 +89,8 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
         this.automaticCodeModificationService = automaticCodeModificationService;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
         this.promptContextServiceFactory = promptContextServiceFactory;
+        this.inquiryViewerFactory = inquiryViewerFactory;
+        this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         this.promptContextService = promptContextServiceFactory.create();
         EditorFactory editorFactory = EditorFactory.getInstance();
         String extension;
@@ -353,7 +359,8 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                     if (!textArea.getText().isEmpty()) {
                         String code = codeSnippetExtractorService.getAllText(selectedEditor);
                         String question = textArea.getText();
-                        inquiryService.createInquiry(fileModificationSuggestion.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
+                        InquiryViewer inquiryViewer = inquiryViewerFactory.create();
+                        inquiryService.createInquiry(inquiryViewer, fileModificationSuggestion.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire Selected")) {
@@ -363,7 +370,8 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                         code = selectionModel.getSelectedText();
                     }
                     String question = textArea.getText();
-                    inquiryService.createInquiry(fileModificationSuggestion.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
+                    InquiryViewer inquiryViewer = inquiryViewerFactory.create();
+                    inquiryService.createInquiry(inquiryViewer, fileModificationSuggestion.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
                     promptContextService.clearPromptContext();
                 }
             }

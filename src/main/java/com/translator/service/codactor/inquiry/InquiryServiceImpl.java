@@ -5,6 +5,7 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import com.translator.CodactorInjector;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.codactor.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
@@ -17,6 +18,7 @@ import com.translator.service.codactor.functions.CodactorFunctionGeneratorServic
 import com.translator.service.codactor.functions.InquiryFunctionCallProcessorService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
+import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,6 +40,7 @@ public class InquiryServiceImpl implements InquiryService {
     private CodactorFunctionGeneratorService codactorFunctionGeneratorService;
     private InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService;
     private InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService;
+    private InquiryViewerFactory inquiryViewerFactory;
 
     @Inject
     public InquiryServiceImpl(Gson gson,
@@ -63,7 +66,7 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     @Override
-    public void createInquiry(String subjectRecordId, RecordType recordType, String question, String filePath, String model) {
+    public void createInquiry(InquiryViewer inquiryViewer, String subjectRecordId, RecordType recordType, String question, String filePath, String model) {
         String likelyCodeLanguage = gptToLanguageTransformerService.getFromFilePath(filePath);
         Inquiry inquiry = new Inquiry.Builder()
                 .build();
@@ -73,8 +76,8 @@ public class InquiryServiceImpl implements InquiryService {
                 .withLikelyCodeLanguage(likelyCodeLanguage)
                 .build();
         inquiry.getChats().add(temporaryChat);
-        InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
         inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
+        codactorToolWindowService.createInquiryViewerToolWindow(inquiryViewer);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Inquiry (MODIFICATION)", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
@@ -99,17 +102,15 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     @Override
-    public void createInquiry(String filePath, String code, String question, List<HistoricalContextObjectHolder> priorContext, String model) {
+    public void createInquiry(InquiryViewer inquiryViewer, String filePath, String code, String question, List<HistoricalContextObjectHolder> priorContext, String model) {
         Inquiry temporaryInquiry = new Inquiry.Builder()
                 .withFilePath(filePath)
                 .withSubjectCode(code)
                 .withInitialQuestion(question)
                 .withPriorContext(priorContext)
                 .build();
-        InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
         inquiryViewer.getInquiryChatListViewer().updateInquiryContents(temporaryInquiry);
         inquiryViewer.setLoadingChat(true);
-        codactorToolWindowService.openInquiryViewerToolWindow();
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Inquiry (CODE)", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
@@ -136,7 +137,7 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     @Override
-    public void createGeneralInquiry(String question, String model) {
+    public void createGeneralInquiry(InquiryViewer inquiryViewer, String question, String model) {
         String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
         InquiryChat temporaryChat = new InquiryChat.Builder()
                 .withFrom("User")
@@ -146,7 +147,6 @@ public class InquiryServiceImpl implements InquiryService {
         Inquiry inquiry = new Inquiry.Builder()
                 .build();
         inquiry.getChats().add(temporaryChat);
-        InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
         inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Inquiry (GENERAL)", true) {
             @Override
@@ -178,9 +178,8 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     @Override
-    public void continueInquiry(String previousInquiryChatId, String question, String model) {
+    public void continueInquiry(InquiryViewer inquiryViewer, String previousInquiryChatId, String question, String model) {
         String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
-        InquiryViewer inquiryViewer = codactorToolWindowService.getInquiryViewer();
         Inquiry inquiry = inquiryViewer.getInquiry();
         InquiryChat inquiryChat = new InquiryChat.Builder()
                 .withInquiryId(inquiry.getId())

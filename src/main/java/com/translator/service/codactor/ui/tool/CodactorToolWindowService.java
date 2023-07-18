@@ -16,15 +16,13 @@ public interface CodactorToolWindowService {
 
     void closeModificationQueueViewerToolWindow();
 
-    void openInquiryViewerToolWindow();
+    void createInquiryViewerToolWindow(InquiryViewer inquiryViewer);
 
     void openInquiryListViewerToolWindow();
 
     void openHistoricalModificationListViewerToolWindow();
 
     void closeInquiryViewerToolWindow();
-
-    InquiryViewer getInquiryViewer();
 
     InquiryListViewer getInquiryListViewer();
 

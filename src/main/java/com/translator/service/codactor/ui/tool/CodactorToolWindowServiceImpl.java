@@ -8,7 +8,9 @@ import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.content.ContentManagerEvent;
 import com.intellij.ui.content.ContentManagerListener;
 import com.translator.CodactorInjector;
+import com.translator.service.codactor.inquiry.InquiryViewerMapService;
 import com.translator.view.codactor.console.CodactorConsole;
+import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;
@@ -17,6 +19,9 @@ import com.translator.view.codactor.viewer.modification.ProvisionalModificationV
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class CodactorToolWindowServiceImpl implements CodactorToolWindowService {
     private Project project;
@@ -27,27 +32,27 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
     private CodactorConsole console;
     private ModificationQueueViewer modificationQueueViewer;
     private ProvisionalModificationViewer provisionalModificationViewer;
-    private InquiryViewer inquiryViewer;
     private InquiryListViewer inquiryListViewer;
     private HistoricalModificationListViewer historicalModificationListViewer;
+    private List<InquiryViewer> inquiryViewerList;
+    private Map<String, Content> inquiryViewerContentMap;
 
     @Inject
     public CodactorToolWindowServiceImpl(Project project,
                                          ModificationQueueViewer modificationQueueViewer,
-                                            ProvisionalModificationViewer provisionalModificationViewer,
-                                            InquiryViewer inquiryViewer,
-                                            InquiryListViewer inquiryListViewer,
-                                            HistoricalModificationListViewer historicalModificationListViewer,
-                                            CodactorConsole codactorConsole,
-                                            ToolWindowService toolWindowService) {
+                                         ProvisionalModificationViewer provisionalModificationViewer,
+                                         InquiryListViewer inquiryListViewer,
+                                         HistoricalModificationListViewer historicalModificationListViewer,
+                                         CodactorConsole codactorConsole,
+                                         ToolWindowService toolWindowService) {
         this.project = project;
         this.modificationQueueViewer = modificationQueueViewer;
         this.provisionalModificationViewer = provisionalModificationViewer;
-        this.inquiryViewer = inquiryViewer;
         this.inquiryListViewer = inquiryListViewer;
         this.historicalModificationListViewer = historicalModificationListViewer;
         this.console = codactorConsole;
         this.toolWindowService = toolWindowService;
+        this.inquiryViewerList = new ArrayList<>();
         this.modificationQueueViewerToolWindowId = "Modifications";
         this.inquiryViewerToolWindowId = "Inquiries";
         this.consoleToolWindowId = "Codactor";
@@ -105,14 +110,15 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
         toolWindowService.closeToolWindow(modificationQueueViewerToolWindowId);
     }
 
+    public void createInquiryViewerToolWindow(InquiryViewer inquiryViewer) {
+        inquiryViewerList.add(inquiryViewer);
+        openInquiryViewerToolWindow(inquiryViewer);
+    }
 
-    public void openInquiryViewerToolWindow() {
+
+    private void openInquiryViewerToolWindow(InquiryViewer inquiryViewer) {
         ToolWindow toolWindow = toolWindowService.getToolWindow(inquiryViewerToolWindowId);
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-        if (inquiryViewer == null) {
-            Injector injector = CodactorInjector.getInstance().getInjector(project);
-            this.inquiryViewer = injector.getInstance(InquiryViewer.class);
-        }
         Content content = contentFactory.createContent(inquiryViewer, "Inquiry", false);
         toolWindow.getContentManager().addContent(content);
         toolWindow.getContentManager().setSelectedContent(content);
@@ -148,12 +154,6 @@ public class CodactorToolWindowServiceImpl implements CodactorToolWindowService 
 
     public void closeInquiryViewerToolWindow() {
         toolWindowService.closeToolWindow(inquiryViewerToolWindowId);
-    }
-
-
-    @Override
-    public InquiryViewer getInquiryViewer() {
-        return inquiryViewer;
     }
 
     @Override

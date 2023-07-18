@@ -18,6 +18,7 @@ import com.translator.service.codactor.modification.FileModificationRestarterSer
 import com.translator.service.codactor.modification.FileModificationSuggestionDiffViewerService;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
+import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.factory.dialog.*;
 import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
@@ -64,6 +65,7 @@ public class CodeTranslatorViewConfig extends AbstractModule {
         install(new FactoryModuleBuilder().build(FileModifyDialogFactory.class));
         install(new FactoryModuleBuilder().build(FileTranslateDialogFactory.class));
         install(new FactoryModuleBuilder().build(FileModificationErrorDialogFactory.class));
+        install(new FactoryModuleBuilder().build(InquiryViewerFactory.class));
     }
 
     @Singleton
@@ -92,18 +94,18 @@ public class CodeTranslatorViewConfig extends AbstractModule {
 
     @Singleton
     @Provides
-    public InquiryListViewer inquiryListViewer(InquiryViewer inquiryViewer,
-                                               CodactorToolWindowService codactorToolWindowService,
-                                               InquiryDao inquiryDao) {
-        return new InquiryListViewer(inquiryViewer, codactorToolWindowService, inquiryDao);
+    public InquiryListViewer inquiryListViewer(CodactorToolWindowService codactorToolWindowService,
+                                               InquiryDao inquiryDao,
+                                               InquiryViewerFactory inquiryViewer) {
+        return new InquiryListViewer(codactorToolWindowService, inquiryDao, inquiryViewer);
     }
 
     @Singleton
     @Provides
-    public HistoricalModificationListViewer historicalModificationListViewer(InquiryViewer inquiryViewer,
-                                                                             CodactorToolWindowService codactorToolWindowService,
-                                                                             CodeModificationHistoryDao codeModificationHistoryDao) {
-        return new HistoricalModificationListViewer(inquiryViewer, codactorToolWindowService, codeModificationHistoryDao);
+    public HistoricalModificationListViewer historicalModificationListViewer(CodactorToolWindowService codactorToolWindowService,
+                                                                             CodeModificationHistoryDao codeModificationHistoryDao,
+                                                                             InquiryViewerFactory inquiryViewerFactory) {
+        return new HistoricalModificationListViewer(codactorToolWindowService, codeModificationHistoryDao, inquiryViewerFactory);
     }
 
     @Singleton
@@ -133,8 +135,9 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            AutomaticCodeModificationService automaticCodeModificationService,
                                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                                            CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory,
-                                           CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory) {
-        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, automaticCodeModificationService, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, codactorUmlBuilderViewFactory, codactorUmlBuilderApplicationModelFactory);
+                                           CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory,
+                                           InquiryViewerFactory inquiryViewerFactory) {
+        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, automaticCodeModificationService, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, codactorUmlBuilderViewFactory, codactorUmlBuilderApplicationModelFactory, inquiryViewerFactory);
     }
 
     @Provides

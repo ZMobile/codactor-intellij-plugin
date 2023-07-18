@@ -139,6 +139,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(FileDirectoryStructureQueryService.class).to(FileDirectoryStructureQueryServiceImpl.class);
         bind(SelectedFileViewerService.class).to(SelectedFileViewerServiceImpl.class);
         bind(FileModificationDataHolderJsonCompatibilityService.class).to(FileModificationDataHolderJsonCompatibilityServiceImpl.class);
+        bind(InquiryViewerMapService.class).to(InquiryViewerMapServiceImpl.class).asEagerSingleton();
     }
 
     @Singleton

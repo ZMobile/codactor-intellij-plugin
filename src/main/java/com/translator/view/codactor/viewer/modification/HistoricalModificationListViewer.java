@@ -11,6 +11,7 @@ import com.translator.model.codactor.modification.FileModificationSuggestionModi
 import com.translator.model.codactor.modification.FileModificationSuggestionRecord;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
+import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.renderer.HistoricalCompletedFileModificationRenderer;
 import com.translator.view.codactor.renderer.SeparatorListCellRenderer;
 import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
@@ -29,19 +30,19 @@ public class HistoricalModificationListViewer extends JPanel {
     private JBScrollPane modificationListScrollPane;
     private JToolBar jToolBar2;
     private JButton otherInquiriesButton;
-    private InquiryViewer inquiryViewer;
     private InquiryListViewer inquiryListViewer;
     private CodactorToolWindowService codactorToolWindowService;
     private CodeModificationHistoryDao codeModificationHistoryDao;
+    private InquiryViewerFactory inquiryViewerFactory;
     private JPanel parentComponent = this;
 
-    public HistoricalModificationListViewer(InquiryViewer inquiryViewer,
-                                            CodactorToolWindowService codactorToolWindowService,
-                                            CodeModificationHistoryDao codeModificationHistoryDao) {
-        this.inquiryViewer = inquiryViewer;
+    public HistoricalModificationListViewer(CodactorToolWindowService codactorToolWindowService,
+                                            CodeModificationHistoryDao codeModificationHistoryDao,
+                                            InquiryViewerFactory inquiryViewerFactory) {
         this.inquiryListViewer = null;
         this.codactorToolWindowService = codactorToolWindowService;
         this.codeModificationHistoryDao = codeModificationHistoryDao;
+        this.inquiryViewerFactory = inquiryViewerFactory;
         initComponents();
     }
 
@@ -97,9 +98,10 @@ public class HistoricalModificationListViewer extends JPanel {
                 if (index == 0) {
                     Inquiry inquiry = new Inquiry.Builder()
                             .build();
+                    InquiryViewer inquiryViewer = inquiryViewerFactory.create();
                     inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                     inquiryViewer.setLoadingChat(false);
-                    codactorToolWindowService.openInquiryViewerToolWindow();
+                    codactorToolWindowService.createInquiryViewerToolWindow(inquiryViewer);
                     return;
                 }
                 HistoricalFileModificationDataHolder historicalFileModificationDataHolder = modificationList.getModel().getElementAt(index);
@@ -129,8 +131,9 @@ public class HistoricalModificationListViewer extends JPanel {
                             .withModificationType(fileModificationSuggestionRecord.getModificationType())
                             .build();
                 }
+                InquiryViewer inquiryViewer = inquiryViewerFactory.create();
                 inquiryViewer.getInquiryChatListViewer().updateInquiryContents(temporaryInquiry);
-                codactorToolWindowService.openInquiryViewerToolWindow();
+                codactorToolWindowService.createInquiryViewerToolWindow(inquiryViewer);
             }
         });
     }
