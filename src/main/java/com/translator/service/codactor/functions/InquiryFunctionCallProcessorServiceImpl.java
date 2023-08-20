@@ -228,6 +228,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 endIndex = codeSnippetIndexGetterService.getEndIndex(code, codeSnippetString);
             } else {
                 startSnippetString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "startBoundary");
+
                 if (startSnippetString != null) {
                     try {
                         startIndex = codeSnippetIndexGetterService.getStartIndex(code, startSnippetString);
@@ -246,6 +247,22 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                     }
                 } else {
                     endIndex = code.length();
+                }
+                // Check if startSnippetString is after endSnippetString, and swap if necessary
+                if (startSnippetString != null && endSnippetString != null && startIndex > endIndex) {
+                    String temp = startSnippetString;
+                    startSnippetString = endSnippetString;
+                    endSnippetString = temp;
+                    try {
+                        startIndex = codeSnippetIndexGetterService.getStartIndex(code, startSnippetString);
+                    } catch (NumberFormatException e) {
+                        startIndex = 0;
+                    }
+                    try {
+                        endIndex = codeSnippetIndexGetterService.getEndIndex(code, endSnippetString);
+                    } catch (NumberFormatException e) {
+                        endIndex = code.length();
+                    }
                 }
             }
             String modificationTypeString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "modificationType");
@@ -316,6 +333,22 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                     }
                 } else {
                     endIndex = code.length();
+                }
+                // Check if startSnippetString is after endSnippetString, and swap if necessary
+                if (startSnippetString != null && endSnippetString != null && startIndex > endIndex) {
+                    String temp = startSnippetString;
+                    startSnippetString = endSnippetString;
+                    endSnippetString = temp;
+                    try {
+                        startIndex = codeSnippetIndexGetterService.getStartIndex(code, startSnippetString);
+                    } catch (NumberFormatException e) {
+                        startIndex = 0;
+                    }
+                    try {
+                        endIndex = codeSnippetIndexGetterService.getEndIndex(code, endSnippetString);
+                    } catch (NumberFormatException e) {
+                        endIndex = code.length();
+                    }
                 }
             }
             String modificationTypeString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "modificationType");

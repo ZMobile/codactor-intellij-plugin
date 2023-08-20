@@ -100,17 +100,17 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
             } else {
                 fileModificationTrackerService.errorFileModification(fileModification.getId());
                 if (error.equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModification.getId(), fileModification.getFilePath(), "", ModificationType.TRANSLATE);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModification.getId(), fileModification.getFilePath(), "", fileModification.getModificationType());
                     fileModificationErrorDialog.setVisible(true);
                 } else {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModification.getId(), fileModification.getFilePath(), error, ModificationType.TRANSLATE);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModification.getId(), fileModification.getFilePath(), error, fileModification.getModificationType());
                     fileModificationErrorDialog.setVisible(true);
                 }
             }
             backgroundTaskMapperService.removeTask(fileModification.getId());
         };
         Runnable cancelTask = () -> {};
-        CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.TRANSLATE + ")", task, cancelTask);
+        CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + fileModification.getModificationType() + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(fileModification.getId(), backgroundTask);
     }

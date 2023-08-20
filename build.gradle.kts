@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.codactor"
-version = "2.3-BETA"
+version = "2.4-BETA"
 
 repositories {
     mavenCentral()
@@ -44,7 +44,7 @@ tasks {
         implementation("com.google.inject:guice:5.1.0")
         implementation("com.google.inject.extensions:guice-assistedinject:5.1.0")
         implementation("com.norconex.language:langdetect:1.3.0")
-        implementation("org.jhotdraw:jhotdraw:7.7.0")
+        implementation(fileTree("libs") { include("*.jar") })
         implementation("org.openjfx:javafx-swing:21-ea+5")
         implementation("io.github.java-diff-utils:java-diff-utils:4.12")
     }
