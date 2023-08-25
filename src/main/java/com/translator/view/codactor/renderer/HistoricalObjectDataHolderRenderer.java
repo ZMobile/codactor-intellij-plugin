@@ -69,11 +69,11 @@ public class HistoricalObjectDataHolderRenderer extends JPanel implements ListCe
             if (historicalFileModificationDataHolder.getRecordType() != null && historicalFileModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
                 leftLabelOne.setText("File: (SUB) " + historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getFilePath());
                 leftLabelTwo.setText("Type: " + historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getModificationType() + " Subject: " + historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getSubjectLine());
-                labelThree.setText("Lines: " + lineCounterService.countLines(historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode().trim(), historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode().trim().length()));
+                labelThree.setText("Lines: " + lineCounterService.countLines(historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode(), historicalFileModificationDataHolder.getFileModificationSuggestionModificationRecord().getEditedCode().length()));
             } else if (historicalFileModificationDataHolder.getRecordType() != null && historicalFileModificationDataHolder.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
                 leftLabelOne.setText("File: " + historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getFilePath());
                 leftLabelTwo.setText("Type: " + historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getModificationType() + " Subject: " + historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getModificationId()/*historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSubjectLine()*/);
-                labelThree.setText("Lines: " + lineCounterService.countLines(historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim(), historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().trim().length()));
+                labelThree.setText("Lines: " + lineCounterService.countLines(historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode(), historicalFileModificationDataHolder.getFileModificationSuggestionRecord().getSuggestedCode().length()));
             }
             if (isSelected) {
                 setBackground(Color.decode("#228B22").darker());

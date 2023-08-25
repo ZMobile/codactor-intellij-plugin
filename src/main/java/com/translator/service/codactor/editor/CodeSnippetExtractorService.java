@@ -3,7 +3,6 @@ package com.translator.service.codactor.editor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 
 public interface CodeSnippetExtractorService {

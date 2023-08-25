@@ -5,30 +5,26 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import com.intellij.ui.components.JBTextArea;
 import com.translator.CodactorInjector;
-import com.translator.dao.history.CodeModificationHistoryDao;
-import com.translator.model.codactor.api.translator.history.DesktopCodeModificationHistoryResponseResource;
+import com.translator.model.codactor.history.HistoricalContextObjectHolder;
+import com.translator.model.codactor.modification.*;
 import com.translator.model.codactor.modification.data.FileModificationDataHolder;
-import com.translator.model.codactor.modification.data.ModificationObjectType;
-import com.translator.service.codactor.editor.*;
+import com.translator.service.codactor.editor.CodeHighlighterService;
+import com.translator.service.codactor.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.editor.GuardedBlockService;
+import com.translator.service.codactor.editor.RangeReplaceService;
 import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
 import com.translator.service.codactor.file.FileCreatorService;
 import com.translator.service.codactor.file.FileRemoverService;
-import com.translator.service.codactor.transformer.modification.HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService;
-import com.translator.service.codactor.transformer.modification.HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerServiceImpl;
-import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
-import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.modification.*;
 import com.translator.service.codactor.file.RenameFileService;
 import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerService;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
+import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
 import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
 
 import javax.inject.Inject;
 import javax.swing.*;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 public class FileModificationTrackerServiceImpl implements FileModificationTrackerService {
@@ -277,13 +273,13 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                 .orElseThrow();
         guardedBlockService.removeFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId());
         codeHighlighterService.highlightTextArea(fileModificationSuggestionModificationTracker);
-        fileModificationSuggestionModificationTracker.implementModification(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId(), fileModificationSuggestionModificationRecord.getEditedCode().trim());
+        fileModificationSuggestionModificationTracker.implementModification(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId(), fileModificationSuggestionModificationRecord.getEditedCode());
         if (fileModificationSuggestionModificationTracker.getModifications().isEmpty()) {
             activeModificationSuggestionModifications.values().remove(fileModificationSuggestionModificationTracker);
         }
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         FileModificationSuggestion fileModificationSuggestion = fileModificationSuggestionModificationTracker.getFileModificationSuggestion();
-        diffEditorGeneratorService.updateDiffEditor(fileModificationSuggestion.getDiffEditor(), fileModificationSuggestion.getBeforeCode(), fileModificationSuggestionModificationRecord.getEditedCode().trim());
+        diffEditorGeneratorService.updateDiffEditor(fileModificationSuggestion.getDiffEditor(), fileModificationSuggestion.getBeforeCode(), fileModificationSuggestionModificationRecord.getEditedCode());
     }
 
     public Map<String, FileModificationTracker> getActiveModificationFiles() {
@@ -435,6 +431,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             return;
         }
         fileModification.setError(true);
+        codeHighlighterService.highlightTextArea(getModificationTracker(fileModification.getFilePath()));
     }
 
     @Override

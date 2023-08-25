@@ -5,26 +5,19 @@ import com.google.inject.assistedinject.Assisted;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.factory.CodeFileGeneratorServiceFactory;
 import com.translator.service.codactor.file.CodeFileGeneratorService;
-import com.translator.service.codactor.modification.AutomaticCodeModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
-import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
 
 public class FileCreateDialog extends JDialog {
     private Project project;

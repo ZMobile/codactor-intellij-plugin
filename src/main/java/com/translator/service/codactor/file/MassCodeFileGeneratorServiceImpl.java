@@ -7,8 +7,8 @@ import com.intellij.openapi.project.Project;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.codactor.api.translator.modification.DesktopCodeCreationRequestResource;
 import com.translator.model.codactor.api.translator.modification.DesktopCodeCreationResponseResource;
-import com.translator.model.codactor.history.HistoricalContextInquiryHolder;
 import com.translator.model.codactor.history.HistoricalContextFileModificationHolder;
+import com.translator.model.codactor.history.HistoricalContextInquiryHolder;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
@@ -129,10 +129,10 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                                         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                            fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim(), true);
+                                            fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                             //write the contents to the file with printWriter:
                                            // try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                                                //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                                //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode());
                                             //} catch (FileNotFoundException e) {
                                                 //e.printStackTrace();
                                             //}
@@ -251,10 +251,10 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                     DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
                                     DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                        fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim(), true);
+                                        fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                         //write the contents to the file with printWriter:
                                         //try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                                            //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                            //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode());
                                         //} catch (FileNotFoundException e) {
                                             //e.printStackTrace();
                                         //}
@@ -358,10 +358,10 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), newDescription, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), newPriorContext);
                                         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                            fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim(), true);
+                                            fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                             //write the contents to the file with printWriter:
                                             //try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                                                //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                                //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode());
                                             //} catch (FileNotFoundException e) {
                                                 //e.printStackTrace();
                                             //}
@@ -476,12 +476,12 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                     DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description2, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext2);
                                     DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                        fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim(), true);
+                                        fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                         //write the contents to the file with printWriter:
                                         //Check if the file contents are empty first:
                                         /////
                                         //try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                                            //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode().trim());
+                                            //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode());
                                             //System.out.println("Testo 9");
                                         //} catch (FileNotFoundException e) {
                                             //e.printStackTrace();

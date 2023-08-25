@@ -7,19 +7,17 @@ import com.translator.model.codactor.api.translator.modification.*;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.modification.*;
 import com.translator.model.codactor.task.CancellableRunnable;
+import com.translator.model.codactor.task.CustomBackgroundTask;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
-import com.translator.model.codactor.task.CustomBackgroundTask;
 import com.translator.view.codactor.dialog.FileModificationErrorDialog;
 import com.translator.view.codactor.dialog.LoginDialog;
-import com.translator.view.codactor.dialog.OpenAiApiKeyDialog;
 import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFactory;
 
 import javax.inject.Inject;
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -25,6 +25,10 @@ public class HistoricalContextInquiryHolder {
         this.requestedChats = requestedChats;
     }
 
+    public HistoricalContextInquiryHolder(String inquiryId) {
+        this.inquiryId = inquiryId;
+    }
+
     public HistoricalContextInquiryHolder(HistoricalInquiryDataHolder historicalInquiryDataHolder) {
         this.inquiryId = historicalInquiryDataHolder.getInquiry().getId();
         this.previousChatId = historicalInquiryDataHolder.getPreviousChatId();

@@ -15,7 +15,6 @@ import org.jhotdraw.app.action.window.MaximizeWindowAction;
 import org.jhotdraw.app.action.window.MinimizeWindowAction;
 import org.jhotdraw.app.action.window.TogglePaletteAction;
 import org.jhotdraw.app.osx.OSXAdapter;
-import org.jhotdraw.app.osx.OSXPaletteHandler;
 import org.jhotdraw.gui.Worker;
 import org.jhotdraw.net.URIUtil;
 import org.jhotdraw.util.ResourceBundleUtil;

@@ -2,29 +2,22 @@ package com.translator.view.codactor.action.file;
 
 import com.google.inject.Injector;
 import com.intellij.ide.actions.CreateElementActionBase;
-import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.translator.CodactorInjector;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.modification.AutomaticCodeModificationService;
-import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.FileCreateDialog;
 import com.translator.view.codactor.factory.dialog.FileCreateDialogFactory;
-import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 

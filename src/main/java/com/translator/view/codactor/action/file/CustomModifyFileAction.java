@@ -9,13 +9,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.CodactorInjector;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
-import com.translator.service.codactor.modification.AutomaticMassCodeModificationService;
-import com.translator.service.codactor.modification.multi.MultiFileModificationService;
-import com.translator.service.codactor.openai.OpenAiModelService;
-import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.FileModifyDialog;
 import com.translator.view.codactor.factory.dialog.FileModifyDialogFactory;
-import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

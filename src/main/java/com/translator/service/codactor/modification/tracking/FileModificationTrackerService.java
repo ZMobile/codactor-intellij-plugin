@@ -1,9 +1,9 @@
 package com.translator.service.codactor.modification.tracking;
 
-import com.translator.model.codactor.modification.data.FileModificationDataHolder;
-import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.modification.*;
+import com.translator.model.codactor.modification.data.FileModificationDataHolder;
+import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
 import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
 
 import java.util.List;

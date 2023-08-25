@@ -2,10 +2,11 @@ package com.translator.service.codactor.functions;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.intellij.ide.bookmarks.Bookmark;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.dao.inquiry.InquiryDao;
+import com.translator.model.codactor.history.HistoricalContextInquiryHolder;
+import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.data.InquiryDataReferenceHolder;
 import com.translator.model.codactor.inquiry.function.ChatGptFunctionCall;
@@ -26,7 +27,6 @@ import com.translator.service.codactor.modification.history.FileModificationHist
 import com.translator.service.codactor.modification.json.FileModificationDataHolderJsonCompatibilityService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.runner.CodeRunnerService;
-import com.translator.service.codactor.runner.CodeRunnerServiceImpl;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 import com.translator.service.codactor.transformer.modification.FileModificationTrackerToFileModificationRangeDataTransformerService;
 import com.translator.service.util.SelectedFileViewerService;
@@ -95,7 +95,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     }
 
     @Override
-    public String processFunctionCall(ChatGptFunctionCall chatGptFunctionCall) {
+    public String processFunctionCall(ChatGptFunctionCall chatGptFunctionCall, String inquiryId) {
         if (chatGptFunctionCall.getName().equals("get_project_base_path")) {
             return project.getBasePath();
         } else if (chatGptFunctionCall.getName().equals("read_current_selected_file_in_editor")) {
@@ -108,7 +108,6 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(filePath);
             if (fileModificationTracker != null) {
                 List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
-                System.out.println("BIG TESTO: " + gson.toJson(fileModificationRangeData));
                 contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
             }
             return gson.toJson(contentMap);
@@ -268,6 +267,9 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             String modificationTypeString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "modificationType");
             assert modificationTypeString != null;
             ModificationType modificationType;
+            HistoricalContextObjectHolder inquiryContext = new HistoricalContextObjectHolder(new HistoricalContextInquiryHolder(inquiryId));
+            List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+            priorContext.add(inquiryContext);
             switch (modificationTypeString) {
                 case "modify":
                     if (startSnippetString == null && endSnippetString == null) {
@@ -354,6 +356,9 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             String modificationTypeString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "modificationType");
             assert modificationTypeString != null;
             ModificationType modificationType;
+            List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
+            HistoricalContextObjectHolder inquiryContext = new HistoricalContextObjectHolder(new HistoricalContextInquiryHolder(inquiryId));
+            priorContext.add(inquiryContext);
             switch (modificationTypeString) {
                 case "modify":
                     if (startSnippetString == null && endSnippetString == null) {

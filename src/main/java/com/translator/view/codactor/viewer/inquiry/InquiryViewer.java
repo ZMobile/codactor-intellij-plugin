@@ -18,7 +18,8 @@ import com.translator.view.codactor.viewer.modification.HistoricalModificationLi
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  *

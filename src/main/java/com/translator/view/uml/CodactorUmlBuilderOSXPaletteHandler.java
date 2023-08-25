@@ -5,7 +5,6 @@
 package com.translator.view.uml;
 
 import org.jhotdraw.annotation.Nullable;
-import com.translator.view.uml.CodactorUmlBuilderOSXApplication;
 import org.jhotdraw.app.View;
 
 import java.awt.*;

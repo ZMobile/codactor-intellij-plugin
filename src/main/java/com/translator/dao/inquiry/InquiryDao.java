@@ -1,8 +1,8 @@
 package com.translator.dao.inquiry;
 
-import com.translator.model.codactor.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
+import com.translator.model.codactor.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.modification.RecordType;
 
 import java.util.List;

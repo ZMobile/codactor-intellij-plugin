@@ -16,8 +16,8 @@ import com.translator.model.codactor.ai.ModificationImplementableResponse;
 import com.translator.model.codactor.ai.ModificationNeededResponse;
 import com.translator.model.codactor.api.translator.modification.DesktopCodeModificationRequestResource;
 import com.translator.model.codactor.api.translator.modification.DesktopCodeModificationResponseResource;
-import com.translator.model.codactor.history.HistoricalContextInquiryHolder;
 import com.translator.model.codactor.history.HistoricalContextFileModificationHolder;
+import com.translator.model.codactor.history.HistoricalContextInquiryHolder;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
@@ -38,7 +38,10 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import javax.swing.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MultiFileModificationServiceImpl implements MultiFileModificationService {
     private Project project;

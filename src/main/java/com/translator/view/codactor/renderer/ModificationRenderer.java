@@ -2,7 +2,9 @@ package com.translator.view.codactor.renderer;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
-import com.translator.model.codactor.modification.*;
+import com.translator.model.codactor.modification.FileModification;
+import com.translator.model.codactor.modification.FileModificationSuggestionModification;
+import com.translator.model.codactor.modification.MultiFileModification;
 import com.translator.model.codactor.modification.data.FileModificationDataHolder;
 import com.translator.model.codactor.modification.data.ModificationObjectType;
 import com.translator.service.codactor.file.FileReaderService;

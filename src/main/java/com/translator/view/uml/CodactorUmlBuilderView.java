@@ -4,9 +4,7 @@
 package com.translator.view.uml;
 
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import com.translator.view.uml.factory.adapter.CustomMouseAdapterFactory;
-import com.translator.view.uml.factory.tool.PromptNodeCreationToolFactory;
 import org.jhotdraw.app.AbstractView;
 import org.jhotdraw.app.ApplicationLabels;
 import org.jhotdraw.app.action.edit.RedoAction;

@@ -4,9 +4,6 @@
  */
 package com.translator.view.codactor.viewer.modification;
 
-import com.intellij.diff.DiffRequestFactory;
-import com.intellij.diff.contents.DiffContent;
-import com.intellij.diff.requests.SimpleDiffRequest;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;

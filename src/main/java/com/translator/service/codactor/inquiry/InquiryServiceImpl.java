@@ -5,15 +5,14 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import com.translator.CodactorInjector;
 import com.translator.dao.inquiry.InquiryDao;
-import com.translator.model.codactor.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
+import com.translator.model.codactor.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.modification.RecordType;
-import com.translator.service.codactor.editor.GptToLanguageTransformerService;
 import com.translator.service.codactor.context.PromptContextService;
+import com.translator.service.codactor.editor.GptToLanguageTransformerService;
 import com.translator.service.codactor.functions.CodactorFunctionGeneratorService;
 import com.translator.service.codactor.functions.InquiryFunctionCallProcessorService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
@@ -242,7 +241,7 @@ public class InquiryServiceImpl implements InquiryService {
         InquiryChat latestInquiryChat = getLatestInquiryChat(inquiry.getChats());
         if (latestInquiryChat.getFunctionCall() != null) {
             while (latestInquiryChat.getFunctionCall() != null) {
-                String functionCallResponse = inquiryFunctionCallProcessorService.processFunctionCall(latestInquiryChat.getFunctionCall());
+                String functionCallResponse = inquiryFunctionCallProcessorService.processFunctionCall(latestInquiryChat.getFunctionCall(), inquiry.getId());
                 Inquiry inquiry1 = inquiryDao.respondToFunctionCall(latestInquiryChat.getId(), latestInquiryChat.getFunctionCall().getName(), functionCallResponse, openAiApiKey, model, functions);
                 if (inquiry1 == null) {
                     break;

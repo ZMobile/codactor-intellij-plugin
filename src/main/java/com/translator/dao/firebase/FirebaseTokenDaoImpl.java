@@ -10,7 +10,9 @@ import com.translator.model.codactor.api.firebase.UserLoginRequestResource;
 import org.apache.commons.io.IOUtils;
 
 import javax.inject.Inject;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;

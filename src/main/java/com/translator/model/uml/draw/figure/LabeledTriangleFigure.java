@@ -1,7 +1,7 @@
 package com.translator.model.uml.draw.figure;
 
-import org.jhotdraw.draw.TriangleFigure;
 import org.jhotdraw.draw.TextFigure;
+import org.jhotdraw.draw.TriangleFigure;
 
 import java.awt.*;
 import java.awt.geom.Point2D;

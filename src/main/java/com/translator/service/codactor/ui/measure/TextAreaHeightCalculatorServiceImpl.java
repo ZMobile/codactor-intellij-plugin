@@ -1,14 +1,10 @@
 package com.translator.service.codactor.ui.measure;
 
 
-
-import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBTextArea;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
 

@@ -10,12 +10,9 @@ import com.intellij.psi.PsiElement;
 import com.translator.CodactorInjector;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
-import com.translator.service.codactor.file.CodeFileGeneratorService;
 import com.translator.service.codactor.openai.OpenAiModelService;
-import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.MultiFileCreateDialog;
 import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
-import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 import org.jetbrains.annotations.NotNull;
 
 public class CustomCreateMultiFileAction extends CreateElementActionBase {

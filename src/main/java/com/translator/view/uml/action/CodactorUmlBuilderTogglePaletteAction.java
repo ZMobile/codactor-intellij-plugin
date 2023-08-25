@@ -1,14 +1,13 @@
 package com.translator.view.uml.action;
 
-import java.awt.Window;
+import com.translator.view.uml.CodactorUmlBuilderOSXApplication;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import javax.swing.AbstractAction;
-
-import com.translator.view.uml.CodactorUmlBuilderOSXApplication;
-import org.jhotdraw.app.OSXApplication;
 
 public class CodactorUmlBuilderTogglePaletteAction extends AbstractAction {
     private static final long serialVersionUID = 1L;

@@ -6,8 +6,6 @@ import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiManager;
 import com.translator.model.codactor.modification.FileModification;
 import com.translator.model.codactor.modification.FileModificationSuggestion;
 import com.translator.model.codactor.modification.FileModificationSuggestionModification;
@@ -16,7 +14,6 @@ import com.translator.service.codactor.modification.tracking.FileModificationTra
 import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class GuardedBlockServiceImpl implements GuardedBlockService {
     private final Project project;

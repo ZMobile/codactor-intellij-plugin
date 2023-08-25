@@ -529,17 +529,17 @@ public class InquiryViewer extends JPanel {
             InquiryChatViewer descriptionViewer = new InquiryChatViewer(inquiry.getFilePath(), text, "User", InquiryChatType.INSTIGATOR_PROMPT);
             model.addElement(descriptionViewer);
             if (inquiry.getBeforeCode() != null) {
-                String beforeCodeText = "```" + inquiry.getBeforeCode().trim() + "```";
+                String beforeCodeText = "```" + inquiry.getBeforeCode() + "```";
                 InquiryChatViewer beforeViewer = new InquiryChatViewer(inquiry.getFilePath(), beforeCodeText, "Before", InquiryChatType.CODE_SNIPPET);
                 model.addElement(beforeViewer);
             }
             if (inquiry.getAfterCode() != null) {
-                String afterCodeText = "```" + inquiry.getAfterCode().trim() + "```";
+                String afterCodeText = "```" + inquiry.getAfterCode() + "```";
                 InquiryChatViewer afterViewer = new InquiryChatViewer(inquiry.getFilePath(), afterCodeText, "After", InquiryChatType.CODE_SNIPPET);
                 model.addElement(afterViewer);
             }
         } else if (inquiry.getSubjectCode() != null) {
-            String subjectCodeText = "```" + inquiry.getSubjectCode().trim() + "```";
+            String subjectCodeText = "```" + inquiry.getSubjectCode() + "```";
             InquiryChatViewer subjectCodeViewer = new InquiryChatViewer(inquiry.getFilePath(), subjectCodeText, "Code", InquiryChatType.CODE_SNIPPET);
             model.addElement(subjectCodeViewer);
             String text = inquiry.getInitialQuestion().trim();

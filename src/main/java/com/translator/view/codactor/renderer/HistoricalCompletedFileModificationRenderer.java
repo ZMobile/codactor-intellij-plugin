@@ -64,12 +64,12 @@ public class HistoricalCompletedFileModificationRenderer extends JPanel implemen
         if (value.getRecordType() != null && value.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
             filePathLabel.setText("File: (SUB) " + value.getFileModificationSuggestionModificationRecord().getFilePath());
             modificationTypeLabel.setText("Type: " + value.getFileModificationSuggestionModificationRecord().getModificationType());
-            lineRangeLabel.setText("Lines: " + lineCounterService.countLines(value.getFileModificationSuggestionModificationRecord().getEditedCode().trim(), value.getFileModificationSuggestionModificationRecord().getEditedCode().trim().length()));
+            lineRangeLabel.setText("Lines: " + lineCounterService.countLines(value.getFileModificationSuggestionModificationRecord().getEditedCode(), value.getFileModificationSuggestionModificationRecord().getEditedCode().length()));
             setBackground(Color.decode("#228B22"));
         } else if (value.getRecordType() != null && value.getRecordType() == RecordType.FILE_MODIFICATION_SUGGESTION) {
             filePathLabel.setText("File: " + value.getFileModificationSuggestionRecord().getFilePath());
             modificationTypeLabel.setText("Type: " + value.getFileModificationSuggestionRecord().getModificationType() + " Subject: " + value.getFileModificationSuggestionRecord().getSubjectLine());
-            lineRangeLabel.setText("Lines: " + lineCounterService.countLines(value.getFileModificationSuggestionRecord().getSuggestedCode().trim(), value.getFileModificationSuggestionRecord().getSuggestedCode().trim().length()));
+            lineRangeLabel.setText("Lines: " + lineCounterService.countLines(value.getFileModificationSuggestionRecord().getSuggestedCode(), value.getFileModificationSuggestionRecord().getSuggestedCode().length()));
             setBackground(Color.decode("#228B22"));
         } else if (value.getRecordType() == null) {
             filePathLabel.setText("New General Inquiry");

@@ -24,6 +24,8 @@ public class DiffEditorGeneratorServiceImpl implements DiffEditorGeneratorServic
     }
 
     public Editor createDiffEditor(String beforeCode, String afterCode) {
+        System.out.println("Before code: \n" + beforeCode);
+        System.out.println("After code: \n" + afterCode);
         List<String> beforeLines = Arrays.asList(beforeCode.split("\n"));
         List<String> afterLines = Arrays.asList(afterCode.split("\n"));
 

@@ -12,7 +12,6 @@ import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
-import com.translator.model.TestoObject;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
@@ -38,8 +37,8 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class InquiryChatListViewer extends JPanel {
@@ -355,7 +354,7 @@ public class InquiryChatListViewer extends JPanel {
                     .build();
             model.addElement(descriptionViewer);
             if (inquiry.getBeforeCode() != null) {
-                String beforeCodeText = "```" + inquiry.getBeforeCode().trim() + "```";
+                String beforeCodeText = "```" + inquiry.getBeforeCode() + "```";
                 InquiryChatViewer beforeViewer = new InquiryChatViewer.Builder()
                         .withFilePath(inquiry.getFilePath())
                         .withMessage(beforeCodeText)
@@ -365,7 +364,7 @@ public class InquiryChatListViewer extends JPanel {
                 model.addElement(beforeViewer);
             }
             if (inquiry.getAfterCode() != null) {
-                String afterCodeText = "```" + inquiry.getAfterCode().trim() + "```";
+                String afterCodeText = "```" + inquiry.getAfterCode() + "```";
                 InquiryChatViewer afterViewer = new InquiryChatViewer.Builder()
                         .withFilePath(inquiry.getFilePath())
                         .withMessage(afterCodeText)
@@ -375,7 +374,7 @@ public class InquiryChatListViewer extends JPanel {
                 model.addElement(afterViewer);
             }
         } else if (inquiry.getSubjectCode() != null) {
-            String subjectCodeText = "```" + inquiry.getSubjectCode().trim() + "```";
+            String subjectCodeText = "```" + inquiry.getSubjectCode() + "```";
             InquiryChatViewer subjectCodeViewer = new InquiryChatViewer.Builder()
                     .withFilePath(inquiry.getFilePath())
                     .withMessage(subjectCodeText)

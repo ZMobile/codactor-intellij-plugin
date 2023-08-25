@@ -1,8 +1,5 @@
 package com.translator.model.uml.node;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public class Node {

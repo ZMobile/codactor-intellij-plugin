@@ -3,7 +3,6 @@ package com.translator.service.codactor.modification;
 import com.google.inject.Inject;
 import com.intellij.diff.DiffContentFactory;
 import com.intellij.diff.DiffManager;
-import com.intellij.diff.DiffRequestFactory;
 import com.intellij.diff.contents.DiffContent;
 import com.intellij.diff.requests.SimpleDiffRequest;
 import com.intellij.openapi.editor.Document;

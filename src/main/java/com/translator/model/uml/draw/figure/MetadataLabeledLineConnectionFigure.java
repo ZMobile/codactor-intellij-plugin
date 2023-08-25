@@ -1,6 +1,5 @@
 package com.translator.model.uml.draw.figure;
 
-import org.jhotdraw.draw.Figure;
 import org.jhotdraw.draw.LabeledLineConnectionFigure;
 import org.jhotdraw.draw.connector.Connector;
 

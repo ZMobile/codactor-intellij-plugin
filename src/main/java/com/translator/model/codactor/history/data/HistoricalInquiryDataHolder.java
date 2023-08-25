@@ -20,6 +20,7 @@ public class HistoricalInquiryDataHolder {
 
     public HistoricalInquiryDataHolder(Inquiry inquiry) {
         this.inquiry = inquiry;
+        this.includePreviousContext = false;
     }
 
     public Inquiry getInquiry() {

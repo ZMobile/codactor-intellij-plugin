@@ -1,8 +1,11 @@
 package com.translator.model.uml.draw.figure;
 
-import org.jhotdraw.draw.*;
+import org.jhotdraw.draw.DiamondFigure;
+import org.jhotdraw.draw.TextFigure;
+
 import java.awt.*;
-import java.awt.geom.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 public class LabeledDiamondFigure extends DiamondFigure implements LabeledMetadataFigure {
     private TextFigure label;

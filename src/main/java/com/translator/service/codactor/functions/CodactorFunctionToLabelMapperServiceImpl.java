@@ -2,8 +2,8 @@ package com.translator.service.codactor.functions;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.translator.model.codactor.inquiry.function.ChatGptFunctionCall;
 import com.translator.model.codactor.inquiry.InquiryChat;
+import com.translator.model.codactor.inquiry.function.ChatGptFunctionCall;
 import com.translator.service.codactor.json.JsonExtractorService;
 
 public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctionToLabelMapperService {

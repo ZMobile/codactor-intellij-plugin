@@ -1,11 +1,9 @@
 package com.translator.model.uml.draw.figure;
 
-import com.google.gson.Gson;
-import com.translator.model.uml.node.PromptNode;
 import org.jhotdraw.draw.RectangleFigure;
 import org.jhotdraw.draw.TextFigure;
 
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 

@@ -5,8 +5,8 @@ import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.project.Project;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
-import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
 import com.translator.service.codactor.editor.RangeReplaceService;
+import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
 import com.translator.service.codactor.modification.tracking.CodeRangeTrackerService;
 
 import java.util.ArrayList;

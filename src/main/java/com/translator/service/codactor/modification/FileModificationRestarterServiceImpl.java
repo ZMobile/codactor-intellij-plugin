@@ -52,6 +52,7 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
     @Override
     public void restartFileModification(FileModification fileModification) {
         fileModificationTrackerService.undoReadyFileModification(fileModification.getId());
+        fileModificationTrackerService.retryFileModification(fileModification.getId());
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
             List<FileModificationSuggestionRecord> fileModificationSuggestionRecords = null;

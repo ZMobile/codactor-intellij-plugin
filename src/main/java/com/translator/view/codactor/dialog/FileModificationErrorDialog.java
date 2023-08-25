@@ -7,7 +7,6 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.translator.model.codactor.modification.FileModification;
 import com.translator.model.codactor.modification.ModificationType;
-import com.translator.service.codactor.modification.AutomaticCodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
