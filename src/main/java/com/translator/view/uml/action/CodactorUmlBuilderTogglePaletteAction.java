@@ -1,6 +1,6 @@
 package com.translator.view.uml.action;
 
-import com.translator.view.uml.CodactorUmlBuilderOSXApplication;
+import com.translator.view.uml.application.CodactorUmlBuilderOSXApplication;
 
 import javax.swing.*;
 import java.awt.*;

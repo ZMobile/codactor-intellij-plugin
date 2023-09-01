@@ -4,6 +4,7 @@
 package com.translator.view.uml;
 
 import com.google.inject.Inject;
+import com.intellij.openapi.application.ApplicationManager;
 import com.translator.view.uml.factory.adapter.CustomMouseAdapterFactory;
 import org.jhotdraw.app.AbstractView;
 import org.jhotdraw.app.ApplicationLabels;
@@ -168,25 +169,24 @@ public class CodactorUmlBuilderView extends AbstractView {
      */
     @Override
     public void read(URI f, URIChooser fc) throws IOException {
-        try {
 
             final Drawing drawing = createDrawing();
 
             boolean success = false;
-                for (InputFormat sfi : drawing.getInputFormats()) {
-                        try {
-                            sfi.read(f, drawing, true);
-                            success = true;
-                            break;
-                        } catch (Exception e) {
-                        // try with the next input format
-                        }
-                    }
+            for (InputFormat sfi : drawing.getInputFormats()) {
+                try {
+                    sfi.read(f, drawing, true);
+                    success = true;
+                    break;
+                } catch (Exception e) {
+                    // try with the next input format
+                }
+            }
             if (!success) {
                 ResourceBundleUtil labels = ApplicationLabels.getLabels();
-                throw new IOException(labels.getFormatted("file.open.unsupportedFileFormat.message", URIUtil.getName(f)));
+                //throw new IOException(labels.getFormatted("file.open.unsupportedFileFormat.message : " + uri.getPath(), URIUtil.getName(f)));
             }
-            SwingUtilities.invokeAndWait(new Runnable() {
+            ApplicationManager.getApplication().invokeAndWait(new Runnable() {
                 @Override
                 public void run() {
                     view.getDrawing().removeUndoableEditListener(undo);
@@ -195,15 +195,6 @@ public class CodactorUmlBuilderView extends AbstractView {
                     undo.discardAllEdits();
                 }
             });
-        } catch (InterruptedException e) {
-            InternalError error = new InternalError();
-            e.initCause(e);
-            throw error;
-        } catch (InvocationTargetException e) {
-            InternalError error = new InternalError();
-            error.initCause(e);
-            throw error;
-        }
     }
     
     
@@ -233,21 +224,15 @@ public class CodactorUmlBuilderView extends AbstractView {
     @Override
     public void clear() {
         final Drawing newDrawing = createDrawing();
-        try {
-            SwingUtilities.invokeAndWait(new Runnable() {
-                @Override
-                public void run() {
-                    view.getDrawing().removeUndoableEditListener(undo);
-                    view.setDrawing(newDrawing);
-                    view.getDrawing().addUndoableEditListener(undo);
-                    undo.discardAllEdits();
-                }
-            });
-        } catch (InvocationTargetException ex) {
-            ex.printStackTrace();
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        }
+        ApplicationManager.getApplication().invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                view.getDrawing().removeUndoableEditListener(undo);
+                view.setDrawing(newDrawing);
+                view.getDrawing().addUndoableEditListener(undo);
+                undo.discardAllEdits();
+            }
+        });
     }
     
     @Override

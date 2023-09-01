@@ -70,6 +70,10 @@ public class InquiryViewer extends JPanel {
         otherInquiriesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (inquiryListViewer == null) {
+                    Injector injector = CodactorInjector.getInstance().getInjector(project);
+                    inquiryListViewer = injector.getInstance(InquiryListViewer.class);
+                }
                 inquiryListViewer.updateInquiryList();
                 codactorToolWindowService.openInquiryListViewerToolWindow();
             }

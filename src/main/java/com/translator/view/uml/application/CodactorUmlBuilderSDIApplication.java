@@ -1,7 +1,7 @@
 /* @(#)SDIApplication.java
  * Copyright © The authors and contributors of JHotDraw. MIT License.
  */
-package com.translator.view.uml;
+package com.translator.view.uml.application;
 
 import org.jhotdraw.annotation.Nullable;
 import org.jhotdraw.app.AbstractApplication;
@@ -114,7 +114,7 @@ import java.util.prefs.Preferences;
  * @author Werner Randelshofer
  * @version $Id$
  */
-public class CodactorUmlBuilderSDIApplication extends AbstractApplication {
+public class CodactorUmlBuilderSDIApplication extends CodactorUmlBuilderAbstractApplication {
     private static final long serialVersionUID = 1L;
 
     private Preferences prefs;
@@ -128,6 +128,7 @@ public class CodactorUmlBuilderSDIApplication extends AbstractApplication {
         System.setProperty("apple.awt.graphics.UseQuartz", "false");
         super.launch(args);
     }
+
 
     @Override
     public void init() {
@@ -539,5 +540,15 @@ public class CodactorUmlBuilderSDIApplication extends AbstractApplication {
         vMap.setParent(intermediateMap);
         intermediateMap.setParent(getActionMap(null));
         return vMap;
+    }
+
+    @Override
+    public void showPalettes() {
+
+    }
+
+    @Override
+    public void hidePalettes() {
+
     }
 }

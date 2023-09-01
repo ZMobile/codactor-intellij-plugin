@@ -33,6 +33,9 @@ import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;
 import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;
 import com.translator.view.codactor.viewer.modification.ProvisionalModificationViewer;
+import com.translator.view.uml.CodactorUmlBuilderApplicationModel;
+import com.translator.view.uml.application.CodactorUmlBuilderApplication;
+import com.translator.view.uml.application.CodactorUmlBuilderSDIApplication;
 import com.translator.view.uml.CodactorUmlBuilderView;
 import com.translator.view.uml.factory.CodactorUmlBuilderApplicationModelFactory;
 import com.translator.view.uml.factory.CodactorUmlBuilderViewFactory;
@@ -40,6 +43,8 @@ import com.translator.view.uml.factory.adapter.CustomMouseAdapterFactory;
 import com.translator.view.uml.factory.dialog.PromptNodeDialogFactory;
 import com.translator.view.uml.factory.tool.NodeConnectionToolFactory;
 import com.translator.view.uml.factory.tool.PromptNodeCreationToolFactory;
+import com.translator.view.uml.application.CodactorUmlBuilderOSXApplication;
+import org.jhotdraw.app.Application;
 
 public class CodeTranslatorViewConfig extends AbstractModule {
     private Project project;
@@ -131,13 +136,38 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            CodeSnippetExtractorService codeSnippetExtractorService,
                                            InquiryService inquiryService,
                                            OpenAiModelService openAiModelService,
-                                           MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                            AutomaticCodeModificationService automaticCodeModificationService,
+                                           CodactorUmlBuilderApplication codactorUmlBuilderApplication,
+                                           MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
-                                           CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory,
-                                           CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory,
                                            InquiryViewerFactory inquiryViewerFactory) {
-        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, automaticCodeModificationService, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, codactorUmlBuilderViewFactory, codactorUmlBuilderApplicationModelFactory, inquiryViewerFactory);
+        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, automaticCodeModificationService, codactorUmlBuilderApplication, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory);
+    }
+
+    @Singleton
+    @Provides
+    public CodactorUmlBuilderApplication codactorUmlBuilderApplication(CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory, CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory) {
+        CodactorUmlBuilderApplication app;
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.startsWith("mac")) {
+            app = new CodactorUmlBuilderOSXApplication();
+        } else if (os.startsWith("win")) {
+            //app = new MDIApplication();
+            app = new CodactorUmlBuilderOSXApplication();
+        } else {
+            app = new CodactorUmlBuilderSDIApplication();
+        }
+
+        CodactorUmlBuilderApplicationModel model = codactorUmlBuilderApplicationModelFactory.create();
+        model.setName("JHotDraw Draw");
+        model.setVersion(getClass().getPackage().getImplementationVersion());
+        model.setCopyright("Copyright 2006-2009 (c) by the authors of JHotDraw and all its contributors.\n" +
+                "This software is licensed under LGPL or Creative Commons 3.0 Attribution.");
+        model.setViewFactory(codactorUmlBuilderViewFactory::create);
+        app.setModel(model);
+        String[] args = new String[0];
+        app.launch(args);
+        return app;
     }
 
     @Provides

@@ -28,9 +28,8 @@ import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
-import com.translator.view.uml.CodactorUmlBuilderApplicationModel;
-import com.translator.view.uml.CodactorUmlBuilderOSXApplication;
-import com.translator.view.uml.CodactorUmlBuilderSDIApplication;
+import com.translator.view.uml.application.CodactorUmlBuilderApplication;
+import com.translator.view.uml.editor.CodactorUmlBuilderSVGEditor;
 import com.translator.view.uml.factory.CodactorUmlBuilderApplicationModelFactory;
 import com.translator.view.uml.factory.CodactorUmlBuilderViewFactory;
 import org.jetbrains.annotations.NotNull;
@@ -67,10 +66,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private AutomaticCodeModificationService automaticCodeModificationService;
     private InquiryService inquiryService;
     private OpenAiModelService openAiModelService;
+    private CodactorUmlBuilderApplication codactorUmlBuilderApplication;
     private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
-    private CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory;
-    private CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory;
     private InquiryViewerFactory inquiryViewerFactory;
 
     @Inject
@@ -82,10 +80,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            InquiryService inquiryService,
                            OpenAiModelService openAiModelService,
                            AutomaticCodeModificationService automaticCodeModificationService,
+                           CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
-                           CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory,
-                           CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory,
                            InquiryViewerFactory inquiryViewerFactory) {
         super(new BorderLayout());
         this.project = project;
@@ -96,10 +93,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.inquiryService = inquiryService;
         this.openAiModelService = openAiModelService;
         this.automaticCodeModificationService = automaticCodeModificationService;
+        this.codactorUmlBuilderApplication = codactorUmlBuilderApplication;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
-        this.codactorUmlBuilderViewFactory = codactorUmlBuilderViewFactory;
-        this.codactorUmlBuilderApplicationModelFactory = codactorUmlBuilderApplicationModelFactory;
         this.inquiryViewerFactory = inquiryViewerFactory;
 
         textArea = new JBTextArea();
@@ -168,11 +164,32 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         FileEditorManagerListener fileEditorManagerListener = new FileEditorManagerListener() {
             @Override
             public void fileOpenedSync(@NotNull FileEditorManager source, @NotNull VirtualFile file, @NotNull Pair<FileEditor[], FileEditorProvider[]> editors) {
+                System.out.println("This gets called 1");
+                if (file.getExtension().equals("svg")) {
+                    System.out.println("This gets called 3");
+                    for (FileEditor fileEditor : editors.getFirst()) {
+                        if (fileEditor instanceof CodactorUmlBuilderSVGEditor) {
+                            CodactorUmlBuilderSVGEditor codactorUmlBuilderSVGEditor = (CodactorUmlBuilderSVGEditor) fileEditor;
+                            codactorUmlBuilderSVGEditor.activateView();
+                        }
+                    }
+                }
                 FileEditorManagerListener.super.fileOpenedSync(source, file, editors);
             }
 
             @Override
             public void fileOpenedSync(@NotNull FileEditorManager source, @NotNull VirtualFile file, @NotNull List<FileEditorWithProvider> editorsWithProviders) {
+                System.out.println("This gets called 2: " + file.getExtension());
+                if (Objects.equals(file.getExtension(), "SVG")) {
+                    System.out.println("This gets called too");
+                    for (FileEditorWithProvider fileEditorWithProvider : editorsWithProviders) {
+                        if (fileEditorWithProvider.getFileEditor() instanceof CodactorUmlBuilderSVGEditor) {
+                            System.out.println("This gets called three");
+                            CodactorUmlBuilderSVGEditor codactorUmlBuilderSVGEditor = (CodactorUmlBuilderSVGEditor) fileEditorWithProvider.getFileEditor();
+                            codactorUmlBuilderSVGEditor.activateView();
+                        }
+                    }
+                }
                 FileEditorManagerListener.super.fileOpenedSync(source, file, editorsWithProviders);
             }
 
@@ -316,7 +333,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             public void actionPerformed(ActionEvent e) {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
-                        Application app;
+                        /*Application app;
                         String os = System.getProperty("os.name").toLowerCase();
                         if (os.startsWith("mac")) {
                             app = new CodactorUmlBuilderOSXApplication();
@@ -335,12 +352,12 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                         model.setViewFactory(codactorUmlBuilderViewFactory::create);
                         app.setModel(model);
                         String[] args = new String[0];
-                        app.launch(args);
+                        app.launch(args);*/
                     }
                 });
             }
         });
-        //rightToolbar.add(testoButton);
+        rightToolbar.add(testoButton);
 
         topToolbar.add(leftToolbar);
         topToolbar.add(rightToolbar, BorderLayout.EAST);

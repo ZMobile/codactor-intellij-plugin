@@ -327,9 +327,12 @@ public class HistoricalContextObjectViewer extends JPanel {
             }
             newModel.addElement(chatViewer);
         }
-        jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, newTotalHeight));
-        jList1.setModel(newModel);
-        jBScrollPane1.setViewportView(jList1);
+        int finalNewTotalHeight = newTotalHeight;
+        ApplicationManager.getApplication().invokeLater(() -> {
+            jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, finalNewTotalHeight));
+            jList1.setModel(newModel);
+            jBScrollPane1.setViewportView(jList1);
+        });
     }
 
     public void setHistoricalContextInquiryListViewer(HistoricalContextInquiryListViewer historicalContextInquiryListViewer) {

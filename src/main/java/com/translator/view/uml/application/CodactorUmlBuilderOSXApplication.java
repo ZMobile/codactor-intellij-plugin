@@ -1,8 +1,10 @@
 /* @(#)OSXApplication.java
  * Copyright © The authors and contributors of JHotDraw. MIT License.
  */
-package com.translator.view.uml;
+package com.translator.view.uml.application;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.translator.view.uml.CodactorUmlBuilderOSXPaletteHandler;
 import com.translator.view.uml.action.CodactorUmlBuilderTogglePaletteAction;
 import org.jhotdraw.annotation.Nullable;
 import org.jhotdraw.app.*;
@@ -134,7 +136,7 @@ import java.util.prefs.Preferences;
  * @author Werner Randelshofer
  * @version $Id$
  */
-public class CodactorUmlBuilderOSXApplication extends AbstractApplication {
+public class CodactorUmlBuilderOSXApplication extends CodactorUmlBuilderAbstractApplication {
     private static final long serialVersionUID = 1L;
 
     private CodactorUmlBuilderOSXPaletteHandler paletteHandler;
@@ -254,7 +256,7 @@ public class CodactorUmlBuilderOSXApplication extends AbstractApplication {
 
     @Override
     public void show(View view) {
-        if (!view.isShowing()) {
+        /*if (!view.isShowing()) {
             view.setShowing(true);
             JFrame f = new JFrame();
             f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -285,8 +287,13 @@ public class CodactorUmlBuilderOSXApplication extends AbstractApplication {
             f.getContentPane().add(view.getComponent());
             f.setVisible(true);
             view.start();
+        }*/
+        if (!view.isShowing()) {
+            view.setShowing(true);
+            view.start();
         }
     }
+
 
     /**
      * Updates the title of a view and displays it in the given frame.
@@ -527,8 +534,18 @@ public class CodactorUmlBuilderOSXApplication extends AbstractApplication {
         }
     }
 
-    protected void initPalettes(final LinkedList<Action> paletteActions) {
-        SwingUtilities.invokeLater(new Worker<LinkedList<JFrame>>() {
+    @Override
+    public void showPalettes() {
+        paletteHandler.showPalettes();
+    }
+
+    @Override
+    public void hidePalettes() {
+        paletteHandler.hidePalettes();
+    }
+
+    public void initPalettes(final LinkedList<Action> paletteActions) {
+        ApplicationManager.getApplication().invokeLater(new Worker<LinkedList<JFrame>>() {
 
             @Override
             public LinkedList<JFrame> construct() {
@@ -569,18 +586,17 @@ public class CodactorUmlBuilderOSXApplication extends AbstractApplication {
                     x += d.getWidth();
 
                     CodactorUmlBuilderTogglePaletteAction tpa = new CodactorUmlBuilderTogglePaletteAction(CodactorUmlBuilderOSXApplication.this, d, tb.getName());
-                    d.setVisible(true);
+                    d.setVisible(false);
                     palettes.add(d);
                     addPalette(d);
-                    tpa.putValue(ActionUtil.SELECTED_KEY, true);
+                    tpa.putValue(ActionUtil.SELECTED_KEY, false);
                     if (prefs.getBoolean("toolbar." + i + ".visible", true)) {
                         addPalette(d);
-                        tpa.putValue(ActionUtil.SELECTED_KEY, true);
+                        tpa.putValue(ActionUtil.SELECTED_KEY, false);
                     }
                     paletteActions.add(tpa);
                 }
                 return palettes;
-
             }
 
             @Override

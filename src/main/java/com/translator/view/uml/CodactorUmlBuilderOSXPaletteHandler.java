@@ -4,6 +4,7 @@
 
 package com.translator.view.uml;
 
+import com.translator.view.uml.application.CodactorUmlBuilderOSXApplication;
 import org.jhotdraw.annotation.Nullable;
 import org.jhotdraw.app.View;
 
@@ -90,15 +91,8 @@ public class CodactorUmlBuilderOSXPaletteHandler {
     public Set<Window> getPalettes() {
         return Collections.unmodifiableSet(palettes);
     }
-    
-    private void showPalettes() {
-        for (Window palette : palettes) {
-            if (! palette.isVisible()) {
-                palette.setVisible(true);
-            }
-        }
-    }
-    
+
+
     private boolean isFocused(Window w) {
         if (w.isFocused()) return true;
         Window[] ownedWindows = w.getOwnedWindows();
@@ -139,5 +133,21 @@ public class CodactorUmlBuilderOSXPaletteHandler {
     public void removeWindow(Window window) {
         windows.remove(window);
         window.removeWindowFocusListener(focusHandler);
+    }
+
+    public void showPalettes() {
+        for (Window palette : palettes) {
+            if (!palette.isVisible()) {
+                timer.stop();
+                palette.setVisible(true);
+            }
+        }
+    }
+
+    public void hidePalettes() {
+        for (Window palette : palettes) {
+            timer.stop();
+            palette.setVisible(false);
+        }
     }
 }

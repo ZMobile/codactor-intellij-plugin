@@ -66,16 +66,16 @@ public class RangeReplaceServiceImpl implements RangeReplaceService {
                     out.println(replacementString);
                     //FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
 
-            /*// Obtain the VirtualFile for the file you want to refresh
-            LocalFileSystem localFileSystem = LocalFileSystem.getInstance();
-            VirtualFile virtualFile = localFileSystem.refreshAndFindFileByPath(filePath);
+                    /*// Obtain the VirtualFile for the file you want to refresh
+                    LocalFileSystem localFileSystem = LocalFileSystem.getInstance();
+                    VirtualFile virtualFile = localFileSystem.refreshAndFindFileByPath(filePath);
 
-            if (virtualFile != null) {
-                System.out.println("This gets called 5");
-                // Refresh the currently opened file
-                fileEditorManager.updateFilePresentation(virtualFile);
-            }
-            System.out.println("This gets called 6");*/
+                    if (virtualFile != null) {
+                        System.out.println("This gets called 5");
+                        // Refresh the currently opened file
+                        fileEditorManager.updateFilePresentation(virtualFile);
+                    }
+                    System.out.println("This gets called 6");*/
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
