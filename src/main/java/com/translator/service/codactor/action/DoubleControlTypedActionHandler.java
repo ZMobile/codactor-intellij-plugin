@@ -1,4 +1,4 @@
-package com.translator.service.codactor.handler;
+package com.translator.service.codactor.action;
 
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;

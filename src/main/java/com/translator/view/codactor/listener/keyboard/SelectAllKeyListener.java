@@ -1,4 +1,4 @@
-package com.translator.view.codactor.listener;
+package com.translator.view.codactor.listener.keyboard;
 
 import com.intellij.ui.components.JBTextArea;
 

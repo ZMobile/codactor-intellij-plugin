@@ -27,6 +27,7 @@ import com.translator.view.codactor.dialog.PromptContextBuilderDialog;
 import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
+import com.translator.view.codactor.listener.file.CodactorFileEditorManagerListener;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import com.translator.view.uml.application.CodactorUmlBuilderApplication;
 import com.translator.view.uml.editor.CodactorUmlBuilderSVGEditor;
@@ -50,9 +51,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private JBTextArea textArea;
     private JButton button1;
     private JButton button2;
-    private JComboBox<String> modelComboBox;
-    private JComboBox<FileItem> fileComboBox;
-    private JComboBox<String> modificationTypeComboBox;
+    private ComboBox<String> modelComboBox;
+    private ComboBox<FileItem> fileComboBox;
+    private ComboBox<String> modificationTypeComboBox;
     private JLabel jLabel1;
     private JBTextField languageInputTextField;
     private JBLabel jLabel2;
@@ -108,7 +109,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         button2 = new JButton();
         button2.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/microphone_icon.png"))));
 
-        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314", "gpt-3.5-turbo-0613", "gpt-4-0613"});
+        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k"});
         modelComboBox.addActionListener(e -> {
             JComboBox<String> cb = (JComboBox<String>) e.getSource();
             String model = (String) cb.getSelectedItem();
@@ -161,120 +162,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             }
         });*/
 
-        FileEditorManagerListener fileEditorManagerListener = new FileEditorManagerListener() {
-            @Override
-            public void fileOpenedSync(@NotNull FileEditorManager source, @NotNull VirtualFile file, @NotNull Pair<FileEditor[], FileEditorProvider[]> editors) {
-                System.out.println("This gets called 1");
-                if (file.getExtension().equals("svg")) {
-                    System.out.println("This gets called 3");
-                    for (FileEditor fileEditor : editors.getFirst()) {
-                        if (fileEditor instanceof CodactorUmlBuilderSVGEditor) {
-                            CodactorUmlBuilderSVGEditor codactorUmlBuilderSVGEditor = (CodactorUmlBuilderSVGEditor) fileEditor;
-                            codactorUmlBuilderSVGEditor.activateView();
-                        }
-                    }
-                }
-                FileEditorManagerListener.super.fileOpenedSync(source, file, editors);
-            }
-
-            @Override
-            public void fileOpenedSync(@NotNull FileEditorManager source, @NotNull VirtualFile file, @NotNull List<FileEditorWithProvider> editorsWithProviders) {
-                System.out.println("This gets called 2: " + file.getExtension());
-                if (Objects.equals(file.getExtension(), "SVG")) {
-                    System.out.println("This gets called too");
-                    for (FileEditorWithProvider fileEditorWithProvider : editorsWithProviders) {
-                        if (fileEditorWithProvider.getFileEditor() instanceof CodactorUmlBuilderSVGEditor) {
-                            System.out.println("This gets called three");
-                            CodactorUmlBuilderSVGEditor codactorUmlBuilderSVGEditor = (CodactorUmlBuilderSVGEditor) fileEditorWithProvider.getFileEditor();
-                            codactorUmlBuilderSVGEditor.activateView();
-                        }
-                    }
-                }
-                FileEditorManagerListener.super.fileOpenedSync(source, file, editorsWithProviders);
-            }
-
-            @Override
-            public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
-                FileEditorManagerListener.super.fileOpened(source, file);
-                VirtualFile[] selectedFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
-                VirtualFile[] openFiles = selectedFileFetcherService.getOpenFiles();
-                fileComboBox.setVisible(
-                        (selectedFiles != null && selectedFiles.length > 1)
-                                || (openFiles != null && openFiles.length > 1));fileComboBox.removeAllItems();
-                VirtualFile currentlyOpenFile = getSelectedFile();
-                if (currentlyOpenFile != null) {
-                    fileComboBox.addItem(new FileItem(currentlyOpenFile.getPath()));
-                    if (selectedFiles.length > 1) {
-                        for (VirtualFile selectedFile : selectedFiles) {
-                            if (!selectedFile.equals(currentlyOpenFile)) {
-                                fileComboBox.addItem(new FileItem(selectedFile.getPath()));
-                            }
-                        }
-                    } else if (openFiles.length > 1) {
-                        for (VirtualFile openFile : openFiles) {
-                            if (!openFile.equals(currentlyOpenFile)) {
-                                fileComboBox.addItem(new FileItem(openFile.getPath()));
-                            }
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
-                FileEditorManagerListener.super.fileClosed(source, file);
-                VirtualFile[] selectedFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
-                VirtualFile[] openFiles = selectedFileFetcherService.getOpenFiles();
-                fileComboBox.setVisible(
-                        (selectedFiles != null && selectedFiles.length > 1)
-                                || (openFiles != null && openFiles.length > 1));
-                fileComboBox.removeAllItems();
-                VirtualFile currentlyOpenFile = getSelectedFile();
-                if (currentlyOpenFile != null) {
-                    fileComboBox.addItem(new FileItem(currentlyOpenFile.getPath()));
-                    if (selectedFiles.length > 1) {
-                        for (VirtualFile selectedFile : selectedFiles) {
-                            if (!selectedFile.equals(currentlyOpenFile)) {
-                                fileComboBox.addItem(new FileItem(selectedFile.getPath()));
-                            }
-                        }
-                    } else if (openFiles.length > 1) {
-                        for (VirtualFile openFile : openFiles) {
-                            if (!openFile.equals(currentlyOpenFile)) {
-                                fileComboBox.addItem(new FileItem(openFile.getPath()));
-                            }
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void selectionChanged(@NotNull FileEditorManagerEvent event) {
-                FileEditorManagerListener.super.selectionChanged(event);
-                VirtualFile[] selectedFiles = selectedFileFetcherService.getCurrentlySelectedFiles();
-                VirtualFile[] openFiles = selectedFileFetcherService.getOpenFiles();
-                fileComboBox.setVisible(
-                        (selectedFiles != null && selectedFiles.length > 1)
-                                || (openFiles != null && openFiles.length > 1));fileComboBox.removeAllItems();
-                VirtualFile currentlyOpenFile = getSelectedFile();
-                if (currentlyOpenFile != null) {
-                    fileComboBox.addItem(new FileItem(currentlyOpenFile.getPath()));
-                    if (selectedFiles.length > 1) {
-                        for (VirtualFile selectedFile : selectedFiles) {
-                            if (!selectedFile.equals(currentlyOpenFile)) {
-                                fileComboBox.addItem(new FileItem(selectedFile.getPath()));
-                            }
-                        }
-                    } else if (openFiles.length > 1) {
-                        for (VirtualFile openFile : openFiles) {
-                            if (!openFile.equals(currentlyOpenFile)) {
-                                fileComboBox.addItem(new FileItem(openFile.getPath()));
-                            }
-                        }
-                    }
-                }
-            }
-        };
+        FileEditorManagerListener fileEditorManagerListener = new CodactorFileEditorManagerListener(project, selectedFileFetcherService, fileComboBox);
         MessageBus messageBus = project.getMessageBus();
         MessageBusConnection connection = messageBus.connect();
 
@@ -327,37 +215,6 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         JPanel rightToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5)); // Set horizontal gap to 0
         rightToolbar.add(hiddenLabel);
         rightToolbar.add(advancedButton);
-        JButton testoButton = new JButton("Test");
-        testoButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        /*Application app;
-                        String os = System.getProperty("os.name").toLowerCase();
-                        if (os.startsWith("mac")) {
-                            app = new CodactorUmlBuilderOSXApplication();
-                        } else if (os.startsWith("win")) {
-                            //app = new MDIApplication();
-                            app = new CodactorUmlBuilderOSXApplication();
-                        } else {
-                            app = new CodactorUmlBuilderSDIApplication();
-                        }
-
-                        CodactorUmlBuilderApplicationModel model = codactorUmlBuilderApplicationModelFactory.create();
-                        model.setName("JHotDraw Draw");
-                        model.setVersion(getClass().getPackage().getImplementationVersion());
-                        model.setCopyright("Copyright 2006-2009 (c) by the authors of JHotDraw and all its contributors.\n" +
-                                "This software is licensed under LGPL or Creative Commons 3.0 Attribution.");
-                        model.setViewFactory(codactorUmlBuilderViewFactory::create);
-                        app.setModel(model);
-                        String[] args = new String[0];
-                        app.launch(args);*/
-                    }
-                });
-            }
-        });
-        rightToolbar.add(testoButton);
 
         topToolbar.add(leftToolbar);
         topToolbar.add(rightToolbar, BorderLayout.EAST);
@@ -426,7 +283,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                         String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                         String question = textArea.getText();
                         InquiryViewer inquiryViewer = inquiryViewerFactory.create();
+                        inquiryViewer.getInquiryChatBoxViewer().getToolBar().setVisible(false);
                         inquiryService.createInquiry(inquiryViewer, fileItem.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
+                        codactorToolWindowService.createInquiryViewerToolWindow(inquiryViewer);
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire Selected")) {
@@ -437,7 +296,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     }
                     String question = textArea.getText();
                     InquiryViewer inquiryViewer = inquiryViewerFactory.create();
+                    inquiryViewer.getInquiryChatBoxViewer().getToolBar().setVisible(false);
                     inquiryService.createInquiry(inquiryViewer, fileItem.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
+                    codactorToolWindowService.createInquiryViewerToolWindow(inquiryViewer);
                     promptContextService.clearPromptContext();
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Translate")) {
                     codactorToolWindowService.openModificationQueueViewerToolWindow();
@@ -561,16 +422,6 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         }
     }
 
-    private VirtualFile getSelectedFile() {
-        FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
-        Editor editor = fileEditorManager.getSelectedTextEditor();
-        if (editor != null) {
-            Document document = editor.getDocument();
-            return FileDocumentManager.getInstance().getFile(document);
-        }
-        return null;
-    }
-
     public void updateModelComboBox() {
 
 // Get the index of the selected element
@@ -636,5 +487,15 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             modificationTypeComboBox.setSelectedIndex(0);
         }
         updateLabelAndButton(selected);
+    }
+
+    private VirtualFile getSelectedFile() {
+        FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+        Editor editor = fileEditorManager.getSelectedTextEditor();
+        if (editor != null) {
+            Document document = editor.getDocument();
+            return FileDocumentManager.getInstance().getFile(document);
+        }
+        return null;
     }
 }

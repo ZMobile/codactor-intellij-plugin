@@ -87,8 +87,8 @@ public class HistoricalObjectDataHolderRenderer extends JPanel implements ListCe
                 leftLabelTwo.setText(value.getHistoricalContextInquiryDataHolder().getInquiry().getSubjectLine());
                 labelThree.setText("Path: " + inquiry.getFilePath());
             } else if (inquiry.getSubjectCode() != null) {
-                leftLabelTwo.setText("Code Inquiry");
-                leftLabelOne.setText(value.getHistoricalContextInquiryDataHolder().getInquiry().getSubjectLine());
+                leftLabelOne.setText("Code Inquiry");
+                leftLabelTwo.setText(value.getHistoricalContextInquiryDataHolder().getInquiry().getSubjectLine());
                 labelThree.setText("Path: " + inquiry.getFilePath());
             } else {
                 leftLabelOne.setText("General Inquiry");

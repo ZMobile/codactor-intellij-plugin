@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.codactor"
-version = "2.4-BETA"
+version = "2.5-BETA-AzureTest10"
 
 repositories {
     mavenCentral()

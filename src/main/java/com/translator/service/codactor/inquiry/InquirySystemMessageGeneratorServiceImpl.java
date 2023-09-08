@@ -13,7 +13,7 @@ public class InquirySystemMessageGeneratorServiceImpl implements InquirySystemMe
 
     @Override
     public String generateSystemMessage(String model) {
-        if (model.equals("gpt-3.5-turbo-0613") || model.equals("gpt-4-0613")) {
+        if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
             return generateFunctionsSystemMessage();
         } else {
             return generateDefaultSystemMessage();

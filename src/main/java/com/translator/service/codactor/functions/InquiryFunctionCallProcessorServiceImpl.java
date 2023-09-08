@@ -131,24 +131,39 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 Map<String, Object> contentMap = new HashMap<>();
                 contentMap.put("filePath", virtualFile.getPath());
                 contentMap.put("filePackage", packageName);
-                contentMap.put("content", content);
                 FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(virtualFile.getPath());
                 if (fileModificationTracker != null) {
                     List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
                     contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
+                }
+                if (content == null) {
+                    contentMap.put("content",  fileDirectoryStructureQueryService.getDirectoryStructureAsJson(virtualFile.getPath(), 1));
+                } else {
+                    contentMap.put("content", content);
                 }
                 return gson.toJson(contentMap);
             }
         } else if (chatGptFunctionCall.getName().equals("read_file_at_path")) {
             String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
             String content = codeSnippetExtractorService.getAllText(filePath);
+            if (filePath != null && content == null) {
+                String packageName = filePath.replaceAll("/", ".");
+                VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
+                if (virtualFile != null) {
+                    filePath = virtualFile.getPath();
+                }
+            }
             Map<String, Object> contentMap = new HashMap<>();
             contentMap.put("filePath", filePath);
-            contentMap.put("content", content);
             FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(filePath);
             if (fileModificationTracker != null) {
                 List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
                 contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
+            }
+            if (content == null) {
+                contentMap.put("content",  fileDirectoryStructureQueryService.getDirectoryStructureAsJson(filePath, 1));
+            } else {
+                contentMap.put("content", content);
             }
             return gson.toJson(contentMap);
         } else if (chatGptFunctionCall.getName().equals("open_file_at_path_in_editor")) {
@@ -210,15 +225,30 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             String path = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
             if (path == null) {
                 String packageName = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "package");
-                VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
-                if (virtualFile != null) {
-                    path = virtualFile.getPath();
+                if (packageName != null) {
+                    VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
+                    if (virtualFile != null) {
+                        path = virtualFile.getPath();
+                    }
                 }
             }
             String description = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "description");
             int startIndex;
             int endIndex;
             String code = codeSnippetExtractorService.getAllText(path);
+            if (path != null && code == null) {
+                String packageName = path.replaceAll("/", ".");
+                if (packageName != null) {
+                    VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
+                    if (virtualFile != null) {
+                        path = virtualFile.getPath();
+                    }
+                    code = codeSnippetExtractorService.getAllText(path);
+                }
+            }
+            if (code == null) {
+                return "Error: File not found";
+            }
             String codeSnippetString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "codeSnippet");
             String startSnippetString = null;
             String endSnippetString = null;

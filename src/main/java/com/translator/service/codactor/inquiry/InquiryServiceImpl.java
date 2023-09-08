@@ -65,7 +65,7 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     @Override
-    public void createInquiry(InquiryViewer inquiryViewer, String subjectRecordId, RecordType recordType, String question, String filePath, String model) {
+    public InquiryViewer createInquiry(InquiryViewer inquiryViewer, String subjectRecordId, RecordType recordType, String question, String filePath, String model) {
         String likelyCodeLanguage = gptToLanguageTransformerService.getFromFilePath(filePath);
         Inquiry inquiry = new Inquiry.Builder()
                 .build();
@@ -76,7 +76,6 @@ public class InquiryServiceImpl implements InquiryService {
                 .build();
         inquiry.getChats().add(temporaryChat);
         inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
-        codactorToolWindowService.createInquiryViewerToolWindow(inquiryViewer);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Inquiry (MODIFICATION)", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
@@ -84,7 +83,7 @@ public class InquiryServiceImpl implements InquiryService {
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 List<ChatGptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
-                if (model.equals("gpt-3.5-turbo-0613") || model.equals("gpt-4-0613")) {
+                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
@@ -98,10 +97,11 @@ public class InquiryServiceImpl implements InquiryService {
         };
 
         ProgressManager.getInstance().run(backgroundTask);
+        return inquiryViewer;
     }
 
     @Override
-    public void createInquiry(InquiryViewer inquiryViewer, String filePath, String code, String question, List<HistoricalContextObjectHolder> priorContext, String model) {
+    public InquiryViewer createInquiry(InquiryViewer inquiryViewer, String filePath, String code, String question, List<HistoricalContextObjectHolder> priorContext, String model) {
         Inquiry temporaryInquiry = new Inquiry.Builder()
                 .withFilePath(filePath)
                 .withSubjectCode(code)
@@ -116,7 +116,7 @@ public class InquiryServiceImpl implements InquiryService {
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 List<ChatGptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
-                if (model.equals("gpt-3.5-turbo-0613") || model.equals("gpt-4-0613")) {
+                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
@@ -133,10 +133,11 @@ public class InquiryServiceImpl implements InquiryService {
             }
         };
         ProgressManager.getInstance().run(backgroundTask);
+        return inquiryViewer;
     }
 
     @Override
-    public void createGeneralInquiry(InquiryViewer inquiryViewer, String question, String model) {
+    public InquiryViewer createGeneralInquiry(InquiryViewer inquiryViewer, String question, String model) {
         String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
         InquiryChat temporaryChat = new InquiryChat.Builder()
                 .withFrom("User")
@@ -154,7 +155,7 @@ public class InquiryServiceImpl implements InquiryService {
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 List<ChatGptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
-                if (model.equals("gpt-3.5-turbo-0613") || model.equals("gpt-4-0613")) {
+                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
@@ -174,6 +175,7 @@ public class InquiryServiceImpl implements InquiryService {
         };
 
         ProgressManager.getInstance().run(backgroundTask);
+        return inquiryViewer;
     }
 
     @Override
@@ -197,7 +199,7 @@ public class InquiryServiceImpl implements InquiryService {
                 inquiryViewer.setLoadingChat(true);
                 String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
                 List<ChatGptFunction> functions = null;
-                if (model.equals("gpt-3.5-turbo-0613") || model.equals("gpt-4-0613")) {
+                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                 }
                 Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, model, functions);

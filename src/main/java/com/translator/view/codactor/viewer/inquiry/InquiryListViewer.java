@@ -1,7 +1,10 @@
 package com.translator.view.codactor.viewer.inquiry;
 
+import com.google.inject.Injector;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBScrollPane;
+import com.translator.CodactorInjector;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
@@ -18,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InquiryListViewer extends JPanel {
+    private Project project;
     private JList<Inquiry> inquiryList;
     private JBScrollPane inquiryListScrollPane;
     private JToolBar jToolBar2;
@@ -28,9 +32,11 @@ public class InquiryListViewer extends JPanel {
     private InquiryViewerFactory inquiryViewerFactory;
     private JPanel parentComponent = this;
 
-    public InquiryListViewer(CodactorToolWindowService codactorToolWindowService,
+    public InquiryListViewer(Project project,
+                             CodactorToolWindowService codactorToolWindowService,
                              InquiryDao inquiryDao,
                              InquiryViewerFactory inquiryViewerFactory) {
+        this.project = project;
         this.historicalModificationListViewer = null;
         this.codactorToolWindowService = codactorToolWindowService;
         this.inquiryDao = inquiryDao;
@@ -53,6 +59,10 @@ public class InquiryListViewer extends JPanel {
         newInquiryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (historicalModificationListViewer == null) {
+                    Injector injector = CodactorInjector.getInstance().getInjector(project);
+                    historicalModificationListViewer = injector.getInstance(HistoricalModificationListViewer.class);
+                }
                 historicalModificationListViewer.updateModificationList();
                 codactorToolWindowService.openHistoricalModificationListViewerToolWindow();
             }

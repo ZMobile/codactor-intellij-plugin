@@ -235,7 +235,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
 
         JLabel hiddenLabel = new JLabel();
         hiddenLabel.setVisible(false);
-        JComboBox<String> modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4-0314", "gpt-4-32k-0314", "gpt-3.5-turbo-0613", "gpt-4-0613"});
+        JComboBox<String> modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k"});
         modelComboBox.addActionListener(e -> {
             JComboBox<String> cb = (JComboBox<String>) e.getSource();
             String model = (String) cb.getSelectedItem();
@@ -361,6 +361,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                         String question = textArea.getText();
                         InquiryViewer inquiryViewer = inquiryViewerFactory.create();
                         inquiryService.createInquiry(inquiryViewer, fileModificationSuggestion.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
+                        codactorToolWindowService.createInquiryViewerToolWindow(inquiryViewer);
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Inquire Selected")) {
@@ -372,6 +373,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                     String question = textArea.getText();
                     InquiryViewer inquiryViewer = inquiryViewerFactory.create();
                     inquiryService.createInquiry(inquiryViewer, fileModificationSuggestion.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
+                    codactorToolWindowService.createInquiryViewerToolWindow(inquiryViewer);
                     promptContextService.clearPromptContext();
                 }
             }

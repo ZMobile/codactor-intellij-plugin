@@ -99,10 +99,11 @@ public class CodeTranslatorViewConfig extends AbstractModule {
 
     @Singleton
     @Provides
-    public InquiryListViewer inquiryListViewer(CodactorToolWindowService codactorToolWindowService,
+    public InquiryListViewer inquiryListViewer(Project project,
+                                               CodactorToolWindowService codactorToolWindowService,
                                                InquiryDao inquiryDao,
                                                InquiryViewerFactory inquiryViewer) {
-        return new InquiryListViewer(codactorToolWindowService, inquiryDao, inquiryViewer);
+        return new InquiryListViewer(project, codactorToolWindowService, inquiryDao, inquiryViewer);
     }
 
     @Singleton

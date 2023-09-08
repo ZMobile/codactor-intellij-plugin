@@ -3,7 +3,7 @@ package com.translator.service.codactor.modification.tracking.listener;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
-import com.translator.view.codactor.listener.TabKeyListener;
+import com.translator.view.codactor.listener.keyboard.TabKeyListener;
 
 import javax.inject.Inject;
 import java.awt.event.KeyListener;

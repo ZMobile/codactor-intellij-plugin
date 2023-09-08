@@ -37,6 +37,9 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
     }
 
     public String getSnippet(String filePath, int startIndex, int endIndex) {
+        if (filePath == null) {
+            return null;
+        }
         // Convert the file path to a VirtualFile instance
         AtomicReference<String> snippet = new AtomicReference<>();
         ApplicationManager.getApplication().invokeAndWait(() -> {
@@ -60,6 +63,9 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
 
     @Override
     public Document getDocument(String filePath) {
+        if (filePath == null) {
+            return null;
+        }
         // Convert the file path to a VirtualFile instance
         AtomicReference<Document> documentRef = new AtomicReference<>();
         ApplicationManager.getApplication().invokeAndWait(() -> {
@@ -74,6 +80,9 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
     }
 
     public String getAllText(String filePath) {
+        if (filePath == null) {
+            return null;
+        }
         AtomicReference<String> allTextRef = new AtomicReference<>();
         ApplicationManager.getApplication().invokeAndWait(() -> {
             Path path = Paths.get(filePath);
@@ -87,6 +96,9 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
     }
 
     public String getAllTextAtPackage(String filePackage) {
+        if (filePackage == null) {
+            return null;
+        }
         VirtualFile virtualFile = getVirtualFileFromPackage(filePackage);
 
         if (virtualFile != null) {
@@ -103,6 +115,9 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
 
     @Override
     public VirtualFile getVirtualFileFromPackage(String filePackage) {
+        if (filePackage == null) {
+            return null;
+        }
         String[] packageDirectories = filePackage.split("\\.");
         ModuleManager moduleManager = ModuleManager.getInstance(project);
         Module[] modules = moduleManager.getModules();
@@ -151,6 +166,9 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
     }
 
     private String getFileExtension(File file) {
+        if (file == null) {
+            return null;
+        }
         String name = file.getName();
         int lastIndexOf = name.lastIndexOf(".");
         if (lastIndexOf == -1) {
