@@ -47,8 +47,8 @@ import com.translator.service.codactor.modification.tracking.listener.EditorClic
 import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerServiceImpl;
 import com.translator.service.codactor.modification.tracking.listener.TabKeyListenerService;
 import com.translator.service.codactor.modification.tracking.listener.TabKeyListenerServiceImpl;
-import com.translator.service.codactor.openai.OpenAiApiKeyService;
-import com.translator.service.codactor.openai.OpenAiApiKeyServiceImpl;
+import com.translator.service.codactor.connection.DefaultConnectionService;
+import com.translator.service.codactor.connection.DefaultConnectionServiceImpl;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.openai.OpenAiModelServiceImpl;
 import com.translator.service.codactor.runner.CodeRunnerService;
@@ -102,7 +102,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(AutomaticMassCodeModificationService.class).to(AutomaticMassCodeModificationServiceImpl.class);
         bind(AutomaticCodeModificationService.class).to(AutomaticCodeModificationServiceImpl.class);
         bind(CodeModificationService.class).to(CodeModificationServiceImpl.class);
-        bind(OpenAiApiKeyService.class).to(OpenAiApiKeyServiceImpl.class).asEagerSingleton();
+        bind(DefaultConnectionService.class).to(DefaultConnectionServiceImpl.class).asEagerSingleton();
         bind(OpenAiModelService.class).to(OpenAiModelServiceImpl.class).asEagerSingleton();
         bind(FileCreatorService.class).to(FileCreatorServiceImpl.class);
         bind(FileRemoverService.class).to(FileRemoverServiceImpl.class);
@@ -189,11 +189,12 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                     InquiryDao inquiryDao,
                                                                     CodeModificationService codeModificationService,
                                                                     FileModificationTrackerService fileModificationTrackerService,
-                                                                    OpenAiApiKeyService openAiApiKeyService,
+                                                                    DefaultConnectionService defaultConnectionService,
                                                                     OpenAiModelService openAiModelService,
                                                                     FileCreatorService fileCreatorService,
-                                                                    InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService) {
-        return new MassCodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationService, fileModificationTrackerService, openAiApiKeyService, openAiModelService, fileCreatorService, inquirySystemMessageGeneratorService);
+                                                                    InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
+                                                                    AzureConnectionService azureConnectionService) {
+        return new MassCodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationService, fileModificationTrackerService, defaultConnectionService, openAiModelService, fileCreatorService, inquirySystemMessageGeneratorService, azureConnectionService);
     }
 
     @Singleton
@@ -204,11 +205,12 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                      FileModificationRestarterService fileModificationRestarterService,
                                                                      CodeModificationService codeModificationService,
                                                                      CodeSnippetExtractorService codeSnippetExtractorService,
-                                                                     OpenAiApiKeyService openAiApiKeyService,
+                                                                     DefaultConnectionService defaultConnectionService,
                                                                      OpenAiModelService openAiModelService,
                                                                      InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
+                                                                     AzureConnectionService azureConnectionService,
                                                                      FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                                                      Gson gson) {
-        return new MultiFileModificationServiceImpl(project, inquiryDao, fileModificationTrackerService, fileModificationRestarterService, codeModificationService, codeSnippetExtractorService, openAiApiKeyService, openAiModelService, inquirySystemMessageGeneratorService, fileModificationErrorDialogFactory, gson);
+        return new MultiFileModificationServiceImpl(project, inquiryDao, fileModificationTrackerService, fileModificationRestarterService, codeModificationService, codeSnippetExtractorService, defaultConnectionService, openAiModelService, inquirySystemMessageGeneratorService, azureConnectionService, fileModificationErrorDialogFactory, gson);
     }
 }

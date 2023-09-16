@@ -11,11 +11,12 @@ import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.function.ChatGptFunction;
 import com.translator.model.codactor.modification.RecordType;
+import com.translator.service.codactor.connection.AzureConnectionService;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.editor.GptToLanguageTransformerService;
 import com.translator.service.codactor.functions.CodactorFunctionGeneratorService;
 import com.translator.service.codactor.functions.InquiryFunctionCallProcessorService;
-import com.translator.service.codactor.openai.OpenAiApiKeyService;
+import com.translator.service.codactor.connection.DefaultConnectionService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
@@ -33,12 +34,13 @@ public class InquiryServiceImpl implements InquiryService {
     private Project project;
     private InquiryDao inquiryDao;
     private CodactorToolWindowService codactorToolWindowService;
-    private OpenAiApiKeyService openAiApiKeyService;
+    private DefaultConnectionService defaultConnectionService;
     private PromptContextService promptContextService;
     private GptToLanguageTransformerService gptToLanguageTransformerService;
     private CodactorFunctionGeneratorService codactorFunctionGeneratorService;
     private InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService;
     private InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService;
+    private AzureConnectionService azureConnectionService;
     private InquiryViewerFactory inquiryViewerFactory;
 
     @Inject
@@ -46,22 +48,24 @@ public class InquiryServiceImpl implements InquiryService {
                               Project project,
                               InquiryDao inquiryDao,
                               CodactorToolWindowService codactorToolWindowService,
-                              OpenAiApiKeyService openAiApiKeyService,
+                              DefaultConnectionService defaultConnectionService,
                               PromptContextService promptContextService,
                               GptToLanguageTransformerService gptToLanguageTransformerService,
                               CodactorFunctionGeneratorService codactorFunctionGeneratorService,
                               InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService,
-                              InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService) {
+                              InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
+                              AzureConnectionService azureConnectionService) {
         this.gson = gson;
         this.project = project;
         this.inquiryDao = inquiryDao;
         this.codactorToolWindowService = codactorToolWindowService;
-        this.openAiApiKeyService = openAiApiKeyService;
+        this.defaultConnectionService = defaultConnectionService;
         this.promptContextService = promptContextService;
         this.gptToLanguageTransformerService = gptToLanguageTransformerService;
         this.codactorFunctionGeneratorService = codactorFunctionGeneratorService;
         this.inquiryFunctionCallProcessorService = inquiryFunctionCallProcessorService;
         this.inquirySystemMessageGeneratorService = inquirySystemMessageGeneratorService;
+        this.azureConnectionService = azureConnectionService;
     }
 
     @Override
@@ -80,14 +84,14 @@ public class InquiryServiceImpl implements InquiryService {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 inquiryViewer.setLoadingChat(true);
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+                String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
                 List<ChatGptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
                 if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
-                Inquiry inquiry = inquiryDao.createInquiry(subjectRecordId, recordType, question, openAiApiKey, model, new ArrayList<>(), functions, systemMessage);
+                Inquiry inquiry = inquiryDao.createInquiry(subjectRecordId, recordType, question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>(), functions, systemMessage);
                 if (inquiry != null && inquiry.getError() == null) {
                     inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                     processPossibleFunctionCalls(inquiryViewer, inquiry, openAiApiKey, model, functions);
@@ -113,14 +117,14 @@ public class InquiryServiceImpl implements InquiryService {
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Inquiry (CODE)", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+                String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
                 List<ChatGptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
                 if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
-                Inquiry inquiry = inquiryDao.createInquiry(filePath, code, question, openAiApiKey, model, priorContext, functions, systemMessage);
+                Inquiry inquiry = inquiryDao.createInquiry(filePath, code, question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext, functions, systemMessage);
                 if (inquiry == null) {
                     JOptionPane.showMessageDialog(null, "Error creating inquiry", "Error",
                             JOptionPane.ERROR_MESSAGE);
@@ -157,14 +161,14 @@ public class InquiryServiceImpl implements InquiryService {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 inquiryViewer.setLoadingChat(true);
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+                String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
                 List<ChatGptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
                 if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
-                Inquiry inquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, new ArrayList<>(), functions, systemMessage);
+                Inquiry inquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>(), functions, systemMessage);
                 if (inquiry != null) {
                     if (inquiry.getError() != null) {
                         JOptionPane.showMessageDialog(null, inquiry.getError(), "Error",
@@ -202,12 +206,12 @@ public class InquiryServiceImpl implements InquiryService {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 inquiryViewer.setLoadingChat(true);
-                String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+                String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
                 List<ChatGptFunction> functions = null;
                 if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                 }
-                Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, model, functions);
+                Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), functions);
                 if (response.getError() != null) {
                     JOptionPane.showMessageDialog(null, response.getError(), "Error",
                             JOptionPane.ERROR_MESSAGE);
@@ -249,7 +253,7 @@ public class InquiryServiceImpl implements InquiryService {
         if (latestInquiryChat.getFunctionCall() != null) {
             while (latestInquiryChat.getFunctionCall() != null) {
                 String functionCallResponse = inquiryFunctionCallProcessorService.processFunctionCall(latestInquiryChat.getFunctionCall(), inquiry.getId());
-                Inquiry inquiry1 = inquiryDao.respondToFunctionCall(latestInquiryChat.getId(), latestInquiryChat.getFunctionCall().getName(), functionCallResponse, openAiApiKey, model, functions);
+                Inquiry inquiry1 = inquiryDao.respondToFunctionCall(latestInquiryChat.getId(), latestInquiryChat.getFunctionCall().getName(), functionCallResponse, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), functions);
                 if (inquiry1 == null) {
                     break;
                 } else if (inquiry1.getError() != null){

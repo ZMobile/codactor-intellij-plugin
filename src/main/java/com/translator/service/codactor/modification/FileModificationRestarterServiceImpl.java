@@ -10,9 +10,9 @@ import com.translator.model.codactor.modification.FileModificationSuggestionReco
 import com.translator.model.codactor.modification.ModificationType;
 import com.translator.model.codactor.task.CancellableRunnable;
 import com.translator.model.codactor.task.CustomBackgroundTask;
-import com.translator.service.codactor.connection.CodactorConnectionService;
+import com.translator.service.codactor.connection.AzureConnectionService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
-import com.translator.service.codactor.openai.OpenAiApiKeyService;
+import com.translator.service.codactor.connection.DefaultConnectionService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.view.codactor.dialog.FileModificationErrorDialog;
@@ -25,44 +25,45 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
     private final Project project;
     private final FirebaseTokenService firebaseTokenService;
     private final FileModificationTrackerService fileModificationTrackerService;
-    private final OpenAiApiKeyService openAiApiKeyService;
+    private final DefaultConnectionService defaultConnectionService;
     private final OpenAiModelService openAiModelService;
     private final CodeModificationService codeModificationService;
     private final BackgroundTaskMapperService backgroundTaskMapperService;
-    private final CodactorConnectionService codactorConnectionService;
+    private final AzureConnectionService azureConnectionService;
     private final FileModificationErrorDialogFactory fileModificationErrorDialogFactory;
 
     @Inject
     public FileModificationRestarterServiceImpl(Project project,
                                                 FirebaseTokenService firebaseTokenService,
                                                 FileModificationTrackerService fileModificationTrackerService,
-                                                OpenAiApiKeyService openAiApiKeyService,
+                                                DefaultConnectionService defaultConnectionService,
                                                 OpenAiModelService openAiModelService,
                                                 CodeModificationService codeModificationService,
                                                 BackgroundTaskMapperService backgroundTaskMapperService,
-                                                CodactorConnectionService codactorConnectionService,
+                                                AzureConnectionService azureConnectionService,
                                                 FileModificationErrorDialogFactory fileModificationErrorDialogFactory) {
         this.project = project;
         this.firebaseTokenService = firebaseTokenService;
         this.fileModificationTrackerService = fileModificationTrackerService;
-        this.openAiApiKeyService = openAiApiKeyService;
+        this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
         this.codeModificationService = codeModificationService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
-        this.codactorConnectionService = codactorConnectionService;
+        this.azureConnectionService = azureConnectionService;
         this.fileModificationErrorDialogFactory = fileModificationErrorDialogFactory;
     }
 
     @Override
     public void restartFileModification(FileModification fileModification) {
+        String model = openAiModelService.getSelectedOpenAiModel();
         fileModificationTrackerService.undoReadyFileModification(fileModification.getId());
         fileModificationTrackerService.retryFileModification(fileModification.getId());
         CancellableRunnable task = customProgressIndicator -> {
-            String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+            String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
             List<FileModificationSuggestionRecord> fileModificationSuggestionRecords = null;
             String error = null;
             if (fileModification.getModificationType() == ModificationType.MODIFY || fileModification.getModificationType() == ModificationType.MODIFY_SELECTION) {
-                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getModification(), fileModification.getModificationType(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), fileModification.getPriorContext());
+                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getModification(), fileModification.getModificationType(), openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), fileModification.getPriorContext());
                 DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
                 if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                     fileModificationSuggestionRecords = desktopCodeModificationResponseResource.getModificationSuggestions();
@@ -70,7 +71,7 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
                     error = desktopCodeModificationResponseResource.getError();
                 }
             } else if (fileModification.getModificationType() == ModificationType.FIX || fileModification.getModificationType() == ModificationType.FIX_SELECTION) {
-                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getModification(), fileModification.getModificationType(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), fileModification.getPriorContext());
+                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getModification(), fileModification.getModificationType(), openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), fileModification.getPriorContext());
                 DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
                 if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
                     fileModificationSuggestionRecords = desktopCodeModificationResponseResource.getModificationSuggestions();
@@ -78,7 +79,7 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
                     error = desktopCodeModificationResponseResource.getError();
                 }
             } else if (fileModification.getModificationType() == ModificationType.CREATE) {
-                DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(fileModification.getFilePath(), fileModification.getModification(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), fileModification.getPriorContext());
+                DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(fileModification.getFilePath(), fileModification.getModification(), openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), fileModification.getPriorContext());
                 DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                 if (desktopCodeCreationResponseResource.getModificationSuggestions() != null && !desktopCodeCreationResponseResource.getModificationSuggestions().isEmpty()) {
                     fileModificationSuggestionRecords = desktopCodeCreationResponseResource.getModificationSuggestions();
@@ -86,7 +87,7 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
                     error = desktopCodeCreationResponseResource.getError();
                 }
             } else if (fileModification.getModificationType() == ModificationType.TRANSLATE) {
-                DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getNewLanguage(), fileModification.getNewFileType(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), fileModification.getPriorContext());
+                DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getNewLanguage(), fileModification.getNewFileType(), openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), fileModification.getPriorContext());
                 DesktopCodeTranslationResponseResource desktopCodeTranslationResponseResource = codeModificationService.getTranslatedCode(desktopCodeTranslationRequestResource);
                 if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null && !desktopCodeTranslationResponseResource.getModificationSuggestions().isEmpty()) {
                     fileModificationSuggestionRecords = desktopCodeTranslationResponseResource.getModificationSuggestions();

@@ -17,6 +17,9 @@ public class InquiryCreationRequestResource {
         private String question;
         private String openAiApiKey;
         private String model;
+        private boolean azure;
+        private String azureResource;
+        private String azureDeployment;
         private List<ChatGptFunction> functions;
         private List<HistoricalContextObjectHolder> priorContext;
         private String systemMessage;
@@ -56,6 +59,21 @@ public class InquiryCreationRequestResource {
             return this;
         }
 
+        public Builder withAzure(boolean azure) {
+            this.azure = azure;
+            return this;
+        }
+
+        public Builder withAzureResource(String azureResource) {
+            this.azureResource = azureResource;
+            return this;
+        }
+
+        public Builder withAzureDeployment(String azureDeployment) {
+            this.azureDeployment = azureDeployment;
+            return this;
+        }
+
         public Builder withFunctions(List<ChatGptFunction> functions) {
             this.functions = functions;
             return this;
@@ -72,7 +90,7 @@ public class InquiryCreationRequestResource {
         }
 
         public InquiryCreationRequestResource build() {
-            return new InquiryCreationRequestResource(subjectRecordId, recordType, filePath, code, question, openAiApiKey, model, functions, priorContext, systemMessage);
+            return new InquiryCreationRequestResource(subjectRecordId, recordType, filePath, code, question, openAiApiKey, model, azure, azureResource, azureDeployment, functions, priorContext, systemMessage);
         }
     }
 
@@ -83,6 +101,9 @@ public class InquiryCreationRequestResource {
     private String question;
     private String openAiApiKey;
     private String model;
+    private boolean azure;
+    private String azureResource;
+    private String azureDeployment;
     private List<ChatGptFunction> functions;
     private List<HistoricalContextObjectHolder> priorContext;
     private String systemMessage;
@@ -94,6 +115,9 @@ public class InquiryCreationRequestResource {
                                           String question,
                                           String openAiApiKey,
                                           String model,
+                                          boolean azure,
+                                          String azureResource,
+                                          String azureDeployment,
                                           List<ChatGptFunction> functions,
                                           List<HistoricalContextObjectHolder> priorContext,
                                           String systemMessage) {
@@ -104,6 +128,9 @@ public class InquiryCreationRequestResource {
         this.question = question;
         this.openAiApiKey = openAiApiKey;
         this.model = model;
+        this.azure = azure;
+        this.azureResource = azureResource;
+        this.azureDeployment = azureDeployment;
         this.functions = functions;
         this.priorContext = priorContext;
         this.systemMessage = systemMessage;

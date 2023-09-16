@@ -13,8 +13,9 @@ import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.model.uml.node.Node;
 import com.translator.model.uml.node.PromptNode;
 import com.translator.model.uml.prompt.Prompt;
+import com.translator.service.codactor.connection.AzureConnectionService;
 import com.translator.service.codactor.inquiry.InquirySystemMessageGeneratorService;
-import com.translator.service.codactor.openai.OpenAiApiKeyService;
+import com.translator.service.codactor.connection.DefaultConnectionService;
 import com.translator.service.uml.node.NodeDialogWindowMapperService;
 import com.translator.service.uml.node.query.ConnectionQueryService;
 import com.translator.service.uml.node.query.NodeQueryService;
@@ -29,29 +30,32 @@ import java.util.stream.Collectors;
 public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
     private final Project project;
     private final InquiryDao inquiryDao;
-    private final OpenAiApiKeyService openAiApiKeyService;
+    private final DefaultConnectionService defaultConnectionService;
     private final NodeQueryService nodeQueryService;
     private final ConnectionQueryService connectionQueryService;
     private final NodeDialogWindowMapperService nodeDialogWindowMapperService;
     private final InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService;
+    private final AzureConnectionService azureConnectionService;
     private final Gson gson;
 
     @Inject
     public PromptNodeRunnerServiceImpl(Project project,
                                        InquiryDao inquiryDao,
-                                       OpenAiApiKeyService openAiApiKeyService,
+                                       DefaultConnectionService defaultConnectionService,
                                        NodeQueryService nodeQueryService,
                                        ConnectionQueryService connectionQueryService,
                                        NodeDialogWindowMapperService nodeDialogWindowMapperService,
-                                        InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
+                                       InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
+                                       AzureConnectionService azureConnectionService,
                                        Gson gson) {
         this.project = project;
         this.inquiryDao = inquiryDao;
-        this.openAiApiKeyService = openAiApiKeyService;
+        this.defaultConnectionService = defaultConnectionService;
         this.nodeQueryService = nodeQueryService;
         this.connectionQueryService = connectionQueryService;
         this.nodeDialogWindowMapperService = nodeDialogWindowMapperService;
         this.inquirySystemMessageGeneratorService = inquirySystemMessageGeneratorService;
+        this.azureConnectionService = azureConnectionService;
         this.gson = gson;
     }
 
@@ -99,7 +103,7 @@ public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
                 prompt.setProcessed(false);
                 Inquiry newInquiry;
                 if (i == 0) {
-                    newInquiry = inquiryDao.createGeneralInquiry(newPrompt, openAiApiKeyService.getOpenAiApiKey(), promptNode.getModel(), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                    newInquiry = inquiryDao.createGeneralInquiry(newPrompt, defaultConnectionService.getOpenAiApiKey(), promptNode.getModel(), azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(promptNode.getModel()), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                     if (newInquiry.getError() != null) {
                         JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -110,7 +114,7 @@ public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
                             .max(Comparator.comparing(InquiryChat::getCreationTimestamp))
                             .orElseThrow();
                 } else {
-                    newInquiry = inquiryDao.continueInquiry(previousInquiryChat.getId(), prompt.getPrompt(), openAiApiKeyService.getOpenAiApiKey(), promptNode.getModel());
+                    newInquiry = inquiryDao.continueInquiry(previousInquiryChat.getId(), prompt.getPrompt(), defaultConnectionService.getOpenAiApiKey(), promptNode.getModel(), azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(promptNode.getModel()));
                     if (newInquiry.getError() != null) {
                         JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);

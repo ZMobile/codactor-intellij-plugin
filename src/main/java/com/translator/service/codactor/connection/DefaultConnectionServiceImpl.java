@@ -1,11 +1,11 @@
-package com.translator.service.codactor.openai;
+package com.translator.service.codactor.connection;
 
 import com.intellij.credentialStore.CredentialAttributes;
 import com.intellij.credentialStore.Credentials;
 import com.intellij.ide.passwordSafe.PasswordSafe;
 
 
-public class OpenAiApiKeyServiceImpl implements OpenAiApiKeyService {
+public class DefaultConnectionServiceImpl implements DefaultConnectionService {
     private String openAiApiKey;
 
     @Override
@@ -29,5 +29,9 @@ public class OpenAiApiKeyServiceImpl implements OpenAiApiKeyService {
         CredentialAttributes credentialAttributes = new CredentialAttributes("openai_api_key", "user");
         Credentials credentials = new Credentials("", openAiApiKey);
         PasswordSafe.getInstance().set(credentialAttributes, credentials);
+    }
+
+    public String[] getModels() {
+        return new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-3.5", "gpt-3.5-turbo-0613", "gpt-4-0613", "gpt-4-32k-0613"};
     }
 }

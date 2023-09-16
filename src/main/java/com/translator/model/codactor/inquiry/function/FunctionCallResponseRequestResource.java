@@ -10,6 +10,9 @@ public class FunctionCallResponseRequestResource {
         private String content;
         private String openAiApiKey;
         private String model;
+        private boolean azure;
+        private String azureResource;
+        private String azureDeployment;
         private List<ChatGptFunction> functions;
 
         public Builder withPreviousInquiryChatId(String previousInquiryChatId) {
@@ -37,22 +40,40 @@ public class FunctionCallResponseRequestResource {
             return this;
         }
 
+        public Builder withAzure(boolean azure) {
+            this.azure = azure;
+            return this;
+        }
+
+        public Builder withAzureResource(String azureResource) {
+            this.azureResource = azureResource;
+            return this;
+        }
+
+        public Builder withAzureDeployment(String azureDeployment) {
+            this.azureDeployment = azureDeployment;
+            return this;
+        }
+
         public Builder withFunctions(List<ChatGptFunction> functions) {
             this.functions = functions;
             return this;
         }
 
         public FunctionCallResponseRequestResource build() {
-            return new FunctionCallResponseRequestResource(this.previousInquiryChatId, this.functionName, this.content, this.openAiApiKey, this.model, this.functions);
+            return new FunctionCallResponseRequestResource(previousInquiryChatId, functionName, content, openAiApiKey, model, azure, azureResource, azureDeployment, functions);
         }
     }
 
-    private FunctionCallResponseRequestResource(String previousInquiryChatId, String functionName, String content, String openAiApiKey, String model, List<ChatGptFunction> functions) {
+    private FunctionCallResponseRequestResource(String previousInquiryChatId, String functionName, String content, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<ChatGptFunction> functions) {
         this.previousInquiryChatId = previousInquiryChatId;
         this.functionName = functionName;
         this.content = content;
         this.openAiApiKey = openAiApiKey;
         this.model = model;
+        this.azure = azure;
+        this.azureResource = azureResource;
+        this.azureDeployment = azureDeployment;
         this.functions = functions;
     }
 
@@ -61,6 +82,9 @@ public class FunctionCallResponseRequestResource {
     private String content;
     private String openAiApiKey;
     private String model;
+    private boolean azure;
+    private String azureResource;
+    private String azureDeployment;
     private List<ChatGptFunction> functions;
 
     // Getters

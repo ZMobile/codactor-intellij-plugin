@@ -14,10 +14,11 @@ import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.modification.ModificationType;
 import com.translator.model.codactor.modification.RecordType;
+import com.translator.service.codactor.connection.AzureConnectionService;
 import com.translator.service.codactor.inquiry.InquirySystemMessageGeneratorService;
 import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
-import com.translator.service.codactor.openai.OpenAiApiKeyService;
+import com.translator.service.codactor.connection.DefaultConnectionService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.view.codactor.dialog.OpenAiApiKeyDialog;
 import com.translator.worker.LimitedSwingWorker;
@@ -36,39 +37,43 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
     private final InquiryDao inquiryDao;
     private final CodeModificationService codeModificationService;
     private final FileModificationTrackerService fileModificationTrackerService;
-    private final OpenAiApiKeyService openAiApiKeyService;
+    private final DefaultConnectionService defaultConnectionService;
     private final OpenAiModelService openAiModelService;
     private final FileCreatorService fileCreatorService;
     private final InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService;
+    private final AzureConnectionService azureConnectionService;
 
     @Inject
     public MassCodeFileGeneratorServiceImpl(Project project,
                                             InquiryDao inquiryDao,
                                             CodeModificationService codeModificationService,
                                             FileModificationTrackerService fileModificationTrackerService,
-                                            OpenAiApiKeyService openAiApiKeyService,
+                                            DefaultConnectionService defaultConnectionService,
                                             OpenAiModelService openAiModelService,
                                             FileCreatorService fileCreatorService,
-                                            InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService) {
+                                            InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
+                                            AzureConnectionService azureConnectionService) {
         this.project = project;
         this.inquiryDao = inquiryDao;
         this.codeModificationService = codeModificationService;
         this.fileModificationTrackerService = fileModificationTrackerService;
-        this.openAiApiKeyService = openAiApiKeyService;
+        this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
         this.fileCreatorService = fileCreatorService;
         this.inquirySystemMessageGeneratorService = inquirySystemMessageGeneratorService;
+        this.azureConnectionService = azureConnectionService;
     }
 
     @Override
     public void generateCodeFiles(Inquiry inquiry, InquiryChat inquiryChat, String language, String fileExtension, String filePath) {
+        String model = openAiModelService.getSelectedOpenAiModel();
         final String newFileExtension;
         if (fileExtension.startsWith(".")) {
             newFileExtension = fileExtension.substring(1);
         } else {
             newFileExtension = fileExtension;
         }
-        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(inquiry.getId(), language, fileExtension, filePath);
         Task.Backgroundable outerTask = new Task.Backgroundable(project, "Outer Task", true) {
             @Override
@@ -77,9 +82,9 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                 String question = "What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
                 if (inquiryChat != null) {
-                    newInquiry = inquiryDao.continueInquiry(inquiryChat.getId(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                    newInquiry = inquiryDao.continueInquiry(inquiryChat.getId(), question, openAiApiKey, model,  azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                 } else {
-                    newInquiry = inquiryDao.createInquiry(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>(), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                    newInquiry = inquiryDao.createInquiry(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>(), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 }
                 if (newInquiry != null) {
                     if (newInquiry.getError() != null) {
@@ -90,7 +95,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
                     String question2 = "Can you provide the terminal commands for creating these " + language + " files in " + filePath + "?";
-                    newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                    newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                     if (newInquiry != null) {
                         if (newInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, newInquiry, "Error",
@@ -99,7 +104,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         }
                         InquiryChat mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         if (mostRecentInquiryChat2 == null) {
-                            newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                            newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                             if (newInquiry.getError() != null) {
                                 JOptionPane.showMessageDialog(null, newInquiry, "Error",
                                         JOptionPane.ERROR_MESSAGE);
@@ -127,7 +132,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         priorContext.add(priorContextObject);
                                         String modificationId = fileModificationTrackerService.addModification(file.getAbsolutePath(), finalMostRecentInquiryChat.getMessage(), 0, 0, ModificationType.CREATE, priorContext);
                                         String description = "The complete and comprehensive " + language + " code for " + file.getName();
-                                        DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                                        DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
                                         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                             fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
@@ -139,7 +144,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                             //}
                                         } else {
                                             if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                                                OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
+                                                OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(defaultConnectionService);
                                             } else {
                                                 JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                         JOptionPane.ERROR_MESSAGE);
@@ -168,13 +173,14 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
 
     @Override
     public void generateCodeFilesWithConsideration(Inquiry inquiry, InquiryChat inquiryChat, String language, String fileExtension, String filePath) {
+        String model = openAiModelService.getSelectedOpenAiModel();
         final String newFileExtension;
         if (fileExtension.startsWith(".")) {
             newFileExtension = fileExtension.substring(1);
         } else {
             newFileExtension = fileExtension;
         }
-        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(inquiry.getId(), language, fileExtension, filePath);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Task", true) {
             @Override
@@ -183,9 +189,9 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                 String question = "What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
                 if (inquiryChat != null) {
-                    newInquiry = inquiryDao.continueInquiry(inquiryChat.getId(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                    newInquiry = inquiryDao.continueInquiry(inquiryChat.getId(), question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                 } else {
-                    newInquiry = inquiryDao.createInquiry(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>(), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                    newInquiry = inquiryDao.createInquiry(inquiry.getSubjectRecordId(), inquiry.getSubjectRecordType(), question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>(), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 }
                 if (newInquiry != null) {
                     if (newInquiry.getError() != null) {
@@ -202,7 +208,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         // Handle the interruption
                         e.printStackTrace();
                     }
-                    newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                    newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                     if (newInquiry != null) {
                         if (newInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, newInquiry, "Error",
@@ -218,7 +224,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                             // Handle the interruption
                             e.printStackTrace();
                         }
-                        newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat2.getId(), question3, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                        newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat2.getId(), question3, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                         if (newInquiry != null) {
                             if (newInquiry.getError() != null) {
                                 JOptionPane.showMessageDialog(null, newInquiry, "Error",
@@ -249,7 +255,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                     int fileNumber = i + 1;
                                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
                                     String description = "The complete and comprehensive " + language + " code for " + file.getName();
-                                    DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                                    DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
                                     DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                         fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
@@ -262,7 +268,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         completedSuggestionIds.add(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getId());
                                     } else {
                                         if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                                            OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
+                                            OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(defaultConnectionService);
                                         } else {
                                             JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                     JOptionPane.ERROR_MESSAGE);
@@ -289,6 +295,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
 
     @Override
     public void generateCodeFiles(String description, String language, String fileExtension, String filePath, List<HistoricalContextObjectHolder> priorContext) {
+        String model = openAiModelService.getSelectedOpenAiModel();
         if (priorContext == null) {
             priorContext = new ArrayList<>();
         }
@@ -298,7 +305,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
         } else {
             newFileExtension = fileExtension;
         }
-        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(description, language, fileExtension, filePath);
         List<HistoricalContextObjectHolder> finalPriorContext = priorContext;
         LimitedSwingWorker worker = new LimitedSwingWorker(new LimitedSwingWorkerExecutor()) {
@@ -306,7 +313,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
             protected Void doInBackground() {
                 String question = "I need to create a potentially multi-file " + language + " program with the following description: \"" + description + "\".  What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
-                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), finalPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), finalPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 if (newInquiry != null) {
                     if (newInquiry.getError() != null) {
                         JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
@@ -321,7 +328,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         // Handle the interruption
                         e.printStackTrace();
                     }
-                    newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                    newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                     if (newInquiry != null) {
                         if (newInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, newInquiry, "Error",
@@ -329,7 +336,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         }
                         InquiryChat mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         if (mostRecentInquiryChat2 == null) {
-                            newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                            newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                             if (newInquiry.getError() != null) {
                                 JOptionPane.showMessageDialog(null, newInquiry, "Error",
                                         JOptionPane.ERROR_MESSAGE);
@@ -356,7 +363,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         newPriorContext.add(priorContextObject);
                                         String modificationId = fileModificationTrackerService.addModification(newFilePath, description, 0, 0, ModificationType.CREATE, newPriorContext);
                                         String newDescription = "The complete and comprehensive " + language + " code for " + file.getName();
-                                        DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), newDescription, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), newPriorContext);
+                                        DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), newDescription, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), newPriorContext);
                                         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                             fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
@@ -368,7 +375,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                             //}
                                         } else {
                                             if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                                                OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
+                                                OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(defaultConnectionService);
                                             } else {
                                                 JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                         JOptionPane.ERROR_MESSAGE);
@@ -400,6 +407,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
 
     @Override
     public void generateCodeFilesWithConsideration(String description, String language, String fileExtension, String filePath, List<HistoricalContextObjectHolder> priorContext) {
+        String model = openAiModelService.getSelectedOpenAiModel();
         if (priorContext == null) {
             priorContext = new ArrayList<>();
         }
@@ -409,7 +417,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
         } else {
             newFileExtension = fileExtension;
         }
-        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(description, language, fileExtension, filePath);
         List<HistoricalContextObjectHolder> finalPriorContext = priorContext;
         LimitedSwingWorker worker = new LimitedSwingWorker(new LimitedSwingWorkerExecutor()) {
@@ -417,7 +425,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
             protected Void doInBackground() {
                 String question = "I need to create a potentially multi-file " + language + " program with the following description: \"" + description + "\".  What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
                 fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
-                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), finalPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), finalPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 if (newInquiry != null) {
                     if (newInquiry.getError() != null) {
                         JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
@@ -432,7 +440,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         // Handle the interruption
                         e.printStackTrace();
                     }
-                    newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                    newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                     if (newInquiry != null) {
                         if (newInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
@@ -447,7 +455,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                             // Handle the interruption
                             e.printStackTrace();
                         }
-                        newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat2.getId(), question3, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                        newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat2.getId(), question3, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                         if (newInquiry != null) {
                             if (newInquiry.getError() != null) {
                                 JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
@@ -474,7 +482,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                     }
                                     String modificationId = fileModificationTrackerService.addModification(newFilePath, description, 0, 0, ModificationType.CREATE, finalPriorContext);
                                     String description2 = "The complete and comprehensive " + language + " code for " + file.getName();
-                                    DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description2, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext2);
+                                    DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description2, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext2);
                                     DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                         fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
@@ -490,7 +498,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         completedSuggestionIds.add(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getId());
                                     } else {
                                         if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                                            OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
+                                            OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(defaultConnectionService);
                                         } else {
                                             JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                     JOptionPane.ERROR_MESSAGE);

@@ -9,7 +9,7 @@ import com.translator.model.codactor.modification.FileModification;
 import com.translator.model.codactor.modification.ModificationType;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
-import com.translator.service.codactor.openai.OpenAiApiKeyService;
+import com.translator.service.codactor.connection.DefaultConnectionService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 
 import javax.swing.*;
@@ -20,7 +20,7 @@ import java.awt.event.ActionListener;
 public class FileModificationErrorDialog extends JDialog {
     private String modificationId;
     private String filePath;
-    private OpenAiApiKeyService openAiApiKeyService;
+    private DefaultConnectionService defaultConnectionService;
     private OpenAiModelService openAiModelService;
     private FileModificationTrackerService fileModificationTrackerService;
     private FileModificationRestarterService fileModificationRestarterService;
@@ -30,13 +30,13 @@ public class FileModificationErrorDialog extends JDialog {
                                        @Assisted("filePath") String filePath,
                                        @Assisted("error") String error,
                                        @Assisted ModificationType modificationType,
-                                       OpenAiApiKeyService openAiApiKeyService,
+                                       DefaultConnectionService defaultConnectionService,
                                        OpenAiModelService openAiModelService,
                                        FileModificationTrackerService fileModificationTrackerService,
                                        FileModificationRestarterService fileModificationRestarterService) {
         super();
         this.filePath = filePath;
-        this.openAiApiKeyService = openAiApiKeyService;
+        this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.fileModificationRestarterService = fileModificationRestarterService;
@@ -127,7 +127,7 @@ public class FileModificationErrorDialog extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Handle Re-enter openAi Api Key action
-                OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(openAiApiKeyService);
+                OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(defaultConnectionService);
                 dispose();
             }
         });

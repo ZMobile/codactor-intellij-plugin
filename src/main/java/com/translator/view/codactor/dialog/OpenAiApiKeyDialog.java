@@ -1,7 +1,7 @@
 package com.translator.view.codactor.dialog;
 
 import com.intellij.ui.components.JBTextArea;
-import com.translator.service.codactor.openai.OpenAiApiKeyService;
+import com.translator.service.codactor.connection.DefaultConnectionService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,10 +12,10 @@ import java.awt.event.ActionEvent;
 import java.io.IOException;
 
 public class OpenAiApiKeyDialog extends JDialog {
-    private OpenAiApiKeyService openAiApiKeyService;
+    private DefaultConnectionService defaultConnectionService;
     private JBTextArea apiKeyField;
 
-    public OpenAiApiKeyDialog(OpenAiApiKeyService openAiApiKeyService) {
+    public OpenAiApiKeyDialog(DefaultConnectionService defaultConnectionService) {
         setTitle("Enter Your OpenAI API Key");
         setLocationRelativeTo(null);
         setModal(true);
@@ -58,7 +58,7 @@ public class OpenAiApiKeyDialog extends JDialog {
         panel.add(okButton, c);
         okButton.addActionListener(e -> {
             String apiKey = apiKeyField.getText();
-            openAiApiKeyService.setOpenAiApiKey(apiKey);
+            defaultConnectionService.setOpenAiApiKey(apiKey);
             dispose();
         });
 

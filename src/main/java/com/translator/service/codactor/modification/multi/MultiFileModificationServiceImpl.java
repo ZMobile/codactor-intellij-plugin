@@ -24,13 +24,14 @@ import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.modification.ModificationType;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.model.codactor.thread.BooleanWaiter;
+import com.translator.service.codactor.connection.AzureConnectionService;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.inquiry.InquirySystemMessageGeneratorService;
 import com.translator.service.codactor.json.JsonExtractorService;
 import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
-import com.translator.service.codactor.openai.OpenAiApiKeyService;
+import com.translator.service.codactor.connection.DefaultConnectionService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.view.codactor.dialog.FileModificationErrorDialog;
 import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFactory;
@@ -50,9 +51,10 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
     private FileModificationRestarterService fileModificationRestarterService;
     private CodeModificationService codeModificationService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
-    private OpenAiApiKeyService openAiApiKeyService;
+    private DefaultConnectionService defaultConnectionService;
     private OpenAiModelService openAiModelService;
     private InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService;
+    private AzureConnectionService azureConnectionService;
     private FileModificationErrorDialogFactory fileModificationErrorDialogFactory;
     private Gson gson;
 
@@ -63,9 +65,10 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                                             FileModificationRestarterService fileModificationRestarterService,
                                             CodeModificationService codeModificationService,
                                             CodeSnippetExtractorService codeSnippetExtractorService,
-                                            OpenAiApiKeyService openAiApiKeyService,
+                                            DefaultConnectionService defaultConnectionService,
                                             OpenAiModelService openAiModelService,
                                             InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
+                                            AzureConnectionService azureConnectionService,
                                             FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                             Gson gson) {
         this.project = project;
@@ -74,16 +77,18 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
         this.fileModificationRestarterService = fileModificationRestarterService;
         this.codeModificationService = codeModificationService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
-        this.openAiApiKeyService = openAiApiKeyService;
+        this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
         this.fileModificationErrorDialogFactory = fileModificationErrorDialogFactory;
+        this.azureConnectionService = azureConnectionService;
         this.inquirySystemMessageGeneratorService = inquirySystemMessageGeneratorService;
         this.gson = gson;
     }
 
     @Override
     public void modifyCodeFiles(List<String> filePaths, String modification, List<HistoricalContextObjectHolder> priorContext) throws InterruptedException {
-       String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        String model = openAiModelService.getSelectedOpenAiModel();
+        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(modification);
         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/4) Ranking File Modification Likelihood");
         Map<String, Double> filePathPercentageMap = new HashMap<>();
@@ -126,7 +131,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     if (modificationIdMap.containsKey(filePath)) {
                         String code = codeMap.get(filePath);
                         String question = "I'm looking to implement the following modification(s) to my program: \"" + modification + "\". First things first, what is the percentage likelihood that this specific code file has anything to do with this modification and/or will be affected by the provided modification(s): \"" + code + "\". Please provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0";
-                        Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                        Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                         if (newInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
                                     JOptionPane.ERROR_MESSAGE);
@@ -149,7 +154,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                             }
                             if (badJson) {
                                 String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0?";
-                                Inquiry fixInquiry = inquiryDao.continueInquiry(latestInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                                Inquiry fixInquiry = inquiryDao.continueInquiry(latestInquiryChat.getId(), fixQuestion, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                                 if (fixInquiry.getError() != null) {
                                     JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
                                             JOptionPane.ERROR_MESSAGE);
@@ -188,7 +193,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 String initialFilePath = sortedFilePaths.get(0);
                 String code = codeMap.get(initialFilePath);
                 String initialQuestion = "I'm looking to implement the following modification to my program: \"" + modification + "\". First things first, Yes or No: Will you be able to achieve this modification completely solely by changing the code I provide here at " + sortedFilePaths.get(0) + ": \"" + code + "\". Please provide the answer in the following JSON format: \"{ modificationAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if modificationAchievable is false.";
-                Inquiry newInquiry = inquiryDao.createGeneralInquiry(initialQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                Inquiry newInquiry = inquiryDao.createGeneralInquiry(initialQuestion, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 if (newInquiry.getError() != null) {
                     JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
                             JOptionPane.ERROR_MESSAGE);
@@ -208,7 +213,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 }
                 if (badJson) {
                     String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0?";
-                    Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                    Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                     if (newInquiry.getError() != null) {
                         JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -229,7 +234,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         String filePath = sortedFilePaths.get(i);
                         code = codeMap.get(filePath);
                         String question = "What about if I add this code at " + filePath + " to that condition: \"" + code + "\". Could I achieve implementing the entire modification now? Yes or No? Please provide the answer in the following JSON format: \"{ modificationAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if modificationAchievable is false.";
-                        newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                        newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                         if (newInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
                                     JOptionPane.ERROR_MESSAGE);
@@ -249,7 +254,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         }
                         if (badJson2) {
                             String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ modificationAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if modificationAchievable is false?";
-                            Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                            Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                             if (fixInquiry.getError() != null) {
                                 JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
                                         JOptionPane.ERROR_MESSAGE);
@@ -275,7 +280,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     String filePath = utilizedFilePaths.get(i);
                     code = codeMap.get(filePath);
                     String modificationForThisFile = "The modifications that need to be applied to this code to achieve the above modification: (" + modification + ")";
-                    DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modificationForThisFile, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                    DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modificationForThisFile, ModificationType.MODIFY, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
                     DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
                     if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                         fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
@@ -313,7 +318,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 for (String filePath : filesToProcess) {
                     String fileCode = codeMap.get(filePath);
                     String question = "Analyze this code: \"" + fileCode + "\" at " + filePath + "\". Does this file need to be changed in order to fulfill the requested modification: \"" + modification + "\"  Yes or No? Please provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\".";
-                    Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                    Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                     if (finalInquiry.getError() != null) {
                         JOptionPane.showMessageDialog(null, finalInquiry.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -321,7 +326,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     }
                     InquiryChat latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
                     if (latestInquiryChat.getMessage() == null) {
-                        finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                        finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                         if (finalInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, finalInquiry.getError(), "Error",
                                     JOptionPane.ERROR_MESSAGE);
@@ -343,7 +348,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     }
                     if (badJson2) {
                         String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\"?";
-                        Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                        Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                         if (fixInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
                                     JOptionPane.ERROR_MESSAGE);
@@ -355,7 +360,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     }
                     if (modificationNeededResponse.isModificationNeeded()) {
                         String modificationForThisFile = "The modifications that need to be applied to this code to achieve this modification: (" + modification + ")";
-                        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, fileCode, modificationForThisFile, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
+                        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, fileCode, modificationForThisFile, ModificationType.MODIFY, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>());
                         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
                         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                             fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
@@ -383,7 +388,8 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
 
     @Override
     public void fixCodeFiles(List<String> filePaths, String error, List<HistoricalContextObjectHolder> priorContext) throws InterruptedException {
-        String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
+        String model = openAiModelService.getSelectedOpenAiModel();
+        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(error);
         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/4) Ranking File Modification Likelihood");
         Map<String, Double> filePathPercentageMap = new HashMap<>();
@@ -426,7 +432,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     if (modificationIdMap.containsKey(filePath)) {
                         String code = codeMap.get(filePath);
                         String question = "I'm having the following problem/error with my program: \"" + error + "\". First things first, what is the percentage likelihood that this specific code file has anything to do with this error and/or will needed to be modified to fix the above error?: \"" + code + "\". Please provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0";
-                        Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                        Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                         if (newInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
                                     JOptionPane.ERROR_MESSAGE);
@@ -449,7 +455,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                             }
                             if (badJson) {
                                 String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0?";
-                                Inquiry fixInquiry = inquiryDao.continueInquiry(latestInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                                Inquiry fixInquiry = inquiryDao.continueInquiry(latestInquiryChat.getId(), fixQuestion, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                                 if (fixInquiry.getError() != null) {
                                     JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
                                             JOptionPane.ERROR_MESSAGE);
@@ -488,7 +494,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 String initialFilePath = sortedFilePaths.get(0);
                 String code = codeMap.get(initialFilePath);
                 String initialQuestion = "I'm having the following problem/error with my program: \"" + error + "\". First things first, Yes or No: Will you be able to fix this problem/error solely by changing the code I provide here at " + sortedFilePaths.get(0) + "?: \"" + code + "\". Please provide the answer in the following JSON format: \"{ fixAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if fixAchievable is false.";
-                Inquiry newInquiry = inquiryDao.createGeneralInquiry(initialQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                Inquiry newInquiry = inquiryDao.createGeneralInquiry(initialQuestion, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 if (newInquiry.getError() != null) {
                     JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
                             JOptionPane.ERROR_MESSAGE);
@@ -508,7 +514,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 }
                 if (badJson) {
                     String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ likelihoodPercentage: Float!, reasoning: String }\" where likelihoodPercentage is from 0 to 100.0?";
-                    Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                    Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                     if (fixInquiry.getError() != null) {
                         JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -529,7 +535,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         String filePath = sortedFilePaths.get(i);
                         code = codeMap.get(filePath);
                         String question = "What about if I add this code at " + filePath + " to that condition: \"" + code + "\". Could I achieve implementing the entire modification now? Yes or No? Please provide the answer in the following JSON format: \"{ fixAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if fixAchievable is false.";
-                        newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), question, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                        newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                         if (newInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
                                     JOptionPane.ERROR_MESSAGE);
@@ -549,7 +555,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         }
                         if (badJson2) {
                             String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ fixAchievable: Boolean!, reasoning: String }\" where reasoning is only optionally required if fixAchievable is false?";
-                            Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                            Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                             if (fixInquiry.getError() != null) {
                                 JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
                                         JOptionPane.ERROR_MESSAGE);
@@ -574,7 +580,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 for (int i = 0; i < utilizedFilePaths.size(); i++) {
                     String filePath = utilizedFilePaths.get(i);
                     code = codeMap.get(filePath);
-                    DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+                    DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, ModificationType.MODIFY, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
                     DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
                     if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                         fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
@@ -612,7 +618,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                 for (String filePath : filesToProcess) {
                     String fileCode = codeMap.get(filePath);
                     String question = "Analyze this code: \"" + fileCode + "\" at " + filePath + "\". Does this file need to be changed in order to fix the above error/problem: \"" + error + "\"  Yes or No? Please provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\".";
-                    Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                    Inquiry finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                     if (finalInquiry.getError() != null) {
                         JOptionPane.showMessageDialog(null, finalInquiry.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -620,7 +626,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     }
                     InquiryChat latestInquiryChat = finalInquiry.getChats().get(finalInquiry.getChats().size() - 1);
                     if (latestInquiryChat.getMessage() == null) {
-                        finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                        finalInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), modificationsPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                         if (finalInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, finalInquiry.getError(), "Error",
                                     JOptionPane.ERROR_MESSAGE);
@@ -642,7 +648,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     }
                     if (badJson2) {
                         String fixQuestion = "I wasn't able to parse that Json response. Could you provide the answer in the following JSON format: \"{ modificationNeeded: Boolean!, reasoning: String }\"?";
-                        Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, openAiModelService.getSelectedOpenAiModel());
+                        Inquiry fixInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat.getId(), fixQuestion, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                         if (fixInquiry.getError() != null) {
                             JOptionPane.showMessageDialog(null, fixInquiry.getError(), "Error",
                                     JOptionPane.ERROR_MESSAGE);
@@ -653,7 +659,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                         modificationNeededResponse = gson.fromJson(fixJson, ModificationNeededResponse.class);
                     }
                     if (modificationNeededResponse.isModificationNeeded()) {
-                        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, fileCode, error, ModificationType.MODIFY, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
+                        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, fileCode, error, ModificationType.MODIFY, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>());
                         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
                         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                             fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());

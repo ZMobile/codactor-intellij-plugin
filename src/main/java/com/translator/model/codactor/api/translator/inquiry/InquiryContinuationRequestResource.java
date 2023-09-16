@@ -11,6 +11,9 @@ public class InquiryContinuationRequestResource {
         private String question;
         private String openAiApiKey;
         private String model;
+        private boolean azure;
+        private String azureResource;
+        private String azureDeployment;
         private List<ChatGptFunction> functions;
 
         public Builder withPreviousInquiryChatId(String previousInquiryChatId) {
@@ -33,13 +36,28 @@ public class InquiryContinuationRequestResource {
             return this;
         }
 
+        public Builder withAzure(boolean azure) {
+            this.azure = azure;
+            return this;
+        }
+
+        public Builder withAzureResource(String azureResource) {
+            this.azureResource = azureResource;
+            return this;
+        }
+
+        public Builder withAzureDeployment(String azureDeployment) {
+            this.azureDeployment = azureDeployment;
+            return this;
+        }
+
         public Builder withFunctions(List<ChatGptFunction> functions) {
             this.functions = functions;
             return this;
         }
 
         public InquiryContinuationRequestResource build() {
-            return new InquiryContinuationRequestResource(previousInquiryChatId, question, openAiApiKey, model, functions);
+            return new InquiryContinuationRequestResource(previousInquiryChatId, question, openAiApiKey, model, azure, azureResource, azureDeployment, functions);
         }
     }
 
@@ -47,17 +65,26 @@ public class InquiryContinuationRequestResource {
     private String question;
     private String openAiApiKey;
     private String model;
+    private boolean azure;
+    private String azureResource;
+    private String azureDeployment;
     private List<ChatGptFunction> functions;
 
     public InquiryContinuationRequestResource(String previousInquiryChatId,
                                               String question,
                                               String openAiApiKey,
                                               String model,
+                                              boolean azure,
+                                              String azureResource,
+                                              String azureDeployment,
                                               List<ChatGptFunction> functions) {
         this.previousInquiryChatId = previousInquiryChatId;
         this.question = question;
         this.openAiApiKey = openAiApiKey;
         this.model = model;
+        this.azure = azure;
+        this.azureResource = azureResource;
+        this.azureDeployment = azureDeployment;
         this.functions = functions;
     }
 

@@ -12,23 +12,23 @@ public interface InquiryDao {
 
     Inquiry getInquiry(String inquiryId);
 
-    Inquiry createInquiry(String subjectRecordId, RecordType recordType, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, String systemMessage);
+    Inquiry createInquiry(String subjectRecordId, RecordType recordType, String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<HistoricalContextObjectHolder> priorContext, String systemMessage);
 
-    Inquiry createInquiry(String subjectRecordId, RecordType recordType, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions, String systemMessage);
+    Inquiry createInquiry(String subjectRecordId, RecordType recordType, String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions, String systemMessage);
 
-    Inquiry createInquiry(String filePath, String code, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, String systemMessage);
+    Inquiry createInquiry(String filePath, String code, String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<HistoricalContextObjectHolder> priorContext, String systemMessage);
 
-    Inquiry createInquiry(String filePath, String code, String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions, String systemMessage);
+    Inquiry createInquiry(String filePath, String code, String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions, String systemMessage);
 
-    Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, String systemMessage);
+    Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, String systemMessage);
 
-    Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, String systemMessage);
+    Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<HistoricalContextObjectHolder> priorContext, String systemMessage);
 
-    Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions, String systemMessage);
+    Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, boolean azure,  String azureResource, String azureDeployment,List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions, String systemMessage);
 
-    Inquiry continueInquiry(String previousInquiryChatId, String question, String openAiApiKey, String model);
+    Inquiry continueInquiry(String previousInquiryChatId, String question, String openAiApiKey, String model, boolean azure,  String azureResource, String azureDeployment);
 
-    Inquiry continueInquiry(String previousInquiryChatId, String question, String openAiApiKey, String model, List<ChatGptFunction> functions);
+    Inquiry continueInquiry(String previousInquiryChatId, String question, String openAiApiKey, String model, boolean azure,  String azureResource, String azureDeployment,List<ChatGptFunction> functions);
 
-    Inquiry respondToFunctionCall(String previousInquiryChatId, String functionName, String content, String openAiApiKey, String model, List<ChatGptFunction> functions);
+    Inquiry respondToFunctionCall(String previousInquiryChatId, String functionName, String content, String openAiApiKey, String model, boolean azure,  String azureResource, String azureDeployment,List<ChatGptFunction> functions);
 }
