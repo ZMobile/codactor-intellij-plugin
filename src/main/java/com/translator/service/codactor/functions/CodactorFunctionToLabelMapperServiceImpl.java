@@ -38,7 +38,7 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
         } else if (functionCall.getName().equals("read_file_at_path")) {
             String filePath = JsonExtractorService.extractField(functionCall.getArguments(), "path");
             return "Reading file at " + filePath + "...";
-        } else if (functionCall.getName().equals("open_file_at_path_in_editor")) {
+        } else if (functionCall.getName().equals("open_file_at_path_for_user")) {
             String filePath = JsonExtractorService.extractField(functionCall.getArguments(), "path");
             return "Opening file at " + filePath + "...";
         } else if (functionCall.getName().equals("read_file_at_package")) {

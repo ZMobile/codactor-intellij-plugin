@@ -11,7 +11,6 @@
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="h.zante2011@gmail.com" url="https://www.codactor.com">
         Codactor</vendor>
-
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
@@ -26,6 +25,7 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="com.translator.service.codactor.settings.CodactorSettings"/>
         <applicationService serviceImplementation="com.translator.CodactorInjector"/>
         <projectService serviceImplementation="com.translator.listener.ProjectManagerListenerImpl"/>
         <toolWindow
@@ -137,6 +137,7 @@
         </action>
     </actions>
     <extensions defaultExtensionNs="com.intellij">
+        <applicationConfigurable instance="com.translator.service.codactor.settings.CodactorConfigurable"/>
         <fileEditorProvider
                 implementation="com.translator.view.uml.editor.CodactorUmlBuilderSVGEditorProvider"/>
     </extensions>

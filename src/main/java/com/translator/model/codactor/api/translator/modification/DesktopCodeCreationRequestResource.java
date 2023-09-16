@@ -10,17 +10,21 @@ public class DesktopCodeCreationRequestResource {
     private String description;
     private String openAiApiKey;
     private String model;
+    private boolean azure;
     private List<HistoricalContextObjectHolder> priorContext;
+    private String overrideCode;
 
     public DesktopCodeCreationRequestResource(String filePath,
                                               String description,
                                               String openAiApiKey,
                                               String model,
+                                              boolean azure,
                                               List<HistoricalContextObjectHolder> priorContext) {
         this.filePath = filePath;
         this.description = description;
         this.openAiApiKey = openAiApiKey;
         this.model = model;
+        this.azure = azure;
         this.priorContext = priorContext;
     }
 
@@ -56,11 +60,27 @@ public class DesktopCodeCreationRequestResource {
         this.openAiApiKey = openAiApiKey;
     }
 
+    public boolean isAzure() {
+        return azure;
+    }
+
+    public void setAzure(boolean azure) {
+        this.azure = azure;
+    }
+
     public String getModel() {
         return model;
     }
 
     public void setModel(String model) {
         this.model = model;
+    }
+
+    public String getOverrideCode() {
+        return overrideCode;
+    }
+
+    public void setOverrideCode(String overrideCode) {
+        this.overrideCode = overrideCode;
     }
 }

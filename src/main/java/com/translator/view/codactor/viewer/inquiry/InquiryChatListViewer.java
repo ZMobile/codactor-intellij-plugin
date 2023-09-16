@@ -118,7 +118,7 @@ public class InquiryChatListViewer extends JPanel {
         inquiryChatList.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 InquiryChatViewer inquiryChatViewer = null;
-                if (e.getButton() == MouseEvent.BUTTON3) {
+                if (e.getButton() == MouseEvent.BUTTON3|| e.isControlDown() || e.isMetaDown()) {
                     inquiryChatViewer = inquiryChatList.getModel().getElementAt(inquiryChatList.locationToIndex(e.getPoint()));
                     int selectedIndex = inquiryChatList.locationToIndex(e.getPoint());
                     inquiryChatList.setSelectedIndex(selectedIndex);

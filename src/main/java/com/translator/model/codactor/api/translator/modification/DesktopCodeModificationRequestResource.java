@@ -14,7 +14,9 @@ public class DesktopCodeModificationRequestResource {
     private ModificationType modificationType;
     private String openAiApiKey;
     private String model;
+    private boolean azure;
     private List<HistoricalContextObjectHolder> priorContext;
+    private String overrideCode;
 
     public DesktopCodeModificationRequestResource(String filePath,
                                                   String code,
@@ -22,6 +24,7 @@ public class DesktopCodeModificationRequestResource {
                                                   ModificationType modificationType,
                                                   String openAiApiKey,
                                                   String model,
+                                                  boolean azure,
                                                   List<HistoricalContextObjectHolder> priorContext) {
         this.filePath = filePath;
         this.code = code;
@@ -29,8 +32,28 @@ public class DesktopCodeModificationRequestResource {
         this.modificationType = modificationType;
         this.openAiApiKey = openAiApiKey;
         this.model = model;
+        this.azure = azure;
         this.priorContext = priorContext;
     }
+
+    public DesktopCodeModificationRequestResource(String filePath,
+                                                 String code,
+                                                 String modification,
+                                                 ModificationType modificationType,
+                                                 String openAiApiKey,
+                                                 String model,
+                                                 boolean azure,
+                                                 String overrideCode) {
+        this.filePath = filePath;
+        this.code = code;
+        this.modification = modification;
+        this.modificationType = modificationType;
+        this.openAiApiKey = openAiApiKey;
+        this.model = model;
+        this.azure = azure;
+        this.overrideCode = overrideCode;
+    }
+
 
     public DesktopCodeModificationRequestResource(String filePath,
                                                   String suggestionId,
@@ -39,6 +62,7 @@ public class DesktopCodeModificationRequestResource {
                                                   ModificationType modificationType,
                                                   String openAiApiKey,
                                                   String model,
+                                                  boolean azure,
                                                   List<HistoricalContextObjectHolder> priorContext) {
         this.filePath = filePath;
         this.suggestionId = suggestionId;
@@ -47,6 +71,7 @@ public class DesktopCodeModificationRequestResource {
         this.modificationType = modificationType;
         this.openAiApiKey = openAiApiKey;
         this.model = model;
+        this.azure = azure;
         this.priorContext = priorContext;
     }
 

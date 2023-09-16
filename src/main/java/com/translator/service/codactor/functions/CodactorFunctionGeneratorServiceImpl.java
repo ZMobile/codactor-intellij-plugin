@@ -37,12 +37,12 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         ChatGptFunction readFileAtPath = new ChatGptFunction("read_file_at_path", "Read the contents of a code or text file given its path", readFileAtPathParams);
         codactorFunctions.add(readFileAtPath);
 
-        // Create ChatGptFunction for "open_file_at_path_in_editor"
+        // Create ChatGptFunction for "open_file_at_path_for_user"
         Parameters openFileAtPathInEditorParams = new Parameters("object");
         openFileAtPathInEditorParams.getProperties().put("path", pathProperty);
         openFileAtPathInEditorParams.getRequired().add("path");
 
-        ChatGptFunction openFileAtPathInEditor = new ChatGptFunction("open_file_at_path_in_editor", "Open a code file in the Intellij code editor given its path", openFileAtPathInEditorParams);
+        ChatGptFunction openFileAtPathInEditor = new ChatGptFunction("open_file_at_path_for_user", "Open a code file in the Intellij code editor given its path", openFileAtPathInEditorParams);
         codactorFunctions.add(openFileAtPathInEditor);
 
         // Create ChatGptFunction for "read_file_at_package"

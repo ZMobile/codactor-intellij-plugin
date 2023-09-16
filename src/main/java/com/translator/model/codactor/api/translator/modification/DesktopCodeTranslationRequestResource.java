@@ -11,7 +11,9 @@ public class DesktopCodeTranslationRequestResource {
     private String newFileType;
     private String openAiApiKey;
     private String model;
+    private boolean azure;
     private List<HistoricalContextObjectHolder> priorContext;
+    private String overrideCode;
 
     public DesktopCodeTranslationRequestResource(String filePath,
                                                  String code,
@@ -19,6 +21,7 @@ public class DesktopCodeTranslationRequestResource {
                                                  String newFileType,
                                                  String openAiApiKey,
                                                  String model,
+                                                 boolean azure,
                                                  List<HistoricalContextObjectHolder> priorContext) {
         this.filePath = filePath;
         this.code = code;
@@ -26,6 +29,7 @@ public class DesktopCodeTranslationRequestResource {
         this.newFileType = newFileType;
         this.openAiApiKey = openAiApiKey;
         this.model = model;
+        this.azure = azure;
         this.priorContext = priorContext;
     }
 
@@ -77,11 +81,27 @@ public class DesktopCodeTranslationRequestResource {
         this.model = model;
     }
 
+    public boolean isAzure() {
+        return azure;
+    }
+
+    public void setAzure(boolean azure) {
+        this.azure = azure;
+    }
+
     public List<HistoricalContextObjectHolder> getPriorContext() {
         return priorContext;
     }
 
     public void setPriorContext(List<HistoricalContextObjectHolder> priorContext) {
         this.priorContext = priorContext;
+    }
+
+    public String getOverrideCode() {
+        return overrideCode;
+    }
+
+    public void setOverrideCode(String overrideCode) {
+        this.overrideCode = overrideCode;
     }
 }

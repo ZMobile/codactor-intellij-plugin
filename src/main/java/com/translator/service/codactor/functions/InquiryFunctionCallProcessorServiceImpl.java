@@ -137,8 +137,10 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                     contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
                 }
                 if (content == null) {
+                    System.out.println("This gets called: " + packageName);
                     contentMap.put("content",  fileDirectoryStructureQueryService.getDirectoryStructureAsJson(virtualFile.getPath(), 1));
                 } else {
+                    System.out.println("This gets called error: " + content);
                     contentMap.put("content", content);
                 }
                 return gson.toJson(contentMap);
@@ -166,7 +168,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 contentMap.put("content", content);
             }
             return gson.toJson(contentMap);
-        } else if (chatGptFunctionCall.getName().equals("open_file_at_path_in_editor")) {
+        } else if (chatGptFunctionCall.getName().equals("open_file_at_path_for_user")) {
             String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
             fileOpenerService.openFileInEditor(filePath);
             return "File opened in editor.";

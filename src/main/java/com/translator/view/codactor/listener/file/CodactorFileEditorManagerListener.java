@@ -5,14 +5,18 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.fileEditor.ex.FileEditorWithProvider;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.translator.model.codactor.file.FileItem;
 import com.translator.service.codactor.file.SelectedFileFetcherService;
 import com.translator.view.uml.editor.CodactorUmlBuilderSVGEditor;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,9 +34,7 @@ public class CodactorFileEditorManagerListener implements FileEditorManagerListe
     @Override
     public void fileOpenedSync(@NotNull FileEditorManager source, @NotNull VirtualFile file, @NotNull Pair<FileEditor[], FileEditorProvider[]> editors) {
         FileEditorManagerListener.super.fileOpenedSync(source, file, editors);
-        System.out.println("This gets called 1");
-        if (file.getExtension().equals("svg")) {
-            System.out.println("This gets called 3");
+        if (file.getExtension() != null && file.getExtension().equals("svg")) {
             if (editors != null) {
                 for (FileEditor fileEditor : editors.getFirst()) {
                     if (fileEditor instanceof CodactorUmlBuilderSVGEditor) {
@@ -47,12 +49,9 @@ public class CodactorFileEditorManagerListener implements FileEditorManagerListe
     @Override
     public void fileOpenedSync(@NotNull FileEditorManager source, @NotNull VirtualFile file, @NotNull List<FileEditorWithProvider> editorsWithProviders) {
         FileEditorManagerListener.super.fileOpenedSync(source, file, editorsWithProviders);
-        System.out.println("This gets called 2: " + file.getExtension());
-        if (Objects.equals(file.getExtension(), "svg")) {
-            System.out.println("This gets called too");
+        if (file.getExtension() != null && Objects.equals(file.getExtension(), "svg")) {
             for (FileEditorWithProvider fileEditorWithProvider : editorsWithProviders) {
                 if (fileEditorWithProvider.getFileEditor() instanceof CodactorUmlBuilderSVGEditor) {
-                    System.out.println("This gets called three");
                     CodactorUmlBuilderSVGEditor codactorUmlBuilderSVGEditor = (CodactorUmlBuilderSVGEditor) fileEditorWithProvider.getFileEditor();
                     //codactorUmlBuilderSVGEditor.activateView();
                 }
@@ -67,20 +66,25 @@ public class CodactorFileEditorManagerListener implements FileEditorManagerListe
         VirtualFile[] openFiles = selectedFileFetcherService.getOpenFiles();
         fileComboBox.setVisible(
                 (selectedFiles != null && selectedFiles.length > 1)
-                        || (openFiles != null && openFiles.length > 1));fileComboBox.removeAllItems();
+                        || (openFiles != null && openFiles.length > 1));
+        fileComboBox.removeAllItems();
         VirtualFile currentlyOpenFile = getSelectedFile();
         if (currentlyOpenFile != null) {
             fileComboBox.addItem(new FileItem(currentlyOpenFile.getPath()));
+            assert selectedFiles != null;
             if (selectedFiles.length > 1) {
                 for (VirtualFile selectedFile : selectedFiles) {
                     if (!selectedFile.equals(currentlyOpenFile)) {
                         fileComboBox.addItem(new FileItem(selectedFile.getPath()));
                     }
                 }
-            } else if (openFiles.length > 1) {
-                for (VirtualFile openFile : openFiles) {
-                    if (!openFile.equals(currentlyOpenFile)) {
-                        fileComboBox.addItem(new FileItem(openFile.getPath()));
+            } else {
+                assert openFiles != null;
+                if (openFiles.length > 1) {
+                    for (VirtualFile openFile : openFiles) {
+                        if (!openFile.equals(currentlyOpenFile)) {
+                            fileComboBox.addItem(new FileItem(openFile.getPath()));
+                        }
                     }
                 }
             }
@@ -161,6 +165,15 @@ public class CodactorFileEditorManagerListener implements FileEditorManagerListe
             Document document = editor.getDocument();
             return FileDocumentManager.getInstance().getFile(document);
         }
+
+        // Handle .form files
+        if(ProjectRootManager.getInstance(project).getFileIndex().isInSource(fileEditorManager.getSelectedFiles()[0])) {
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(fileEditorManager.getSelectedFiles()[0]);
+            if(psiFile != null) {
+                return psiFile.getVirtualFile();
+            }
+        }
         return null;
     }
+
 }

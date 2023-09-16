@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 
 import javax.inject.Inject;
+import java.util.Arrays;
 
 public class SelectedFileFetcherServiceImpl implements SelectedFileFetcherService {
     private final Project project;

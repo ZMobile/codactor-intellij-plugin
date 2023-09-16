@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.codactor"
-version = "2.5-BETA-AzureTest10"
+version = "2.5-BETA-AzureTest17"
 
 repositories {
     mavenCentral()
@@ -31,7 +31,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("221")
-        untilBuild.set("231.*")
+        untilBuild.set("232.*");
     }
 
     signPlugin {

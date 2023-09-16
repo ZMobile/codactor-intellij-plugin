@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorService {
+
     private final Project project;
     private final InquiryDao inquiryDao;
     private final CodeModificationService codeModificationService;

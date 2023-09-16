@@ -8,6 +8,8 @@ import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.modification.*;
 import com.translator.model.codactor.task.CancellableRunnable;
 import com.translator.model.codactor.task.CustomBackgroundTask;
+import com.translator.service.codactor.account.AccountService;
+import com.translator.service.codactor.connection.CodactorConnectionService;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
@@ -23,6 +25,7 @@ import java.util.List;
 
 public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModificationService {
     private Project project;
+    private AccountService accountService;
     private FirebaseTokenService firebaseTokenService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
     private FileModificationTrackerService fileModificationTrackerService;
@@ -31,10 +34,12 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     private CodeModificationService codeModificationService;
     private BackgroundTaskMapperService backgroundTaskMapperService;
     private FileModificationRestarterService fileModificationRestarterService;
+    private CodactorConnectionService codactorConnectionService;
     private FileModificationErrorDialogFactory fileModificationErrorDialogFactory;
 
     @Inject
     public AutomaticCodeModificationServiceImpl(Project project,
+                                                AccountService accountService,
                                                 FirebaseTokenService firebaseTokenService,
                                                 CodeSnippetExtractorService codeSnippetExtractorService,
                                                 FileModificationTrackerService fileModificationTrackerService,
@@ -43,6 +48,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
                                                 CodeModificationService codeModificationService,
                                                 BackgroundTaskMapperService backgroundTaskMapperService,
                                                 FileModificationRestarterService fileModificationRestarterService,
+                                                CodactorConnectionService codactorConnectionService,
                                                 FileModificationErrorDialogFactory fileModificationErrorDialogFactory) {
         this.project = project;
         this.firebaseTokenService = firebaseTokenService;
@@ -53,13 +59,14 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         this.codeModificationService = codeModificationService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
         this.fileModificationRestarterService = fileModificationRestarterService;
+        this.codactorConnectionService = codactorConnectionService;
         this.fileModificationErrorDialogFactory = fileModificationErrorDialogFactory;
     }
 
     @Override
     public void getModifiedCode(String filePath, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -68,7 +75,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String modificationId = fileModificationTrackerService.addModification(filePath, modification, startIndex, endIndex, modificationType, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                 fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
@@ -93,7 +100,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getModifiedCodeAndWait(String filePath, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -101,7 +108,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
         String modificationId = fileModificationTrackerService.addModification(filePath, modification, startIndex, endIndex, modificationType, priorContext);
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
             fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
@@ -120,7 +127,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getModifiedCode(String filePath, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -129,7 +136,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String modificationId = fileModificationTrackerService.addModification(filePath, modification, 0, code.length(), modificationType, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                 fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
@@ -154,7 +161,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getModifiedCodeAndWait(String filePath, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -162,7 +169,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String code = codeSnippetExtractorService.getAllText(filePath);
         String modificationId = fileModificationTrackerService.addModification(filePath, modification, 0, code.length(), modificationType, priorContext);
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
             fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
@@ -181,7 +188,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getModifiedCodeModification(String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -190,7 +197,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), suggestionId, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), suggestionId, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
             FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeModification(desktopCodeModificationRequestResource);
             if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
                 fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
@@ -216,7 +223,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getFixedCode(String filePath, int startIndex, int endIndex, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -225,7 +232,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String modificationId = fileModificationTrackerService.addModification(filePath, error, startIndex, endIndex, modificationType, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                 fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
@@ -250,7 +257,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getFixedCodeAndWait(String filePath, int startIndex, int endIndex, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -258,7 +265,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
         String modificationId = fileModificationTrackerService.addModification(filePath, error, startIndex, endIndex, modificationType, priorContext);
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
             fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
@@ -277,7 +284,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getFixedCode(String filePath, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -286,7 +293,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String modificationId = fileModificationTrackerService.addModification(filePath, error, 0, code.length(), modificationType, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                 fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
@@ -311,7 +318,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getFixedCodeAndWait(String filePath, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -319,7 +326,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String code = codeSnippetExtractorService.getAllText(filePath);
         String modificationId = fileModificationTrackerService.addModification(filePath, error, 0, code.length(), modificationType, priorContext);
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+        DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
             fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
@@ -338,7 +345,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getModifiedCodeFix(String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -347,7 +354,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), suggestionId, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), suggestionId, code, modification, modificationType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
             FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeFix(desktopCodeModificationRequestResource);
             if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
                 fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
@@ -373,7 +380,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getCreatedCode(String filePath, String description, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -381,7 +388,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
             DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
             if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
                 fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
@@ -406,14 +413,14 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getCreatedCodeAndWait(String filePath, String description, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
         }
         String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-        DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+        DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
             fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
@@ -432,7 +439,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getDeletedCodeFile(String filePath) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -449,7 +456,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getCreatedCodeFile(String filePath, String description) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -459,7 +466,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         fileModification.setFileCreationAtFilePathOnAcceptance(true);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
+            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), new ArrayList<>());
             DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
             if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
                 fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
@@ -484,14 +491,14 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getCreatedCodeFileAndWait(String filePath, String description) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
         }
         String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, new ArrayList<>());
         String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-        DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), new ArrayList<>());
+        DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), new ArrayList<>());
         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
             fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
@@ -510,7 +517,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void createAndImplementCode(String filePath, String description, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -518,7 +525,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
             DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
             if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
                 fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), false);
@@ -543,7 +550,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getModifiedCodeCreation(String suggestionId, int startIndex, int endIndex, String description, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -552,7 +559,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, ModificationType.CREATE);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(fileModificationSuggestion.getFilePath(), description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(fileModificationSuggestion.getFilePath(), description, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
             FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationService.getModifiedCodeCreation(desktopCodeCreationRequestResource);
             if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
                 fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
@@ -577,7 +584,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
     @Override
     public void getTranslatedCode(String filePath, String newLanguage, String newFileType, List<HistoricalContextObjectHolder> priorContext) {
         if (firebaseTokenService.getFirebaseToken() == null) {
-            LoginDialog loginDialog = new LoginDialog(firebaseTokenService);
+            LoginDialog loginDialog = new LoginDialog(accountService);
             if (firebaseTokenService.getFirebaseToken() == null) {
                 return;
             }
@@ -589,7 +596,7 @@ public class AutomaticCodeModificationServiceImpl implements AutomaticCodeModifi
         fileModification.setNewFileType(newFileType);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey = openAiApiKeyService.getOpenAiApiKey();
-            DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(filePath, code, newLanguage, newFileType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), priorContext);
+            DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(filePath, code, newLanguage, newFileType, openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), priorContext);
             DesktopCodeTranslationResponseResource desktopCodeTranslationResponseResource = codeModificationService.getTranslatedCode(desktopCodeTranslationRequestResource);
             if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null && desktopCodeTranslationResponseResource.getModificationSuggestions().size() > 0) {
                 fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeTranslationResponseResource.getSubjectLine(), desktopCodeTranslationResponseResource.getModificationSuggestions());

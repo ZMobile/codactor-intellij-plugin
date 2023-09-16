@@ -121,6 +121,11 @@ public class InquiryServiceImpl implements InquiryService {
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
                 Inquiry inquiry = inquiryDao.createInquiry(filePath, code, question, openAiApiKey, model, priorContext, functions, systemMessage);
+                if (inquiry == null) {
+                    JOptionPane.showMessageDialog(null, "Error creating inquiry", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 if (inquiry.getError() != null) {
                     JOptionPane.showMessageDialog(null, inquiry.getError(), "Error",
                             JOptionPane.ERROR_MESSAGE);

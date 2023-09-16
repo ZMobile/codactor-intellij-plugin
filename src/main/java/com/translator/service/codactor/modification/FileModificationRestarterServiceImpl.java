@@ -10,6 +10,7 @@ import com.translator.model.codactor.modification.FileModificationSuggestionReco
 import com.translator.model.codactor.modification.ModificationType;
 import com.translator.model.codactor.task.CancellableRunnable;
 import com.translator.model.codactor.task.CustomBackgroundTask;
+import com.translator.service.codactor.connection.CodactorConnectionService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.openai.OpenAiApiKeyService;
 import com.translator.service.codactor.openai.OpenAiModelService;
@@ -28,6 +29,7 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
     private final OpenAiModelService openAiModelService;
     private final CodeModificationService codeModificationService;
     private final BackgroundTaskMapperService backgroundTaskMapperService;
+    private final CodactorConnectionService codactorConnectionService;
     private final FileModificationErrorDialogFactory fileModificationErrorDialogFactory;
 
     @Inject
@@ -38,6 +40,7 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
                                                 OpenAiModelService openAiModelService,
                                                 CodeModificationService codeModificationService,
                                                 BackgroundTaskMapperService backgroundTaskMapperService,
+                                                CodactorConnectionService codactorConnectionService,
                                                 FileModificationErrorDialogFactory fileModificationErrorDialogFactory) {
         this.project = project;
         this.firebaseTokenService = firebaseTokenService;
@@ -46,6 +49,7 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
         this.openAiModelService = openAiModelService;
         this.codeModificationService = codeModificationService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
+        this.codactorConnectionService = codactorConnectionService;
         this.fileModificationErrorDialogFactory = fileModificationErrorDialogFactory;
     }
 
@@ -58,7 +62,7 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
             List<FileModificationSuggestionRecord> fileModificationSuggestionRecords = null;
             String error = null;
             if (fileModification.getModificationType() == ModificationType.MODIFY || fileModification.getModificationType() == ModificationType.MODIFY_SELECTION) {
-                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getModification(), fileModification.getModificationType(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), fileModification.getPriorContext());
+                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getModification(), fileModification.getModificationType(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), fileModification.getPriorContext());
                 DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
                 if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                     fileModificationSuggestionRecords = desktopCodeModificationResponseResource.getModificationSuggestions();
@@ -66,25 +70,25 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
                     error = desktopCodeModificationResponseResource.getError();
                 }
             } else if (fileModification.getModificationType() == ModificationType.FIX || fileModification.getModificationType() == ModificationType.FIX_SELECTION) {
-                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getModification(), fileModification.getModificationType(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), fileModification.getPriorContext());
+                DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getModification(), fileModification.getModificationType(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), fileModification.getPriorContext());
                 DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
-                if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
+                if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
                     fileModificationSuggestionRecords = desktopCodeModificationResponseResource.getModificationSuggestions();
                 } else {
                     error = desktopCodeModificationResponseResource.getError();
                 }
             } else if (fileModification.getModificationType() == ModificationType.CREATE) {
-                DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(fileModification.getFilePath(), fileModification.getModification(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), fileModification.getPriorContext());
+                DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(fileModification.getFilePath(), fileModification.getModification(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), fileModification.getPriorContext());
                 DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
-                if (desktopCodeCreationResponseResource.getModificationSuggestions() != null && desktopCodeCreationResponseResource.getModificationSuggestions().size() > 0) {
+                if (desktopCodeCreationResponseResource.getModificationSuggestions() != null && !desktopCodeCreationResponseResource.getModificationSuggestions().isEmpty()) {
                     fileModificationSuggestionRecords = desktopCodeCreationResponseResource.getModificationSuggestions();
                 } else {
                     error = desktopCodeCreationResponseResource.getError();
                 }
             } else if (fileModification.getModificationType() == ModificationType.TRANSLATE) {
-                DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getNewLanguage(), fileModification.getNewFileType(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), fileModification.getPriorContext());
+                DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(fileModification.getFilePath(), fileModification.getBeforeText(), fileModification.getNewLanguage(), fileModification.getNewFileType(), openAiApiKey, openAiModelService.getSelectedOpenAiModel(), codactorConnectionService.isAzure(), fileModification.getPriorContext());
                 DesktopCodeTranslationResponseResource desktopCodeTranslationResponseResource = codeModificationService.getTranslatedCode(desktopCodeTranslationRequestResource);
-                if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null && desktopCodeTranslationResponseResource.getModificationSuggestions().size() > 0) {
+                if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null && !desktopCodeTranslationResponseResource.getModificationSuggestions().isEmpty()) {
                     fileModificationSuggestionRecords = desktopCodeTranslationResponseResource.getModificationSuggestions();
                 } else {
                     error = desktopCodeTranslationResponseResource.getError();

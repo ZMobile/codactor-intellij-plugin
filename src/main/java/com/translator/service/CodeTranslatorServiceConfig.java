@@ -8,6 +8,12 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.intellij.openapi.project.Project;
 import com.translator.dao.CodeTranslatorDaoConfig;
 import com.translator.dao.inquiry.InquiryDao;
+import com.translator.service.codactor.account.AccountService;
+import com.translator.service.codactor.account.AccountServiceImpl;
+import com.translator.service.codactor.connection.AzureConnectionService;
+import com.translator.service.codactor.connection.AzureConnectionServiceImpl;
+import com.translator.service.codactor.connection.CodactorConnectionService;
+import com.translator.service.codactor.connection.CodactorConnectionServiceImpl;
 import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.context.PromptContextServiceImpl;
 import com.translator.service.codactor.copy.DirectoryCopierService;
@@ -149,6 +155,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(SelectedFileViewerService.class).to(SelectedFileViewerServiceImpl.class);
         bind(FileModificationDataHolderJsonCompatibilityService.class).to(FileModificationDataHolderJsonCompatibilityServiceImpl.class);
         bind(InquiryViewerMapService.class).to(InquiryViewerMapServiceImpl.class).asEagerSingleton();
+        bind(AccountService.class).to(AccountServiceImpl.class).asEagerSingleton();
+        bind(CodactorConnectionService.class).to(CodactorConnectionServiceImpl.class).asEagerSingleton();
+        bind(AzureConnectionService.class).to(AzureConnectionServiceImpl.class).asEagerSingleton();
     }
 
     @Singleton
