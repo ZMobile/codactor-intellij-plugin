@@ -59,7 +59,12 @@ public class FileModificationRestarterServiceImpl implements FileModificationRes
         fileModificationTrackerService.undoReadyFileModification(fileModification.getId());
         fileModificationTrackerService.retryFileModification(fileModification.getId());
         CancellableRunnable task = customProgressIndicator -> {
-            String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            String openAiApiKey;
+            if (azureConnectionService.isAzureConnected()) {
+                openAiApiKey = azureConnectionService.getKey();
+            } else {
+                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            }
             List<FileModificationSuggestionRecord> fileModificationSuggestionRecords = null;
             String error = null;
             if (fileModification.getModificationType() == ModificationType.MODIFY || fileModification.getModificationType() == ModificationType.MODIFY_SELECTION) {

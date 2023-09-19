@@ -65,12 +65,9 @@ public class FirebaseTokenDaoImpl implements FirebaseTokenDao {
             if (firebaseAuthLoginResponseResource == null) {
                 return null;
             }
-            CredentialAttributes credentialAttributes = new CredentialAttributes("firebase_refresh_token", "user");
-            Credentials credentials = new Credentials("", firebaseAuthLoginResponseResource.getRefreshToken());
-            PasswordSafe.getInstance().set(credentialAttributes, credentials);
             return firebaseAuthLoginResponseResource;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            return new FirebaseAuthLoginResponseResource(e.getMessage());
         }
     }
 

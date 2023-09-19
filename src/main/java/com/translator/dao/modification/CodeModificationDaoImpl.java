@@ -30,7 +30,7 @@ public class CodeModificationDaoImpl implements CodeModificationDao {
     
     public DesktopCodeModificationResponseResource getModifiedCode(DesktopCodeModificationRequestResource desktopCodeModificationRequestResource) {
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/modify");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/modify");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -62,7 +62,7 @@ public class CodeModificationDaoImpl implements CodeModificationDao {
     @Override
     public FileModificationSuggestionModificationRecord getModifiedCodeModification(DesktopCodeModificationRequestResource desktopCodeModificationRequestResource) {
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/modify/suggestions");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/modify/suggestions");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -94,7 +94,7 @@ public class CodeModificationDaoImpl implements CodeModificationDao {
     @Override
     public DesktopCodeModificationResponseResource getFixedCode(DesktopCodeModificationRequestResource desktopCodeModificationRequestResource) {
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/fix");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/fix");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -126,7 +126,7 @@ public class CodeModificationDaoImpl implements CodeModificationDao {
     @Override
     public FileModificationSuggestionModificationRecord getModifiedCodeFix(DesktopCodeModificationRequestResource desktopCodeModificationRequestResource) {
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/fix/suggestions");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/fix/suggestions");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -158,7 +158,7 @@ public class CodeModificationDaoImpl implements CodeModificationDao {
     @Override
     public DesktopCodeCreationResponseResource getCreatedCode(DesktopCodeCreationRequestResource desktopCodeCreationRequestResource) {
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/create");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/create");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -190,7 +190,7 @@ public class CodeModificationDaoImpl implements CodeModificationDao {
     @Override
     public FileModificationSuggestionModificationRecord getModifiedCodeCreation(DesktopCodeCreationRequestResource desktopCodeCreationRequestResource) {
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/suggestions");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/suggestions");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -222,7 +222,7 @@ public class CodeModificationDaoImpl implements CodeModificationDao {
     @Override
     public DesktopCodeTranslationResponseResource getTranslatedCode(DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource) {
         try {
-        URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/translate");
+        URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/translate");
                         HttpURLConnection con = (HttpURLConnection) url.openConnection();
                         con.setRequestMethod("POST");
                         con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());

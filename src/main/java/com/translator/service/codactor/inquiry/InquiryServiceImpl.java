@@ -84,7 +84,12 @@ public class InquiryServiceImpl implements InquiryService {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 inquiryViewer.setLoadingChat(true);
-                String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+                String openAiApiKey;
+            if (azureConnectionService.isAzureConnected()) {
+                openAiApiKey = azureConnectionService.getKey();
+            } else {
+                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            }
                 List<ChatGptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
                 if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
@@ -117,7 +122,12 @@ public class InquiryServiceImpl implements InquiryService {
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Inquiry (CODE)", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
-                String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+                String openAiApiKey;
+            if (azureConnectionService.isAzureConnected()) {
+                openAiApiKey = azureConnectionService.getKey();
+            } else {
+                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            }
                 List<ChatGptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
                 if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
@@ -161,7 +171,12 @@ public class InquiryServiceImpl implements InquiryService {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 inquiryViewer.setLoadingChat(true);
-                String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+                String openAiApiKey;
+            if (azureConnectionService.isAzureConnected()) {
+                openAiApiKey = azureConnectionService.getKey();
+            } else {
+                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            }
                 List<ChatGptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
                 if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
@@ -206,7 +221,12 @@ public class InquiryServiceImpl implements InquiryService {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 inquiryViewer.setLoadingChat(true);
-                String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+                String openAiApiKey;
+            if (azureConnectionService.isAzureConnected()) {
+                openAiApiKey = azureConnectionService.getKey();
+            } else {
+                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            }
                 List<ChatGptFunction> functions = null;
                 if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();

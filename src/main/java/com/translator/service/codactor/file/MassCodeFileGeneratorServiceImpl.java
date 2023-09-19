@@ -1,5 +1,6 @@
 package com.translator.service.codactor.file;
 
+import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
@@ -20,6 +21,7 @@ import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.connection.DefaultConnectionService;
 import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.service.codactor.settings.CodactorConfigurable;
 import com.translator.view.codactor.dialog.OpenAiApiKeyDialog;
 import com.translator.worker.LimitedSwingWorker;
 import com.translator.worker.LimitedSwingWorkerExecutor;
@@ -73,7 +75,12 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
         } else {
             newFileExtension = fileExtension;
         }
-        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+        String openAiApiKey;
+            if (azureConnectionService.isAzureConnected()) {
+                openAiApiKey = azureConnectionService.getKey();
+            } else {
+                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            }
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(inquiry.getId(), language, fileExtension, filePath);
         Task.Backgroundable outerTask = new Task.Backgroundable(project, "Outer Task", true) {
             @Override
@@ -144,7 +151,8 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                             //}
                                         } else {
                                             if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                                                OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(defaultConnectionService);
+                                                CodactorConfigurable configurable = new CodactorConfigurable();
+                                                ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
                                             } else {
                                                 JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                         JOptionPane.ERROR_MESSAGE);
@@ -180,7 +188,12 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
         } else {
             newFileExtension = fileExtension;
         }
-        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+        String openAiApiKey;
+            if (azureConnectionService.isAzureConnected()) {
+                openAiApiKey = azureConnectionService.getKey();
+            } else {
+                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            }
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(inquiry.getId(), language, fileExtension, filePath);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Task", true) {
             @Override
@@ -268,7 +281,8 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         completedSuggestionIds.add(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getId());
                                     } else {
                                         if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                                            OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(defaultConnectionService);
+                                            CodactorConfigurable configurable = new CodactorConfigurable();
+            ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
                                         } else {
                                             JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                     JOptionPane.ERROR_MESSAGE);
@@ -305,7 +319,12 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
         } else {
             newFileExtension = fileExtension;
         }
-        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+        String openAiApiKey;
+            if (azureConnectionService.isAzureConnected()) {
+                openAiApiKey = azureConnectionService.getKey();
+            } else {
+                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            }
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(description, language, fileExtension, filePath);
         List<HistoricalContextObjectHolder> finalPriorContext = priorContext;
         LimitedSwingWorker worker = new LimitedSwingWorker(new LimitedSwingWorkerExecutor()) {
@@ -375,7 +394,8 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                             //}
                                         } else {
                                             if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                                                OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(defaultConnectionService);
+                                                CodactorConfigurable configurable = new CodactorConfigurable();
+            ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
                                             } else {
                                                 JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                         JOptionPane.ERROR_MESSAGE);
@@ -417,7 +437,12 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
         } else {
             newFileExtension = fileExtension;
         }
-        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+        String openAiApiKey;
+            if (azureConnectionService.isAzureConnected()) {
+                openAiApiKey = azureConnectionService.getKey();
+            } else {
+                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            }
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(description, language, fileExtension, filePath);
         List<HistoricalContextObjectHolder> finalPriorContext = priorContext;
         LimitedSwingWorker worker = new LimitedSwingWorker(new LimitedSwingWorkerExecutor()) {
@@ -498,7 +523,8 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         completedSuggestionIds.add(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getId());
                                     } else {
                                         if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
-                                            OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(defaultConnectionService);
+                                            CodactorConfigurable configurable = new CodactorConfigurable();
+            ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
                                         } else {
                                             JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                     JOptionPane.ERROR_MESSAGE);

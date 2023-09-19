@@ -6,6 +6,7 @@ public class FirebaseAuthLoginResponseResource {
     private String refreshToken;
     private String expiresIn;
     private String localId;
+    private String error;
 
     public FirebaseAuthLoginResponseResource(String idToken, String email, String refreshToken, String expiresIn, String localId) {
         this.idToken = idToken;
@@ -13,6 +14,18 @@ public class FirebaseAuthLoginResponseResource {
         this.refreshToken = refreshToken;
         this.expiresIn = expiresIn;
         this.localId = localId;
+    }
+
+    public FirebaseAuthLoginResponseResource(String error) {
+        this.error = error;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 
     public String getIdToken() {

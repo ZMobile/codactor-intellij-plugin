@@ -10,4 +10,8 @@ public interface FirebaseTokenService {
     boolean login(String email, String password);
 
     void logout();
+
+    String getLoggedInUser();
+
+    boolean isLoggedIn();
 }

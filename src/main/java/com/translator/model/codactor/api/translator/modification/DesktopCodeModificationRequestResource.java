@@ -145,6 +145,18 @@ public class DesktopCodeModificationRequestResource {
         this.model = model;
     }
 
+    public boolean isAzure() {
+        return azure;
+    }
+
+    public String getAzureResource() {
+        return azureResource;
+    }
+
+    public String getAzureDeployment() {
+        return azureDeployment;
+    }
+
     public List<HistoricalContextObjectHolder> getPriorContext() {
         return priorContext;
     }

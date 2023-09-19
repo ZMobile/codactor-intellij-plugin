@@ -107,7 +107,7 @@ public class InquiryDaoImpl implements InquiryDao {
             inquiryCreationRequestResource.setPriorContext(new ArrayList<>());
         }
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/inquiries/new");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -152,7 +152,7 @@ public class InquiryDaoImpl implements InquiryDao {
             inquiryCreationRequestResource.setPriorContext(new ArrayList<>());
         }
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/inquiries/new");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -193,7 +193,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withSystemMessage(systemMessage)
                 .build();
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/inquiries/new");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -235,7 +235,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withSystemMessage(systemMessage)
                 .build();
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/inquiries/new");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -285,7 +285,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withSystemMessage(systemMessage)
                 .build();
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/inquiries/new/general");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/new/general");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -328,7 +328,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withFunctions(functions)
                 .build();
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/inquiries/continue");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/continue");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());
@@ -369,7 +369,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withFunctions(functions)
                 .build();
         try {
-            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/azure/inquiries/continue/function");
+            URL url = new URL("https://api.codactor.com" + /*://localHost:8080*/ "/projects/desktop/inquiries/continue/function");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Authorization", firebaseTokenService.getFirebaseToken().getIdToken());

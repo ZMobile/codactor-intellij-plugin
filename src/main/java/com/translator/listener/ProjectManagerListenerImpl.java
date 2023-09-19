@@ -23,7 +23,6 @@ public class ProjectManagerListenerImpl implements ProjectManagerListener {
     @Override
     public void projectOpened(@NotNull Project project) {
         Injector injector = CodactorInjector.getInstance().getInjector(project);
-
         // Get the action manager instance
         ActionManager actionManager = ActionManager.getInstance();
 

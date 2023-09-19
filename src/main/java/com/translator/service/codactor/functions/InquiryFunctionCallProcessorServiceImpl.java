@@ -31,6 +31,7 @@ import com.translator.service.codactor.transformer.FileModificationObjectHolderT
 import com.translator.service.codactor.transformer.modification.FileModificationTrackerToFileModificationRangeDataTransformerService;
 import com.translator.service.util.SelectedFileViewerService;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -123,12 +124,17 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             if (virtualFile != null) {
                 String content;
                 Path path = Paths.get(virtualFile.getPath());
-                try {
-                    content = Files.readString(path, StandardCharsets.UTF_8);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
                 Map<String, Object> contentMap = new HashMap<>();
+                if (!virtualFile.isDirectory()) {
+                    try {
+                        content = Files.readString(path, StandardCharsets.UTF_8);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    contentMap.put("content", content);
+                } else {
+                    contentMap.put("content",  fileDirectoryStructureQueryService.getDirectoryStructureAsJson(virtualFile.getPath(), 1));
+                }
                 contentMap.put("filePath", virtualFile.getPath());
                 contentMap.put("filePackage", packageName);
                 FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(virtualFile.getPath());
@@ -136,37 +142,39 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                     List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
                     contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
                 }
-                if (content == null) {
-                    System.out.println("This gets called: " + packageName);
-                    contentMap.put("content",  fileDirectoryStructureQueryService.getDirectoryStructureAsJson(virtualFile.getPath(), 1));
-                } else {
-                    System.out.println("This gets called error: " + content);
-                    contentMap.put("content", content);
-                }
                 return gson.toJson(contentMap);
             }
         } else if (chatGptFunctionCall.getName().equals("read_file_at_path")) {
             String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
             String content = codeSnippetExtractorService.getAllText(filePath);
-            if (filePath != null && content == null) {
-                String packageName = filePath.replaceAll("/", ".");
-                VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
-                if (virtualFile != null) {
-                    filePath = virtualFile.getPath();
+            Map<String, Object> contentMap = new HashMap<>();
+            if (filePath != null) {
+                File file = new File(filePath);
+                if (!file.exists()) {
+                    String packageName = filePath.replaceAll("/", ".");
+                    VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
+                    if (virtualFile != null) {
+                        filePath = virtualFile.getPath();
+                        file = new File(filePath);
+                    }
+                }
+                if (file.isDirectory()) {
+                    contentMap.put("content",  fileDirectoryStructureQueryService.getDirectoryStructureAsJson(filePath, 1));
+                } else {
+                    contentMap.put("content", content);
+                    FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(filePath);
+                    if (fileModificationTracker != null) {
+                        List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
+                        contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
+                    }
+                    if (content == null) {
+                        contentMap.put("content",  fileDirectoryStructureQueryService.getDirectoryStructureAsJson(filePath, 1));
+                    } else {
+                        contentMap.put("content", content);
+                    }
                 }
             }
-            Map<String, Object> contentMap = new HashMap<>();
             contentMap.put("filePath", filePath);
-            FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(filePath);
-            if (fileModificationTracker != null) {
-                List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
-                contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
-            }
-            if (content == null) {
-                contentMap.put("content",  fileDirectoryStructureQueryService.getDirectoryStructureAsJson(filePath, 1));
-            } else {
-                contentMap.put("content", content);
-            }
             return gson.toJson(contentMap);
         } else if (chatGptFunctionCall.getName().equals("open_file_at_path_for_user")) {
             String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");

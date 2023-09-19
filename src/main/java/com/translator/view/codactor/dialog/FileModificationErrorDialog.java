@@ -2,6 +2,8 @@ package com.translator.view.codactor.dialog;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.intellij.openapi.options.ShowSettingsUtil;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
@@ -11,6 +13,7 @@ import com.translator.service.codactor.modification.FileModificationRestarterSer
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.connection.DefaultConnectionService;
 import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.service.codactor.settings.CodactorConfigurable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +21,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class FileModificationErrorDialog extends JDialog {
+    private Project project;
     private String modificationId;
     private String filePath;
     private DefaultConnectionService defaultConnectionService;
@@ -30,11 +34,13 @@ public class FileModificationErrorDialog extends JDialog {
                                        @Assisted("filePath") String filePath,
                                        @Assisted("error") String error,
                                        @Assisted ModificationType modificationType,
+                                       Project project,
                                        DefaultConnectionService defaultConnectionService,
                                        OpenAiModelService openAiModelService,
                                        FileModificationTrackerService fileModificationTrackerService,
                                        FileModificationRestarterService fileModificationRestarterService) {
         super();
+        this.project = project;
         this.filePath = filePath;
         this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
@@ -127,7 +133,8 @@ public class FileModificationErrorDialog extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Handle Re-enter openAi Api Key action
-                OpenAiApiKeyDialog openAiApiKeyDialog = new OpenAiApiKeyDialog(defaultConnectionService);
+                CodactorConfigurable configurable = new CodactorConfigurable();
+                ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
                 dispose();
             }
         });

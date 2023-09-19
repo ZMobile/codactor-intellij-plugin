@@ -1,7 +1,7 @@
 package com.translator.view.codactor.dialog;
 
 import com.translator.dao.firebase.FirebaseTokenService;
-import com.translator.service.codactor.account.AccountService;
+import com.translator.dao.firebase.FirebaseTokenService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,13 +16,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 public class LoginDialog extends JDialog {
-    private AccountService accountService;
+    private FirebaseTokenService firebaseTokenService;
 
     private JTextField emailField;
     private JPasswordField passwordField;
 
-    public LoginDialog(AccountService accountService) {
-        this.accountService = accountService;
+    public LoginDialog(FirebaseTokenService firebaseTokenService) {
+        this.firebaseTokenService = firebaseTokenService;
         setTitle("Login");
         setLocationRelativeTo(null);
         setModal(true);
@@ -95,7 +95,7 @@ public class LoginDialog extends JDialog {
         loginButton.addActionListener(e -> {
             String email = emailField.getText();
             String password = new String(passwordField.getPassword());
-            if (accountService.login(email, password)) {
+            if (firebaseTokenService.login(email, password)) {
                 dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid email or password", "Error", JOptionPane.ERROR_MESSAGE);

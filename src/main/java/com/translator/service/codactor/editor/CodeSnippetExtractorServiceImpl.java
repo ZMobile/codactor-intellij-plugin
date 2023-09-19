@@ -118,6 +118,14 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
         if (filePackage == null) {
             return null;
         }
+
+        String packagePath = filePackage.replace('.', '/');
+
+        VirtualFile directAccessFile = getVirtualFilesInDirectory(packagePath);
+        if (directAccessFile != null) {
+            return directAccessFile;
+        }
+
         String[] packageDirectories = filePackage.split("\\.");
         ModuleManager moduleManager = ModuleManager.getInstance(project);
         Module[] modules = moduleManager.getModules();
@@ -184,6 +192,17 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
             return LocalFileSystem.getInstance().refreshAndFindFileByIoFile(sourceDirectory);
         }
         return null;
+    }
+
+    // new method
+    private VirtualFile getVirtualFilesInDirectory(String packagePath){
+        File directory = new File(project.getBasePath() + "/" + "src/main/java" + "/" + packagePath);
+        System.out.println("Testo: " + directory.getPath());
+        if (directory.exists()){
+            return LocalFileSystem.getInstance().findFileByIoFile(directory);
+        } else {
+            return null;
+        }
     }
 
     @Override

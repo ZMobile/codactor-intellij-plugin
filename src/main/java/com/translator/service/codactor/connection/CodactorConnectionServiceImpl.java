@@ -3,21 +3,21 @@ package com.translator.service.codactor.connection;
 import com.intellij.credentialStore.CredentialAttributes;
 import com.intellij.credentialStore.Credentials;
 import com.intellij.ide.passwordSafe.PasswordSafe;
-import com.translator.service.codactor.account.AccountService;
+import com.translator.dao.firebase.FirebaseTokenService;
 
 import javax.inject.Inject;
 
 public class CodactorConnectionServiceImpl implements CodactorConnectionService {
-    private final AccountService accountService;
+    private final FirebaseTokenService firebaseTokenService;
 
     @Inject
-    public CodactorConnectionServiceImpl(AccountService accountService) {
-        this.accountService = accountService;
+    public CodactorConnectionServiceImpl(FirebaseTokenService firebaseTokenService) {
+        this.firebaseTokenService = firebaseTokenService;
     }
 
     @Override
     public CodactorConnectionType getConnectionType() {
-        String user = accountService.getLoggedInUser();
+        String user = firebaseTokenService.getLoggedInUser();
         CredentialAttributes credentialAttributes = new CredentialAttributes("codactor_connection_type", user);
         Credentials credentials = PasswordSafe.getInstance().get(credentialAttributes);
         String connectionType = credentials != null ? String.valueOf(credentials.getPassword()) : null;
@@ -29,9 +29,9 @@ public class CodactorConnectionServiceImpl implements CodactorConnectionService 
 
     @Override
     public CodactorConnectionType setConnectionType(CodactorConnectionType connectionType) {
-        String user = accountService.getLoggedInUser();
+        String user = firebaseTokenService.getLoggedInUser();
         CredentialAttributes credentialAttributes = new CredentialAttributes("codactor_connection_type", user);
-        Credentials credentials = new Credentials(user, connectionType.name());
+        Credentials credentials = new Credentials("user", connectionType.name());
         PasswordSafe.getInstance().set(credentialAttributes, credentials);
         return connectionType;
     }

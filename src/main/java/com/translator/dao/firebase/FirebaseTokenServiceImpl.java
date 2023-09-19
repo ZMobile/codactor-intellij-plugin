@@ -23,22 +23,27 @@ public class FirebaseTokenServiceImpl implements FirebaseTokenService {
         if (firebaseToken != null && !firebaseToken.isExpired()) {
             return firebaseToken;
         }
-        CredentialAttributes credentialAttributes = new CredentialAttributes("firebase_refresh_token", "user");
+        CredentialAttributes credentialAttributes = new CredentialAttributes("firebase_refresh_token", getLoggedInUser());
         Credentials credentials = PasswordSafe.getInstance().get(credentialAttributes);
         String refreshToken = credentials != null ? String.valueOf(credentials.getPassword()) : null;
         if (refreshToken == null || refreshToken.isEmpty()) {
             return null;
         }
-        FirebaseToken firebaseToken = firebaseTokenDao.getFirebaseToken(refreshToken);
-        return firebaseToken;
+        return firebaseTokenDao.getFirebaseToken(refreshToken);
     }
 
     @Override
     public boolean login(String email, String password) {
         FirebaseAuthLoginResponseResource firebaseAuthLoginResponseResource = firebaseTokenDao.login(email, password);
-        if (firebaseAuthLoginResponseResource == null) {
+        if (firebaseAuthLoginResponseResource == null || firebaseAuthLoginResponseResource.getError() != null) {
             return false;
         }
+        CredentialAttributes credentialAttributes = new CredentialAttributes("logged_in_user", "user");
+        Credentials credentials = new Credentials("user", email);
+        PasswordSafe.getInstance().set(credentialAttributes, credentials);
+        CredentialAttributes refreshTokenCredentialAttributes = new CredentialAttributes("firebase_refresh_token", email);
+        credentials = new Credentials(email, firebaseAuthLoginResponseResource.getRefreshToken());
+        PasswordSafe.getInstance().set(refreshTokenCredentialAttributes, credentials);
         this.firebaseToken = firebaseTokenDao.getFirebaseToken(firebaseAuthLoginResponseResource.getRefreshToken());
         return true;
     }
@@ -53,7 +58,24 @@ public class FirebaseTokenServiceImpl implements FirebaseTokenService {
     }
 
     public void logout() {
-        CredentialAttributes credentialAttributes = new CredentialAttributes("firebase_refresh_token", "user");
-        PasswordSafe.getInstance().set(credentialAttributes, null);
+        CredentialAttributes refreshTokenCredentialAttributes = new CredentialAttributes("firebase_refresh_token", getLoggedInUser());
+        PasswordSafe.getInstance().set(refreshTokenCredentialAttributes, null);
+        CredentialAttributes loggedInUserEmailCredentialAttributes = new CredentialAttributes("logged_in_user", "user");
+        Credentials credentials = new Credentials("", "");
+        PasswordSafe.getInstance().set(loggedInUserEmailCredentialAttributes, credentials);
+    }
+
+    public String getLoggedInUser() {
+        CredentialAttributes credentialAttributes = new CredentialAttributes("logged_in_user", "user");
+        Credentials credentials = PasswordSafe.getInstance().get(credentialAttributes);
+        String email = credentials != null ? String.valueOf(credentials.getPassword()) : null;
+        if (email == null || email.isEmpty()) {
+            return null;
+        }
+        return email;
+    }
+
+    public boolean isLoggedIn() {
+        return getLoggedInUser() != null;
     }
 }

@@ -88,7 +88,12 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
     @Override
     public void modifyCodeFiles(List<String> filePaths, String modification, List<HistoricalContextObjectHolder> priorContext) throws InterruptedException {
         String model = openAiModelService.getSelectedOpenAiModel();
-        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+        String openAiApiKey;
+            if (azureConnectionService.isAzureConnected()) {
+                openAiApiKey = azureConnectionService.getKey();
+            } else {
+                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            }
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(modification);
         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/4) Ranking File Modification Likelihood");
         Map<String, Double> filePathPercentageMap = new HashMap<>();
@@ -389,7 +394,12 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
     @Override
     public void fixCodeFiles(List<String> filePaths, String error, List<HistoricalContextObjectHolder> priorContext) throws InterruptedException {
         String model = openAiModelService.getSelectedOpenAiModel();
-        String openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+        String openAiApiKey;
+            if (azureConnectionService.isAzureConnected()) {
+                openAiApiKey = azureConnectionService.getKey();
+            } else {
+                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+            }
         String multiFileModificationId = fileModificationTrackerService.addMultiFileModification(error);
         fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/4) Ranking File Modification Likelihood");
         Map<String, Double> filePathPercentageMap = new HashMap<>();
