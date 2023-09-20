@@ -17,7 +17,7 @@ import com.translator.service.codactor.file.SelectedFileFetcherService;
 import com.translator.service.codactor.functions.InquiryChatListFunctionCallCompressorService;
 import com.translator.service.codactor.functions.InquiryFunctionCallProcessorService;
 import com.translator.service.codactor.inquiry.InquiryService;
-import com.translator.service.codactor.modification.AutomaticCodeModificationService;
+import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.modification.FileModificationSuggestionDiffViewerService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
@@ -44,7 +44,6 @@ import com.translator.view.uml.factory.dialog.PromptNodeDialogFactory;
 import com.translator.view.uml.factory.tool.NodeConnectionToolFactory;
 import com.translator.view.uml.factory.tool.PromptNodeCreationToolFactory;
 import com.translator.view.uml.application.CodactorUmlBuilderOSXApplication;
-import org.jhotdraw.app.Application;
 
 public class CodeTranslatorViewConfig extends AbstractModule {
     private Project project;
@@ -137,12 +136,12 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            CodeSnippetExtractorService codeSnippetExtractorService,
                                            InquiryService inquiryService,
                                            OpenAiModelService openAiModelService,
-                                           AutomaticCodeModificationService automaticCodeModificationService,
+                                           CodeModificationService codeModificationService,
                                            CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                                            InquiryViewerFactory inquiryViewerFactory) {
-        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, automaticCodeModificationService, codactorUmlBuilderApplication, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory);
+        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, codeModificationService, codactorUmlBuilderApplication, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory);
     }
 
     @Singleton
@@ -160,10 +159,10 @@ public class CodeTranslatorViewConfig extends AbstractModule {
         }
 
         CodactorUmlBuilderApplicationModel model = codactorUmlBuilderApplicationModelFactory.create();
-        model.setName("JHotDraw Draw");
+        /*model.setName("JHotDraw Draw");
         model.setVersion(getClass().getPackage().getImplementationVersion());
         model.setCopyright("Copyright 2006-2009 (c) by the authors of JHotDraw and all its contributors.\n" +
-                "This software is licensed under LGPL or Creative Commons 3.0 Attribution.");
+                "This software is licensed under LGPL or Creative Commons 3.0 Attribution.");*/
         model.setViewFactory(codactorUmlBuilderViewFactory::create);
         app.setModel(model);
         String[] args = new String[0];

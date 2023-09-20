@@ -31,7 +31,7 @@ public class CodeRangeTrackerServiceImpl implements CodeRangeTrackerService {
 
                 if (document != null) {
                     // Create a RangeMarker for the specified range
-                    int newEndIndex = Math.min(endIndex, document.getTextLength());
+                    int newEndIndex = Math.min(endIndex, document..getText().length());
                     rangeMarker.set(document.createRangeMarker(startIndex, newEndIndex));
                 }
             }

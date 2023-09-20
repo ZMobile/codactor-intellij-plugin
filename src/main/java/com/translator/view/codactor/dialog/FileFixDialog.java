@@ -14,7 +14,7 @@ import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.modification.AutomaticMassCodeModificationService;
+import com.translator.service.codactor.modification.MassCodeModificationService;
 import com.translator.service.codactor.modification.multi.MultiFileModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
@@ -31,7 +31,7 @@ public class FileFixDialog extends JDialog {
     private CodactorToolWindowService codactorToolWindowService;
     private PromptContextService promptContextService;
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
-    private AutomaticMassCodeModificationService automaticMassCodeModificationService;
+    private MassCodeModificationService massCodeModificationService;
     private MultiFileModificationService multiFileModificationService;
     private OpenAiModelService openAiModelService;
     private JBList<String> fileList;
@@ -52,7 +52,7 @@ public class FileFixDialog extends JDialog {
                          CodactorToolWindowService codactorToolWindowService,
                          @Assisted PromptContextService promptContextService,
                          PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
-                         AutomaticMassCodeModificationService automaticMassCodeModificationService,
+                         MassCodeModificationService massCodeModificationService,
                          MultiFileModificationService multiFileModificationService,
                          OpenAiModelService openAiModelService,
                          @Assisted List<VirtualFile> selectedItems) {
@@ -60,7 +60,7 @@ public class FileFixDialog extends JDialog {
         this.codactorToolWindowService = codactorToolWindowService;
         this.promptContextService = promptContextService;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
-        this.automaticMassCodeModificationService = automaticMassCodeModificationService;
+        this.massCodeModificationService = massCodeModificationService;
         this.multiFileModificationService = multiFileModificationService;
         this.openAiModelService = openAiModelService;
         setLayout(new BorderLayout());
@@ -246,7 +246,7 @@ public class FileFixDialog extends JDialog {
                     return null;
                 }
                 if (applyToEachFileButton.isSelected()) {
-                    automaticMassCodeModificationService.getFixedCode(selectedFiles, description.getText(), promptContextService.getPromptContext());
+                    massCodeModificationService.getFixedCode(selectedFiles, description.getText(), promptContextService.getPromptContext());
                     promptContextService.clearPromptContext();
                 } else {
                     try {

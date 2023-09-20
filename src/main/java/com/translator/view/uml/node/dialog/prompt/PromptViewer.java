@@ -250,7 +250,7 @@ public class PromptViewer extends JPanel {
                         if (fixedHeightPanel.getEditor() != null) {
                             Editor editor = fixedHeightPanel.getEditor();
                             editor.getMarkupModel().removeAllHighlighters();
-                            editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                            editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument()..getText().length(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
                         }
                     }
                 }

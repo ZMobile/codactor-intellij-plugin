@@ -10,6 +10,7 @@ import com.translator.CodactorInjector;
 import com.translator.service.codactor.editor.CodeHighlighterService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerService;
+import com.translator.view.codactor.listener.EditorListener;
 import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;

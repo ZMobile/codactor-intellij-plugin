@@ -160,4 +160,12 @@ public class DesktopCodeModificationRequestResource {
     public List<HistoricalContextObjectHolder> getPriorContext() {
         return priorContext;
     }
+
+    public void setOverrideCode(String overrideCode) {
+        this.overrideCode = overrideCode;
+    }
+
+    public String getOverrideCode() {
+        return overrideCode;
+    }
 }

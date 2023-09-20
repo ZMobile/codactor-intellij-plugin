@@ -14,7 +14,7 @@ import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextField;
 import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.modification.AutomaticMassCodeModificationService;
+import com.translator.service.codactor.modification.MassCodeModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
@@ -30,7 +30,7 @@ public class FileTranslateDialog extends JDialog {
     private CodactorToolWindowService codactorToolWindowService;
     private PromptContextService promptContextService;
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
-    private AutomaticMassCodeModificationService automaticMassCodeModificationService;
+    private MassCodeModificationService massCodeModificationService;
     private OpenAiModelService openAiModelService;
     private JBList<String> fileList;
     private DefaultListModel<String> listModel;
@@ -51,14 +51,14 @@ public class FileTranslateDialog extends JDialog {
                                CodactorToolWindowService codactorToolWindowService,
                                @Assisted PromptContextService promptContextService,
                                PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
-                               AutomaticMassCodeModificationService automaticMassCodeModificationService,
+                               MassCodeModificationService massCodeModificationService,
                                OpenAiModelService openAiModelService,
                                @Assisted List<VirtualFile> selectedItems) {
         this.project = project;
         this.codactorToolWindowService = codactorToolWindowService;
         this.promptContextService = promptContextService;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
-        this.automaticMassCodeModificationService = automaticMassCodeModificationService;
+        this.massCodeModificationService = massCodeModificationService;
         this.openAiModelService = openAiModelService;
         setLayout(new BorderLayout());
         setTitle("Translate Code");
@@ -92,6 +92,7 @@ public class FileTranslateDialog extends JDialog {
         textFieldsPanel.add(newFileTypeField);
         centerPanel.add(textFieldsPanel, BorderLayout.CENTER);
 
+        addButton = new JButton("Add");
         addButton.addActionListener(e -> {
             FileChooserDescriptor descriptor = new FileChooserDescriptor(true, false, false, false, false, true);
             VirtualFile[] filesToAdd = FileChooser.chooseFiles(descriptor, project, null);
@@ -210,7 +211,7 @@ public class FileTranslateDialog extends JDialog {
                     SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FileTranslateDialog.this, "Please select at least one file.", "Error", JOptionPane.ERROR_MESSAGE));
                     return null;
                 }
-                automaticMassCodeModificationService.getTranslatedCode(selectedFiles, newLanguageField.getText(), newFileTypeField.getText(), promptContextService.getPromptContext());
+                massCodeModificationService.getTranslatedCode(selectedFiles, newLanguageField.getText(), newFileTypeField.getText(), promptContextService.getPromptContext());
                 promptContextService.clearPromptContext();
 
                 if (selectedFiles.size() == 1) {

@@ -32,6 +32,7 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
     }
 
     public void addFileModificationGuardedBlock(String fileModificationId, int startOffset, int endOffset) {
+        System.out.println("This gets called 1");
         FileModification fileModification = fileModificationTrackerService.getModification(fileModificationId);
         String filePath = fileModification.getFilePath();
         ApplicationManager.getApplication().invokeLater(() -> {
@@ -44,7 +45,7 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
         if (document == null) {
             throw new IllegalStateException("Could not get document for file: " + filePath);
         }
-            int newEndOffset = Math.min(endOffset, document.getTextLength());
+            int newEndOffset = Math.min(endOffset, document.getText().length());
             RangeMarker guardedBlock = document.createGuardedBlock(startOffset, newEndOffset);
             guardedBlocks.put(fileModification.getId(), guardedBlock);
         });
@@ -52,11 +53,14 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
     }
 
     public void removeFileModificationGuardedBlock(String fileModificationId) {
+        System.out.println("This gets called 2");
         RangeMarker guardedBlock = guardedBlocks.get(fileModificationId);
         if (guardedBlock != null) {
+            System.out.println("This gets called 3");
             ApplicationManager.getApplication().invokeLater(() -> {
                         guardedBlocks.remove(fileModificationId);
                         guardedBlock.dispose();
+                        System.out.println("Guarded block disposed");
             });
             //uneditableSegmentListenerService.removeUneditableFileModificationSegmentListener(fileModificationId);
         }

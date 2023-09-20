@@ -13,17 +13,17 @@ import com.translator.service.codactor.modification.tracking.FileModificationTra
 import javax.inject.Inject;
 import java.util.List;
 
-public class AutomaticMassCodeModificationServiceImpl implements AutomaticMassCodeModificationService {
+public class MassCodeModificationServiceImpl implements MassCodeModificationService {
     private Project project;
-    private AutomaticCodeModificationService automaticCodeModificationService;
+    private CodeModificationService codeModificationService;
     private FileModificationTrackerService fileModificationTrackerService;
 
     @Inject
-    public AutomaticMassCodeModificationServiceImpl(Project project,
-                                                    AutomaticCodeModificationService automaticCodeModificationService,
-                                                    FileModificationTrackerService fileModificationTrackerService) {
+    public MassCodeModificationServiceImpl(Project project,
+                                           CodeModificationService codeModificationService,
+                                           FileModificationTrackerService fileModificationTrackerService) {
         this.project = project;
-        this.automaticCodeModificationService = automaticCodeModificationService;
+        this.codeModificationService = codeModificationService;
         this.fileModificationTrackerService = fileModificationTrackerService;
     }
 
@@ -43,7 +43,7 @@ public class AutomaticMassCodeModificationServiceImpl implements AutomaticMassCo
                         String code = document.getText();
                         int startIndex = 0;
                         int endIndex = code.length();
-                        automaticCodeModificationService.getModifiedCode(filePath, startIndex, endIndex, modification, ModificationType.MODIFY, priorContext);
+                        codeModificationService.getModifiedCode(filePath, startIndex, endIndex, modification, ModificationType.MODIFY, priorContext);
                     }
                 }
             });
@@ -73,7 +73,7 @@ public class AutomaticMassCodeModificationServiceImpl implements AutomaticMassCo
                         String code = document.getText();
                         int startIndex = 0;
                         int endIndex = code.length();
-                        automaticCodeModificationService.getModifiedCode(filePath, startIndex, endIndex, error, ModificationType.FIX, priorContext);
+                        codeModificationService.getModifiedCode(filePath, startIndex, endIndex, error, ModificationType.FIX, priorContext);
                     }
                 }
             });
@@ -93,7 +93,7 @@ public class AutomaticMassCodeModificationServiceImpl implements AutomaticMassCo
         for (String filePath : filePaths) {
             //Get the document to find the start and end index. It needs to be some read action
             ApplicationManager.getApplication().invokeLater(() -> {
-                automaticCodeModificationService.getTranslatedCode(filePath, newLanguage, newFileType, priorContext);
+                codeModificationService.getTranslatedCode(filePath, newLanguage, newFileType, priorContext);
             });
             try {
                 Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)

@@ -6,6 +6,7 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.translator.dao.inquiry.InquiryDao;
+import com.translator.dao.modification.CodeModificationDao;
 import com.translator.model.codactor.api.translator.modification.DesktopCodeCreationRequestResource;
 import com.translator.model.codactor.api.translator.modification.DesktopCodeCreationResponseResource;
 import com.translator.model.codactor.history.HistoricalContextFileModificationHolder;
@@ -17,12 +18,10 @@ import com.translator.model.codactor.modification.ModificationType;
 import com.translator.model.codactor.modification.RecordType;
 import com.translator.service.codactor.connection.AzureConnectionService;
 import com.translator.service.codactor.inquiry.InquirySystemMessageGeneratorService;
-import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.connection.DefaultConnectionService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.settings.CodactorConfigurable;
-import com.translator.view.codactor.dialog.OpenAiApiKeyDialog;
 import com.translator.worker.LimitedSwingWorker;
 import com.translator.worker.LimitedSwingWorkerExecutor;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +36,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
 
     private final Project project;
     private final InquiryDao inquiryDao;
-    private final CodeModificationService codeModificationService;
+    private final CodeModificationDao codeModificationDao;
     private final FileModificationTrackerService fileModificationTrackerService;
     private final DefaultConnectionService defaultConnectionService;
     private final OpenAiModelService openAiModelService;
@@ -48,7 +47,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
     @Inject
     public MassCodeFileGeneratorServiceImpl(Project project,
                                             InquiryDao inquiryDao,
-                                            CodeModificationService codeModificationService,
+                                            CodeModificationDao codeModificationDao,
                                             FileModificationTrackerService fileModificationTrackerService,
                                             DefaultConnectionService defaultConnectionService,
                                             OpenAiModelService openAiModelService,
@@ -57,7 +56,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                             AzureConnectionService azureConnectionService) {
         this.project = project;
         this.inquiryDao = inquiryDao;
-        this.codeModificationService = codeModificationService;
+        this.codeModificationDao = codeModificationDao;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
@@ -140,7 +139,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         String modificationId = fileModificationTrackerService.addModification(file.getAbsolutePath(), finalMostRecentInquiryChat.getMessage(), 0, 0, ModificationType.CREATE, priorContext);
                                         String description = "The complete and comprehensive " + language + " code for " + file.getName();
                                         DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
-                                        DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
+                                        DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                             fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                             //write the contents to the file with printWriter:
@@ -269,7 +268,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                     fileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
                                     String description = "The complete and comprehensive " + language + " code for " + file.getName();
                                     DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
-                                    DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
+                                    DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                         fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                         //write the contents to the file with printWriter:
@@ -383,7 +382,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         String modificationId = fileModificationTrackerService.addModification(newFilePath, description, 0, 0, ModificationType.CREATE, newPriorContext);
                                         String newDescription = "The complete and comprehensive " + language + " code for " + file.getName();
                                         DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), newDescription, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), newPriorContext);
-                                        DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
+                                        DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                             fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                             //write the contents to the file with printWriter:
@@ -508,7 +507,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                     String modificationId = fileModificationTrackerService.addModification(newFilePath, description, 0, 0, ModificationType.CREATE, finalPriorContext);
                                     String description2 = "The complete and comprehensive " + language + " code for " + file.getName();
                                     DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description2, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext2);
-                                    DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationService.getCreatedCode(desktopCodeCreationRequestResource);
+                                    DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
                                         fileModificationTrackerService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                         //write the contents to the file with printWriter:

@@ -72,10 +72,10 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
                 location = JsonExtractorService.extractField(functionCall.getArguments(), "package");
             }
             return "Requesting file modification for " + location + "...";
-        } else if (functionCall.getName().equals("request_file_modification_and_wait_for_response")) {
+        /*} else if (functionCall.getName().equals("request_file_modification_and_wait_for_response")) {
             String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
             return "Requesting file modification for " + path + " and waiting for response...";
-        } else if (functionCall.getName().equals("request_file_creation")) {
+        */} else if (functionCall.getName().equals("request_file_creation")) {
             String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
             return "Requesting file creation for " + path + "...";
         } else if (functionCall.getName().equals("request_file_creation_and_wait_for_response")) {

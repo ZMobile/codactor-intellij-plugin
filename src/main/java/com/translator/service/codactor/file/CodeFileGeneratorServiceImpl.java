@@ -9,7 +9,7 @@ import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
 import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.modification.AutomaticCodeModificationService;
+import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 
 import java.io.File;
@@ -17,17 +17,17 @@ import java.io.IOException;
 
 public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
     private final Project project;
-    private final AutomaticCodeModificationService automaticCodeModificationService;
+    private final CodeModificationService codeModificationService;
     private final CodactorToolWindowService codactorToolWindowService;
     private final PromptContextService promptContextService;
 
     @Inject
     public CodeFileGeneratorServiceImpl(Project project,
-                                        AutomaticCodeModificationService automaticCodeModificationService,
+                                        CodeModificationService codeModificationService,
                                         CodactorToolWindowService codactorToolWindowService,
                                         @Assisted PromptContextService promptContextService) {
         this.project = project;
-        this.automaticCodeModificationService = automaticCodeModificationService;
+        this.codeModificationService = codeModificationService;
         this.codactorToolWindowService = codactorToolWindowService;
         this.promptContextService = promptContextService;
     }
@@ -47,7 +47,7 @@ public class CodeFileGeneratorServiceImpl implements CodeFileGeneratorService {
 
         if (!description.isEmpty()) {
             String newDescription = "The code for " + fileName + ": " + description;
-            automaticCodeModificationService.createAndImplementCode(filePath, newDescription, promptContextService.getPromptContext());
+            codeModificationService.createAndImplementCode(filePath, newDescription, promptContextService.getPromptContext());
             promptContextService.clearPromptContext();
             codactorToolWindowService.openModificationQueueViewerToolWindow();
         }

@@ -4,7 +4,7 @@ import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 
 import java.util.List;
 
-public interface AutomaticMassCodeModificationService {
+public interface MassCodeModificationService {
     void getModifiedCode(List<String> filePaths, String modification, List<HistoricalContextObjectHolder> priorContext);
 
     void getFixedCode(List<String> filePaths, String error, List<HistoricalContextObjectHolder> priorContext);

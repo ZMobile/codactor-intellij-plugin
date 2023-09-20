@@ -167,7 +167,8 @@ public class CodactorFileEditorManagerListener implements FileEditorManagerListe
         }
 
         // Handle .form files
-        if(ProjectRootManager.getInstance(project).getFileIndex().isInSource(fileEditorManager.getSelectedFiles()[0])) {
+        VirtualFile[] selectedFiles = fileEditorManager.getSelectedFiles();
+        if (selectedFiles.length > 0 &&ProjectRootManager.getInstance(project).getFileIndex().isInSource(selectedFiles[0])) {
             PsiFile psiFile = PsiManager.getInstance(project).findFile(fileEditorManager.getSelectedFiles()[0]);
             if(psiFile != null) {
                 return psiFile.getVirtualFile();
@@ -175,5 +176,4 @@ public class CodactorFileEditorManagerListener implements FileEditorManagerListe
         }
         return null;
     }
-
 }

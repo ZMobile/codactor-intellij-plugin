@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.dao.inquiry.InquiryDao;
+import com.translator.dao.modification.CodeModificationDao;
 import com.translator.model.codactor.ai.FixImplementableResponse;
 import com.translator.model.codactor.ai.LikelihoodResponse;
 import com.translator.model.codactor.ai.ModificationImplementableResponse;
@@ -28,7 +29,6 @@ import com.translator.service.codactor.connection.AzureConnectionService;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.inquiry.InquirySystemMessageGeneratorService;
 import com.translator.service.codactor.json.JsonExtractorService;
-import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.connection.DefaultConnectionService;
@@ -47,9 +47,9 @@ import java.util.Map;
 public class MultiFileModificationServiceImpl implements MultiFileModificationService {
     private Project project;
     private InquiryDao inquiryDao;
+    private CodeModificationDao codeModificationDao;
     private FileModificationTrackerService fileModificationTrackerService;
     private FileModificationRestarterService fileModificationRestarterService;
-    private CodeModificationService codeModificationService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
     private DefaultConnectionService defaultConnectionService;
     private OpenAiModelService openAiModelService;
@@ -61,9 +61,9 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
     @Inject
     public MultiFileModificationServiceImpl(Project project,
                                             InquiryDao inquiryDao,
+                                            CodeModificationDao codeModificationDao,
                                             FileModificationTrackerService fileModificationTrackerService,
                                             FileModificationRestarterService fileModificationRestarterService,
-                                            CodeModificationService codeModificationService,
                                             CodeSnippetExtractorService codeSnippetExtractorService,
                                             DefaultConnectionService defaultConnectionService,
                                             OpenAiModelService openAiModelService,
@@ -73,9 +73,9 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                                             Gson gson) {
         this.project = project;
         this.inquiryDao = inquiryDao;
+        this.codeModificationDao = codeModificationDao;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.fileModificationRestarterService = fileModificationRestarterService;
-        this.codeModificationService = codeModificationService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
@@ -286,7 +286,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     code = codeMap.get(filePath);
                     String modificationForThisFile = "The modifications that need to be applied to this code to achieve the above modification: (" + modification + ")";
                     DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modificationForThisFile, ModificationType.MODIFY, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
-                    DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
+                    DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getModifiedCode(desktopCodeModificationRequestResource);
                     if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                         fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
                         String suggestionId = desktopCodeModificationResponseResource.getModificationSuggestions().get(0).getId();
@@ -366,7 +366,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     if (modificationNeededResponse.isModificationNeeded()) {
                         String modificationForThisFile = "The modifications that need to be applied to this code to achieve this modification: (" + modification + ")";
                         DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, fileCode, modificationForThisFile, ModificationType.MODIFY, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>());
-                        DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getModifiedCode(desktopCodeModificationRequestResource);
+                        DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getModifiedCode(desktopCodeModificationRequestResource);
                         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                             fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
                         } else {
@@ -591,7 +591,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     String filePath = utilizedFilePaths.get(i);
                     code = codeMap.get(filePath);
                     DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, ModificationType.MODIFY, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
-                    DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
+                    DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getFixedCode(desktopCodeModificationRequestResource);
                     if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                         fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
                         String suggestionId = desktopCodeModificationResponseResource.getModificationSuggestions().get(0).getId();
@@ -670,7 +670,7 @@ public class MultiFileModificationServiceImpl implements MultiFileModificationSe
                     }
                     if (modificationNeededResponse.isModificationNeeded()) {
                         DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, fileCode, error, ModificationType.MODIFY, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>());
-                        DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationService.getFixedCode(desktopCodeModificationRequestResource);
+                        DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getFixedCode(desktopCodeModificationRequestResource);
                         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && desktopCodeModificationResponseResource.getModificationSuggestions().size() > 0) {
                             fileModificationTrackerService.readyFileModificationUpdate(modificationIdMap.get(filePath), desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
                         } else {

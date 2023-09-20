@@ -4,10 +4,8 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.fileEditor.*;
-import com.intellij.openapi.fileEditor.ex.FileEditorWithProvider;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.*;
 import com.intellij.util.messages.MessageBus;
@@ -19,7 +17,7 @@ import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.SelectedFileFetcherService;
 import com.translator.service.codactor.inquiry.InquiryService;
-import com.translator.service.codactor.modification.AutomaticCodeModificationService;
+import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.MultiFileCreateDialog;
@@ -30,11 +28,6 @@ import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFac
 import com.translator.view.codactor.listener.file.CodactorFileEditorManagerListener;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import com.translator.view.uml.application.CodactorUmlBuilderApplication;
-import com.translator.view.uml.editor.CodactorUmlBuilderSVGEditor;
-import com.translator.view.uml.factory.CodactorUmlBuilderApplicationModelFactory;
-import com.translator.view.uml.factory.CodactorUmlBuilderViewFactory;
-import org.jetbrains.annotations.NotNull;
-import org.jhotdraw.app.Application;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -43,7 +36,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
-import java.util.List;
 import java.util.Objects;
 
 public class CodactorConsole extends JBPanel<CodactorConsole> {
@@ -64,7 +56,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private CodactorToolWindowService codactorToolWindowService;
     private SelectedFileFetcherService selectedFileFetcherService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
-    private AutomaticCodeModificationService automaticCodeModificationService;
+    private CodeModificationService codeModificationService;
     private InquiryService inquiryService;
     private OpenAiModelService openAiModelService;
     private CodactorUmlBuilderApplication codactorUmlBuilderApplication;
@@ -80,7 +72,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            CodeSnippetExtractorService codeSnippetExtractorService,
                            InquiryService inquiryService,
                            OpenAiModelService openAiModelService,
-                           AutomaticCodeModificationService automaticCodeModificationService,
+                           CodeModificationService codeModificationService,
                            CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
@@ -93,7 +85,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.inquiryService = inquiryService;
         this.openAiModelService = openAiModelService;
-        this.automaticCodeModificationService = automaticCodeModificationService;
+        this.codeModificationService = codeModificationService;
         this.codactorUmlBuilderApplication = codactorUmlBuilderApplication;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
@@ -233,7 +225,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        automaticCodeModificationService.getModifiedCode(fileItem.getFilePath(), textArea.getText(), ModificationType.MODIFY, promptContextService.getPromptContext());
+                        codeModificationService.getModifiedCode(fileItem.getFilePath(), textArea.getText(), ModificationType.MODIFY, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Modify Selected")) {
@@ -244,14 +236,14 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     }
                     if (code != null && !code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        automaticCodeModificationService.getModifiedCode(fileItem.getFilePath(), selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.MODIFY_SELECTION, promptContextService.getPromptContext());
+                        codeModificationService.getModifiedCode(fileItem.getFilePath(), selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.MODIFY_SELECTION, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Fix")) {
                     String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        automaticCodeModificationService.getFixedCode(fileItem.getFilePath(), textArea.getText(), ModificationType.FIX, promptContextService.getPromptContext());
+                        codeModificationService.getFixedCode(fileItem.getFilePath(), textArea.getText(), ModificationType.FIX, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Fix Selected")) {
@@ -263,13 +255,13 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     }
                     if (code != null && !code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        automaticCodeModificationService.getFixedCode(fileItem.getFilePath(), selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.FIX_SELECTION, promptContextService.getPromptContext());
+                        codeModificationService.getFixedCode(fileItem.getFilePath(), selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.FIX_SELECTION, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create")) {
                     if (!textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        automaticCodeModificationService.getCreatedCode(fileItem.getFilePath(), textArea.getText(), promptContextService.getPromptContext());
+                        codeModificationService.getCreatedCode(fileItem.getFilePath(), textArea.getText(), promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create Files")) {
@@ -302,7 +294,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     promptContextService.clearPromptContext();
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Translate")) {
                     codactorToolWindowService.openModificationQueueViewerToolWindow();
-                    automaticCodeModificationService.getTranslatedCode(fileItem.getFilePath(), languageInputTextField.getText(), fileTypeTextField.getText(), promptContextService.getPromptContext());
+                    codeModificationService.getTranslatedCode(fileItem.getFilePath(), languageInputTextField.getText(), fileTypeTextField.getText(), promptContextService.getPromptContext());
                     promptContextService.clearPromptContext();
                 }
             }

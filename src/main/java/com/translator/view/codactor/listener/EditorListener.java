@@ -1,4 +1,4 @@
-package com.translator.listener;
+package com.translator.view.codactor.listener;
 
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;

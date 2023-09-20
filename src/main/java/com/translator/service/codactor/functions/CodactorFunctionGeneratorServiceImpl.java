@@ -135,7 +135,8 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         Property optionalPathProperty = new Property("string", "The path of the file to be modified. If not provided, the file modifier will attempt to find the file to be modified based on the provided description. Either this or the package must be provided for a modification", null, null);
         Property optionalPackageProperty = new Property("string", "The class package of the file to be modified. If not provided, the file modifier will attempt to find the file to be modified based on the provided description. Either this or the path must be provided for a modification", null, null);
         Property modificationTypeProperty = new Property("string", "The type of file modification types to choose from are 'modify' for modifying code in a file, 'fix' for reporting and fixing an error (like modify but for complaining), and 'create' for creating new code where none existed before, so it will ignore the startSnippet, endSnippet, and codeSnippet, placing its created code at index 0.", modificationTypes, null);
-        Property descriptionProperty = new Property("string", "The description of the requested file modification to be enacted on the file", null, null);
+        Property descriptionProperty = new Property("string", "The description of the modification to be enacted on the file", null, null);
+        Property replacementCodeProperty = new Property("string", "The code to replace the target code snippet", null, null);
         requestFileModificationParams.getProperties().put("path", optionalPathProperty);
         requestFileModificationParams.getProperties().put("package", optionalPackageProperty);
         requestFileModificationParams.getProperties().put("modificationType", modificationTypeProperty);
@@ -143,11 +144,14 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         requestFileModificationParams.getProperties().put("startBoundary", startSnippetProperty);
         requestFileModificationParams.getProperties().put("endBoundary", endSnippetProperty);
         requestFileModificationParams.getProperties().put("codeSnippet", codeSnippetProperty);
+        requestFileModificationParams.getProperties().put("replacementCodeSnippet", replacementCodeProperty);
         requestFileModificationParams.getRequired().add("modificationType");
         requestFileModificationParams.getRequired().add("description");
+        requestFileModificationParams.getRequired().add("replacementCodeSnippet");
 
-        ChatGptFunction requestFileModification = new ChatGptFunction("request_file_modification", "Request a new file modification at a specified file and optionally a specified range within the file to be processed by the file modifier LLM. Ideally you should have the modification range encapsulate the modification and potentially needed context as its all the modifier LLM sees in addition to the description, though not too big as the modifier LLM has limited a context window. Warning: File modifications with overlapping ranges can not exist in the queue. File modifications can only exist in the same file if they don't overlap. A request for a modification with a range overlapping another existing modification currently in the queue will be automatically denied and return null.", requestFileModificationParams);
+        ChatGptFunction requestFileModification = new ChatGptFunction("request_file_modification", "Request a new file modification at a specified file and optionally a specified range within the file. Warning: File modifications with overlapping ranges can not exist in the queue. File modifications can only exist in the same file if they don't overlap. A request for a modification with a range overlapping another existing modification currently in the queue will be automatically denied and return null.", requestFileModificationParams);
         codactorFunctions.add(requestFileModification);
+
 
         /*ChatGptFunction requestFileModificationAndWait = new ChatGptFunction("request_file_modification_and_wait_for_response", "Request a new file modification to be processed and wait for response", requestFileModificationParams);
         codactorFunctions.add(requestFileModificationAndWait);*/
@@ -155,9 +159,11 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         // Create ChatGptFunction for "request_file_creation"
         Parameters requestFileCreationParams = new Parameters("object");
         requestFileCreationParams.getProperties().put("path", pathProperty);
-        requestFileCreationParams.getProperties().put("description", descriptionProperty);
+        requestFileCreationParams.getProperties().put("description", new Property("string", "Description of the new code file", null, null));
+        requestFileCreationParams.getProperties().put("code",  new Property("string", "Contents of the new code file", null, null));
         requestFileCreationParams.getRequired().add("path");
         requestFileCreationParams.getRequired().add("description");
+        requestFileCreationParams.getRequired().add("code");
 
         ChatGptFunction requestFileCreation = new ChatGptFunction("request_file_creation", "Request a new file to be created following a provided description that will be processed by the file modifier LLM", requestFileCreationParams);
         codactorFunctions.add(requestFileCreation);

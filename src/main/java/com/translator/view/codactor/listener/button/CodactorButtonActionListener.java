@@ -1,22 +1,5 @@
 package com.translator.view.codactor.listener.button;
 
-import com.intellij.openapi.editor.SelectionModel;
-import com.intellij.openapi.ui.ComboBox;
-import com.intellij.ui.components.JBTextArea;
-import com.translator.model.codactor.file.FileItem;
-import com.translator.model.codactor.modification.ModificationType;
-import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.editor.CodeSnippetExtractorService;
-import com.translator.service.codactor.inquiry.InquiryService;
-import com.translator.service.codactor.modification.AutomaticCodeModificationService;
-import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
-import com.translator.view.codactor.dialog.MultiFileCreateDialog;
-import com.translator.view.codactor.factory.InquiryViewerFactory;
-import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
-import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
-
-import java.awt.event.ActionEvent;
-
 public class CodactorButtonActionListener {
     /*private final JBTextArea textArea;
     private final ComboBox<FileItem> fileComboBox;

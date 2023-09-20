@@ -94,7 +94,7 @@ public class HistoricalContextObjectViewer extends JPanel {
                                     FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
                                     Editor editor = fixedHeightPanel.getEditor();
                                     if (editor != null) {
-                                        editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getTextLength(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                                        editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument()..getText().length(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
                                     }
                                 }
                             }
