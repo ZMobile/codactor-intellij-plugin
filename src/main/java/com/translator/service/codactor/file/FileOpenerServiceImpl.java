@@ -1,5 +1,6 @@
 package com.translator.service.codactor.file;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.CaretModel;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -26,7 +27,9 @@ public class FileOpenerServiceImpl implements FileOpenerService {
 
         if (virtualFile != null) {
             FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
-            fileEditorManager.openFile(virtualFile, true);
+            ApplicationManager.getApplication().invokeLater(() -> {
+                fileEditorManager.openFile(virtualFile, true);
+            });
         }
     }
 
@@ -36,18 +39,19 @@ public class FileOpenerServiceImpl implements FileOpenerService {
 
         if (virtualFile != null) {
             FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
-            fileEditorManager.openFile(virtualFile, true);
-            FileEditor fileEditor = fileEditorManager.getSelectedEditor(virtualFile);
+            ApplicationManager.getApplication().invokeLater(() -> {
+                fileEditorManager.openFile(virtualFile, true);
+                FileEditor fileEditor = fileEditorManager.getSelectedEditor(virtualFile);
 
-            if (fileEditor instanceof TextEditor) {
-                Editor editor = ((TextEditor) fileEditor).getEditor();
-                CaretModel caretModel = editor.getCaretModel();
-                Document document = editor.getDocument();
-                int lineNumber = document.getLineNumber(startIndex);
-                int lineStartOffset = document.getLineStartOffset(lineNumber);
-
-                caretModel.moveToOffset(lineStartOffset);
-            }
+                if (fileEditor instanceof TextEditor) {
+                    Editor editor = ((TextEditor) fileEditor).getEditor();
+                    CaretModel caretModel = editor.getCaretModel();
+                    Document document = editor.getDocument();
+                    int lineNumber = document.getLineNumber(startIndex);
+                    int lineStartOffset = document.getLineStartOffset(lineNumber);
+                    caretModel.moveToOffset(lineStartOffset);
+                }
+            });
         }
     }
 }

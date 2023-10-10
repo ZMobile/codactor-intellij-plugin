@@ -103,7 +103,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                                     FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
                                     Editor editor = fixedHeightPanel.getEditor();
                                     if (editor != null) {
-                                        editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument()..getText().length(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
+                                        editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getText().length(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
                                     }
                                 }
                             }
@@ -366,6 +366,9 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
     }
 
     public void componentResized(DefaultListModel<InquiryChatViewer> previousModel) {
+        if (previousModel == null || previousModel.isEmpty()) {
+            return;
+        }
         DefaultListModel<InquiryChatViewer> newModel = new DefaultListModel<>();
         int newTotalHeight = 0;
         for (int i = 0; i < previousModel.size(); i++) {
@@ -384,7 +387,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                     chatDisplay.setPreferredSize(preferredSize);
                     chatDisplay.setMaximumSize(preferredSize);
                     chatDisplay.setSize(preferredSize);
-                    newTotalHeight += newHeight + chatViewer.getComponent(0).getHeight();
+                    newTotalHeight += newHeight;
                 } else if (component instanceof FixedHeightPanel) {
                     FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
                     newTotalHeight += fixedHeightPanel.getHeight();

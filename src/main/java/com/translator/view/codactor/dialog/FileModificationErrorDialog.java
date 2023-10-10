@@ -13,7 +13,7 @@ import com.translator.service.codactor.modification.FileModificationRestarterSer
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.connection.DefaultConnectionService;
 import com.translator.service.codactor.openai.OpenAiModelService;
-import com.translator.service.codactor.settings.CodactorConfigurable;
+import com.translator.view.codactor.settings.CodactorConfigurable;
 
 import javax.swing.*;
 import java.awt.*;

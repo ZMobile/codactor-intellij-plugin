@@ -24,10 +24,13 @@ import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
 import com.translator.service.codactor.editor.diff.DiffEditorGeneratorServiceImpl;
 import com.translator.service.codactor.editor.diff.GitDiffStingGeneratorService;
 import com.translator.service.codactor.editor.diff.GitDiffStingGeneratorServiceImpl;
+import com.translator.service.codactor.editor.psi.*;
 import com.translator.service.codactor.factory.CodeFileGeneratorServiceFactory;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.*;
 import com.translator.service.codactor.functions.*;
+import com.translator.service.codactor.functions.search.ProjectSearchService;
+import com.translator.service.codactor.functions.search.ProjectSearchServiceImpl;
 import com.translator.service.codactor.inquiry.*;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
@@ -156,6 +159,13 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(InquiryViewerMapService.class).to(InquiryViewerMapServiceImpl.class).asEagerSingleton();
         bind(CodactorConnectionService.class).to(CodactorConnectionServiceImpl.class).asEagerSingleton();
         bind(AzureConnectionService.class).to(AzureConnectionServiceImpl.class).asEagerSingleton();
+        bind(ProjectSearchService.class).to(ProjectSearchServiceImpl.class);
+        bind(PsiFileService.class).to(PsiFileServiceImpl.class);
+        bind(PsiElementCollectorService.class).to(PsiElementCollectorServiceImpl.class);
+        bind(FindDeclarationsService.class).to(FindDeclarationsServiceImpl.class);
+        bind(FindErrorService.class).to(FindErrorServiceImpl.class);
+        bind(FindUsagesHandlerService.class).to(FindUsagesHandlerServiceImpl.class);
+        bind(FindUsagesService.class).to(FindUsagesServiceImpl.class);
     }
 
     @Singleton

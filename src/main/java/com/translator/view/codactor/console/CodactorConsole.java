@@ -1,5 +1,6 @@
 package com.translator.view.codactor.console;
 
+import com.google.gson.Gson;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
@@ -16,6 +17,7 @@ import com.translator.service.codactor.context.PromptContextService;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.SelectedFileFetcherService;
+import com.translator.service.codactor.functions.search.ProjectSearchService;
 import com.translator.service.codactor.inquiry.InquiryService;
 import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
@@ -59,6 +61,10 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private CodeModificationService codeModificationService;
     private InquiryService inquiryService;
     private OpenAiModelService openAiModelService;
+    // For testing purposes
+    private Gson gson;
+    private ProjectSearchService projectSearchService;
+    // For testing purposes
     private CodactorUmlBuilderApplication codactorUmlBuilderApplication;
     private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
@@ -73,6 +79,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            InquiryService inquiryService,
                            OpenAiModelService openAiModelService,
                            CodeModificationService codeModificationService,
+                           Gson gson,
+                           ProjectSearchService projectSearchService,
                            CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
@@ -86,6 +94,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.inquiryService = inquiryService;
         this.openAiModelService = openAiModelService;
         this.codeModificationService = codeModificationService;
+        this.gson = gson;
+        this.projectSearchService = projectSearchService;
         this.codactorUmlBuilderApplication = codactorUmlBuilderApplication;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
@@ -208,6 +218,15 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         rightToolbar.add(hiddenLabel);
         rightToolbar.add(advancedButton);
 
+        /*JButton testButton = new JButton("Test");
+        testButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println(gson.toJson(projectSearchService.search("Analysis")));
+            }
+        });
+        rightToolbar.add(testButton);*/
+
         topToolbar.add(leftToolbar);
         topToolbar.add(rightToolbar, BorderLayout.EAST);
 
@@ -275,7 +294,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                         String code = codeSnippetExtractorService.getAllText(fileItem.getFilePath());
                         String question = textArea.getText();
                         InquiryViewer inquiryViewer = inquiryViewerFactory.create();
-                        inquiryViewer.getInquiryChatBoxViewer().getToolBar().setVisible(false);
+                        //inquiryViewer.getInquiryChatBoxViewer().getToolBar().setVisible(false);
                         inquiryService.createInquiry(inquiryViewer, fileItem.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
                         codactorToolWindowService.createInquiryViewerToolWindow(inquiryViewer);
                         promptContextService.clearPromptContext();
@@ -288,7 +307,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                     }
                     String question = textArea.getText();
                     InquiryViewer inquiryViewer = inquiryViewerFactory.create();
-                    inquiryViewer.getInquiryChatBoxViewer().getToolBar().setVisible(false);
+                    //inquiryViewer.getInquiryChatBoxViewer().getToolBar().setVisible(false);
                     inquiryService.createInquiry(inquiryViewer, fileItem.getFilePath(), code, question, promptContextService.getPromptContext(), openAiModelService.getSelectedOpenAiModel());
                     codactorToolWindowService.createInquiryViewerToolWindow(inquiryViewer);
                     promptContextService.clearPromptContext();

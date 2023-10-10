@@ -37,6 +37,14 @@ public class InquiryChatBoxViewer extends JPanel {
         promptInput = new JBTextArea();
         promptInput.setLineWrap(true);
         promptInput.setWrapStyleWord(true);
+        promptInput.getInputMap().put(KeyStroke.getKeyStroke("shift ENTER"), "shiftEnter");
+        promptInput.getActionMap().put("shiftEnter", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int pos = promptInput.getCaretPosition();
+                promptInput.insert("\n", pos);
+            }
+        });
 
         microphoneButton = new JButton();
         microphoneButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/microphone_icon.png"))));

@@ -5,6 +5,11 @@ import com.google.inject.Inject;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.dao.inquiry.InquiryDao;
+import com.translator.model.codactor.editor.psi.DeclarationResult;
+import com.translator.model.codactor.editor.psi.ErrorResult;
+import com.translator.model.codactor.editor.psi.UsageResult;
+import com.translator.model.codactor.functions.search.SearchResponseResource;
+import com.translator.model.codactor.functions.search.SearchResult;
 import com.translator.model.codactor.history.HistoricalContextInquiryHolder;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
@@ -19,7 +24,11 @@ import com.translator.model.codactor.modification.data.FileModificationRangeData
 import com.translator.service.codactor.directory.FileDirectoryStructureQueryService;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.editor.CodeSnippetIndexGetterService;
+import com.translator.service.codactor.editor.psi.FindDeclarationsService;
+import com.translator.service.codactor.editor.psi.FindErrorService;
+import com.translator.service.codactor.editor.psi.FindUsagesService;
 import com.translator.service.codactor.file.FileOpenerService;
+import com.translator.service.codactor.functions.search.ProjectSearchService;
 import com.translator.service.codactor.json.JsonExtractorService;
 import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.CodeRecorderService;
@@ -61,6 +70,10 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     private final FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
     private final FileModificationTrackerToFileModificationRangeDataTransformerService fileModificationTrackerToFileModificationRangeDataTransformerService;
     private final FileModificationDataHolderJsonCompatibilityService fileModificationDataHolderJsonCompatibilityService;
+    private final ProjectSearchService projectSearchService;
+    private final FindUsagesService findUsagesService;
+    private final FindDeclarationsService findDeclarationsService;
+    private final FindErrorService findErrorService;
 
     @Inject
     public InquiryFunctionCallProcessorServiceImpl(Gson gson,
@@ -72,14 +85,18 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                                    FileModificationHistoryService fileModificationHistoryService,
                                                    FileModificationRestarterService fileModificationRestarterService,
                                                    CodeRecorderService codeRecorderService,
-                                                    CodeModificationService codeModificationService,
+                                                   CodeModificationService codeModificationService,
                                                    FileDirectoryStructureQueryService fileDirectoryStructureQueryService,
                                                    CodeRunnerService codeRunnerService,
                                                    SelectedFileViewerService selectedFileViewerService,
                                                    FileOpenerService fileOpenerService,
                                                    FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService,
                                                    FileModificationTrackerToFileModificationRangeDataTransformerService fileModificationTrackerToFileModificationRangeDataTransformerService,
-                                                   FileModificationDataHolderJsonCompatibilityService fileModificationDataHolderJsonCompatibilityService) {
+                                                   FileModificationDataHolderJsonCompatibilityService fileModificationDataHolderJsonCompatibilityService,
+                                                   ProjectSearchService projectSearchService,
+                                                   FindUsagesService findUsagesService,
+                                                   FindDeclarationsService findDeclarationsService,
+                                                   FindErrorService findErrorService) {
         this.gson = gson;
         this.project = project;
         this.inquiryDao = inquiryDao;
@@ -97,6 +114,10 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         this.fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService = fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
         this.fileModificationTrackerToFileModificationRangeDataTransformerService = fileModificationTrackerToFileModificationRangeDataTransformerService;
         this.fileModificationDataHolderJsonCompatibilityService = fileModificationDataHolderJsonCompatibilityService;
+        this.projectSearchService = projectSearchService;
+        this.findUsagesService = findUsagesService;
+        this.findDeclarationsService = findDeclarationsService;
+        this.findErrorService = findErrorService;
     }
 
     @Override
@@ -246,13 +267,18 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                     }
                 }
             }
+            if (path == null) {
+                return "Error: File not found.";
+            }
             String description = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "description");
             String replacementCodeSnippetString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "replacementCodeSnippet");
-            assert replacementCodeSnippetString != null;
+            if (replacementCodeSnippetString == null) {
+                return "Error: You need to provide your modification as a replacement code snippet to mark what will be replacing the code snippet you selected.";
+            }
             int startIndex;
             int endIndex;
             String code = codeSnippetExtractorService.getAllText(path);
-            if (path != null && code == null) {
+            if (code == null) {
                 String packageName = path.replaceAll("/", ".");
                 VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
                 if (virtualFile != null) {
@@ -460,6 +486,46 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             return "{" +
                     "\"message\": \"Program started\"" +
                     "}";
+        } else if (chatGptFunctionCall.getName().equals("project_text_search")) {
+            String query = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "query");
+            String page = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "page");
+            int pageInt;
+            String pageSize = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "pageSize");
+            int pageSizeInt;
+            if (page != null) {
+                pageInt = Integer.parseInt(page);
+            } else {
+                pageInt = 1;
+            }
+            if (pageSize != null) {
+                pageSizeInt = Integer.parseInt(pageSize);
+            } else {
+                pageSizeInt = 10;
+            }
+            SearchResponseResource searchResponseResource = projectSearchService.search(query, pageInt, pageSizeInt);
+            return gson.toJson(searchResponseResource);
+        } else if (chatGptFunctionCall.getName().equals("find_usages_of_code")) {
+            String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
+            String codeSnippet = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "codeSnippet");
+            List<UsageResult> usageResults = findUsagesService.findUsagesWithinRange(filePath, codeSnippet);
+            return gson.toJson(usageResults);
+        } else if (chatGptFunctionCall.getName().equals("find_declarations_of_code")) {
+            String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
+            String codeSnippet = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "codeSnippet");
+            List<DeclarationResult> declarationResults = findDeclarationsService.findDeclarationsWithinRange(filePath, codeSnippet);
+            return gson.toJson(declarationResults);
+        } else if (chatGptFunctionCall.getName().equals("find_errors_in_code")) {
+            String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
+            String codeSnippet = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "codeSnippet");
+
+            boolean includeWarnings;
+            if (JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "includeWarnings") == null) {
+                includeWarnings = false;
+            }  else {
+                includeWarnings = Boolean.parseBoolean(JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "includeWarnings"));
+            }
+            List<ErrorResult> errorResults = findErrorService.getErrorsWithinRange(filePath, codeSnippet, includeWarnings);
+            return gson.toJson(errorResults);
         }
         return null;
     }

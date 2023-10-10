@@ -5,6 +5,7 @@ import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiManager;
 
 public class SelectedFileViewerServiceImpl implements SelectedFileViewerService {
     private Project project;
@@ -15,8 +16,13 @@ public class SelectedFileViewerServiceImpl implements SelectedFileViewerService 
     }
 
     public VirtualFile getSelectedFileInEditor() {
-        final FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
-        return fileEditorManager.getSelectedFiles()[0];
+        FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+        final VirtualFile[] selectedFiles = fileEditorManager.getSelectedFiles();
+        if (selectedFiles.length > 0) {
+            return fileEditorManager.getSelectedFiles()[0];
+        }
+
+        return null;
     }
 
     public VirtualFile getSelectedFileInTreeView() {

@@ -1,5 +1,6 @@
 package com.translator.view.codactor.viewer.context;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
@@ -137,7 +138,12 @@ public class HistoricalContextObjectListViewer extends JPanel {
         }
         contextObjectList.setModel(model);
         if (historicalContextObjectListChatViewer != null) {
-            historicalContextObjectListChatViewer.updateChatContents();
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    historicalContextObjectListChatViewer.updateChatContents();
+                }
+            });
         }
     }
 

@@ -136,7 +136,7 @@
         </action>
     </actions>
     <extensions defaultExtensionNs="com.intellij">
-        <applicationConfigurable instance="com.translator.service.codactor.settings.CodactorConfigurable"/>
+        <applicationConfigurable instance="com.translator.view.codactor.settings.CodactorConfigurable"/>
         <fileEditorProvider
                 implementation="com.translator.view.uml.editor.CodactorUmlBuilderSVGEditorProvider"/>
     </extensions>

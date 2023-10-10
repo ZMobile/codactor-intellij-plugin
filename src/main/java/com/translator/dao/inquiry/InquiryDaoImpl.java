@@ -124,6 +124,7 @@ public class InquiryDaoImpl implements InquiryDao {
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                System.out.println("Testo response 1: " + response);
                 System.out.println(response);
                 return gson.fromJson(response, Inquiry.class);
             }
@@ -169,7 +170,7 @@ public class InquiryDaoImpl implements InquiryDao {
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                System.out.println(response);
+                System.out.println("Testo response 2: " + response);
                 return gson.fromJson(response, Inquiry.class);
             }
         } catch (IOException ex) {
@@ -210,7 +211,7 @@ public class InquiryDaoImpl implements InquiryDao {
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                System.out.println(response);
+                System.out.println("Testo response 3: " + response);
                 return gson.fromJson(response, Inquiry.class);
             }
         } catch (IOException ex) {
@@ -252,7 +253,7 @@ public class InquiryDaoImpl implements InquiryDao {
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                System.out.println(response);
+                System.out.println("Testo response 4: " + response);
                 return gson.fromJson(response, Inquiry.class);
             }
         } catch (IOException ex) {
@@ -301,7 +302,7 @@ public class InquiryDaoImpl implements InquiryDao {
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                System.out.println(response);
+                System.out.println("Testo response 5: " + response);
                 return gson.fromJson(response, Inquiry.class);
             }
         } catch (IOException ex) {
@@ -345,7 +346,7 @@ public class InquiryDaoImpl implements InquiryDao {
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                System.out.println(response);
+                System.out.println("Testo response 6: " + response);
                 return gson.fromJson(response, Inquiry.class);
             }
         } catch (IOException ex) {
@@ -386,7 +387,7 @@ public class InquiryDaoImpl implements InquiryDao {
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                System.out.println(response);
+                System.out.println("Testo response 7: " + response);
                 return gson.fromJson(response, Inquiry.class);
             }
         } catch (IOException ex) {

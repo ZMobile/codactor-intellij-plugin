@@ -52,7 +52,7 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
                 if (document != null) {
                     // Retrieve the text from the document using the start and end indices
                     int newStartIndex = Math.max(startIndex, 0);
-                    int newEndIndex = Math.min(endIndex, document..getText().length());
+                    int newEndIndex = Math.min(endIndex, document.getText().length());
                     snippet.set(document.getText(new TextRange(newStartIndex, newEndIndex)));
                 }
             }
@@ -250,7 +250,7 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
         int lineEnd = document.getLineEndOffset(document.getLineNumber(startIndex));
 
         String currentLine = document.getText(new TextRange(startIndex, lineEnd));
-        String restOfCode = document.getText(new TextRange(lineEnd + 1, document..getText().length()));
+        String restOfCode = document.getText(new TextRange(lineEnd + 1, document.getText().length()));
 
         String[] lines = restOfCode.split("\n", 2);
         String nextLine = "";

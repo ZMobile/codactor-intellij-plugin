@@ -130,7 +130,7 @@ public class InquiryViewer extends JPanel {
     }
 
     public void askInquiryQuestion(String subjectRecordId, RecordType recordType, String question, String filePath) {
-        inquiryChatBoxViewer.getToolBar().setVisible(false);
+        //inquiryChatBoxViewer.getToolBar().setVisible(false);
         String model = inquiryChatListViewer.getOpenAiModelService().getSelectedOpenAiModel();
         inquiryService.createInquiry(this, subjectRecordId, recordType, question, filePath, model);
     }

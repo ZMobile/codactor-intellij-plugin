@@ -14,9 +14,21 @@ public class CodeSnippetIndexGetterServiceImpl implements CodeSnippetIndexGetter
         return code.indexOf(snippet);
     }
 
+    @Override
+    public int getStartIndexInFilePath(String filePath, String snippet) {
+        String code = codeSnippetExtractorService.getAllText(filePath);
+        return getStartIndex(code, snippet);
+    }
+
     public int getEndIndex(String code, String snippet) {
         int start = getStartIndex(code, snippet);
         return start == -1 ? -1 : start + snippet.length();
+    }
+
+    @Override
+    public int getEndIndexInFilePath(String filePath, String snippet) {
+        String code = codeSnippetExtractorService.getAllText(filePath);
+        return getEndIndex(code, snippet);
     }
 
     @Override

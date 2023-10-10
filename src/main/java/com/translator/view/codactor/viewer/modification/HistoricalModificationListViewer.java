@@ -1,8 +1,10 @@
 package com.translator.view.codactor.viewer.modification;
 
+import com.google.inject.Injector;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBScrollPane;
+import com.translator.CodactorInjector;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.model.codactor.api.translator.history.DesktopCodeModificationHistoryResponseResource;
 import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
@@ -58,12 +60,13 @@ public class HistoricalModificationListViewer extends JPanel {
         otherInquiriesButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         jToolBar2.add(otherInquiriesButton);
 
-        otherInquiriesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                inquiryListViewer.updateInquiryList();
-                codactorToolWindowService.openInquiryListViewerToolWindow();
+        otherInquiriesButton.addActionListener(e -> {
+            if (inquiryListViewer == null) {
+                Injector injector = CodactorInjector.getInstance().getInjector(project);
+                inquiryListViewer = injector.getInstance(InquiryListViewer.class);
             }
+            inquiryListViewer.updateInquiryList();
+            codactorToolWindowService.openInquiryListViewerToolWindow();
         });
 
         modificationList = new JList<>();

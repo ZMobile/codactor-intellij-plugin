@@ -56,10 +56,11 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
         System.out.println("This gets called 2");
         RangeMarker guardedBlock = guardedBlocks.get(fileModificationId);
         if (guardedBlock != null) {
+            Document document = guardedBlock.getDocument();
             System.out.println("This gets called 3");
             ApplicationManager.getApplication().invokeLater(() -> {
+                        document.removeGuardedBlock(guardedBlock);
                         guardedBlocks.remove(fileModificationId);
-                        guardedBlock.dispose();
                         System.out.println("Guarded block disposed");
             });
             //uneditableSegmentListenerService.removeUneditableFileModificationSegmentListener(fileModificationId);
@@ -78,8 +79,9 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
     public void removeFileModificationSuggestionModificationGuardedBlock(String fileModificationSuggestionModificationId) {
         RangeMarker guardedBlock = guardedBlocks.get(fileModificationSuggestionModificationId);
         if (guardedBlock != null) {
-            guardedBlock.dispose();
+            Document document = guardedBlock.getDocument();
             guardedBlocks.remove(fileModificationSuggestionModificationId);
+            document.removeGuardedBlock(guardedBlock);
             //uneditableSegmentListenerService.removeUneditableFileModificationSuggestionModificationSegmentListener(fileModificationSuggestionModificationId);
         }
     }

@@ -30,7 +30,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
 
         // Create ChatGptFunction for "read_file_at_path"
         Parameters readFileAtPathParams = new Parameters("object");
-        Property pathProperty = new Property("string", "The path of the code file eg. /Users/user/IdeaProjects/code_project/src/code.java", null, null);
+        Property pathProperty = new Property("string", "The file path of the code eg. /Users/user/IdeaProjects/code_project/src/code.java", null, null);
         readFileAtPathParams.getProperties().put("path", pathProperty);
         readFileAtPathParams.getRequired().add("path");
 
@@ -45,6 +45,39 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         ChatGptFunction openFileAtPathInEditor = new ChatGptFunction("open_file_at_path_for_user", "Open a code file in the Intellij code editor given its path", openFileAtPathInEditorParams);
         codactorFunctions.add(openFileAtPathInEditor);
 
+        //Create ChatGptFunction for "find_usages_of_code"
+        Parameters findUsagesOfCodeParams = new Parameters("object");
+        findUsagesOfCodeParams.getProperties().put("path", pathProperty);
+        findUsagesOfCodeParams.getRequired().add("path");
+        Property codeSnippetProperty = new Property("string", "A snippet of code from within the file marking the start and end of the selection.", null, null);
+        findUsagesOfCodeParams.getProperties().put("codeSnippet", codeSnippetProperty);
+        findUsagesOfCodeParams.getRequired().add("codeSnippet");
+
+        ChatGptFunction findUsagesOfCode = new ChatGptFunction("find_usages_of_code", "Find usages of a code snippet within a file", findUsagesOfCodeParams);
+        codactorFunctions.add(findUsagesOfCode);
+
+        //Create ChatGptFunction for "find_declarations_of_code"
+        Parameters findDeclarationsOfCodeParams = new Parameters("object");
+        findDeclarationsOfCodeParams.getProperties().put("path", pathProperty);
+        findDeclarationsOfCodeParams.getRequired().add("path");
+        findDeclarationsOfCodeParams.getProperties().put("codeSnippet", codeSnippetProperty);
+        findDeclarationsOfCodeParams.getRequired().add("codeSnippet");
+
+        ChatGptFunction findDeclarationsOfCode = new ChatGptFunction("find_declarations_of_code", "Find declarations of a code snippet within a file", findDeclarationsOfCodeParams);
+        codactorFunctions.add(findDeclarationsOfCode);
+
+        //Create ChatGptFunction for "find_errors_9j_code"
+        Parameters findErrorsInCodeParams = new Parameters("object");
+        findErrorsInCodeParams.getProperties().put("path", pathProperty);
+        findErrorsInCodeParams.getRequired().add("path");
+        findErrorsInCodeParams.getProperties().put("codeSnippet", codeSnippetProperty);
+        findErrorsInCodeParams.getRequired().add("codeSnippet");
+        Property includeWarningsProperty = new Property("boolean", "Whether to include warnings in the results", null, null);
+        findErrorsInCodeParams.getProperties().put("includeWarnings", includeWarningsProperty);
+
+        ChatGptFunction findErrorsInCode = new ChatGptFunction("find_errors_in_code", "Find errors of a code snippet within a file", findErrorsInCodeParams);
+        codactorFunctions.add(findErrorsInCode);
+
         // Create ChatGptFunction for "read_file_at_package"
         Parameters readFileAtPackageParams = new Parameters("object");
         Property packageProperty = new Property("string", "The class package of the code file e.g. com.translator.view.uml.node.dialog.prompt", null, null);
@@ -53,6 +86,18 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
 
         ChatGptFunction readFileAtPackage = new ChatGptFunction("read_file_at_package", "Read the contents and file path of a code or text file given its package in the project directory", readFileAtPackageParams);
         codactorFunctions.add(readFileAtPackage);
+
+        Parameters projectTextSearchParams = new Parameters("object");
+        Property queryProperty = new Property("string", "The string to run an Intellij search query on", null, null);
+        projectTextSearchParams.getProperties().put("query", queryProperty);
+        Property pageProperty = new Property("integer", "The page of the query", null, null);
+        projectTextSearchParams.getProperties().put("page", pageProperty);
+        Property pageSizeProperty = new Property("integer", "The page size of the query", null, null);
+        projectTextSearchParams.getProperties().put("pageSize", pageSizeProperty);
+        projectTextSearchParams.getRequired().add("query");
+
+        ChatGptFunction projectTextSearch = new ChatGptFunction("project_text_search", "Run a text search for files and contents throughout the currently open project and return the results. If page and pageSize are null, it will return the first 10 results. Powered by Intellij's PsiSearchHelper", projectTextSearchParams);
+        codactorFunctions.add(projectTextSearch);
 
         // Create ChatGptFunction for "get_recent_historical_modifications"
         Parameters getHistoricalModificationParams = new Parameters("object");
@@ -131,19 +176,19 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         modificationTypes.add("create");
         Property startSnippetProperty = new Property("string", "A snippet of code from within the file marking the start boundary of the selection. Upon use, the start index of the modification will be at the start of this string. Ideally, the start snippet should include enough to make it unique so it can be used to find its location in the code with precision. If not utilized, it will automatically be set to the beginning of the file.", null, null);
         Property endSnippetProperty = new Property("string", "A snippet of code from within the file marking the end boundary of the selection. Upon use, the end index of the modification will be at the start of this string. Ideally the end snippet should include enough to make it unique so it can be used to find its location in the code with precision. If not utilized, it will automatically be set to the end of the file.", null, null);
-        Property codeSnippetProperty = new Property("string", "A snippet of code from within the file marking the start and end of the selection. This property overrides the startSnippet and endSnippet properties--it should not be used start snippet or end snippet are used.", null, null);
+        Property requestFileModificationCodeSnippetProperty = new Property("string", "A snippet of code from within the file marking the start and end of the selection. This property overrides the startSnippet and endSnippet properties--it should not be used start snippet or end snippet are used.", null, null);
         Property optionalPathProperty = new Property("string", "The path of the file to be modified. If not provided, the file modifier will attempt to find the file to be modified based on the provided description. Either this or the package must be provided for a modification", null, null);
         Property optionalPackageProperty = new Property("string", "The class package of the file to be modified. If not provided, the file modifier will attempt to find the file to be modified based on the provided description. Either this or the path must be provided for a modification", null, null);
         Property modificationTypeProperty = new Property("string", "The type of file modification types to choose from are 'modify' for modifying code in a file, 'fix' for reporting and fixing an error (like modify but for complaining), and 'create' for creating new code where none existed before, so it will ignore the startSnippet, endSnippet, and codeSnippet, placing its created code at index 0.", modificationTypes, null);
         Property descriptionProperty = new Property("string", "The description of the modification to be enacted on the file", null, null);
-        Property replacementCodeProperty = new Property("string", "The code to replace the target code snippet", null, null);
+        Property replacementCodeProperty = new Property("string", "The code to replace the target code snippet. This code must serve as a full replacement for the target code as it will be directly replacing the code snippet provided if accepted.", null, null);
         requestFileModificationParams.getProperties().put("path", optionalPathProperty);
         requestFileModificationParams.getProperties().put("package", optionalPackageProperty);
         requestFileModificationParams.getProperties().put("modificationType", modificationTypeProperty);
         requestFileModificationParams.getProperties().put("description", descriptionProperty);
         requestFileModificationParams.getProperties().put("startBoundary", startSnippetProperty);
         requestFileModificationParams.getProperties().put("endBoundary", endSnippetProperty);
-        requestFileModificationParams.getProperties().put("codeSnippet", codeSnippetProperty);
+        requestFileModificationParams.getProperties().put("codeSnippet", requestFileModificationCodeSnippetProperty);
         requestFileModificationParams.getProperties().put("replacementCodeSnippet", replacementCodeProperty);
         requestFileModificationParams.getRequired().add("modificationType");
         requestFileModificationParams.getRequired().add("description");

@@ -16,6 +16,7 @@ import com.translator.service.codactor.file.FileReaderService;
 import com.translator.service.codactor.file.SelectedFileFetcherService;
 import com.translator.service.codactor.functions.InquiryChatListFunctionCallCompressorService;
 import com.translator.service.codactor.functions.InquiryFunctionCallProcessorService;
+import com.translator.service.codactor.functions.search.ProjectSearchService;
 import com.translator.service.codactor.inquiry.InquiryService;
 import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
@@ -137,11 +138,13 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            InquiryService inquiryService,
                                            OpenAiModelService openAiModelService,
                                            CodeModificationService codeModificationService,
+                                           Gson gson,
+                                           ProjectSearchService projectSearchService,
                                            CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                                            InquiryViewerFactory inquiryViewerFactory) {
-        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, codeModificationService, codactorUmlBuilderApplication, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory);
+        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, codeModificationService, gson, projectSearchService, codactorUmlBuilderApplication, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory);
     }
 
     @Singleton

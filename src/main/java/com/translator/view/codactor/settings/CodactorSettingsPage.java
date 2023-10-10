@@ -1,4 +1,4 @@
-package com.translator.service.codactor.settings;
+package com.translator.view.codactor.settings;
 
 import com.translator.dao.firebase.FirebaseTokenService;
 import com.translator.service.codactor.connection.AzureConnectionService;
@@ -56,7 +56,12 @@ public class CodactorSettingsPage {
     private JPanel accountEmailPanel;
     private JPanel accountPasswordPanel;
     private JPanel codactorConnectionInfoPanel;
-
+    private JPanel localApiPanel;
+    private JLabel apiSettingLabel;
+    private JLabel portLabel;
+    private JTextField textField2;
+    private JButton enableButton;
+    private JLabel localApiServerStatusLabel;
 
 
     DocumentListener textChangedListener = new DocumentListener() {

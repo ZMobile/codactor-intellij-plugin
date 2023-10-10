@@ -87,6 +87,18 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
         } else if (functionCall.getName().equals("run_program")) {
             String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
             return "Running program " + path + "...";
+        } else if (functionCall.getName().equals("project_text_search")) {
+            String query = JsonExtractorService.extractField(functionCall.getArguments(), "query");
+            return "Running project text search for \"" + query + "\"...";
+        } else if (functionCall.getName().equals("find_usages_of_code")) {
+            String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            return "Finding Usages for code snippet in \"" + path + "\"...";
+        } else if (functionCall.getName().equals("find_declarations_of_code")) {
+            String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            return "Finding Declarations for code snippet in \"" + path + "\"...";
+        } else if (functionCall.getName().equals("find_errors_in_code")) {
+            String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            return "Finding Errors for code snippet in \"" + path + "\"...";
         }
         return "Running function " + functionCall.getName() + "...";
     }
