@@ -19,7 +19,6 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Objects;
 
-@Service
 public class RangeReplaceServiceImpl implements RangeReplaceService {
     private Project project;
 

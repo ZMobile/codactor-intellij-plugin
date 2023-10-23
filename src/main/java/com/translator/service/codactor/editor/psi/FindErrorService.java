@@ -1,6 +1,6 @@
 package com.translator.service.codactor.editor.psi;
 
-import com.translator.model.codactor.editor.psi.ErrorResult;
+import com.translator.model.codactor.editor.psi.error.ErrorResult;
 
 import java.util.List;
 

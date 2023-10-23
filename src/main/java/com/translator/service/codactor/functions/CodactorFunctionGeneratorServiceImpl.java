@@ -45,7 +45,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         ChatGptFunction openFileAtPathInEditor = new ChatGptFunction("open_file_at_path_for_user", "Open a code file in the Intellij code editor given its path", openFileAtPathInEditorParams);
         codactorFunctions.add(openFileAtPathInEditor);
 
-        //Create ChatGptFunction for "find_usages_of_code"
+        //Create ChatGptFunction for "find_declarations_or_usages_of_code"
         Parameters findUsagesOfCodeParams = new Parameters("object");
         findUsagesOfCodeParams.getProperties().put("path", pathProperty);
         findUsagesOfCodeParams.getRequired().add("path");
@@ -53,20 +53,20 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         findUsagesOfCodeParams.getProperties().put("codeSnippet", codeSnippetProperty);
         findUsagesOfCodeParams.getRequired().add("codeSnippet");
 
-        ChatGptFunction findUsagesOfCode = new ChatGptFunction("find_usages_of_code", "Find usages of a code snippet within a file", findUsagesOfCodeParams);
+        ChatGptFunction findUsagesOfCode = new ChatGptFunction("find_declarations_or_usages_of_code", "Find declarations or usages of a code snippet within a file", findUsagesOfCodeParams);
         codactorFunctions.add(findUsagesOfCode);
 
-        //Create ChatGptFunction for "find_declarations_of_code"
-        Parameters findDeclarationsOfCodeParams = new Parameters("object");
-        findDeclarationsOfCodeParams.getProperties().put("path", pathProperty);
-        findDeclarationsOfCodeParams.getRequired().add("path");
-        findDeclarationsOfCodeParams.getProperties().put("codeSnippet", codeSnippetProperty);
-        findDeclarationsOfCodeParams.getRequired().add("codeSnippet");
+        //Create ChatGptFunction for "find_implementations_of_code"
+        Parameters findImplementationsOfCodeParams = new Parameters("object");
+        findImplementationsOfCodeParams.getProperties().put("path", pathProperty);
+        findImplementationsOfCodeParams.getRequired().add("path");
+        findImplementationsOfCodeParams.getProperties().put("codeSnippet", codeSnippetProperty);
+        findImplementationsOfCodeParams.getRequired().add("codeSnippet");
 
-        ChatGptFunction findDeclarationsOfCode = new ChatGptFunction("find_declarations_of_code", "Find declarations of a code snippet within a file", findDeclarationsOfCodeParams);
-        codactorFunctions.add(findDeclarationsOfCode);
+        ChatGptFunction findImplementationsOfCode = new ChatGptFunction("find_implementations_of_code", "Find implementations of methods in a code snippet within a file", findImplementationsOfCodeParams);
+        codactorFunctions.add(findImplementationsOfCode);
 
-        //Create ChatGptFunction for "find_errors_9j_code"
+        //Create ChatGptFunction for "find_compile_time_errors_in_code"
         Parameters findErrorsInCodeParams = new Parameters("object");
         findErrorsInCodeParams.getProperties().put("path", pathProperty);
         findErrorsInCodeParams.getRequired().add("path");
@@ -75,7 +75,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         Property includeWarningsProperty = new Property("boolean", "Whether to include warnings in the results", null, null);
         findErrorsInCodeParams.getProperties().put("includeWarnings", includeWarningsProperty);
 
-        ChatGptFunction findErrorsInCode = new ChatGptFunction("find_errors_in_code", "Find errors of a code snippet within a file", findErrorsInCodeParams);
+        ChatGptFunction findErrorsInCode = new ChatGptFunction("find_compile_time_errors_in_code", "Find compile-time errors of a code snippet within a file", findErrorsInCodeParams);
         codactorFunctions.add(findErrorsInCode);
 
         // Create ChatGptFunction for "read_file_at_package"

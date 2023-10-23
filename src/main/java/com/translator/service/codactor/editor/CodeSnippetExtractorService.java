@@ -27,4 +27,6 @@ public interface CodeSnippetExtractorService {
     String getCurrentAndNextLineCodeAfterIndex(String filePath, int startIndex);
 
     String getCurrentAndOneLinePreviousCodeBeforeIndex(String filePath, int endIndex);
+
+    String getCurrentLineCodeAtIndex(String filePath, int index);
 }

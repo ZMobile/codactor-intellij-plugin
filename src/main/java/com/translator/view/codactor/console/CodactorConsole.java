@@ -14,7 +14,10 @@ import com.intellij.util.messages.MessageBusConnection;
 import com.translator.model.codactor.file.FileItem;
 import com.translator.model.codactor.modification.ModificationType;
 import com.translator.service.codactor.context.PromptContextService;
+import com.translator.service.codactor.editor.CodeHighlighterService;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.editor.psi.FindImplementationsService;
+import com.translator.service.codactor.editor.psi.FindUsagesService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.file.SelectedFileFetcherService;
 import com.translator.service.codactor.functions.search.ProjectSearchService;
@@ -63,7 +66,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private OpenAiModelService openAiModelService;
     // For testing purposes
     private Gson gson;
-    private ProjectSearchService projectSearchService;
+    private FindImplementationsService findImplementationsService;
+    private FindUsagesService findUsagesService;
+    private CodeHighlighterService codeHighlighterService;
     // For testing purposes
     private CodactorUmlBuilderApplication codactorUmlBuilderApplication;
     private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
@@ -80,7 +85,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            OpenAiModelService openAiModelService,
                            CodeModificationService codeModificationService,
                            Gson gson,
-                           ProjectSearchService projectSearchService,
+                           FindImplementationsService findImplementationsService,
+                           FindUsagesService findUsagesService,
+                           CodeHighlighterService codeHighlighterService,
                            CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
@@ -95,7 +102,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.openAiModelService = openAiModelService;
         this.codeModificationService = codeModificationService;
         this.gson = gson;
-        this.projectSearchService = projectSearchService;
+        this.findImplementationsService = findImplementationsService;
+        this.findUsagesService = findUsagesService;
+        this.codeHighlighterService = codeHighlighterService;
         this.codactorUmlBuilderApplication = codactorUmlBuilderApplication;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
@@ -218,14 +227,15 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         rightToolbar.add(hiddenLabel);
         rightToolbar.add(advancedButton);
 
-        /*JButton testButton = new JButton("Test");
+        JButton testButton = new JButton("Test");
         testButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println(gson.toJson(projectSearchService.search("Analysis")));
+                System.out.println(gson.toJson(findImplementationsService.findImplementationsWithinRange("/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/editor/CodeSnippetExtractorService.java", "String getSnippet(String filePath, int startIndex, int endIndex);")));
+                //codeHighlighterService.addHighlight("/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/editor/CodeSnippetExtractorService.java", 250, 350, Color.ORANGE);
             }
         });
-        rightToolbar.add(testButton);*/
+        //rightToolbar.add(testButton);
 
         topToolbar.add(leftToolbar);
         topToolbar.add(rightToolbar, BorderLayout.EAST);

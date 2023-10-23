@@ -277,4 +277,30 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
         return previousLine + "\n" + currentLine;
     }
 
+    @Override
+    public String getCurrentLineCodeAtIndex(String filePath, int index) {
+        if (filePath == null) {
+            return null;
+        }
+        // Convert the file path to a VirtualFile instance
+        AtomicReference<String> lineTextRef = new AtomicReference<>();
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+
+            if (virtualFile != null) {
+                // Get the Document instance corresponding to the VirtualFile
+                Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
+
+                if (document != null) {
+                    // Retrieve the line number from an index
+                    int lineNumber = document.getLineNumber(index);
+                    int lineStart = document.getLineStartOffset(lineNumber);
+                    int lineEnd = document.getLineEndOffset(lineNumber);
+                    // Retrieve the text of the line
+                    lineTextRef.set(document.getText(new TextRange(lineStart, lineEnd)));
+                }
+            }
+        });
+        return lineTextRef.get();
+    }
 }

@@ -162,10 +162,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(ProjectSearchService.class).to(ProjectSearchServiceImpl.class);
         bind(PsiFileService.class).to(PsiFileServiceImpl.class);
         bind(PsiElementCollectorService.class).to(PsiElementCollectorServiceImpl.class);
-        bind(FindDeclarationsService.class).to(FindDeclarationsServiceImpl.class);
         bind(FindErrorService.class).to(FindErrorServiceImpl.class);
-        bind(FindUsagesHandlerService.class).to(FindUsagesHandlerServiceImpl.class);
         bind(FindUsagesService.class).to(FindUsagesServiceImpl.class);
+        bind(FindImplementationsService.class).to(FindImplementationsServiceImpl.class);
     }
 
     @Singleton

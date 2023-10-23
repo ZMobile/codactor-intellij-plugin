@@ -1,4 +1,4 @@
-package com.translator.model.codactor.editor.psi;
+package com.translator.model.codactor.editor.psi.error;
 
 public class ErrorResult {
     public String description;

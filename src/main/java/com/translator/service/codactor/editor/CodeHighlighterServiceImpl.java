@@ -116,4 +116,34 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
                 textAttributes,
                 HighlighterTargetArea.EXACT_RANGE);
     }
+
+    @Override
+    public void addHighlight(String filePath, int startIndex, int endIndex, Color highlightColor) {
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+        if (virtualFile == null) {
+            return;
+        }
+
+        Editor editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
+        if (editor == null) {
+            return;
+        }
+
+        addHighlight(editor, startIndex, endIndex, highlightColor);
+    }
+
+    @Override
+    public void removeAllHighlights(String filePath) {
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+        if (virtualFile == null) {
+            return;
+        }
+
+        Editor editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
+        if (editor == null) {
+            return;
+        }
+
+        removeAllHighlights(editor);
+    }
 }

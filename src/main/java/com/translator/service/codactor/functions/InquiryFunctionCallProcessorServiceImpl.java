@@ -5,11 +5,10 @@ import com.google.inject.Inject;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.dao.inquiry.InquiryDao;
-import com.translator.model.codactor.editor.psi.DeclarationResult;
-import com.translator.model.codactor.editor.psi.ErrorResult;
-import com.translator.model.codactor.editor.psi.UsageResult;
+import com.translator.model.codactor.editor.psi.error.ErrorResult;
+import com.translator.model.codactor.editor.psi.implementation.ImplementationResultsResource;
+import com.translator.model.codactor.editor.psi.usage.UsageResultsResource;
 import com.translator.model.codactor.functions.search.SearchResponseResource;
-import com.translator.model.codactor.functions.search.SearchResult;
 import com.translator.model.codactor.history.HistoricalContextInquiryHolder;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
@@ -24,8 +23,8 @@ import com.translator.model.codactor.modification.data.FileModificationRangeData
 import com.translator.service.codactor.directory.FileDirectoryStructureQueryService;
 import com.translator.service.codactor.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.editor.CodeSnippetIndexGetterService;
-import com.translator.service.codactor.editor.psi.FindDeclarationsService;
 import com.translator.service.codactor.editor.psi.FindErrorService;
+import com.translator.service.codactor.editor.psi.FindImplementationsService;
 import com.translator.service.codactor.editor.psi.FindUsagesService;
 import com.translator.service.codactor.file.FileOpenerService;
 import com.translator.service.codactor.functions.search.ProjectSearchService;
@@ -72,7 +71,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     private final FileModificationDataHolderJsonCompatibilityService fileModificationDataHolderJsonCompatibilityService;
     private final ProjectSearchService projectSearchService;
     private final FindUsagesService findUsagesService;
-    private final FindDeclarationsService findDeclarationsService;
+    private final FindImplementationsService findImplementationsService;
     private final FindErrorService findErrorService;
 
     @Inject
@@ -95,7 +94,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                                    FileModificationDataHolderJsonCompatibilityService fileModificationDataHolderJsonCompatibilityService,
                                                    ProjectSearchService projectSearchService,
                                                    FindUsagesService findUsagesService,
-                                                   FindDeclarationsService findDeclarationsService,
+                                                   FindImplementationsService findImplementationsService,
                                                    FindErrorService findErrorService) {
         this.gson = gson;
         this.project = project;
@@ -116,7 +115,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         this.fileModificationDataHolderJsonCompatibilityService = fileModificationDataHolderJsonCompatibilityService;
         this.projectSearchService = projectSearchService;
         this.findUsagesService = findUsagesService;
-        this.findDeclarationsService = findDeclarationsService;
+        this.findImplementationsService = findImplementationsService;
         this.findErrorService = findErrorService;
     }
 
@@ -504,17 +503,17 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             }
             SearchResponseResource searchResponseResource = projectSearchService.search(query, pageInt, pageSizeInt);
             return gson.toJson(searchResponseResource);
-        } else if (chatGptFunctionCall.getName().equals("find_usages_of_code")) {
+        } else if (chatGptFunctionCall.getName().equals("find_declarations_or_usages_of_code")) {
             String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
             String codeSnippet = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "codeSnippet");
-            List<UsageResult> usageResults = findUsagesService.findUsagesWithinRange(filePath, codeSnippet);
+            UsageResultsResource usageResults = findUsagesService.findUsagesWithinRange(filePath, codeSnippet);
             return gson.toJson(usageResults);
-        } else if (chatGptFunctionCall.getName().equals("find_declarations_of_code")) {
+        } else if (chatGptFunctionCall.getName().equals("find_implementations_of_code")) {
             String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
             String codeSnippet = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "codeSnippet");
-            List<DeclarationResult> declarationResults = findDeclarationsService.findDeclarationsWithinRange(filePath, codeSnippet);
-            return gson.toJson(declarationResults);
-        } else if (chatGptFunctionCall.getName().equals("find_errors_in_code")) {
+            ImplementationResultsResource implementationResults = findImplementationsService.findImplementationsWithinRange(filePath, codeSnippet);
+            return gson.toJson(implementationResults);
+        } else if (chatGptFunctionCall.getName().equals("find_compile_time_errors_in_code")) {
             String filePath = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
             String codeSnippet = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "codeSnippet");
 

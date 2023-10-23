@@ -1,4 +1,4 @@
-package com.translator.model.codactor.editor.psi;
+package com.translator.model.codactor.editor.psi.usage;
 
 public class UsageResult {
     public UsageResult(String filePath, String snippet) {
