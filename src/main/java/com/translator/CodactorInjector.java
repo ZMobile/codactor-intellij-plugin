@@ -29,6 +29,7 @@ public class CodactorInjector {
                 System.out.println("Project is null");
                 e.printStackTrace();
             }
+            return null;
         }
         if (projectToInjectorMap.containsKey(project)) {
             return projectToInjectorMap.get(project);

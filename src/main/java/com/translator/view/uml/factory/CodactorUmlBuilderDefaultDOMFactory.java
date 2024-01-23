@@ -54,10 +54,7 @@ public class CodactorUmlBuilderDefaultDOMFactory extends JavaPrimitivesDOMFactor
             throw new IllegalArgumentException("Storable name not known to factory: " + name);
         } else if (o instanceof Class) {
             try {
-                for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
-                    System.out.println(ste);
-                }
-                return ((Class)o).getDeclaredConstructor(String.class).newInstance("Prompt");
+                return ((Class)o).getDeclaredConstructor().newInstance();
             } catch (Exception var4) {
                 var4.printStackTrace();
                 throw new IllegalArgumentException("Storable class not instantiable by factory: " + name, var4);

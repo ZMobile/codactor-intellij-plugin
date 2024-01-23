@@ -71,6 +71,10 @@ public class PromptViewer extends JPanel {
         this.lastSelectedChat = -1;
         this.gson = gson;
         initComponents();
+        //System.out.println("og metadta: " + promptNodeDialog.getPromptNodeFigure().getMetadata());
+        //System.out.println("new metadata: " + gson.toJson(promptNode));
+        //promptNodeDialog.getPromptNodeFigure().setMetadata(gson.toJson(promptNode));
+        updatePromptChatContents(promptNode.getPromptList());
     }
 
     private void initComponents() {

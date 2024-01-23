@@ -43,6 +43,8 @@ public class PromptNodeDialog extends JDialog {
                             Gson gson) {
         super();
         this.gson = gson;
+        System.out.println("Figure: " + promptNodeFigure);
+        System.out.println("Metadata: " + promptNodeFigure.getMetadata());
         this.project = project;
         this.nodeRunnerManagerService = nodeRunnerManagerService;
         this.promptNodeFigure = promptNodeFigure;

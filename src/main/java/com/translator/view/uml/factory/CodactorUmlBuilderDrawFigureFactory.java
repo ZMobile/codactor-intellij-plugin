@@ -1,6 +1,6 @@
 package com.translator.view.uml.factory;
 
-import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
+import com.translator.model.uml.draw.figure.*;
 import org.jhotdraw.draw.*;
 import org.jhotdraw.draw.connector.*;
 import org.jhotdraw.draw.decoration.ArrowTip;
@@ -27,6 +27,11 @@ public class CodactorUmlBuilderDrawFigureFactory extends CodactorUmlBuilderDefau
             {GroupFigure.class, "g"},
 
             {LabeledRectangleFigure.class, "lr"},
+            {LabeledDiamondFigure.class, "ld"},
+            {LabeledTriangleFigure.class, "lt"},
+            {LabeledEllipseFigure.class, "le"},
+            {LabeledRoundRectangleFigure.class, "lrr"},
+            {MetadataLabeledLineConnectionFigure.class, "ll"},
 
             {ArrowTip.class, "arrowTip"},
             {ChopRectangleConnector.class, "rConnector"},
