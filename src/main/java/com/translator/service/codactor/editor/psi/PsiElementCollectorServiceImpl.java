@@ -253,5 +253,4 @@ public class PsiElementCollectorServiceImpl implements PsiElementCollectorServic
 
         return search.findAll();
     }
-
 }

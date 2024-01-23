@@ -71,8 +71,23 @@ public class CodactorUmlBuilderSVGEditor extends UserDataHolderBase implements F
         uriList.add(uri);
         this.view = application.startAndReturn(uriList);
 
+        // Create a toolbar for the detach button
+        JToolBar toolbar = new JToolBar();
+        toolbar.setFloatable(false);
+        toolbar.setBorderPainted(false);
+        JButton detachButton = new JButton("Detach View");
+        detachButton.addActionListener(e -> detachView());
+        toolbar.add(detachButton);
+
+        // Add the toolbar to the component
         this.myComponent = new JPanel(new BorderLayout());
+        this.myComponent.add(toolbar, BorderLayout.PAGE_START);
         this.myComponent.add(view.getComponent(), BorderLayout.CENTER);
+    }
+
+    private void detachView() {
+        application.createNewDetachedView(view);
+        // You may want to handle the original view after detachment
     }
 
     @Override

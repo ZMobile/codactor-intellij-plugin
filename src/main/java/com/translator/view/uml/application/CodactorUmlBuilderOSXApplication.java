@@ -761,6 +761,7 @@ public class CodactorUmlBuilderOSXApplication extends CodactorUmlBuilderAbstract
 
         @Override
         public void windowClosing(final WindowEvent evt) {
+            System.out.println("Window closed action called");
             getAction(view, CloseFileAction.ID).actionPerformed(
                     new ActionEvent(evt.getSource(), ActionEvent.ACTION_PERFORMED,
                     "windowClosing"));
@@ -793,6 +794,38 @@ public class CodactorUmlBuilderOSXApplication extends CodactorUmlBuilderAbstract
         public void windowGainedFocus(WindowEvent e) {
             setActiveView(view);
         }
+    }
+
+    public void createNewDetachedView(View view) {
+        view.setShowing(true);
+        JFrame f = new JFrame();
+        f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        f.setSize(new Dimension(600, 400));
+        updateViewTitle(view, f);
+
+        PreferencesUtil.installFramePrefsHandler(prefs, "view", f);
+        Point loc = f.getLocation();
+        boolean moved;
+        do {
+            moved = false;
+            for (View aView : views()) {
+                if (aView != view && aView.isShowing()
+                        && SwingUtilities.getWindowAncestor(aView.getComponent()).
+                        getLocation().equals(loc)) {
+                    loc.x += 22;
+                    loc.y += 22;
+                    moved = true;
+                    break;
+                }
+            }
+        } while (moved);
+        f.setLocation(loc);
+
+        new FrameHandler(f, view);
+        addWindow(f, view);
+
+        f.getContentPane().add(view.getComponent());
+        f.setVisible(true);
     }
 
     private static class QuitHandler {

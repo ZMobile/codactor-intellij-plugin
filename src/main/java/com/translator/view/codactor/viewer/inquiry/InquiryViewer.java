@@ -11,6 +11,7 @@ import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.functions.InquiryChatListFunctionCallCompressorService;
 import com.translator.service.codactor.functions.InquiryFunctionCallProcessorService;
 import com.translator.service.codactor.inquiry.InquiryService;
+import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
@@ -46,13 +47,14 @@ public class InquiryViewer extends JPanel {
                          MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                          InquiryService inquiryService,
                          PromptContextServiceFactory promptContextServiceFactory,
+                         OpenAiModelService openAiModelService,
                          TextAreaHeightCalculatorService textAreaHeightCalculatorService,
                          InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService,
                          InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService) {
         this.project = project;
         this.inquiryService = inquiryService;
         this.codactorToolWindowService = codactorToolWindowService;
-        this.inquiryChatListViewer = new InquiryChatListViewer(gson, this, textAreaHeightCalculatorService, promptContextServiceFactory, codactorToolWindowService, inquiryChatListFunctionCallCompressorService, inquiryFunctionCallProcessorService, multiFileCreateDialogFactory);
+        this.inquiryChatListViewer = new InquiryChatListViewer(gson, this, textAreaHeightCalculatorService, promptContextServiceFactory, openAiModelService, codactorToolWindowService, inquiryChatListFunctionCallCompressorService, inquiryFunctionCallProcessorService, multiFileCreateDialogFactory);
         this.inquiryChatBoxViewer = new InquiryChatBoxViewer(this);
         initComponents();
     }
@@ -67,16 +69,13 @@ public class InquiryViewer extends JPanel {
         otherInquiriesButton.setHorizontalTextPosition(SwingConstants.CENTER);
         otherInquiriesButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         otherInquiriesButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        otherInquiriesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (inquiryListViewer == null) {
-                    Injector injector = CodactorInjector.getInstance().getInjector(project);
-                    inquiryListViewer = injector.getInstance(InquiryListViewer.class);
-                }
-                inquiryListViewer.updateInquiryList();
-                codactorToolWindowService.openInquiryListViewerToolWindow();
+        otherInquiriesButton.addActionListener(e -> {
+            if (inquiryListViewer == null) {
+                Injector injector = CodactorInjector.getInstance().getInjector(project);
+                inquiryListViewer = injector.getInstance(InquiryListViewer.class);
             }
+            inquiryListViewer.updateInquiryList();
+            codactorToolWindowService.openInquiryListViewerToolWindow();
         });
         toolbar.add(otherInquiriesButton);
 

@@ -20,6 +20,8 @@ import com.translator.service.codactor.copy.DirectoryCopierServiceImpl;
 import com.translator.service.codactor.directory.FileDirectoryStructureQueryService;
 import com.translator.service.codactor.directory.FileDirectoryStructureQueryServiceImpl;
 import com.translator.service.codactor.editor.*;
+import com.translator.service.codactor.editor.EditorService;
+import com.translator.service.codactor.editor.EditorServiceImpl;
 import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
 import com.translator.service.codactor.editor.diff.DiffEditorGeneratorServiceImpl;
 import com.translator.service.codactor.editor.diff.GitDiffStingGeneratorService;
@@ -64,6 +66,8 @@ import com.translator.service.codactor.transformer.HistoricalContextObjectDataHo
 import com.translator.service.codactor.transformer.modification.*;
 import com.translator.service.codactor.ui.ModificationQueueListButtonService;
 import com.translator.service.codactor.ui.ModificationQueueListButtonServiceImpl;
+import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
+import com.translator.service.codactor.ui.ModificationTypeComboBoxServiceImpl;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorServiceImpl;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
@@ -82,8 +86,6 @@ import com.translator.service.uml.node.runner.NodeRunnerManagerService;
 import com.translator.service.uml.node.runner.NodeRunnerManagerServiceImpl;
 import com.translator.service.uml.node.runner.PromptNodeRunnerService;
 import com.translator.service.uml.node.runner.PromptNodeRunnerServiceImpl;
-import com.translator.service.util.SelectedFileViewerService;
-import com.translator.service.util.SelectedFileViewerServiceImpl;
 import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFactory;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
@@ -154,7 +156,6 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(FileModificationTrackerToFileModificationRangeDataTransformerService.class).to(FileModificationTrackerToFileModificationRangeDataTransformerServiceImpl.class);
         bind(CodeRunnerService.class).to(CodeRunnerServiceImpl.class);
         bind(FileDirectoryStructureQueryService.class).to(FileDirectoryStructureQueryServiceImpl.class);
-        bind(SelectedFileViewerService.class).to(SelectedFileViewerServiceImpl.class);
         bind(FileModificationDataHolderJsonCompatibilityService.class).to(FileModificationDataHolderJsonCompatibilityServiceImpl.class);
         bind(InquiryViewerMapService.class).to(InquiryViewerMapServiceImpl.class).asEagerSingleton();
         bind(CodactorConnectionService.class).to(CodactorConnectionServiceImpl.class).asEagerSingleton();
@@ -165,6 +166,8 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(FindErrorService.class).to(FindErrorServiceImpl.class);
         bind(FindUsagesService.class).to(FindUsagesServiceImpl.class);
         bind(FindImplementationsService.class).to(FindImplementationsServiceImpl.class);
+        bind(EditorService.class).to(EditorServiceImpl.class);
+        bind(ModificationTypeComboBoxService.class).to(ModificationTypeComboBoxServiceImpl.class).asEagerSingleton();
     }
 
     @Singleton

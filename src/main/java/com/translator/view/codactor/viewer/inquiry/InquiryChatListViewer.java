@@ -66,6 +66,7 @@ public class InquiryChatListViewer extends JPanel {
                                  InquiryViewer inquiryViewer,
                                  TextAreaHeightCalculatorService textAreaHeightCalculatorService,
                                  PromptContextServiceFactory promptContextServiceFactory,
+                                 OpenAiModelService openAiModelService,
                                  CodactorToolWindowService codactorToolWindowService,
                                  InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService,
                                  InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService,
@@ -73,9 +74,9 @@ public class InquiryChatListViewer extends JPanel {
         this.gson = gson;
         this.inquiryViewer = inquiryViewer;
         this.textAreaHeightCalculatorService = textAreaHeightCalculatorService;
-        this.openAiModelService = new OpenAiModelServiceImpl(codactorToolWindowService);
         this.inquiryChatListFunctionCallCompressorService = inquiryChatListFunctionCallCompressorService;
         this.promptContextServiceFactory = promptContextServiceFactory;
+        this.openAiModelService = openAiModelService;
         this.inquiryFunctionCallProcessorService = inquiryFunctionCallProcessorService;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         initComponents();

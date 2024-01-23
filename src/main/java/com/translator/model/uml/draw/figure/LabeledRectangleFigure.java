@@ -2,14 +2,21 @@ package com.translator.model.uml.draw.figure;
 
 import org.jhotdraw.draw.RectangleFigure;
 import org.jhotdraw.draw.TextFigure;
+import org.jhotdraw.xml.DOMInput;
+import org.jhotdraw.xml.DOMOutput;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.IOException;
 
 public class LabeledRectangleFigure extends RectangleFigure implements LabeledMetadataFigure {
     private TextFigure label;
     private String metadata;
+
+    public LabeledRectangleFigure() {
+        this("Rectangle");
+    }
 
     public LabeledRectangleFigure(String name) {
         super();
@@ -50,6 +57,27 @@ public class LabeledRectangleFigure extends RectangleFigure implements LabeledMe
                 bounds.getCenterY() - labelHeight / 2.0
         );
         label.setBounds(labelPosition, labelPosition);
+    }
+
+
+    public void write(DOMOutput out) throws IOException {
+        Rectangle2D.Double r = this.getBounds();
+        out.addAttribute("x", r.x);
+        out.addAttribute("y", r.y);
+        out.addAttribute("w", r.width);
+        out.addAttribute("h", r.height);
+        out.addAttribute("metadata", metadata);
+        super.writeAttributes(out);
+    }
+
+    public void read(DOMInput in) throws IOException {
+        double x = in.getAttribute("x", 0.0);
+        double y = in.getAttribute("y", 0.0);
+        double w = in.getAttribute("w", 0.0);
+        double h = in.getAttribute("h", 0.0);
+        this.setBounds(new Point2D.Double(x, y), new Point2D.Double(x + w, y + h));
+        this.setMetadata(in.getAttribute("metadata", null));
+        super.readAttributes(in);
     }
 }
 

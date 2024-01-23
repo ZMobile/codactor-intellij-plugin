@@ -5,6 +5,7 @@ package com.translator.view.uml;
 
 import com.google.inject.Inject;
 import com.intellij.openapi.application.ApplicationManager;
+import com.translator.view.uml.factory.CodactorUmlBuilderDrawFigureFactory;
 import com.translator.view.uml.factory.adapter.CustomMouseAdapterFactory;
 import org.jhotdraw.app.AbstractView;
 import org.jhotdraw.app.ApplicationLabels;
@@ -107,7 +108,7 @@ public class CodactorUmlBuilderView extends AbstractView {
     protected Drawing createDrawing() {
         Drawing drawing = new QuadTreeDrawing();
         DOMStorableInputOutputFormat ioFormat =
-                new DOMStorableInputOutputFormat(new DrawFigureFactory());
+                new DOMStorableInputOutputFormat(new CodactorUmlBuilderDrawFigureFactory());
         
         drawing.addInputFormat(ioFormat);
         ImageFigure prototype = new ImageFigure();

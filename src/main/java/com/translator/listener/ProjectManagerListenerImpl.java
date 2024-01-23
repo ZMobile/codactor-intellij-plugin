@@ -8,8 +8,12 @@ import com.intellij.openapi.actionSystem.KeyboardShortcut;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManagerListener;
 import com.translator.CodactorInjector;
+import com.translator.service.codactor.editor.CodeHighlighterService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerService;
+import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
 import com.translator.view.codactor.action.DoubleControlAction;
+import com.translator.view.codactor.listener.EditorListener;
 import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;
@@ -22,34 +26,42 @@ public class ProjectManagerListenerImpl implements ProjectManagerListener {
 
     @Override
     public void projectOpened(@NotNull Project project) {
-        Injector injector = CodactorInjector.getInstance().getInjector(project);
-        // Get the action manager instance
-        ActionManager actionManager = ActionManager.getInstance();
+        if (project != null) {
+            Injector injector = CodactorInjector.getInstance().getInjector(project);
+            // Get the action manager instance
+            ActionManager actionManager = ActionManager.getInstance();
 
-        // Get the existing Run Anything action
-        AnAction runAnythingAction = actionManager.getAction(RUN_ANYTHING_ACTION_ID);
+            // Get the existing Run Anything action
+            AnAction runAnythingAction = actionManager.getAction(RUN_ANYTHING_ACTION_ID);
 
-        if (runAnythingAction != null) {
-            // Get the keyboard shortcut for the Run Anything action
-            KeyboardShortcut keyboardShortcut = actionManager.getKeyboardShortcut(RUN_ANYTHING_ACTION_ID);
+            if (runAnythingAction != null) {
+                // Get the keyboard shortcut for the Run Anything action
+                KeyboardShortcut keyboardShortcut = actionManager.getKeyboardShortcut(RUN_ANYTHING_ACTION_ID);
 
-            DoubleControlAction doubleControlAction = new DoubleControlAction(runAnythingAction);
-            actionManager.registerAction(RUN_ANYTHING_ACTION_ID, doubleControlAction);
-            doubleControlAction.registerCustomShortcutSet(new CustomShortcutSet(keyboardShortcut), null);
+                DoubleControlAction doubleControlAction = new DoubleControlAction(runAnythingAction);
+                actionManager.registerAction(RUN_ANYTHING_ACTION_ID, doubleControlAction);
+                doubleControlAction.registerCustomShortcutSet(new CustomShortcutSet(keyboardShortcut), null);
+            }
+            // Your code to execute when a project is opened
+            FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
+            ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
+
+            fileModificationTrackerService.setModificationQueueViewer(modificationQueueViewer);
+            InquiryViewer inquiryViewer = injector.getInstance(InquiryViewer.class);
+            InquiryListViewer inquiryListViewer = injector.getInstance(InquiryListViewer.class);
+            inquiryViewer.setInquiryListViewer(inquiryListViewer);
+            HistoricalModificationListViewer historicalModificationListViewer = injector.getInstance(HistoricalModificationListViewer.class);
+            historicalModificationListViewer.setInquiryListViewer(inquiryListViewer);
+            historicalModificationListViewer.setProject(project);
+            inquiryListViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
+            inquiryViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
+
+            EditorClickHandlerService editorClickHandlerService = injector.getInstance(EditorClickHandlerService.class);
+            CodeHighlighterService codeHighlighterService = injector.getInstance(CodeHighlighterService.class);
+            ModificationTypeComboBoxService modificationTypeComboBoxService = injector.getInstance(ModificationTypeComboBoxService.class);
+
+            EditorListener.register(project, fileModificationTrackerService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
         }
-        // Your code to execute when a project is opened
-        FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
-        ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
-
-        fileModificationTrackerService.setModificationQueueViewer(modificationQueueViewer);
-        InquiryViewer inquiryViewer = injector.getInstance(InquiryViewer.class);
-        InquiryListViewer inquiryListViewer = injector.getInstance(InquiryListViewer.class);
-        inquiryViewer.setInquiryListViewer(inquiryListViewer);
-        HistoricalModificationListViewer historicalModificationListViewer = injector.getInstance(HistoricalModificationListViewer.class);
-        historicalModificationListViewer.setInquiryListViewer(inquiryListViewer);
-        historicalModificationListViewer.setProject(project);
-        inquiryListViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
-        inquiryViewer.setHistoricalModificationListViewer(historicalModificationListViewer);
     }
 
     @Override

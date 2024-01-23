@@ -8,8 +8,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
 import com.translator.CodactorInjector;
 import com.translator.service.codactor.editor.CodeHighlighterService;
+import com.translator.service.codactor.editor.EditorService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerService;
+import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
 import com.translator.view.codactor.listener.EditorListener;
 import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
@@ -22,17 +24,19 @@ public class MyStartupActivity implements StartupActivity {
 
     @Override
     public void runActivity(@NotNull Project project) {
-        Injector injector = CodactorInjector.getInstance().getInjector(project);
-        // Get the action manager instance
-        ActionManager actionManager = ActionManager.getInstance();
-        // Get the existing Run Anything action
-        AnAction runAnythingAction = actionManager.getAction(RUN_ANYTHING_ACTION_ID);
-        if (runAnythingAction != null) {
-            // Get the keyboard shortcut for the Run Anything action
-            KeyboardShortcut keyboardShortcut = actionManager.getKeyboardShortcut(RUN_ANYTHING_ACTION_ID);
+        if (project != null) {
+            Injector injector = CodactorInjector.getInstance().getInjector(project);
+            // Get the action manager instance
+            ActionManager actionManager = ActionManager.getInstance();
+            // Get the existing Run Anything action
+            AnAction runAnythingAction = actionManager.getAction(RUN_ANYTHING_ACTION_ID);
+            if (runAnythingAction != null) {
+                // Get the keyboard shortcut for the Run Anything action
+                KeyboardShortcut keyboardShortcut = actionManager.getKeyboardShortcut(RUN_ANYTHING_ACTION_ID);
 
-            // Unregister the existing Run Anything action
-            actionManager.unregisterAction(RUN_ANYTHING_ACTION_ID);
+                // Unregister the existing Run Anything action
+                actionManager.unregisterAction(RUN_ANYTHING_ACTION_ID);
+            }
 
             FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
             ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
@@ -49,8 +53,9 @@ public class MyStartupActivity implements StartupActivity {
 
             EditorClickHandlerService editorClickHandlerService = injector.getInstance(EditorClickHandlerService.class);
             CodeHighlighterService codeHighlighterService = injector.getInstance(CodeHighlighterService.class);
+            ModificationTypeComboBoxService modificationTypeComboBoxService = injector.getInstance(ModificationTypeComboBoxService.class);
 
-            EditorListener.register(fileModificationTrackerService, editorClickHandlerService, codeHighlighterService);
+            EditorListener.register(project, fileModificationTrackerService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
         }
     }
 }

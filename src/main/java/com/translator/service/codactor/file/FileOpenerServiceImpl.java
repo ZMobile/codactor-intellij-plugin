@@ -54,4 +54,16 @@ public class FileOpenerServiceImpl implements FileOpenerService {
             });
         }
     }
+
+    public void closeFileInEditor(String filePath) {
+        VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
+        VirtualFile virtualFile = virtualFileManager.findFileByUrl("file://" + filePath);
+
+        if (virtualFile != null) {
+            FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+            ApplicationManager.getApplication().invokeLater(() -> {
+                fileEditorManager.closeFile(virtualFile);
+            });
+        }
+    }
 }

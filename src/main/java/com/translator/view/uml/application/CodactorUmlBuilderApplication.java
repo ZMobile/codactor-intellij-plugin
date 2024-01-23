@@ -17,6 +17,8 @@ import java.util.List;
 public interface CodactorUmlBuilderApplication extends Application {
     View startAndReturn(List<URI> uris);
 
+    void createNewDetachedView(View view);
+
     void showPalettes();
 
     void hidePalettes();

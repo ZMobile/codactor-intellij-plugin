@@ -13,6 +13,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.service.codactor.directory.FileDirectoryStructureQueryService;
+import com.translator.service.codactor.file.FileOpenerService;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -28,12 +29,18 @@ import java.util.concurrent.atomic.AtomicReference;
 public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorService {
     private final Project project;
     private final FileDirectoryStructureQueryService fileDirectoryStructureQueryService;
+    private final EditorService editorService;
+    private final FileOpenerService fileOpenerService;
 
     @Inject
     public CodeSnippetExtractorServiceImpl(Project project,
-                                           FileDirectoryStructureQueryService fileDirectoryStructureQueryService) {
+                                           FileDirectoryStructureQueryService fileDirectoryStructureQueryService,
+                                           EditorService editorService,
+                                           FileOpenerService fileOpenerService) {
         this.project = project;
         this.fileDirectoryStructureQueryService = fileDirectoryStructureQueryService;
+        this.editorService = editorService;
+        this.fileOpenerService = fileOpenerService;
     }
 
     public String getSnippet(String filePath, int startIndex, int endIndex) {
@@ -84,14 +91,28 @@ public class CodeSnippetExtractorServiceImpl implements CodeSnippetExtractorServ
             return null;
         }
         AtomicReference<String> allTextRef = new AtomicReference<>();
-        ApplicationManager.getApplication().invokeAndWait(() -> {
+        //ApplicationManager.getApplication().invokeAndWait(() -> {
             Path path = Paths.get(filePath);
+            String content = null;
             try {
-                allTextRef.set(Files.readString(path, StandardCharsets.UTF_8));
-            } catch (IOException e) {
-                allTextRef.set(null);
+                System.out.println("This gets called 1");
+                content = Files.readString(path, StandardCharsets.UTF_8);
+            } catch (IOException ignored) {
+                System.out.println("This gets called 2");
             }
-        });
+            if (content == null) {
+                Editor editor = editorService.getEditor(filePath);
+                if (editor != null) {
+                    content = editorService.getEditor(filePath).getDocument().getText();
+                } else {
+                    System.out.println("This gets called open sesame");
+                    fileOpenerService.openFileInEditor(filePath);
+                    content = editorService.getEditor(filePath).getDocument().getText();
+                    //fileOpenerService.closeFileInEditor(filePath);
+                }
+            }
+            allTextRef.set(content);
+        //});
         return allTextRef.get();
     }
 

@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.codactor"
-version = "3.3-BETA"
+version = "3.8-BETA"
 
 repositories {
     mavenCentral()
@@ -30,8 +30,8 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("221")
-        untilBuild.set("232.*");
+        sinceBuild.set("220.*")
+        untilBuild.set("300.*")
     }
 
     signPlugin {

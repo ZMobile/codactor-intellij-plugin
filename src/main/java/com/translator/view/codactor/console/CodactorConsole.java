@@ -24,6 +24,7 @@ import com.translator.service.codactor.functions.search.ProjectSearchService;
 import com.translator.service.codactor.inquiry.InquiryService;
 import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.MultiFileCreateDialog;
 import com.translator.view.codactor.dialog.PromptContextBuilderDialog;
@@ -64,6 +65,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private CodeModificationService codeModificationService;
     private InquiryService inquiryService;
     private OpenAiModelService openAiModelService;
+    private ModificationTypeComboBoxService modificationTypeComboBoxService;
     // For testing purposes
     private Gson gson;
     private FindImplementationsService findImplementationsService;
@@ -83,6 +85,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            CodeSnippetExtractorService codeSnippetExtractorService,
                            InquiryService inquiryService,
                            OpenAiModelService openAiModelService,
+                           ModificationTypeComboBoxService modificationTypeComboBoxService,
                            CodeModificationService codeModificationService,
                            Gson gson,
                            FindImplementationsService findImplementationsService,
@@ -100,6 +103,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.inquiryService = inquiryService;
         this.openAiModelService = openAiModelService;
+        this.modificationTypeComboBoxService = modificationTypeComboBoxService;
         this.codeModificationService = codeModificationService;
         this.gson = gson;
         this.findImplementationsService = findImplementationsService;
@@ -151,7 +155,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                 }
             }
         }
-        modificationTypeComboBox = new ComboBox<>(new String[]{"Modify", "Modify Selected", "Fix", "Fix Selected", "Create", "Create Files", "Inquire", "Inquire Selected", "Translate"});
+        modificationTypeComboBox = modificationTypeComboBoxService.getModificationTypeComboBox();
         jLabel1 = new JLabel();
         advancedButton = new JButton("(Advanced) Add Context");
         advancedButton.addActionListener(e -> {
@@ -179,7 +183,6 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
 
         // Register the listener
         connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, fileEditorManagerListener);
-
 
         modificationTypeComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
@@ -231,8 +234,13 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         testButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println(gson.toJson(findImplementationsService.findImplementationsWithinRange("/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/editor/CodeSnippetExtractorService.java", "String getSnippet(String filePath, int startIndex, int endIndex);")));
-                //codeHighlighterService.addHighlight("/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/editor/CodeSnippetExtractorService.java", 250, 350, Color.ORANGE);
+                System.out.println("Selected tree view file: ");
+                VirtualFile[] selectedFiles = selectedFileFetcherService.getSelectedFilesInTreeView();
+                if (selectedFiles != null) {
+                    for (VirtualFile selectedFile : selectedFiles) {
+                        System.out.println(selectedFile.getPath());
+                    }
+                }
             }
         });
         //rightToolbar.add(testButton);

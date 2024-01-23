@@ -547,6 +547,73 @@ public class CodactorUmlBuilderSDIApplication extends CodactorUmlBuilderAbstract
 
     }
 
+    public void createNewDetachedView(View view ) {
+        view.setShowing(true);
+        final JFrame f = new JFrame();
+        f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        updateViewTitle(view, f);
+
+        JPanel panel = (JPanel) wrapViewComponent(view);
+        f.add(panel);
+        f.setSize(new Dimension(600, 400));
+        f.setJMenuBar(createMenuBar(view));
+
+        PreferencesUtil.installFramePrefsHandler(prefs, "view", f);
+        Point loc = f.getLocation();
+        boolean moved;
+        do {
+            moved = false;
+            for (View aView : views()) {
+                if (aView != view
+                        && SwingUtilities.getWindowAncestor(aView.getComponent()) != null
+                        && SwingUtilities.getWindowAncestor(aView.getComponent()).
+                        getLocation().equals(loc)) {
+                    loc.x += 22;
+                    loc.y += 22;
+                    moved = true;
+                    break;
+                }
+            }
+        } while (moved);
+        f.setLocation(loc);
+
+        f.addWindowListener(new WindowAdapter() {
+
+            @Override
+            public void windowClosing(final WindowEvent evt) {
+                getAction(view, CloseFileAction.ID).actionPerformed(
+                        new ActionEvent(f, ActionEvent.ACTION_PERFORMED,
+                                "windowClosing"));
+            }
+
+            @Override
+            public void windowClosed(final WindowEvent evt) {
+                view.stop();
+            }
+
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+                setActiveView(view);
+            }
+        });
+
+        view.addPropertyChangeListener(new PropertyChangeListener() {
+
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                String name = evt.getPropertyName();
+                if (name.equals(View.HAS_UNSAVED_CHANGES_PROPERTY)
+                        || name.equals(View.URI_PROPERTY)
+                        || name.equals(View.TITLE_PROPERTY)
+                        || name.equals(View.MULTIPLE_OPEN_ID_PROPERTY)) {
+                    updateViewTitle(view, f);
+                }
+            }
+        });
+
+        f.setVisible(true);
+    }
+
     @Override
     public void hidePalettes() {
 

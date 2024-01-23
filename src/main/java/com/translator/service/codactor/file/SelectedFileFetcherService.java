@@ -6,4 +6,8 @@ public interface SelectedFileFetcherService {
     VirtualFile[] getCurrentlySelectedFiles();
 
     VirtualFile[] getOpenFiles();
+
+    VirtualFile getSelectedFileInTreeView();
+
+    VirtualFile[] getSelectedFilesInTreeView();
 }

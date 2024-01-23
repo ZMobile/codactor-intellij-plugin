@@ -58,6 +58,14 @@ public class HistoricalModificationListViewer extends JPanel {
         otherInquiriesButton.setHorizontalTextPosition(SwingConstants.CENTER);
         otherInquiriesButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         otherInquiriesButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        otherInquiriesButton.addActionListener(e -> {
+            if (inquiryListViewer == null) {
+                Injector injector = CodactorInjector.getInstance().getInjector(project);
+                inquiryListViewer = injector.getInstance(InquiryListViewer.class);
+            }
+            inquiryListViewer.updateInquiryList();
+            codactorToolWindowService.openInquiryListViewerToolWindow();
+        });
         jToolBar2.add(otherInquiriesButton);
 
         otherInquiriesButton.addActionListener(e -> {

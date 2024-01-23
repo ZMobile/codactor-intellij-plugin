@@ -29,6 +29,7 @@ import com.translator.service.codactor.inquiry.InquiryService;
 import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
@@ -55,6 +56,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
     private PromptContextService promptContextService;
     private FileModificationTrackerService fileModificationTrackerService;
     private OpenAiModelService openAiModelService;
+    private ModificationTypeComboBoxService modificationTypeComboBoxService;
     private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
     private PromptContextServiceFactory promptContextServiceFactory;
@@ -69,10 +71,10 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                                                    CodeSnippetExtractorService codeSnippetExtractorService,
                                                    CodactorToolWindowService codactorToolWindowService,
                                                    InquiryService inquiryService,
-                                                   MassCodeFileGeneratorService massCodeFileGeneratorService,
                                                    CodeModificationService codeModificationService,
                                                    FileModificationTrackerService fileModificationTrackerService,
                                                    OpenAiModelService openAiModelService,
+                                                   ModificationTypeComboBoxService modificationTypeComboBoxService,
                                                    MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                                    PromptContextServiceFactory promptContextServiceFactory,
                                                    PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
@@ -86,6 +88,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
         this.inquiryService = inquiryService;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.openAiModelService = openAiModelService;
+        this.modificationTypeComboBoxService = modificationTypeComboBoxService;
         this.codeModificationService = codeModificationService;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
         this.promptContextServiceFactory = promptContextServiceFactory;
@@ -243,7 +246,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                 openAiModelService.setSelectedOpenAiModel(model);
             }
         });
-        JComboBox<String> modificationTypeComboBox = new ComboBox<>(new String[]{"Modify", "Modify Selected", "Fix", "Fix Selected", "Create", "Create Files", "Inquire", "Inquire Selected"});
+        JComboBox<String> modificationTypeComboBox = modificationTypeComboBoxService.getModificationTypeComboBox();
         JLabel jLabel1 = new JLabel();
         JButton advancedButton = new JButton("(Advanced) Add Context");
         advancedButton.addActionListener(e -> {

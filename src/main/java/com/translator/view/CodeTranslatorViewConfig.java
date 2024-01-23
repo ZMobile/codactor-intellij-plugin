@@ -19,7 +19,6 @@ import com.translator.service.codactor.file.FileReaderService;
 import com.translator.service.codactor.file.SelectedFileFetcherService;
 import com.translator.service.codactor.functions.InquiryChatListFunctionCallCompressorService;
 import com.translator.service.codactor.functions.InquiryFunctionCallProcessorService;
-import com.translator.service.codactor.functions.search.ProjectSearchService;
 import com.translator.service.codactor.inquiry.InquiryService;
 import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.modification.FileModificationRestarterService;
@@ -27,6 +26,7 @@ import com.translator.service.codactor.modification.FileModificationSuggestionDi
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.openai.OpenAiModelService;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
+import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.console.CodactorConsole;
@@ -94,10 +94,11 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                        MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                        InquiryService inquiryService,
                                        PromptContextServiceFactory promptContextServiceFactory,
+                                       OpenAiModelService openAiModelService,
                                        TextAreaHeightCalculatorService textAreaHeightCalculatorService,
                                        InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService,
                                        InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService) {
-        return new InquiryViewer(gson, project, codactorToolWindowService, multiFileCreateDialogFactory, inquiryService, promptContextServiceFactory, textAreaHeightCalculatorService, inquiryChatListFunctionCallCompressorService, inquiryFunctionCallProcessorService);
+        return new InquiryViewer(gson, project, codactorToolWindowService, multiFileCreateDialogFactory, inquiryService, promptContextServiceFactory, openAiModelService, textAreaHeightCalculatorService, inquiryChatListFunctionCallCompressorService, inquiryFunctionCallProcessorService);
     }
 
     @Singleton
@@ -140,6 +141,7 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            CodeSnippetExtractorService codeSnippetExtractorService,
                                            InquiryService inquiryService,
                                            OpenAiModelService openAiModelService,
+                                           ModificationTypeComboBoxService modificationTypeComboBoxService,
                                            CodeModificationService codeModificationService,
                                            Gson gson,
                                            FindImplementationsService findImplementationsService,
@@ -149,7 +151,7 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                                            InquiryViewerFactory inquiryViewerFactory) {
-        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, codeModificationService, gson, findImplementationsService, findUsagesService, codeHighlighterService, codactorUmlBuilderApplication, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory);
+        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, modificationTypeComboBoxService, codeModificationService, gson, findImplementationsService, findUsagesService, codeHighlighterService, codactorUmlBuilderApplication, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory);
     }
 
     @Singleton

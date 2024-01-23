@@ -23,9 +23,9 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         codactorFunctions.add(readCurrentSelectedFileInEditor);
 
 
-        // Create ChatGptFunction for "read_current_selected_file_in_tree_view"
+        // Create ChatGptFunction for "read_current_selected_files_in_tree_view"
         Parameters readCurrentSelectedFileInTreeViewParams = new Parameters("object");
-        ChatGptFunction readCurrentSelectedFileInTreeView = new ChatGptFunction("read_current_selected_file_in_tree_view", "Read the file path of the currently selected file or directory in the Intellij directory tree view", readCurrentSelectedFileInTreeViewParams);
+        ChatGptFunction readCurrentSelectedFileInTreeView = new ChatGptFunction("read_current_selected_files_in_tree_view", "Read the file path of the currently selected file or directory in the Intellij directory tree view", readCurrentSelectedFileInTreeViewParams);
         codactorFunctions.add(readCurrentSelectedFileInTreeView);
 
         // Create ChatGptFunction for "read_file_at_path"
@@ -45,7 +45,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         ChatGptFunction openFileAtPathInEditor = new ChatGptFunction("open_file_at_path_for_user", "Open a code file in the Intellij code editor given its path", openFileAtPathInEditorParams);
         codactorFunctions.add(openFileAtPathInEditor);
 
-        //Create ChatGptFunction for "find_declarations_or_usages_of_code"
+        /*//Create ChatGptFunction for "find_declarations_or_usages_of_code"
         Parameters findUsagesOfCodeParams = new Parameters("object");
         findUsagesOfCodeParams.getProperties().put("path", pathProperty);
         findUsagesOfCodeParams.getRequired().add("path");
@@ -76,7 +76,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         findErrorsInCodeParams.getProperties().put("includeWarnings", includeWarningsProperty);
 
         ChatGptFunction findErrorsInCode = new ChatGptFunction("find_compile_time_errors_in_code", "Find compile-time errors of a code snippet within a file", findErrorsInCodeParams);
-        codactorFunctions.add(findErrorsInCode);
+        codactorFunctions.add(findErrorsInCode);*/
 
         // Create ChatGptFunction for "read_file_at_package"
         Parameters readFileAtPackageParams = new Parameters("object");
