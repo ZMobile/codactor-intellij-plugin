@@ -15,12 +15,12 @@ public class LabeledRectangleFigure extends RectangleFigure implements LabeledMe
     private String metadata;
 
     public LabeledRectangleFigure() {
-        this("Rectangle");
+        super();
+        this.label = new TextFigure();
     }
 
     public LabeledRectangleFigure(String name) {
         super();
-
         this.label = new TextFigure();
         this.label.setText(name);
         this.metadata = null;
@@ -67,6 +67,8 @@ public class LabeledRectangleFigure extends RectangleFigure implements LabeledMe
         out.addAttribute("w", r.width);
         out.addAttribute("h", r.height);
         out.addAttribute("metadata", metadata);
+        System.out.println("Woo testo: " + label.getText());
+        out.addAttribute("label", label.getText());
         super.writeAttributes(out);
     }
 
@@ -77,7 +79,10 @@ public class LabeledRectangleFigure extends RectangleFigure implements LabeledMe
         double h = in.getAttribute("h", 0.0);
         this.setBounds(new Point2D.Double(x, y), new Point2D.Double(x + w, y + h));
         this.setMetadata(in.getAttribute("metadata", null));
+        this.label = new TextFigure();
+        this.label.setText(in.getAttribute("label", null));
         super.readAttributes(in);
+        setBounds(new Point2D.Double(x, y), new Point2D.Double(x + w, y + h));
     }
 }
 
