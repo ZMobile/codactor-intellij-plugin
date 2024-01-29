@@ -76,7 +76,6 @@ public class LabeledRectangleFigure extends RectangleFigure implements LabeledMe
         double y = in.getAttribute("y", 0.0);
         double w = in.getAttribute("w", 0.0);
         double h = in.getAttribute("h", 0.0);
-        this.setBounds(new Point2D.Double(x, y), new Point2D.Double(x + w, y + h));
         this.setMetadata(in.getAttribute("metadata", null));
         this.label = new TextFigure();
         this.label.setText(in.getAttribute("label", null));
