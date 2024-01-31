@@ -1,4 +1,4 @@
-package com.translator.view.uml.node.tool;
+package com.translator.service.uml.node.tool;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;

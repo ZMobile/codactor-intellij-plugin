@@ -103,7 +103,13 @@ public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
                 prompt.setProcessed(false);
                 Inquiry newInquiry;
                 if (i == 0) {
-                    newInquiry = inquiryDao.createGeneralInquiry(newPrompt, defaultConnectionService.getOpenAiApiKey(), promptNode.getModel(), azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(promptNode.getModel()), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+                    String openAiApiKey;
+                    if (azureConnectionService.isAzureConnected()) {
+                        openAiApiKey = azureConnectionService.getKey();
+                    } else {
+                        openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+                    }
+                    newInquiry = inquiryDao.createGeneralInquiry(newPrompt, openAiApiKey, promptNode.getModel(), azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(promptNode.getModel()), inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                     if (newInquiry.getError() != null) {
                         JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -114,7 +120,7 @@ public class PromptNodeRunnerServiceImpl implements PromptNodeRunnerService {
                             .max(Comparator.comparing(InquiryChat::getCreationTimestamp))
                             .orElseThrow();
                 } else {
-                    newInquiry = inquiryDao.continueInquiry(previousInquiryChat.getId(), prompt.getPrompt(), defaultConnectionService.getOpenAiApiKey(), promptNode.getModel(), azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(promptNode.getModel()));
+                    newInquiry = inquiryDao.continueInquiry(previousInquiryChat.getId(), prompt.getPrompt(), newPrompt, promptNode.getModel(), azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(promptNode.getModel()));
                     if (newInquiry.getError() != null) {
                         JOptionPane.showMessageDialog(null, newInquiry.getError(), "Error",
                                 JOptionPane.ERROR_MESSAGE);

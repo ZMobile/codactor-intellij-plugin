@@ -107,7 +107,7 @@ public class CodactorUmlBuilderSVGEditor extends UserDataHolderBase implements F
 
     @Override
     public @Nls(capitalization = Nls.Capitalization.Title) @NotNull String getName() {
-        return "Codactor Uml Builder SVG Editor";
+        return "Codactor Uml Builder SvgEditor";
     }
 
     @Override

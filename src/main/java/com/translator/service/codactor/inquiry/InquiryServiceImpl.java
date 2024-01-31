@@ -172,11 +172,11 @@ public class InquiryServiceImpl implements InquiryService {
             public void run(@NotNull ProgressIndicator indicator) {
                 inquiryViewer.setLoadingChat(true);
                 String openAiApiKey;
-            if (azureConnectionService.isAzureConnected()) {
-                openAiApiKey = azureConnectionService.getKey();
-            } else {
-                openAiApiKey = defaultConnectionService.getOpenAiApiKey();
-            }
+                if (azureConnectionService.isAzureConnected()) {
+                    openAiApiKey = azureConnectionService.getKey();
+                } else {
+                    openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+                }
                 List<ChatGptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
                 if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {

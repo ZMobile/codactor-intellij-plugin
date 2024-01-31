@@ -5,7 +5,9 @@ package com.translator.view.uml;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.intellij.openapi.project.Project;
 import com.translator.model.uml.draw.figure.*;
+import com.translator.service.uml.node.tool.AdvancedDelegationSelectionTool;
 import com.translator.view.uml.factory.tool.NodeConnectionToolFactory;
 import com.translator.view.uml.factory.tool.PromptNodeCreationToolFactory;
 import org.jhotdraw.annotation.Nullable;
@@ -40,6 +42,7 @@ import static org.jhotdraw.draw.AttributeKeys.END_DECORATION;
  * @version $Id$
  */
 public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel {
+    private Project project;
     private List<JToolBar> list;
     private static final long serialVersionUID = 1L;
 
@@ -54,10 +57,12 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
 
     /** Creates a new instance. */
     @Inject
-    public CodactorUmlBuilderApplicationModel(PromptNodeCreationToolFactory promptNodeCreationToolFactory,
+    public CodactorUmlBuilderApplicationModel(Project project,
+                                              PromptNodeCreationToolFactory promptNodeCreationToolFactory,
                                               NodeConnectionToolFactory nodeConnectionToolFactory,
                                               Gson gson) {
         this.list = new LinkedList<>();
+        this.project = project;
         this.promptNodeCreationToolFactory = promptNodeCreationToolFactory;
         this.nodeConnectionToolFactory = nodeConnectionToolFactory;
         this.gson = gson;
@@ -124,7 +129,9 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
             Collection<Action> drawingActions, Collection<Action> selectionActions) {
         ResourceBundleUtil labels = DrawLabels.getLabels();
 
-        ButtonFactory.addSelectionToolTo(tb, editor, drawingActions, selectionActions);
+        //ButtonFactory.addToolTo(tb, editor, new DelegationSelectionTool(drawingActions, selectionActions), "selectionTool", labels);
+        Tool selectionTool = new AdvancedDelegationSelectionTool(drawingActions, selectionActions);
+        ButtonFactory.addSelectionToolTo(tb, editor, selectionTool);
         tb.addSeparator();
 
         AbstractAttributedFigure af;
