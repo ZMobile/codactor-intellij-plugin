@@ -1,6 +1,6 @@
 package com.translator.service.uml.node.query;
 
-import com.translator.model.uml.connection.Connection;
+import com.translator.model.uml.draw.connection.Connection;
 import org.jhotdraw.draw.Drawing;
 import org.jhotdraw.draw.Figure;
 

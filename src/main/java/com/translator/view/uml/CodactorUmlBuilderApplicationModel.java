@@ -16,11 +16,28 @@ import org.jhotdraw.app.ApplicationModel;
 import org.jhotdraw.app.DefaultApplicationModel;
 import org.jhotdraw.app.View;
 import org.jhotdraw.draw.*;
+import org.jhotdraw.draw.AbstractAttributedFigure;
+import org.jhotdraw.draw.BezierFigure;
+import org.jhotdraw.draw.ConnectionFigure;
+import org.jhotdraw.draw.DefaultDrawingEditor;
+import org.jhotdraw.draw.DrawLabels;
+import org.jhotdraw.draw.DrawingEditor;
+import org.jhotdraw.draw.ImageFigure;
+import org.jhotdraw.draw.LineFigure;
+import org.jhotdraw.draw.TextAreaFigure;
+import org.jhotdraw.draw.TextFigure;
 import org.jhotdraw.draw.action.ButtonFactory;
 import org.jhotdraw.draw.decoration.ArrowTip;
 import org.jhotdraw.draw.liner.CurvedLiner;
 import org.jhotdraw.draw.liner.ElbowLiner;
 import org.jhotdraw.draw.tool.*;
+import org.jhotdraw.draw.tool.BezierTool;
+import org.jhotdraw.draw.tool.ConnectionTool;
+import org.jhotdraw.draw.tool.CreationTool;
+import org.jhotdraw.draw.tool.ImageTool;
+import org.jhotdraw.draw.tool.TextAreaCreationTool;
+import org.jhotdraw.draw.tool.TextCreationTool;
+import org.jhotdraw.draw.tool.Tool;
 import org.jhotdraw.gui.JFileURIChooser;
 import org.jhotdraw.gui.URIChooser;
 import org.jhotdraw.gui.filechooser.ExtensionFileFilter;
@@ -175,6 +192,4 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
         c.addChoosableFileFilter(new ExtensionFileFilter("Drawing .xml","xml"));
         return c;
     }
-
-
 }

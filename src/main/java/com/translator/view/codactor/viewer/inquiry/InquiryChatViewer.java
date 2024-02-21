@@ -29,6 +29,8 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
+
 public class InquiryChatViewer extends JPanel {
 
     public static class Builder {
@@ -194,7 +196,7 @@ public class InquiryChatViewer extends JPanel {
         return components;
     }
 
-    private Component createPlainTextComponent(String text) {
+    /*private Component createPlainTextComponent(String text) {
         JBTextArea textArea = new JBTextArea(text);
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
@@ -205,7 +207,16 @@ public class InquiryChatViewer extends JPanel {
         });
 
         return textArea;
+    }*/
+    private Component createPlainTextComponent(String text) {
+        JTextPane textPane = new JTextPane();
+        textPane.setContentType("text/html");
+        textPane.setEditable(false);
+        textPane.setText("<html><body style='font-family: sans-serif;'>" + escapeHtml(text) + "</body></html>");
+        textPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return textPane;
     }
+
 
     private FixedHeightPanel createFunctionCallsPanel(List<InquiryChat> functionCalls) {
         // Add the function call names as vertical list

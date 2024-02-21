@@ -56,12 +56,14 @@ public class EditorListener implements EditorFactoryListener {
         if (editor.getProject() != project) {
             if (!activeListeners.containsKey(editor.getProject())) {
                 Injector injector = CodactorInjector.getInstance().getInjector(editor.getProject());
-                FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
-                EditorClickHandlerService editorClickHandlerService = injector.getInstance(EditorClickHandlerService.class);
-                CodeHighlighterService codeHighlighterService = injector.getInstance(CodeHighlighterService.class);
-                ModificationTypeComboBoxService modificationTypeComboBoxService = injector.getInstance(ModificationTypeComboBoxService.class);
+                if (injector != null) {
+                    FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
+                    EditorClickHandlerService editorClickHandlerService = injector.getInstance(EditorClickHandlerService.class);
+                    CodeHighlighterService codeHighlighterService = injector.getInstance(CodeHighlighterService.class);
+                    ModificationTypeComboBoxService modificationTypeComboBoxService = injector.getInstance(ModificationTypeComboBoxService.class);
 
-                EditorListener.register(editor.getProject(), fileModificationTrackerService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
+                    EditorListener.register(editor.getProject(), fileModificationTrackerService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
+                }
             }
             return;
         }
@@ -93,12 +95,14 @@ public class EditorListener implements EditorFactoryListener {
         if (editor.getProject() != project) {
             if (!activeListeners.containsKey(editor.getProject())) {
                 Injector injector = CodactorInjector.getInstance().getInjector(editor.getProject());
-                FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
-                EditorClickHandlerService editorClickHandlerService = injector.getInstance(EditorClickHandlerService.class);
-                CodeHighlighterService codeHighlighterService = injector.getInstance(CodeHighlighterService.class);
-                ModificationTypeComboBoxService modificationTypeComboBoxService = injector.getInstance(ModificationTypeComboBoxService.class);
+                if (injector != null) {
+                    FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
+                    EditorClickHandlerService editorClickHandlerService = injector.getInstance(EditorClickHandlerService.class);
+                    CodeHighlighterService codeHighlighterService = injector.getInstance(CodeHighlighterService.class);
+                    ModificationTypeComboBoxService modificationTypeComboBoxService = injector.getInstance(ModificationTypeComboBoxService.class);
 
-                EditorListener.register(editor.getProject(), fileModificationTrackerService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
+                    EditorListener.register(editor.getProject(), fileModificationTrackerService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
+                }
             }
             return;
         }

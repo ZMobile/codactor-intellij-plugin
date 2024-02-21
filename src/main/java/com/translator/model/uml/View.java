@@ -1,7 +1,7 @@
 package com.translator.model.uml;
 
-import com.translator.model.uml.connection.Connection;
-import com.translator.model.uml.node.Node;
+import com.translator.model.uml.draw.connection.Connection;
+import com.translator.model.uml.draw.node.Node;
 import org.jhotdraw.draw.Figure;
 
 import java.util.ArrayList;

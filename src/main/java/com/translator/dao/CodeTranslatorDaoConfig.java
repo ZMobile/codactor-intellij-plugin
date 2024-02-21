@@ -18,6 +18,9 @@ import com.translator.dao.modification.CodeModificationDao;
 import com.translator.dao.modification.CodeModificationDaoImpl;
 
 public class CodeTranslatorDaoConfig extends AbstractModule {
+    public CodeTranslatorDaoConfig() {
+    }
+
     @Override
     protected void configure() {
         bind(CodeModificationHistoryDao.class).to(CodeModificationHistoryDaoImpl.class).asEagerSingleton();

@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.codactor"
-version = "3.9-BETA"
+version = "4.0-BETA"
 
 repositories {
     mavenCentral()
@@ -50,6 +50,7 @@ tasks {
         implementation(fileTree("libs") { include("*.jar") })
         implementation("org.openjfx:javafx-swing:21-ea+5")
         implementation("io.github.java-diff-utils:java-diff-utils:4.12")
+        implementation(files("/Users/zantehays/IdeaProjects/jhotdraw/jhotdraw7/target/jhotdraw-7.7.0.jar"))
     }
 
     publishPlugin {

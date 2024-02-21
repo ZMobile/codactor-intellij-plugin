@@ -7,7 +7,7 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.translator.model.codactor.task.CancellableRunnable;
 import com.translator.model.codactor.task.CustomBackgroundTask;
-import com.translator.model.uml.connection.Connection;
+import com.translator.model.uml.draw.connection.Connection;
 import com.translator.model.uml.draw.figure.LabeledMetadataFigure;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.model.uml.draw.figure.MetadataLabeledLineConnectionFigure;

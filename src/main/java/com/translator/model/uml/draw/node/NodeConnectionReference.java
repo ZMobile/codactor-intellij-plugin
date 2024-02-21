@@ -1,4 +1,4 @@
-package com.translator.model.uml.node;
+package com.translator.model.uml.draw.node;
 
 public class NodeConnectionReference {
     private String connectionId;

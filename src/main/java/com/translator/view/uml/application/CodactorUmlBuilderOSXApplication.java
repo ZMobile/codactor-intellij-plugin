@@ -810,6 +810,7 @@ public class CodactorUmlBuilderOSXApplication extends CodactorUmlBuilderAbstract
             moved = false;
             for (View aView : views()) {
                 if (aView != view && aView.isShowing()
+                        && SwingUtilities.getWindowAncestor(aView.getComponent()) != null
                         && SwingUtilities.getWindowAncestor(aView.getComponent()).
                         getLocation().equals(loc)) {
                     loc.x += 22;

@@ -6,7 +6,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
-import com.translator.model.uml.node.PromptNode;
+import com.translator.model.uml.draw.node.PromptNode;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.uml.node.NodeDialogWindowMapperService;
 import com.translator.service.uml.node.PromptHighlighterService;

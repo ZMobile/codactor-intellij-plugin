@@ -2,7 +2,7 @@ package com.translator.service.uml.node.query;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.translator.model.uml.connection.Connection;
+import com.translator.model.uml.draw.connection.Connection;
 import com.translator.model.uml.draw.figure.MetadataLabeledLineConnectionFigure;
 import org.jhotdraw.draw.Drawing;
 

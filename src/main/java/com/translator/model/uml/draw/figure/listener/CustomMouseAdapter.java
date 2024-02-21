@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.translator.model.uml.draw.figure.LabeledRectangleFigure;
 import com.translator.service.uml.node.NodeDialogWindowMapperService;
+import com.translator.view.uml.CodactorUmlDefaultDrawingView;
 import com.translator.view.uml.factory.dialog.PromptNodeDialogFactory;
 import com.translator.view.uml.node.dialog.prompt.PromptNodeDialog;
 import org.jhotdraw.draw.DefaultDrawingView;
@@ -15,12 +16,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class CustomMouseAdapter extends MouseAdapter {
-    private DefaultDrawingView defaultDrawingView;
+    private CodactorUmlDefaultDrawingView defaultDrawingView;
     private PromptNodeDialogFactory promptNodeDialogFactory;
     private NodeDialogWindowMapperService nodeDialogWindowMapperService;
 
     @Inject
-    public CustomMouseAdapter(@Assisted DefaultDrawingView defaultDrawingView,
+    public CustomMouseAdapter(@Assisted CodactorUmlDefaultDrawingView defaultDrawingView,
                               PromptNodeDialogFactory promptNodeDialogFactory,
                               NodeDialogWindowMapperService nodeDialogWindowMapperService) {
         this.defaultDrawingView = defaultDrawingView;

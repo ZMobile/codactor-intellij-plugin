@@ -115,8 +115,8 @@ public class InquiryChatListViewer extends JPanel {
                                 text.append("\n");
                                 text.append("\n");
                             }
-                            if (component1 instanceof JBTextArea) {
-                                JBTextArea jBTextArea = (JBTextArea) component1;
+                            if (component1 instanceof JTextPane) {
+                                JTextPane jBTextArea = (JTextPane) component1;
                                 text.append(jBTextArea.getText());
                                 firstComponentCopied = true;
                             } else if (component1 instanceof FixedHeightPanel) {
@@ -185,9 +185,9 @@ public class InquiryChatListViewer extends JPanel {
                             text.append("\n");
                             text.append("\n");
                         }
-                        if (component1 instanceof JBTextArea) {
-                            JBTextArea jBTextArea = (JBTextArea) component1;
-                            text.append(jBTextArea.getText());
+                        if (component1 instanceof JTextPane) {
+                            JTextPane jTextPane = (JTextPane) component1;
+                            text.append(jTextPane.getText());
                             firstComponentCopied = true;
                         } else if (component1 instanceof FixedHeightPanel) {
                             FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
@@ -310,11 +310,11 @@ public class InquiryChatListViewer extends JPanel {
             InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(i);
             if (i == selectedChat) {
                 for (Component component : inquiryChatViewer.getComponents()) {
-                    if (component instanceof JBTextArea) {
-                        JBTextArea selectedJBTextArea = (JBTextArea) component;
+                    if (component instanceof JTextPane) {
+                        JTextPane selectedJTextPane = (JTextPane) component;
                         //Highlight the whole text area
                         try {
-                            selectedJBTextArea.getHighlighter().addHighlight(0, selectedJBTextArea.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
+                            selectedJTextPane.getHighlighter().addHighlight(0, selectedJTextPane.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
                         } catch (BadLocationException ex) {
                             throw new RuntimeException(ex);
                         }
@@ -329,8 +329,8 @@ public class InquiryChatListViewer extends JPanel {
                 continue;
             }
             for (Component component : inquiryChatViewer.getComponents()) {
-                if (component instanceof JBTextArea) {
-                    JBTextArea jBTextArea = (JBTextArea) component;
+                if (component instanceof JTextPane) {
+                    JTextPane jBTextArea = (JTextPane) component;
                     jBTextArea.getHighlighter().removeAllHighlights();
                 } else if (component instanceof FixedHeightPanel) {
                     FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
@@ -500,6 +500,39 @@ public class InquiryChatListViewer extends JPanel {
         inquiryChat.setAlternateInquiryChatIds(alternateInquiryChatIds);
     }
 
+    /*public void componentResized(DefaultListModel<InquiryChatViewer> previousModel) {
+        if (previousModel == null || previousModel.isEmpty()) {
+            return;
+        }
+        ApplicationManager.getApplication().invokeLater(() -> {
+            DefaultListModel<InquiryChatViewer> newModel = new DefaultListModel<>();
+            int newTotalHeight = 0;
+            for (int i = 0; i < previousModel.size(); i++) {
+                InquiryChatViewer chatViewer = previousModel.getElementAt(i);
+                for (Component component : chatViewer.getComponents()) {
+                    if (component instanceof JTextPane) {
+                        JTextPane chatDisplay = (JTextPane) component;
+                        newTotalHeight += chatDisplay.getHeight();
+                    } else if (component instanceof FixedHeightPanel) {
+                        FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                        newTotalHeight += fixedHeightPanel.getHeight();
+                    } else if (component instanceof JToolBar) {
+                        JToolBar jToolBar = (JToolBar) component;
+                        newTotalHeight += jToolBar.getHeight();
+                    }
+                    //newTotalHeight += component.getHeight();
+                }
+                newModel.addElement(chatViewer);
+            }
+            System.out.println("Estimated total chat height: " + newTotalHeight);
+            Dimension preferredSize = new Dimension(jBScrollPane.getWidth(), newTotalHeight);
+            jBScrollPane.setPreferredSize(preferredSize);
+            inquiryChatList.setPreferredSize(preferredSize);
+            inquiryChatList.setModel(newModel);
+            jBScrollPane.setViewportView(inquiryChatList);
+        });
+    }*/
+
     public void componentResized(DefaultListModel<InquiryChatViewer> previousModel) {
         if (previousModel == null || previousModel.isEmpty()) {
             return;
@@ -527,8 +560,16 @@ public class InquiryChatListViewer extends JPanel {
                     } else if (component instanceof FixedHeightPanel) {
                         FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
                         newTotalHeight += fixedHeightPanel.getHeight();
+                        System.out.println("Fixed height panel: " + fixedHeightPanel.getHeight());
+                    } else if (component instanceof JToolBar) {
+                        JToolBar jToolBar = (JToolBar) component;
+                        newTotalHeight += jToolBar.getHeight();
+                        System.out.println("JToolBar: " + jToolBar.getHeight());
+                    } else if (component instanceof JTextPane) {
+                        JTextPane chatDisplay = (JTextPane) component;
+                        newTotalHeight += chatDisplay.getHeight();
+                        System.out.println("JTextPane: " + chatDisplay.getHeight());
                     }
-                    newTotalHeight += chatViewer.getComponent(0).getHeight();
                 }
                 newModel.addElement(chatViewer);
             }

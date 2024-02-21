@@ -15,7 +15,7 @@ import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.inquiry.Inquiry;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.InquiryChatType;
-import com.translator.model.uml.node.PromptNode;
+import com.translator.model.uml.draw.node.PromptNode;
 import com.translator.model.uml.prompt.Prompt;
 import com.translator.service.codactor.task.BackgroundTaskMapperService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;

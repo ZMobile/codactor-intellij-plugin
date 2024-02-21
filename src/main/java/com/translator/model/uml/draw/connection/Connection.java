@@ -1,4 +1,4 @@
-package com.translator.model.uml.connection;
+package com.translator.model.uml.draw.connection;
 
 import java.util.UUID;
 

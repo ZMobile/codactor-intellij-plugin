@@ -1,5 +1,6 @@
 package com.translator.view.uml.application;
 
+import com.translator.view.uml.CodactorUmlBuilderView;
 import org.jhotdraw.annotation.Nullable;
 import org.jhotdraw.app.*;
 import org.jhotdraw.app.action.file.LoadRecentFileAction;
@@ -130,15 +131,16 @@ public abstract class CodactorUmlBuilderAbstractApplication extends AbstractBean
             });*/
         } else {
             Iterator var5 = uris.iterator();
-
             while(var5.hasNext()) {
                 final URI uri = (URI)var5.next();
                 final View v = this.createView();
+                if (v instanceof CodactorUmlBuilderView) {
+                    ((CodactorUmlBuilderView) v).setFilePath(uri.getPath());
+                }
                 this.add(v);
                 v.setEnabled(false);
                 show(v);
                 this.setActiveView(v);
-
                 v.execute(new BackgroundTask() {
                     public void construct() throws Exception {
                         v.read(uri, (URIChooser)null);

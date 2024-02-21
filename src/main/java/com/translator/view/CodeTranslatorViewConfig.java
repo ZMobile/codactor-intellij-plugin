@@ -181,7 +181,7 @@ public class CodeTranslatorViewConfig extends AbstractModule {
     }
 
     @Provides
-    public CodactorUmlBuilderView codactorUmlBuilderView(CustomMouseAdapterFactory customMouseAdapterFactory) {
-        return new CodactorUmlBuilderView(customMouseAdapterFactory);
+    public CodactorUmlBuilderView codactorUmlBuilderView(Project project, CustomMouseAdapterFactory customMouseAdapterFactory) {
+        return new CodactorUmlBuilderView(project, customMouseAdapterFactory);
     }
 }

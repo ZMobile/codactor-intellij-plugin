@@ -398,7 +398,9 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         }
         jList1.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, newTotalHeight));
         jList1.setModel(newModel);
-        jBScrollPane1.setViewportView(jList1);
+        ApplicationManager.getApplication().invokeLater(() -> {
+            jBScrollPane1.setViewportView(jList1);
+        });
     }
 
     public void addContextObject(HistoricalObjectDataHolder historicalObjectDataHolder) {

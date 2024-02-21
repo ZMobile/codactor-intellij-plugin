@@ -5,6 +5,9 @@ package com.translator.view.uml;
 
 import com.google.inject.Inject;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.Project;
+import com.translator.model.uml.draw.io.AdvancedDOMStorableInputOutputFormat;
+import com.translator.service.uml.undo.AdvancedUndoRedoManager;
 import com.translator.view.uml.factory.CodactorUmlBuilderDrawFigureFactory;
 import com.translator.view.uml.factory.adapter.CustomMouseAdapterFactory;
 import org.jhotdraw.app.AbstractView;
@@ -25,6 +28,8 @@ import org.jhotdraw.util.ResourceBundleUtil;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.geom.Point2D;
 import java.awt.print.Pageable;
 import java.beans.PropertyChangeEvent;
@@ -44,12 +49,13 @@ import java.net.URI;
  */
 public class CodactorUmlBuilderView extends AbstractView {
       private static final long serialVersionUID = 1L;
-  
+      private String filePath;
+      private Project project;
     /**
      * Each DrawView uses its own undo redo manager.
      * This allows for undoing and redoing actions per view.
      */
-    private UndoRedoManager undo;
+    private AdvancedUndoRedoManager undo;
     
     /**
      * Depending on the type of an application, there may be one editor per
@@ -63,7 +69,9 @@ public class CodactorUmlBuilderView extends AbstractView {
      * Creates a new view.
      */
     @Inject
-    public CodactorUmlBuilderView(CustomMouseAdapterFactory customMouseAdapterFactory) {
+    public CodactorUmlBuilderView(Project project,
+                                  CustomMouseAdapterFactory customMouseAdapterFactory) {
+        this.project = project;
         this.customMouseAdapterFactory = customMouseAdapterFactory;
 
         initComponents();
@@ -72,7 +80,7 @@ public class CodactorUmlBuilderView extends AbstractView {
         scrollPane.setBorder(new EmptyBorder(0,0,0,0));
         
         setEditor(new DefaultDrawingEditor());
-        undo = new UndoRedoManager();
+        undo = new AdvancedUndoRedoManager(project);
         view.setDrawing(createDrawing());
         view.getDrawing().addUndoableEditListener(undo);
         initActions();
@@ -108,7 +116,8 @@ public class CodactorUmlBuilderView extends AbstractView {
     protected Drawing createDrawing() {
         Drawing drawing = new QuadTreeDrawing();
         DOMStorableInputOutputFormat ioFormat =
-                new DOMStorableInputOutputFormat(new CodactorUmlBuilderDrawFigureFactory());
+                //All hell breaks loose when this is active-- we need to figure out why
+                new AdvancedDOMStorableInputOutputFormat(project, new CodactorUmlBuilderDrawFigureFactory());
         
         drawing.addInputFormat(ioFormat);
         ImageFigure prototype = new ImageFigure();
@@ -209,6 +218,11 @@ public class CodactorUmlBuilderView extends AbstractView {
         editor = newValue;
         if (editor != null) {
             editor.add(view);
+            if (editor.getActionMap() != null && editor.getInputMap() != null) {editor.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK), UndoAction.ID);
+                editor.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.META_DOWN_MASK), UndoAction.ID);
+                editor.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK), RedoAction.ID);
+                editor.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Y, InputEvent.META_DOWN_MASK), RedoAction.ID);
+            }
         }
     }
     
@@ -250,7 +264,8 @@ public class CodactorUmlBuilderView extends AbstractView {
     private void initComponents() {
 
         scrollPane = new JScrollPane();
-        view = new org.jhotdraw.draw.DefaultDrawingView();
+        //view = new DefaultDrawingView();
+        view = new CodactorUmlDefaultDrawingView();
         view.addMouseListener(customMouseAdapterFactory.create(view));
 
         setLayout(new BorderLayout());
@@ -265,12 +280,22 @@ public class CodactorUmlBuilderView extends AbstractView {
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private JScrollPane scrollPane;
-    private org.jhotdraw.draw.DefaultDrawingView view;
+    //private org.jhotdraw.draw.DefaultDrawingView view;
+    private CodactorUmlDefaultDrawingView view;
     // End of variables declaration//GEN-END:variables
 
 
-    public DefaultDrawingView getView() {
+    public CodactorUmlDefaultDrawingView getView() {
         return view;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+        this.undo.setFilePath(filePath);
     }
 }
 

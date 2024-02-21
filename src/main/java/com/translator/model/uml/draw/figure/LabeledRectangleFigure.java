@@ -1,11 +1,12 @@
 package com.translator.model.uml.draw.figure;
 
-import com.translator.model.uml.handle.AdvancedResizeHandleKit;
+import com.intellij.openapi.project.Project;
+import com.translator.model.uml.draw.handle.AdvancedResizeHandleKit;
+import com.translator.model.uml.draw.io.xml.AdvancedNanoXMLDOMInput;
 import org.jhotdraw.draw.RectangleFigure;
 import org.jhotdraw.draw.TextFigure;
 import org.jhotdraw.draw.handle.BoundsOutlineHandle;
 import org.jhotdraw.draw.handle.Handle;
-import org.jhotdraw.draw.handle.ResizeHandleKit;
 import org.jhotdraw.xml.DOMInput;
 import org.jhotdraw.xml.DOMOutput;
 
@@ -17,6 +18,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class LabeledRectangleFigure extends RectangleFigure implements LabeledMetadataFigure {
+    private Project project;
     private TextFigure label;
     private String metadata;
 
@@ -78,6 +80,14 @@ public class LabeledRectangleFigure extends RectangleFigure implements LabeledMe
     }
 
     public void read(DOMInput in) throws IOException {
+        try {
+            int impossibleNumber = 10 / 0;
+        } catch (ArithmeticException e) {
+            e.printStackTrace();
+        }
+        if (in instanceof AdvancedNanoXMLDOMInput) {
+            this.project = ((AdvancedNanoXMLDOMInput) in).getProject();
+        }
         double x = in.getAttribute("x", 0.0);
         double y = in.getAttribute("y", 0.0);
         double w = in.getAttribute("w", 0.0);
@@ -97,7 +107,6 @@ public class LabeledRectangleFigure extends RectangleFigure implements LabeledMe
                 handles.add(new BoundsOutlineHandle(this,false,true));
                 break;
             case 0:
-                System.out.println("This is called");
                 AdvancedResizeHandleKit.addResizeHandles(this, handles);
                 break;
         }
