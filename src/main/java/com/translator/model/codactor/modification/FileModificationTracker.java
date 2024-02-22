@@ -54,7 +54,7 @@ public class FileModificationTracker {
             RangeMarker existingRangeMarker = m.getRangeMarker();
             if (existingRangeMarker != null && existingRangeMarker.isValid()) {
                 if ((startIndex <= existingRangeMarker.getStartOffset() && endIndex >= existingRangeMarker.getStartOffset()) || (startIndex <= existingRangeMarker.getEndOffset() && endIndex >= existingRangeMarker.getEndOffset())) {
-                    return null;
+                    return "Error: Can't modify code that is already being modified. Your modification boundaries clash with modification id: " + m.getId() + " with code snippet: \n" + m.getBeforeText() + "\n your selected code snippet which clashes with this is: \n" + beforeText + "\n";
                 }
             }
         }

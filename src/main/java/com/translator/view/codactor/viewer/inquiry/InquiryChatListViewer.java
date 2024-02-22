@@ -33,6 +33,7 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.html.HTMLDocument;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -83,7 +84,7 @@ public class InquiryChatListViewer extends JPanel {
     }
 
     private void initComponents() {
-        inquiryChatList = new JBList<>();
+        inquiryChatList = new JList<>();
         inquiryChatList.setModel(new DefaultListModel<>());
         inquiryChatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         inquiryChatList.setCellRenderer(new InquiryChatRenderer());
@@ -187,7 +188,13 @@ public class InquiryChatListViewer extends JPanel {
                         }
                         if (component1 instanceof JTextPane) {
                             JTextPane jTextPane = (JTextPane) component1;
-                            text.append(jTextPane.getText());
+                            HTMLDocument doc = (HTMLDocument)jTextPane.getDocument();
+                            int length = doc.getLength();
+                            try {
+                                text.append(doc.getText(0, length));
+                            } catch (BadLocationException ex) {
+                                throw new RuntimeException(ex);
+                            }
                             firstComponentCopied = true;
                         } else if (component1 instanceof FixedHeightPanel) {
                             FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
@@ -195,6 +202,15 @@ public class InquiryChatListViewer extends JPanel {
                             if (editor != null) {
                                 text.append(editor.getDocument().getText());
                                 firstComponentCopied = true;
+                            }
+                        } else if (component1 instanceof JToolBar) {
+                            JToolBar jToolBar = (JToolBar) component1;
+                            for (Component component2 : jToolBar.getComponents()) {
+                                if (component2 instanceof JLabel) {
+                                    JLabel jLabel = (JLabel) component2;
+                                    text.append(jLabel.getText());
+                                    text.append("\n");
+                                }
                             }
                         }
                     }
@@ -449,19 +465,30 @@ public class InquiryChatListViewer extends JPanel {
             model.addElement(inquiryChatListViewer);
         }
         ComponentListener componentListener = new ComponentAdapter() {
+            // Keep the initial size
+            Dimension oldSize = InquiryChatListViewer.this.getSize();
+
             @Override
             public void componentResized(ComponentEvent e) {
-                InquiryChatListViewer.this.componentResized(model);
+                Component component = e.getComponent();
+                Dimension newSize = component.getSize();
+                Boolean bigger = null;
+
+                if (newSize.height > oldSize.height || newSize.width > oldSize.width) {
+                    bigger = true;
+                } else if (newSize.height < oldSize.height || newSize.width < oldSize.width) {
+                    bigger = false;
+                }
+
+                // After calculating, make current size as oldSize for the next detection
+                oldSize = newSize;
+
+                InquiryChatListViewer.this.componentResized(model, bigger);
             }
         };
         this.addComponentListener(componentListener);
-        ApplicationManager.getApplication().invokeLater(() -> {
-            inquiryChatList.setModel(model);
-            jBScrollPane.setViewportView(inquiryChatList);
-            //JScrollBar verticalScrollBar = jBScrollPane.getVerticalScrollBar();
-            //verticalScrollBar.setValue(verticalScrollBar.getMaximum());
-            this.componentResized();
-        });
+        this.componentResized(model, null);
+        jBScrollPane.getVerticalScrollBar().setValue(jBScrollPane.getVerticalScrollBar().getMaximum());
     }
 
     private void editQuestion(String inquiryChatId, String newQuestion) {
@@ -533,11 +560,21 @@ public class InquiryChatListViewer extends JPanel {
         });
     }*/
 
-    public void componentResized(DefaultListModel<InquiryChatViewer> previousModel) {
+    public void componentResized(DefaultListModel<InquiryChatViewer> previousModel, Boolean bigger) {
+        boolean canScrollFurther = canScrollFurther(jBScrollPane);
         if (previousModel == null || previousModel.isEmpty()) {
             return;
         }
         ApplicationManager.getApplication().invokeLater(() -> {
+            // Get the current scroll percentage
+            double scrollPercentage = 1.0;
+            if (jBScrollPane.getVerticalScrollBar().getMaximum() != 0) {
+                scrollPercentage = (((double) jBScrollPane.getVerticalScrollBar().getValue()) / jBScrollPane.getVerticalScrollBar().getMaximum());
+                /*scrollPercentage = scrollPercentage * 100;
+                scrollPercentage = Math.ceil(scrollPercentage);
+                scrollPercentage = scrollPercentage / 100;*/
+            }
+
             DefaultListModel<InquiryChatViewer> newModel = new DefaultListModel<>();
             int newTotalHeight = 0;
             for (int i = 0; i < previousModel.size(); i++) {
@@ -559,30 +596,46 @@ public class InquiryChatListViewer extends JPanel {
                         newTotalHeight += newHeight;
                     } else if (component instanceof FixedHeightPanel) {
                         FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                        newTotalHeight += fixedHeightPanel.getHeight();
-                        System.out.println("Fixed height panel: " + fixedHeightPanel.getHeight());
+                        newTotalHeight += fixedHeightPanel.getPreferredSize().height;
                     } else if (component instanceof JToolBar) {
                         JToolBar jToolBar = (JToolBar) component;
-                        newTotalHeight += jToolBar.getHeight();
-                        System.out.println("JToolBar: " + jToolBar.getHeight());
+                        newTotalHeight += jToolBar.getPreferredSize().height;
                     } else if (component instanceof JTextPane) {
                         JTextPane chatDisplay = (JTextPane) component;
-                        newTotalHeight += chatDisplay.getHeight();
-                        System.out.println("JTextPane: " + chatDisplay.getHeight());
+                        newTotalHeight += chatDisplay.getPreferredSize().height;
                     }
+
                 }
                 newModel.addElement(chatViewer);
             }
-            System.out.println("Estimated total chat height: " + newTotalHeight);
+
+            newTotalHeight += 10;
             jBScrollPane.setPreferredSize(new Dimension(getWidth(), getHeight()));
             inquiryChatList.setPreferredSize(new Dimension(jBScrollPane.getWidth(), newTotalHeight));
             inquiryChatList.setModel(newModel);
             jBScrollPane.setViewportView(inquiryChatList);
+
+            // Set the scroll bar to the previous spot
+            if (bigger != null && !bigger && !canScrollFurther) {
+                jBScrollPane.getVerticalScrollBar().setValue(jBScrollPane.getVerticalScrollBar().getMaximum());
+            } else {
+                jBScrollPane.getVerticalScrollBar().setValue((int) Math.ceil(scrollPercentage * jBScrollPane.getVerticalScrollBar().getMaximum()));
+            }
         });
     }
 
+    public boolean canScrollFurther(JBScrollPane scrollPane) {
+        JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
+        int min = verticalScrollBar.getMinimum();
+        int max = verticalScrollBar.getMaximum();
+        int extent = verticalScrollBar.getModel().getExtent();
+        int currentScrollValue = verticalScrollBar.getValue();
+
+        return max - (currentScrollValue + extent) > 0;
+    }
+
     public void componentResized() {
-        componentResized((DefaultListModel<InquiryChatViewer>) inquiryChatList.getModel());
+        componentResized((DefaultListModel<InquiryChatViewer>) inquiryChatList.getModel(), null);
     }
 
     public JBMenuItem getEditItem() {

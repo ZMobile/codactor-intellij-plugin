@@ -82,10 +82,6 @@ public class CodeModificationServiceImpl implements CodeModificationService {
                 openAiApiKey = defaultConnectionService.getOpenAiApiKey();
             }
             DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
-            System.out.println("Testo:");
-            System.out.println(desktopCodeModificationRequestResource.isAzure());
-            System.out.println(desktopCodeModificationRequestResource.getAzureResource());
-            System.out.println(desktopCodeModificationRequestResource.getAzureDeployment());
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getModifiedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
                 fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());

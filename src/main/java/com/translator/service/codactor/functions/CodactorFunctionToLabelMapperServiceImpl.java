@@ -1,10 +1,14 @@
 package com.translator.service.codactor.functions;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import com.google.inject.Inject;
 import com.translator.model.codactor.inquiry.InquiryChat;
 import com.translator.model.codactor.inquiry.function.ChatGptFunctionCall;
 import com.translator.service.codactor.json.JsonExtractorService;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctionToLabelMapperService {
     private Gson gson;
@@ -13,6 +17,50 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
     public CodactorFunctionToLabelMapperServiceImpl(Gson gson) {
         this.gson = gson;
     }
+
+    public String fixMalformedJson(String jsonString) {
+        String fixedJson = jsonString.replace("\" +\n\"", "");
+        // Return the fixed JSON
+        return fixedJson;
+    }
+    /*
+    Before:{
+  "modificationType": "modify",
+  "description": "Provide a function snippet that fixes a malformed json due to multi line code",
+  "replacementCodeSnippet":
+"public String fixMalformedJson(String jsonString) {\n" +
+"    // Pattern to find any strings that have newline characters in them\n" +
+"    Pattern pattern = Pattern.compile(\"\\\\\\\"([^\\\\\\\"]*?\\\\n[^\\\\\\\"]*?)\\\\\\\"\");\n" +
+"    Matcher matcher = pattern.matcher(jsonString);\n" +
+"\n" +
+"    // Replace any newline characters within strings with a special token\n" +
+"    String fixedJson = matcher.replaceAll(matcherResult -> matcherResult.group().replace('\\n', ' '));\n" +
+"    // Return the fixed JSON\n" +
+"    return fixedJson;\n" +
+"}",
+  "startBoundary": "",
+  "endBoundary": "",
+  "path": "/path/to/your/File.java"
+}
+After: {
+  "modificationType": "modify",
+  "description": "Provide a function snippet that fixes a malformed json due to multi line code",
+  "replacementCodeSnippet":
+"public String fixMalformedJson(String jsonString) {\n" +
+"    // Pattern to find any strings that have newline characters in them\n" +
+"    Pattern pattern = Pattern.compile(\"\\\\\\\"([^\\\\\\\"]*?\\\\n[^\\\\\\\"]*?)\\\\\\\"\");\n" +
+"    Matcher matcher = pattern.matcher(jsonString);\n" +
+"\n" +
+"    // Replace any newline characters within strings with a special token\n" +
+"    String fixedJson = matcher.replaceAll(matcherResult -> matcherResult.group().replace('\\n', ' '));\n" +
+"    // Return the fixed JSON\n" +
+"    return fixedJson;\n" +
+"}",
+  "startBoundary": "",
+  "endBoundary": "",
+  "path": "/path/to/your/File.java"
+}
+     */
 
     @Override
     public String getLabel(InquiryChat inquiryChat) {
@@ -66,12 +114,18 @@ public class CodactorFunctionToLabelMapperServiceImpl implements CodactorFunctio
         String id = JsonExtractorService.extractField(functionCall.getArguments(), "id");
         return "Removing modification id " + id + "...";
         } else if (functionCall.getName().equals("request_file_modification")) {
-            String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
-            String location = path;
+            System.out.println("Testooooo arguments: " + functionCall.getArguments());
+            String location;
+            try {
+                location = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            } catch (JsonParseException e) {
+                functionCall.setArguments(fixMalformedJson(functionCall.getArguments()));
+                location = JsonExtractorService.extractField(functionCall.getArguments(), "path");
+            }
             if (location == null) {
                 location = JsonExtractorService.extractField(functionCall.getArguments(), "package");
             }
-            if (location == null)
+            if (location != null)
             return "Requesting file modification for " + location + "...";
         /*} else if (functionCall.getName().equals("request_file_modification_and_wait_for_response")) {
             String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");

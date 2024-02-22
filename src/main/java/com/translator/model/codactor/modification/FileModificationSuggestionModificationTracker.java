@@ -42,16 +42,14 @@ public class FileModificationSuggestionModificationTracker {
 
 
     public String addModificationSuggestionModification(String filePath, int startIndex, int endIndex, ModificationType modificationType) {
-        //String beforeText = display.getText().substring(startIndex, endIndex);
         for (FileModificationSuggestionModification m : modifications) {
             // Check if the proposed modification would overlap with any existing modifications in this tracker
             if ((startIndex <= m.getRangeMarker().getStartOffset() && endIndex >= m.getRangeMarker().getStartOffset()) || (startIndex <= m.getRangeMarker().getEndOffset() && endIndex >= m.getRangeMarker().getEndOffset())) {
-                return null;
+                return "Error: Can't modify code that is already being modified. Your modification boundaries clash with modification id: " + m.getId() + " with code snippet: \n" + m.getBeforeText();
             }
         }
         Document document = fileModificationSuggestion.getSuggestedCodeEditor().getDocument();
         RangeMarker rangeMarker = document.createRangeMarker(startIndex, endIndex);
-        String beforeCode = fileModificationSuggestion.getBeforeCode();
         FileModificationSuggestionModification fileModificationSuggestionModification = new FileModificationSuggestionModification(filePath, fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getId(), rangeMarker, fileModificationSuggestion.getBeforeCode(), modificationType);
         modifications.add(fileModificationSuggestionModification);
         return fileModificationSuggestionModification.getId();

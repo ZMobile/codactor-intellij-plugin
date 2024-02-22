@@ -31,6 +31,29 @@ public class CodeSnippetIndexGetterServiceImpl implements CodeSnippetIndexGetter
         return getEndIndex(code, snippet);
     }
 
+    public int getEndIndex(String code, String startSnippetString, String snippet) {
+        int startSnippetIndex = getStartIndex(code, startSnippetString);
+        if (startSnippetIndex == -1) {
+            return -1;
+        }
+
+        String codeFromStartSnippet = code.substring(startSnippetIndex);
+        int snippetIndex = getStartIndex(codeFromStartSnippet, snippet);
+
+        return snippetIndex == -1 ? -1 : startSnippetIndex + snippetIndex + snippet.length();
+    }
+
+    public int getEndIndex(String code, int startIndex, String snippet) {
+        if (startIndex >= code.length() || startIndex < 0) {
+            return -1;
+        }
+
+        String codeFromStartIndex = code.substring(startIndex);
+        int snippetIndex = getStartIndex(codeFromStartIndex, snippet);
+
+        return snippetIndex == -1 ? -1 : startIndex + snippetIndex + snippet.length();
+    }
+
     @Override
     public int getLineAtIndex(String code, int index) {
         int count = 1;

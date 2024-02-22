@@ -87,10 +87,10 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             activeModificationFiles.put(newFilePath, fileModificationTracker);
         }
         String fileModificationId = fileModificationTracker.addModification(modification, startIndex, endIndex, modificationType, priorContext);
-        if (fileModificationId == null) {
+        if (fileModificationId == null || fileModificationId.startsWith("Error")) {
             JOptionPane.showMessageDialog(null, "Can't modify code that is already being modified", "Error",
                     JOptionPane.ERROR_MESSAGE);
-            return null;
+            return fileModificationId;
         }
         if (modificationType != ModificationType.CREATE) {
             editorClickHandlerService.addEditorClickHandler(newFilePath);
@@ -116,10 +116,10 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             activeModificationSuggestionModifications.put(suggestionId, fileModificationSuggestionModificationTracker);
         }
         String fileModificationSuggestionModificationId = fileModificationSuggestionModificationTracker.addModificationSuggestionModification(newFilePath, startIndex, endIndex, modificationType);
-        if (fileModificationSuggestionModificationId == null) {
+        if (fileModificationSuggestionModificationId == null || fileModificationSuggestionModificationId.startsWith("Error")) {
             JOptionPane.showMessageDialog(null, "Can't modify code that is already being modified", "Error",
                     JOptionPane.ERROR_MESSAGE);
-            return null;
+            return fileModificationSuggestionModificationId;
         }
         if (modificationQueueViewer == null) {
             Injector injector = CodactorInjector.getInstance().getInjector(project);

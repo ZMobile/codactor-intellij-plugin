@@ -80,11 +80,6 @@ public class LabeledRectangleFigure extends RectangleFigure implements LabeledMe
     }
 
     public void read(DOMInput in) throws IOException {
-        try {
-            int impossibleNumber = 10 / 0;
-        } catch (ArithmeticException e) {
-            e.printStackTrace();
-        }
         if (in instanceof AdvancedNanoXMLDOMInput) {
             this.project = ((AdvancedNanoXMLDOMInput) in).getProject();
         }

@@ -176,20 +176,20 @@ public class InquiryChatViewer extends JPanel {
         int lastIndex = 0;
         while (matcher.find()) {
             String plainText = message.substring(lastIndex, matcher.start()).trim();
-            if (!plainText.isEmpty()) {
+            if (!plainText.isEmpty() && !plainText.equals("null")) {
                 components.add(createPlainTextComponent(plainText));
             }
 
             String codeSnippet = matcher.group(1).trim();
             if (!codeSnippet.isEmpty()) {
-                components.add(createCodeEditor(codeSnippet));
+                components.add(createCodeEditor(codeSnippet, inquiryChat.getFilePath()));
             }
 
             lastIndex = matcher.end();
         }
 
         String remainingPlainText = message.substring(lastIndex).trim();
-        if (!remainingPlainText.isEmpty()) {
+        if (!remainingPlainText.isEmpty() && !remainingPlainText.equals("null")) {
             components.add(createPlainTextComponent(remainingPlainText));
         }
 
@@ -214,6 +214,8 @@ public class InquiryChatViewer extends JPanel {
         textPane.setEditable(false);
         textPane.setText("<html><body style='font-family: sans-serif;'>" + escapeHtml(text) + "</body></html>");
         textPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        System.out.println("Text size:" + text.length());
+        System.out.println("TextPane size:" + textPane.getHeight());
         return textPane;
     }
 
@@ -236,7 +238,7 @@ public class InquiryChatViewer extends JPanel {
         return functionCallsPanel;
     }
 
-    private FixedHeightPanel createCodeEditor(String code) {
+    private FixedHeightPanel createCodeEditor(String code, String filePath) {
         final FixedHeightPanel[] fixedHeightPanel = new FixedHeightPanel[1];
         EditorFactory editorFactory = EditorFactory.getInstance();
         String extension = null;
@@ -257,6 +259,9 @@ public class InquiryChatViewer extends JPanel {
         }
         if (extension == null) {
             extension = "txt";
+        }
+        if (filePath != null) {
+            extension = filePath.substring(filePath.lastIndexOf(".") + 1);
         }
         FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(extension);
         ApplicationManager.getApplication().invokeAndWait(() -> {

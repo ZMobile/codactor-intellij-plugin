@@ -17,15 +17,17 @@ public class InquiryChatRenderer extends JPanel implements ListCellRenderer<Inqu
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                // Handle mouse click event
+                System.out.println("1");
             }
             @Override
             public void mouseEntered(MouseEvent e) {
                 // Handle mouse enter event
+                System.out.println("2");
             }
             @Override
             public void mouseExited(MouseEvent e) {
                 // Handle mouse exit event
+                System.out.println("3");
             }
         });
     }

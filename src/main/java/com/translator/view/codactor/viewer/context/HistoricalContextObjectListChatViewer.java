@@ -240,15 +240,8 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
             }
         };
         jList1.getParent().addComponentListener(componentListener);
-
-        ApplicationManager.getApplication().invokeLater(() -> {
-            jList1.setModel(model);
-            jBScrollPane1.setViewportView(jList1);
-        });
-        componentResized(model);
-
-        //JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-        //vertical.setValue(vertical.getMaximum() - vertical.getVisibleAmount());
+        this.componentResized(model);
+        jBScrollPane1.getVerticalScrollBar().setValue(jBScrollPane1.getVerticalScrollBar().getMaximum());
     }
 
     private void updateChatContentsWithContextInstalled() {

@@ -7,6 +7,10 @@ public interface CodeSnippetIndexGetterService {
 
     int getEndIndex(String code, String snippet);
 
+    int getEndIndex(String code, String startSnippetString, String snippet);
+
+    int getEndIndex(String code, int startIndex, String snippet);
+
     int getEndIndexInFilePath(String filePath, String snippet);
 
     int getLineAtIndex(String code, int index);

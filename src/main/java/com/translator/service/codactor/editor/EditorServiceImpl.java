@@ -38,8 +38,6 @@ public class EditorServiceImpl implements EditorService {
 
     @Override
     public List<Editor> getAllEditors() {
-        System.out.println("All editors requested");
-        System.out.println("Project: " + project.getName());
         List<Editor> editorList = new ArrayList<>();
         FileEditor[] allEditors = FileEditorManager.getInstance(project).getAllEditors();
 

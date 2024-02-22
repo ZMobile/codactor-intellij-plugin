@@ -279,53 +279,23 @@ public class PromptViewer extends JPanel {
 
     public void updateInquiryChatContents(java.util.List<InquiryChat> inquiryChats) {
         this.inquiryChats = inquiryChats;
+        DefaultListModel<InquiryChatViewer> model = new DefaultListModel<>();
+        for (InquiryChat inquiryChat : inquiryChats) {
+            InquiryChatViewer chatViewer = new InquiryChatViewer.Builder()
+                    .withInquiryChat(inquiryChat)
+                    .build();
+            model.addElement(chatViewer);
+        }
+        ComponentListener componentListener = new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                PromptViewer.this.componentResized(model);
+            }
+        };
+        promptList.getParent().addComponentListener(componentListener);
+        this.componentResized(model);
         ApplicationManager.getApplication().invokeLater(() -> {
-                if (inquiryChats == null) {
-                    promptList.setModel(new DefaultListModel<>());
-                    return;
-                }
-                int totalHeight = 0;
-                DefaultListModel<InquiryChatViewer> model = new DefaultListModel<>();
-                for (InquiryChat inquiryChat : inquiryChats) {
-                    InquiryChatViewer chatViewer = new InquiryChatViewer.Builder()
-                            .withInquiryChat(inquiryChat)
-                            .build();
-                    model.addElement(chatViewer);
-                    for (Component component : chatViewer.getComponents()) {
-                        if (component instanceof JBTextArea) {
-                            JBTextArea chatDisplay = (JBTextArea) component;
-                            int newHeight = 0;
-                            int newWidth = getWidth();
-                            if (inquiryChat.getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
-                                newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
-                            } else {
-                                newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
-                            }
-                            Dimension preferredSize = new Dimension(newWidth, newHeight);
-                            chatDisplay.setPreferredSize(preferredSize);
-                            chatDisplay.setMaximumSize(preferredSize);
-                            chatDisplay.setSize(preferredSize);
-                            totalHeight += newHeight + chatViewer.getComponent(0).getHeight();
-                        } else if (component instanceof FixedHeightPanel) {
-                            FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                            totalHeight += fixedHeightPanel.getHeight();
-                        }
-                        totalHeight += chatViewer.getComponent(0).getHeight();
-                    }
-                }
-                promptList.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, totalHeight));
-                promptList.setModel(model);
-                ComponentListener componentListener = new ComponentAdapter() {
-                    @Override
-                    public void componentResized(ComponentEvent e) {
-                        PromptViewer.this.componentResized(model);
-                    }
-                };
-                promptList.getParent().addComponentListener(componentListener);
-                jBScrollPane1.setViewportView(promptList);
                 promptHighlighterService.highlightPrompts(promptNodeDialog);
-            //JScrollBar vertical = jBScrollPane1.getVerticalScrollBar();
-                //vertical.setValue(vertical.getMaximum() - vertical.getVisibleAmount());
             }
         );
     }
@@ -375,36 +345,60 @@ public class PromptViewer extends JPanel {
         if (previousModel == null || previousModel.isEmpty()) {
             return;
         }
-        DefaultListModel<InquiryChatViewer> newModel = new DefaultListModel<>();
-        int newTotalHeight = 0;
-        for (int i = 0; i < previousModel.size(); i++) {
-            InquiryChatViewer chatViewer = previousModel.getElementAt(i);
-            for (Component component : chatViewer.getComponents()) {
-                if (component instanceof JBTextArea) {
-                    JBTextArea chatDisplay = (JBTextArea) component;
-                    int newHeight = 0;
-                    int newWidth = getWidth();
-                    if (chatViewer.getInquiryChat().getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
-                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
-                    } else {
-                        newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
-                    }
-                    Dimension preferredSize = new Dimension(newWidth, newHeight);
-                    chatDisplay.setPreferredSize(preferredSize);
-                    chatDisplay.setMaximumSize(preferredSize);
-                    chatDisplay.setSize(preferredSize);
-                    newTotalHeight += newHeight;
-                } else if (component instanceof FixedHeightPanel) {
-                    FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                    newTotalHeight += fixedHeightPanel.getHeight();
-                }
-                newTotalHeight += chatViewer.getComponent(0).getHeight();
+        ApplicationManager.getApplication().invokeLater(() -> {
+            // Get the current scroll percentage
+            double scrollPercentage = 1.0;
+            if (jBScrollPane1.getVerticalScrollBar().getMaximum() != 0) {
+                scrollPercentage = (((double) jBScrollPane1.getVerticalScrollBar().getValue()) / jBScrollPane1.getVerticalScrollBar().getMaximum());
+                /*scrollPercentage = scrollPercentage * 100;
+                scrollPercentage = Math.ceil(scrollPercentage);
+                scrollPercentage = scrollPercentage / 100;*/
             }
-            newModel.addElement(chatViewer);
-        }
-        promptList.setPreferredSize(new Dimension(jBScrollPane1.getWidth() - 20, newTotalHeight));
-        promptList.setModel(newModel);
-        jBScrollPane1.setViewportView(promptList);
+
+            DefaultListModel<InquiryChatViewer> newModel = new DefaultListModel<>();
+            int newTotalHeight = 0;
+            for (int i = 0; i < previousModel.size(); i++) {
+                InquiryChatViewer chatViewer = previousModel.getElementAt(i);
+                for (Component component : chatViewer.getComponents()) {
+                    if (component instanceof JBTextArea) {
+                        JBTextArea chatDisplay = (JBTextArea) component;
+                        int newHeight = 0;
+                        int newWidth = getWidth();
+                        if (chatViewer.getInquiryChat().getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                            newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
+                        } else {
+                            newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+                        }
+                        Dimension preferredSize = new Dimension(newWidth, newHeight);
+                        chatDisplay.setPreferredSize(preferredSize);
+                        chatDisplay.setMaximumSize(preferredSize);
+                        chatDisplay.setSize(preferredSize);
+                        newTotalHeight += newHeight;
+                    } else if (component instanceof FixedHeightPanel) {
+                        FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                        newTotalHeight += fixedHeightPanel.getPreferredSize().height;
+                    } else if (component instanceof JToolBar) {
+                        JToolBar jToolBar = (JToolBar) component;
+                        newTotalHeight += jToolBar.getPreferredSize().height;
+                    } else if (component instanceof JTextPane) {
+                        JTextPane chatDisplay = (JTextPane) component;
+                        newTotalHeight += chatDisplay.getPreferredSize().height;
+                    }
+
+                }
+                newModel.addElement(chatViewer);
+            }
+
+            newTotalHeight += 10;
+            jBScrollPane1.setPreferredSize(new Dimension(getWidth(), getHeight()));
+            promptList.setPreferredSize(new Dimension(jBScrollPane1.getWidth(), newTotalHeight));
+            promptList.setModel(newModel);
+            jBScrollPane1.setViewportView(promptList);
+
+            System.out.println("Scroll percentage:" + scrollPercentage);
+            // Set the scroll bar to the previous spot
+            jBScrollPane1.getVerticalScrollBar().setValue((int) Math.ceil(scrollPercentage * jBScrollPane1.getVerticalScrollBar().getMaximum()));
+        });
     }
 
     public List<InquiryChatViewer> getPrompts() {

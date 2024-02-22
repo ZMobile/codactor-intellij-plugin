@@ -63,17 +63,20 @@ public class CodeRecorderServiceImpl implements CodeRecorderService {
     }
 
     @Override
-    public void getModifiedCode(String filePath, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
+    public String getModifiedCode(String filePath, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
             ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
             if (firebaseTokenService.getFirebaseToken() == null) {
-                return;
+                return "Error: User not authenticated. Please authenticate and try again.";
             }
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
         String modificationId = fileModificationTrackerService.addModification(filePath, modification, startIndex, endIndex, modificationType, priorContext);
+        if (modificationId == null || modificationId.startsWith("Error")) {
+            return modificationId;
+        }
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -102,20 +105,24 @@ public class CodeRecorderServiceImpl implements CodeRecorderService {
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+        return modificationId;
     }
 
     @Override
-    public void getModifiedCode(String filePath, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
+    public String getModifiedCode(String filePath, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
             ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
             if (firebaseTokenService.getFirebaseToken() == null) {
-                return;
+                return "Error: User not authenticated. Please authenticate and try again.";
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
         String modificationId = fileModificationTrackerService.addModification(filePath, modification, 0, code.length(), modificationType, priorContext);
+        if (modificationId == null || modificationId.startsWith("Error")) {
+            return modificationId;
+        }
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -144,20 +151,24 @@ public class CodeRecorderServiceImpl implements CodeRecorderService {
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+        return modificationId;
     }
 
     @Override
-    public void getFixedCode(String filePath, int startIndex, int endIndex, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
+    public String getFixedCode(String filePath, int startIndex, int endIndex, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
             ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
             if (firebaseTokenService.getFirebaseToken() == null) {
-                return;
+                return "Error: User not authenticated. Please authenticate and try again.";
             }
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
         String modificationId = fileModificationTrackerService.addModification(filePath, error, startIndex, endIndex, modificationType, priorContext);
+        if (modificationId == null || modificationId.startsWith("Error")) {
+            return modificationId;
+        }
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -186,20 +197,24 @@ public class CodeRecorderServiceImpl implements CodeRecorderService {
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+        return modificationId;
     }
 
     @Override
-    public void getFixedCode(String filePath, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
+    public String getFixedCode(String filePath, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
             ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
             if (firebaseTokenService.getFirebaseToken() == null) {
-                return;
+                return "Error: User not authenticated. Please authenticate and try again.";
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
         String modificationId = fileModificationTrackerService.addModification(filePath, error, 0, code.length(), modificationType, priorContext);
+        if (modificationId == null || modificationId.startsWith("Error")) {
+            return modificationId;
+        }
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -228,19 +243,23 @@ public class CodeRecorderServiceImpl implements CodeRecorderService {
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+        return modificationId;
     }
 
     @Override
-    public void getCreatedCode(String filePath, String description, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
+    public String getCreatedCode(String filePath, String description, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
             ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
             if (firebaseTokenService.getFirebaseToken() == null) {
-                return;
+                return "Error: User not authenticated. Please authenticate and try again.";
             }
         }
         String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
+        if (modificationId == null || modificationId.startsWith("Error")) {
+            return modificationId;
+        }
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -269,19 +288,23 @@ public class CodeRecorderServiceImpl implements CodeRecorderService {
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.CREATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+        return modificationId;
     }
 
     @Override
-    public void getCreatedCodeFile(String filePath, String description, String overrideCode) {
+    public String getCreatedCodeFile(String filePath, String description, String overrideCode) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
             ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
             if (firebaseTokenService.getFirebaseToken() == null) {
-                return;
+                return "Error: User not authenticated. Please authenticate and try again.";
             }
         }
         String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, new ArrayList<>());
+        if (modificationId == null || modificationId.startsWith("Error")) {
+            return modificationId;
+        }
         FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
         fileModification.setFileCreationAtFilePathOnAcceptance(true);
         CancellableRunnable task = customProgressIndicator -> {
@@ -312,20 +335,24 @@ public class CodeRecorderServiceImpl implements CodeRecorderService {
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.CREATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+        return modificationId;
     }
 
     @Override
-    public void getTranslatedCode(String filePath, String newLanguage, String newFileType, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
+    public String getTranslatedCode(String filePath, String newLanguage, String newFileType, List<HistoricalContextObjectHolder> priorContext, String overrideCode) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
             ShowSettingsUtil.getInstance().editConfigurable(project, configurable);
             if (firebaseTokenService.getFirebaseToken() == null) {
-                return;
+                return "Error: User not authenticated. Please authenticate and try again.";
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
         String modificationId = fileModificationTrackerService.addModification(filePath, null, 0, code.length(), ModificationType.TRANSLATE, priorContext);
+        if (modificationId == null || modificationId.startsWith("Error")) {
+            return modificationId;
+        }
         FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
         fileModification.setNewLanguage(newLanguage);
         fileModification.setNewFileType(newFileType);
@@ -357,5 +384,6 @@ public class CodeRecorderServiceImpl implements CodeRecorderService {
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification (" + ModificationType.TRANSLATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
         backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+        return modificationId;
     }
 }

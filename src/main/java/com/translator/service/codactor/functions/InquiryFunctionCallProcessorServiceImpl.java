@@ -118,6 +118,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
 
     @Override
     public String processFunctionCall(ChatGptFunctionCall chatGptFunctionCall, String inquiryId) {
+
         try {
             if (chatGptFunctionCall.getName().equals("get_project_base_path")) {
                 return project.getBasePath();
@@ -300,7 +301,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 String endSnippetString = null;
                 if (codeSnippetString != null) {
                     startIndex = codeSnippetIndexGetterService.getStartIndex(code, codeSnippetString);
-                    endIndex = codeSnippetIndexGetterService.getEndIndex(code, codeSnippetString);
+                    endIndex = codeSnippetIndexGetterService.getEndIndex(code, startIndex, codeSnippetString);
                 } else {
                     startSnippetString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "startBoundary");
 
@@ -316,7 +317,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                     endSnippetString = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "endBoundary");
                     if (endSnippetString != null) {
                         try {
-                            endIndex = codeSnippetIndexGetterService.getEndIndex(code, endSnippetString);
+                            endIndex = codeSnippetIndexGetterService.getEndIndex(code, startSnippetString, endSnippetString);
                         } catch (NumberFormatException e) {
                             endIndex = code.length();
                         }
@@ -334,7 +335,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                             startIndex = 0;
                         }
                         try {
-                            endIndex = codeSnippetIndexGetterService.getEndIndex(code, endSnippetString);
+                            endIndex = codeSnippetIndexGetterService.getEndIndex(code, startIndex, endSnippetString);
                         } catch (NumberFormatException e) {
                             endIndex = code.length();
                         }
@@ -349,32 +350,45 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 HistoricalContextObjectHolder inquiryContext = new HistoricalContextObjectHolder(new HistoricalContextInquiryHolder(inquiryId));
                 List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
                 priorContext.add(inquiryContext);
+                String modificationId = "Error: no modification type specified.";
                 switch (modificationTypeString) {
                     case "modify":
                         if (startSnippetString == null && endSnippetString == null) {
                             modificationType = ModificationType.MODIFY;
-                            codeRecorderService.getModifiedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = codeRecorderService.getModifiedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         } else {
                             modificationType = ModificationType.MODIFY_SELECTION;
-                            codeRecorderService.getModifiedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = codeRecorderService.getModifiedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         }
                         break;
                     case "fix":
                         if (startSnippetString == null && endSnippetString == null) {
                             modificationType = ModificationType.FIX;
-                            codeRecorderService.getFixedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = codeRecorderService.getFixedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         } else {
                             modificationType = ModificationType.FIX_SELECTION;
-                            codeRecorderService.getFixedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = codeRecorderService.getFixedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         }
                         break;
                     case "create":
-                        codeRecorderService.getCreatedCode(path, description, new ArrayList<>(), replacementCodeSnippetString);
+                        modificationId = codeRecorderService.getCreatedCode(path, description, new ArrayList<>(), replacementCodeSnippetString);
                         break;
                 }
-                return "{" +
-                        "\"message\": \"Modification requested\"" +
-                        "}";
+                if (modificationId != null) {
+                    if (modificationId.startsWith("Error")) {
+                        return "{" +
+                                "\"message\": \"" + modificationId + "\"" +
+                                "}";
+                    } else {
+                        return "{" +
+                                "\"message\": \"Modification requested. Modification id: " + modificationId + " \"" +
+                                "}";
+                    }
+                } else {
+                    return "{" +
+                            "\"message\": \"Error: Unspecified.\"" +
+                            "}";
+                }
         /*} else if (chatGptFunctionCall.getName().equals("request_file_modification_and_wait_for_response")) {
             String path = JsonExtractorService.extractField(chatGptFunctionCall.getArguments(), "path");
             if (path == null) {
