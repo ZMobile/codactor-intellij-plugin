@@ -10,7 +10,6 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.JBLabel;
-import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.service.codactor.context.PromptContextService;
@@ -34,7 +33,7 @@ public class FileFixDialog extends JDialog {
     private MassCodeModificationService massCodeModificationService;
     private MultiFileModificationService multiFileModificationService;
     private OpenAiModelService openAiModelService;
-    private JBList<String> fileList;
+    private JList<String> fileList;
     private DefaultListModel<String> listModel;
     private JBTextArea description;
     private ComboBox<String> modelComboBox;
@@ -70,7 +69,7 @@ public class FileFixDialog extends JDialog {
 
         initFileList(selectedItems);
 
-        fileList = new JBList<>(listModel);
+        fileList = new JList<>(listModel);
         fileList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         fileList.addListSelectionListener(e -> updateSelectedFilesLabel());
 
@@ -218,9 +217,9 @@ public class FileFixDialog extends JDialog {
 
     private void updateSelectedFilesLabel() {
         if (applyToEachFileButton.isSelected()) {
-            if (fileList.getItemsCount() == 1) {
+            if (fileList.getModel().getSize() == 1) {
                 descriptionLabel.setText("Enter the problem to fix with this file:");
-            } else if (fileList.getItemsCount() == 0) {
+            } else if (fileList.getModel().getSize() == 0) {
                 descriptionLabel.setText("Enter the problem to fix with each file added to this list:");
             } else {
                 descriptionLabel.setText("Enter the problem to fix with each of these files:");

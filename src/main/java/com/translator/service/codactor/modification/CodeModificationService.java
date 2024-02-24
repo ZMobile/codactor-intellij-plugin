@@ -1,5 +1,6 @@
 package com.translator.service.codactor.modification;
 
+import com.intellij.openapi.editor.Editor;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.modification.ModificationType;
 
@@ -14,7 +15,7 @@ public interface CodeModificationService {
 
     void getModifiedCodeAndWait(String filePath, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext);
 
-    void getModifiedCodeModification(String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext);
+    void getModifiedCodeModification(Editor editor, String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext);
 
     void getFixedCode(String filePath, int startIndex, int endIndex, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext);
 
@@ -24,7 +25,7 @@ public interface CodeModificationService {
 
     void getFixedCodeAndWait(String filePath, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext);
 
-    void getModifiedCodeFix(String suggestionId, String code, int startIndex, int endIndex, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext);
+    void getModifiedCodeFix(Editor editor, String suggestionId, String code, int startIndex, int endIndex, String error, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext);
 
     void getCreatedCode(String filePath, String description, List<HistoricalContextObjectHolder> priorContext);
 
@@ -38,7 +39,7 @@ public interface CodeModificationService {
 
     void createAndImplementCode(String filePath, String description, List<HistoricalContextObjectHolder> priorContext);
 
-    void getModifiedCodeCreation(String suggestionId, int startIndex, int endIndex, String description, List<HistoricalContextObjectHolder> priorContext);
+    void getModifiedCodeCreation(Editor editor, String suggestionId, int startIndex, int endIndex, String description, List<HistoricalContextObjectHolder> priorContext);
 
     void getTranslatedCode(String filePath, String newLanguage, String newFileType, List<HistoricalContextObjectHolder> priorContext);
 }

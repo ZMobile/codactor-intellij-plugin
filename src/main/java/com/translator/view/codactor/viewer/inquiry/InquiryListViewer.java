@@ -86,7 +86,7 @@ public class InquiryListViewer extends JPanel {
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
                         .addComponent(jToolBar2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(inquiryListScrollPane, GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
+                        .addComponent(inquiryListScrollPane, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
         );
 
         updateInquiryList(new ArrayList<>());

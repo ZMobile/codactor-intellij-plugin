@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.JBMenuItem;
 import com.intellij.openapi.ui.JBPopupMenu;
-import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.model.codactor.modification.FileModification;
@@ -32,7 +31,7 @@ import java.util.List;
 
 public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
 
-    private JBList<FileModificationDataHolder> modificationList;
+    private JList<FileModificationDataHolder> modificationList;
     private JBScrollPane modificationListScrollPane;
     private JBPopupMenu jBPopupMenu;
     private ProvisionalModificationViewer provisionalModificationViewer;
@@ -68,7 +67,7 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
     }
 
     private void initComponents() {
-        modificationList = new JBList<>();
+        modificationList = new JList<>();
         modificationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         modificationListScrollPane = new JBScrollPane(modificationList);
 
@@ -86,7 +85,7 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
         );
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
-                        .addComponent(modificationListScrollPane, GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
+                        .addComponent(modificationListScrollPane, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
         );
 
         updateModificationList(new ArrayList<>());
@@ -100,12 +99,14 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                 FileModificationDataHolder fileModificationDataHolder = modificationList.getModel().getElementAt(index);
                 if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION) {
                     FileModification fileModification = fileModificationDataHolder.getFileModification();
+                    System.out.println("This gets called 1");
                     fileOpenerService.openFileInEditor(fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset());
                     if (fileModification.isError()) {
                         FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModification.getId(), fileModification.getFilePath(), "", fileModification.getModificationType());
                         fileModificationErrorDialog.setVisible(true);
                     }
                     if (fileModification.isDone()) {
+                        System.out.println("This gets called 2");
                         provisionalModificationViewer.updateModificationList(fileModification);
 
                         // Replace the content of the tool window with an instance of CodeSnippetListViewer

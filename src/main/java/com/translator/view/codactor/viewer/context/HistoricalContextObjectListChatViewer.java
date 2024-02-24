@@ -35,6 +35,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.html.HTMLDocument;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -167,6 +168,25 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                                 text.append(editor.getDocument().getText());
                                 firstComponentCopied = true;
                             }
+                        } else if (component1 instanceof JTextPane) {
+                            JTextPane jTextPane = (JTextPane) component1;
+                            HTMLDocument doc = (HTMLDocument)jTextPane.getDocument();
+                            int length = doc.getLength();
+                            try {
+                                text.append(doc.getText(0, length));
+                            } catch (BadLocationException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                            firstComponentCopied = true;
+                        } else if (component1 instanceof JToolBar) {
+                            JToolBar jToolBar = (JToolBar) component1;
+                            for (Component component2 : jToolBar.getComponents()) {
+                                if (component2 instanceof JLabel) {
+                                    JLabel jLabel = (JLabel) component2;
+                                    text.append(jLabel.getText());
+                                    text.append("\n");
+                                }
+                            }
                         }
                     }
                     new TextAreaWindow(text.toString());
@@ -220,7 +240,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                                 .addComponent(jToolBar2, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
                                 .addComponent(jToolBar3, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
-                        .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, jList1.getHeight(), Short.MAX_VALUE)); // Set size for jList1// Add a gap of 20 between jList1 and JBTextArea
+                        .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)); // Set size for jList1// Add a gap of 20 between jList1 and JBTextArea
     }
 
     public void updateChatContents(List<InquiryChat> inquiryChats) {

@@ -1,5 +1,6 @@
 package com.translator.service.codactor.modification;
 
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
@@ -213,7 +214,7 @@ public class CodeModificationServiceImpl implements CodeModificationService {
     }
 
     @Override
-    public void getModifiedCodeModification(String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
+    public void getModifiedCodeModification(Editor editor, String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
@@ -223,7 +224,7 @@ public class CodeModificationServiceImpl implements CodeModificationService {
             }
         }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
-        String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
+        String modificationId = fileModificationTrackerService.addModificationSuggestionModification(editor, fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -405,7 +406,7 @@ public class CodeModificationServiceImpl implements CodeModificationService {
     }
 
     @Override
-    public void getModifiedCodeFix(String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
+    public void getModifiedCodeFix(Editor editor, String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
@@ -415,7 +416,7 @@ public class CodeModificationServiceImpl implements CodeModificationService {
             }
         }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
-        String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
+        String modificationId = fileModificationTrackerService.addModificationSuggestionModification(editor, fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -654,7 +655,7 @@ public class CodeModificationServiceImpl implements CodeModificationService {
     }
 
     @Override
-    public void getModifiedCodeCreation(String suggestionId, int startIndex, int endIndex, String description, List<HistoricalContextObjectHolder> priorContext) {
+    public void getModifiedCodeCreation(Editor editor, String suggestionId, int startIndex, int endIndex, String description, List<HistoricalContextObjectHolder> priorContext) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
@@ -664,7 +665,7 @@ public class CodeModificationServiceImpl implements CodeModificationService {
             }
         }
         FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(suggestionId);
-        String modificationId = fileModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, ModificationType.CREATE);
+        String modificationId = fileModificationTrackerService.addModificationSuggestionModification(editor, fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, ModificationType.CREATE);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {

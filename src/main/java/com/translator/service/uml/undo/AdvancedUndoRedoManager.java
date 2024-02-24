@@ -29,6 +29,7 @@ public class AdvancedUndoRedoManager extends UndoRedoManager {
     }
 
     public Project getProject() {
+        System.out.println("Wohoo 2!");
         return project;
     }
 

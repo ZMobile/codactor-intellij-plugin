@@ -7,7 +7,6 @@ package com.translator.view.codactor.dialog;
 import com.google.inject.assistedinject.Assisted;
 import com.intellij.openapi.ui.Splitter;
 import com.intellij.ui.JBColor;
-import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.JBUI;
@@ -82,7 +81,7 @@ public class PromptContextBuilderDialog extends JDialog {
 
     public void initComponents() {
         jBScrollPane3 = new JBScrollPane();
-        jBList3 = new JBList<>();
+        jBList3 = new JList<>();
         mainPanel = new JBPanel();
         mainPanel.setBackground(JBColor.background());
         mainPanel.setBorder(JBUI.Borders.empty());
@@ -92,27 +91,27 @@ public class PromptContextBuilderDialog extends JDialog {
         leftViewerPanel = new JBPanel();
         jToolBar3 = new JToolBar();
         jBScrollPane4 = new JBScrollPane();
-        jBList4 = new JBList<>();
+        jBList4 = new JList<>();
         historyHolderPanel = new JBPanel();
         inquiryFileModificationSplitter = new Splitter();
         inquiryHistoryPanel = new JBPanel();
         jToolBar7 = new JToolBar();
         jBScrollPane8 = new JBScrollPane();
-        jBList8 = new JBList<>();
+        jBList8 = new JList<>();
         fileModificationHistoryPanel = new JBPanel();
         jToolBar8 = new JToolBar();
         jBScrollPane9 = new JBScrollPane();
-        jBList9 = new JBList<>();
+        jBList9 = new JList<>();
         rightViewerAndCompiledContextHolderPanel = new JBPanel();
         secondarySplitterSeparatingRightViewerFromCompiledContextHolder = new Splitter();
         compiledContextHolderPanel = new JBPanel();
         jToolBar9 = new JToolBar();
         jBScrollPane10 = new JBScrollPane();
-        jBList10 = new JBList<>();
+        jBList10 = new JList<>();
         rightViewerPanel = new JBPanel();
         jToolBar10 = new JToolBar();
         jBScrollPane11 = new JBScrollPane();
-        jBList11 = new JBList<>();
+        jBList11 = new JList<>();
         // Create a GroupLayout for the spliter2 panel
         GroupLayout secondarySplitterSeparatingLeftViewerFromHistoryHoldersLayout = new GroupLayout(secondarySplitterSeparatingLeftViewerFromHistoryHolders);
         jBList3.setModel(new AbstractListModel<String>() {
@@ -171,7 +170,7 @@ public class PromptContextBuilderDialog extends JDialog {
                         .addGroup(inquiryHistoryPanelLayout.createSequentialGroup()
                                 .addComponent(jToolBar7, GroupLayout.PREFERRED_SIZE, 25, GroupLayout.PREFERRED_SIZE)
                                 .addGap(0, 0, 0)
-                                .addComponent(jBScrollPane8, GroupLayout.DEFAULT_SIZE, 780, Short.MAX_VALUE))
+                                .addComponent(jBScrollPane8, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE))
         );
 
         inquiryFileModificationSplitter.setFirstComponent(inquiryHistoryPanel);
@@ -196,7 +195,7 @@ public class PromptContextBuilderDialog extends JDialog {
                 fileModificationHistoryPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
                         .addGroup(fileModificationHistoryPanelLayout.createSequentialGroup()
                                 .addComponent(jToolBar8, GroupLayout.PREFERRED_SIZE, 25, GroupLayout.PREFERRED_SIZE)
-                                .addComponent(jBScrollPane9, GroupLayout.DEFAULT_SIZE, 774, Short.MAX_VALUE))
+                                .addComponent(jBScrollPane9, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE))
         );
 
         inquiryFileModificationSplitter.setSecondComponent(fileModificationHistoryPanel);
@@ -249,12 +248,12 @@ public class PromptContextBuilderDialog extends JDialog {
                         .addGroup(compiledContextHolderPanelLayout.createSequentialGroup()
                                 .addComponent(jToolBar9, GroupLayout.PREFERRED_SIZE, 25, GroupLayout.PREFERRED_SIZE)
                                 .addGap(0, 0, 0)
-                                .addComponent(jBScrollPane10, GroupLayout.DEFAULT_SIZE, 780, Short.MAX_VALUE))
+                                .addComponent(jBScrollPane10, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE))
         );
         compiledContextHolderPanel.setMinimumSize(new Dimension(0, 0));
-        compiledContextHolderPanel.setPreferredSize(new Dimension(106, 805));
+        //compiledContextHolderPanel.setPreferredSize(new Dimension(106, compiledContextHolderPanel.getPreferredSize().height));
         rightViewerAndCompiledContextHolderPanel.setMinimumSize(new Dimension(0, 0));
-        rightViewerAndCompiledContextHolderPanel.setPreferredSize(new Dimension(859, 805));
+        //rightViewerAndCompiledContextHolderPanel.setPreferredSize(new Dimension(859, 805));
 
         secondarySplitterSeparatingRightViewerFromCompiledContextHolder.setFirstComponent(compiledContextHolderPanel);
 
@@ -279,7 +278,7 @@ public class PromptContextBuilderDialog extends JDialog {
                         .addGroup(rightViewerPanelLayout.createSequentialGroup()
                                 .addComponent(jToolBar10, GroupLayout.PREFERRED_SIZE, 25, GroupLayout.PREFERRED_SIZE)
                                 .addGap(0, 0, 0)
-                                .addComponent(jBScrollPane11, GroupLayout.DEFAULT_SIZE, 780, Short.MAX_VALUE))
+                                .addComponent(jBScrollPane11, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE))
         );
 
         secondarySplitterSeparatingRightViewerFromCompiledContextHolder.setSecondComponent(rightViewerPanel);
@@ -330,12 +329,12 @@ public class PromptContextBuilderDialog extends JDialog {
      * @param args the command line arguments
      */
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private JBList<String> jBList10;
-    private JBList<String> jBList11;
-    private JBList<String> jBList3;
-    private JBList<String> jBList4;
-    private JBList<String> jBList8;
-    private JBList<String> jBList9;
+    private JList<String> jBList10;
+    private JList<String> jBList11;
+    private JList<String> jBList3;
+    private JList<String> jBList4;
+    private JList<String> jBList8;
+    private JList<String> jBList9;
     private JBPanel historyHolderPanel;
     private JBPanel compiledContextHolderPanel;
     private JBPanel rightViewerPanel;

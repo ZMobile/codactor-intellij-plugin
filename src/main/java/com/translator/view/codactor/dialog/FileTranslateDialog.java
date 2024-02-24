@@ -10,7 +10,6 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.JBLabel;
-import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextField;
 import com.translator.service.codactor.context.PromptContextService;
@@ -32,7 +31,7 @@ public class FileTranslateDialog extends JDialog {
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
     private MassCodeModificationService massCodeModificationService;
     private OpenAiModelService openAiModelService;
-    private JBList<String> fileList;
+    private JList<String> fileList;
     private DefaultListModel<String> listModel;
     private JBTextField newLanguageField;
     private JBTextField newFileTypeField;
@@ -67,7 +66,7 @@ public class FileTranslateDialog extends JDialog {
 
         initFileList(selectedItems);
 
-        fileList = new JBList<>(listModel);
+        fileList = new JList<>(listModel);
         fileList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         fileList.addListSelectionListener(e -> updateSelectedFilesLabel());
 

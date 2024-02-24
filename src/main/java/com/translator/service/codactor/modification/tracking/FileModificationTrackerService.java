@@ -1,5 +1,6 @@
 package com.translator.service.codactor.modification.tracking;
 
+import com.intellij.openapi.editor.Editor;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.modification.*;
 import com.translator.model.codactor.modification.data.FileModificationDataHolder;
@@ -12,7 +13,7 @@ import java.util.Map;
 public interface FileModificationTrackerService {
     String addModification(String filePath, String modification, int startIndex, int endIndex, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext);
 
-    String addModificationSuggestionModification(String filePath, String suggestionId, int startIndex, int endIndex, ModificationType modificationType);
+    String addModificationSuggestionModification(Editor editor, String filePath, String suggestionId, int startIndex, int endIndex, ModificationType modificationType);
 
     String addMultiFileModification(String description, String language, String fileExtension, String filePath);
 

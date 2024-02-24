@@ -8,7 +8,6 @@ import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.HighlighterTargetArea;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.ui.components.JBLabel;
-import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.model.codactor.history.HistoricalContextObjectHolder;
@@ -47,7 +46,7 @@ public class PromptViewer extends JPanel {
     private HistoricalContextObjectHolder historicalContextObjectHolder;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
     private PromptHighlighterService promptHighlighterService;
-    private JBList<InquiryChatViewer> promptList;
+    private JList<InquiryChatViewer> promptList;
     private JToolBar jToolBar2;
     private JToolBar jToolBar3;
     private JBScrollPane jBScrollPane1;
@@ -78,7 +77,7 @@ public class PromptViewer extends JPanel {
     }
 
     private void initComponents() {
-        promptList = new JBList<>();
+        promptList = new JList<>();
         //promptList.setMaximumSize(new Dimension(getWidth(), Integer.MAX_VALUE));
         promptList.setModel(new DefaultListModel<>());
         promptList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -409,7 +408,7 @@ public class PromptViewer extends JPanel {
         return prompts;
     }
 
-    public JBList<InquiryChatViewer> getPromptJList() {
+    public JList<InquiryChatViewer> getPromptJList() {
         return promptList;
     }
 }

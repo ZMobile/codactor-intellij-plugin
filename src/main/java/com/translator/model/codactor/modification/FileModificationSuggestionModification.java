@@ -1,5 +1,6 @@
 package com.translator.model.codactor.modification;
 
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.RangeMarker;
 
 import java.util.UUID;
@@ -7,6 +8,7 @@ import java.util.UUID;
 public class FileModificationSuggestionModification {
     private String myId;
     private String modificationRecordId;
+    private Editor editor;
     private final String filePath;
     private RangeMarker rangeMarker;
     private final String modificationId;
@@ -18,12 +20,14 @@ public class FileModificationSuggestionModification {
     private boolean error;
     private boolean done;
 
-    public FileModificationSuggestionModification(String filePath,
+    public FileModificationSuggestionModification(Editor editor,
+                                                  String filePath,
                                                   String modificationId,
                                                   String suggestionId,
                                                   RangeMarker rangeMarker,
                                                   String beforeText,
                                                   ModificationType modificationType) {
+        this.editor = editor;
         this.myId = UUID.randomUUID().toString();
         this.filePath = filePath;
         this.modificationId = modificationId;
@@ -36,6 +40,7 @@ public class FileModificationSuggestionModification {
     }
 
     public FileModificationSuggestionModification(FileModificationSuggestionModification fileModificationSuggestionModification) {
+        this.editor = fileModificationSuggestionModification.getEditor();
         this.myId = fileModificationSuggestionModification.getId();
         this.modificationRecordId = fileModificationSuggestionModification.getModificationRecordId();
         this.filePath = fileModificationSuggestionModification.getFilePath();
@@ -72,6 +77,14 @@ public class FileModificationSuggestionModification {
 
     public String getFilePath() {
         return filePath;
+    }
+
+    public Editor getEditor() {
+        return editor;
+    }
+
+    public void setEditor(Editor editor) {
+        this.editor = editor;
     }
 
     public RangeMarker getRangeMarker() {

@@ -32,7 +32,7 @@ public class InquiryViewer extends JPanel {
     private JToolBar toolbar;
     private JButton otherInquiriesButton;
     private JButton newInquiryButton;
-    private JButton discardInquiryButton;
+    private JButton queueButton;
     private InquiryService inquiryService;
     private CodactorToolWindowService codactorToolWindowService;
     private InquiryChatListViewer inquiryChatListViewer;
@@ -97,23 +97,20 @@ public class InquiryViewer extends JPanel {
         });
         toolbar.add(newInquiryButton);
 
-        discardInquiryButton = new JButton("Discard Inquiry");
-        discardInquiryButton.setFocusable(false);
-        discardInquiryButton.setHorizontalTextPosition(SwingConstants.CENTER);
-        discardInquiryButton.setVerticalTextPosition(SwingConstants.BOTTOM);
-        discardInquiryButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        discardInquiryButton.addActionListener(new ActionListener() {
+        /*queueButton = new JButton("Queue");
+        queueButton.setFocusable(false);
+        queueButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        queueButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        queueButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        queueButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (inquiry.getAfterCode() != null || !inquiry.getChats().isEmpty()) {
-                    inquiryChatListViewer.updateInquiryContents(new Inquiry.Builder().build());
-                }
-                /*ProvisionalModificationCustomizer provisionalModificationCustomizer = new ProvisionalModificationCustomizer(fileModification, codeModificationService, fileModificationTrackerService, aiTaskExecutor, codeSnippetListViewer, splitPaneService);
-                provisionalModificationCustomizer.setVisible(true);*/
+
+
             }
         });
 
-        toolbar.add(discardInquiryButton);
+        toolbar.add(queueButton);*/
 
         //CodeSnippetListViewer codeSnippetListViewer = this;
         // Add inquiryChatListViewer and inquiryChatBoxViewer to the main panel

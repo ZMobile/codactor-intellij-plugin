@@ -35,11 +35,12 @@ import java.util.List;
 public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificationViewer> {
     private FileModification fileModification;
     private JList<CodeSnippetViewer> codeSnippetList;
-    private JToolBar jToolBar2;
+    private JToolBar toolbar;
     private JButton acceptButton;
     private JButton rejectAllButton;
     private JButton customizeButton;
     private JButton diffViewerButton;
+    private JButton queueButton;
     private String fileModificationId;
     private CodactorToolWindowService codactorToolWindowService;
     private FileModificationTrackerService fileModificationTrackerService;
@@ -79,37 +80,47 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         });
         JBScrollPane jBScrollPane1 = new JBScrollPane(codeSnippetList);
 
-        jToolBar2 = new JToolBar();
-        jToolBar2.setFloatable(false);
-        jToolBar2.setBorderPainted(false);
+        toolbar = new JToolBar();
+        toolbar.setFloatable(false);
+        toolbar.setBorderPainted(false);
 
         acceptButton = new JButton("Accept Solution");
         acceptButton.setFocusable(false);
         acceptButton.setHorizontalTextPosition(SwingConstants.CENTER);
         acceptButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         acceptButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        jToolBar2.add(acceptButton);
+        toolbar.add(acceptButton);
 
         rejectAllButton = new JButton("Reject All Changes");
         rejectAllButton.setFocusable(false);
         rejectAllButton.setHorizontalTextPosition(SwingConstants.CENTER);
         rejectAllButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         rejectAllButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        jToolBar2.add(rejectAllButton);
+        toolbar.add(rejectAllButton);
 
         customizeButton = new JButton("Customize");
         customizeButton.setFocusable(false);
         customizeButton.setHorizontalTextPosition(SwingConstants.CENTER);
         customizeButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         customizeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        jToolBar2.add(customizeButton);
+        toolbar.add(customizeButton);
 
         diffViewerButton = new JButton("Diff Viewer");
         diffViewerButton.setFocusable(false);
         diffViewerButton.setHorizontalTextPosition(SwingConstants.CENTER);
         diffViewerButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         diffViewerButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        jToolBar2.add(diffViewerButton);
+        toolbar.add(diffViewerButton);
+
+        toolbar.addSeparator();
+
+        queueButton = new JButton("Queue");
+        queueButton.setFocusable(false);
+        queueButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        queueButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        queueButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        toolbar.add(queueButton);
 
         acceptButton.addActionListener(new ActionListener() {
             @Override
@@ -183,17 +194,24 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             }
         });
 
+        queueButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                codactorToolWindowService.openModificationQueueViewerToolWindow();
+            }
+        });
+
         GroupLayout layout = new GroupLayout(this);
         setLayout(layout);
         layout.setHorizontalGroup(
                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addComponent(jToolBar2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(toolbar, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
-                        .addComponent(jToolBar2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
+                        .addComponent(toolbar, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
         );
     }
 

@@ -9,6 +9,7 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.translator.model.codactor.modification.FileModification;
 import com.translator.model.codactor.modification.FileModificationSuggestion;
 import com.translator.model.codactor.modification.FileModificationSuggestionModification;
+import com.translator.model.codactor.modification.FileModificationSuggestionModificationTracker;
 import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
 
 import javax.inject.Inject;
@@ -69,19 +70,22 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
 
     public void addFileModificationSuggestionModificationGuardedBlock(String fileModificationSuggestionModificationId, int startOffset, int endOffset) {
         FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationTrackerService.getModificationSuggestionModification(fileModificationSuggestionModificationId);
-        FileModificationSuggestion fileModificationSuggestion = fileModificationTrackerService.getModificationSuggestion(fileModificationSuggestionModification.getSuggestionId());
-        Document document = fileModificationSuggestion.getSuggestedCodeEditor().getDocument();
-        RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);
-        guardedBlocks.put(fileModificationSuggestionModificationId, guardedBlock);
+        ApplicationManager.getApplication().invokeLater(() -> {
+                    Document document = fileModificationSuggestionModification.getEditor().getDocument();
+                    RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);
+                    guardedBlocks.put(fileModificationSuggestionModificationId, guardedBlock);
+                });
         //uneditableSegmentListenerService.addUneditableFileModificationSuggestionModificationSegmentListener(fileModificationSuggestionModificationId);
     }
 
     public void removeFileModificationSuggestionModificationGuardedBlock(String fileModificationSuggestionModificationId) {
         RangeMarker guardedBlock = guardedBlocks.get(fileModificationSuggestionModificationId);
         if (guardedBlock != null) {
-            Document document = guardedBlock.getDocument();
-            guardedBlocks.remove(fileModificationSuggestionModificationId);
-            document.removeGuardedBlock(guardedBlock);
+            ApplicationManager.getApplication().invokeLater(() -> {
+                        Document document = guardedBlock.getDocument();
+                        guardedBlocks.remove(fileModificationSuggestionModificationId);
+                        document.removeGuardedBlock(guardedBlock);
+                    });
             //uneditableSegmentListenerService.removeUneditableFileModificationSuggestionModificationSegmentListener(fileModificationSuggestionModificationId);
         }
     }

@@ -71,30 +71,29 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
     }
 
     @Override
-    public void highlightTextArea(FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker) {
-        if (fileModificationSuggestionModificationTracker == null) {
-            return;
-        }
-        FileModificationSuggestion fileModificationSuggestion = fileModificationSuggestionModificationTracker.getFileModificationSuggestion();
-        Editor editor = fileModificationSuggestion.getSuggestedCodeEditor();
+    public void highlightTextArea(FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker, String fileModificationSuggestionModificationId) {
+        FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationSuggestionModificationTracker.getModificationSuggestionModification(fileModificationSuggestionModificationId);
+        Editor editor = fileModificationSuggestionModification.getEditor();
 
         ApplicationManager.getApplication().invokeLater(() -> {
             removeAllHighlights(editor);
 
             for (FileModificationSuggestionModification modification : fileModificationSuggestionModificationTracker.getModifications()) {
-                int startIndex = modification.getRangeMarker().getStartOffset();
-                int endIndex = modification.getRangeMarker().getEndOffset();
+                if (modification.getEditor().equals(editor)) {
+                    int startIndex = modification.getRangeMarker().getStartOffset();
+                    int endIndex = modification.getRangeMarker().getEndOffset();
 
-                try {
-                    Color highlightColor;
-                    if (modification.isError()) {
-                        highlightColor = Color.decode("#FF0000");
-                    } else {
-                        highlightColor = Color.decode("#009688");
+                    try {
+                        Color highlightColor;
+                        if (modification.isError()) {
+                            highlightColor = Color.decode("#FF0000");
+                        } else {
+                            highlightColor = Color.decode("#009688");
+                        }
+                        addHighlight(editor, startIndex, endIndex, highlightColor);
+                    } catch(Exception e){
+                        e.printStackTrace();
                     }
-                    addHighlight(editor, startIndex, endIndex, highlightColor);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
         });

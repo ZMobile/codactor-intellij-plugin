@@ -29,6 +29,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.html.HTMLDocument;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -40,7 +41,7 @@ public class HistoricalContextObjectViewer extends JPanel {
     private ContextQueryDao contextQueryDao;
     private InquiryChatListFunctionCallCompressorService inquiryChatListFunctionCallCompressorService;
     private TextAreaHeightCalculatorService textAreaHeightCalculatorService;
-    private JBList<InquiryChatViewer> jList1;
+    private JList<InquiryChatViewer> jList1;
     private JToolBar jToolBar2;
     private JToolBar jToolBar3;
     private JBScrollPane jBScrollPane1;
@@ -63,7 +64,7 @@ public class HistoricalContextObjectViewer extends JPanel {
 
     private void initComponents() {
 
-        jList1 = new JBList<>();
+        jList1 = new JList<>();
         //jList1.setMaximumSize(new Dimension(getWidth(), Integer.MAX_VALUE));
         jList1.setModel(new DefaultListModel<>());
         jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -96,6 +97,13 @@ public class HistoricalContextObjectViewer extends JPanel {
                                     if (editor != null) {
                                         editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getText().length(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
                                     }
+                                } else if (component instanceof JTextPane) {
+                                    JTextPane jTextPane = (JTextPane) component;
+                                    try {
+                                        jTextPane.getHighlighter().addHighlight(0, jTextPane.getDocument().getLength(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
+                                    } catch (BadLocationException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
                                 }
                             }
                             continue;
@@ -110,6 +118,9 @@ public class HistoricalContextObjectViewer extends JPanel {
                                     Editor editor = fixedHeightPanel.getEditor();
                                     editor.getMarkupModel().removeAllHighlighters();
                                 }
+                            } else if (component instanceof JTextPane) {
+                                JTextPane jTextPane = (JTextPane) component;
+                                jTextPane.getHighlighter().removeAllHighlights();
                             }
                         }
                     }
@@ -157,6 +168,25 @@ public class HistoricalContextObjectViewer extends JPanel {
                                 Editor editor = fixedHeightPanel.getEditor();
                                 text.append(editor.getDocument().getText());
                                 firstComponentCopied = true;
+                            }
+                        } else if (component1 instanceof JTextPane) {
+                            JTextPane jTextPane = (JTextPane) component1;
+                            HTMLDocument doc = (HTMLDocument)jTextPane.getDocument();
+                            int length = doc.getLength();
+                            try {
+                                text.append(doc.getText(0, length));
+                            } catch (BadLocationException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                            firstComponentCopied = true;
+                        } else if (component1 instanceof JToolBar) {
+                            JToolBar jToolBar = (JToolBar) component1;
+                            for (Component component2 : jToolBar.getComponents()) {
+                                if (component2 instanceof JLabel) {
+                                    JLabel jLabel = (JLabel) component2;
+                                    text.append(jLabel.getText());
+                                    text.append("\n");
+                                }
                             }
                         }
                     }
@@ -222,7 +252,7 @@ public class HistoricalContextObjectViewer extends JPanel {
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                                 .addComponent(jToolBar2, GroupLayout.PREFERRED_SIZE, 22, GroupLayout.PREFERRED_SIZE)
                                 .addComponent(jToolBar3, GroupLayout.PREFERRED_SIZE, 22, GroupLayout.PREFERRED_SIZE))
-                        .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, jList1.getHeight(), Short.MAX_VALUE)); // Set size for jList1// Add a gap of 20 between jList1 and JBTextArea
+                        .addComponent(jBScrollPane1, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)); // Set size for jList1// Add a gap of 20 between jList1 and JBTextArea
     }
 
     public void updateChatContents(List<InquiryChat> inquiryChats) {

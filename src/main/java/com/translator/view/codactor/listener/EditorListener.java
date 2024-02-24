@@ -92,6 +92,9 @@ public class EditorListener implements EditorFactoryListener {
     @Override
     public void editorReleased(EditorFactoryEvent event) {
         Editor editor = event.getEditor();
+        if (editor.getProject() == null) {
+            return;
+        }
         if (editor.getProject() != project) {
             if (!activeListeners.containsKey(editor.getProject())) {
                 Injector injector = CodactorInjector.getInstance().getInjector(editor.getProject());

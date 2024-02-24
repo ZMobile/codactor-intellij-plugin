@@ -2,6 +2,7 @@ package com.translator.service.codactor.modification.tracking;
 
 import com.google.inject.Injector;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
@@ -105,7 +106,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         return fileModificationId;
     }
 
-    public String addModificationSuggestionModification(String filePath, String suggestionId, int startIndex, int endIndex, ModificationType modificationType) {
+    public String addModificationSuggestionModification(Editor editor, String filePath, String suggestionId, int startIndex, int endIndex, ModificationType modificationType) {
         String newFilePath = Objects.requireNonNullElse(filePath, "Untitled");
         FileModificationSuggestion fileModificationSuggestion = getModificationSuggestion(suggestionId);
         FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker;
@@ -115,7 +116,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             fileModificationSuggestionModificationTracker = new FileModificationSuggestionModificationTracker(fileModificationSuggestion, rangeReplaceService);
             activeModificationSuggestionModifications.put(suggestionId, fileModificationSuggestionModificationTracker);
         }
-        String fileModificationSuggestionModificationId = fileModificationSuggestionModificationTracker.addModificationSuggestionModification(newFilePath, startIndex, endIndex, modificationType);
+        String fileModificationSuggestionModificationId = fileModificationSuggestionModificationTracker.addModificationSuggestionModification(editor, newFilePath, startIndex, endIndex, modificationType);
         if (fileModificationSuggestionModificationId == null || fileModificationSuggestionModificationId.startsWith("Error")) {
             JOptionPane.showMessageDialog(null, "Can't modify code that is already being modified", "Error",
                     JOptionPane.ERROR_MESSAGE);
@@ -128,7 +129,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         guardedBlockService.addFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModificationId, startIndex, endIndex);
         //jTreeHighlighterService.repaint();
-        codeHighlighterService.highlightTextArea(fileModificationSuggestionModificationTracker);
+        codeHighlighterService.highlightTextArea(fileModificationSuggestionModificationTracker, fileModificationSuggestionModificationId);
         return fileModificationSuggestionModificationId;
     }
 
@@ -192,7 +193,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         guardedBlockService.removeFileModificationSuggestionModificationGuardedBlock(modificationSuggestionModificationId);
         //jTreeHighlighterService.repaint();
-        codeHighlighterService.highlightTextArea(fileModificationSuggestionModificationTracker);
+        codeHighlighterService.highlightTextArea(fileModificationSuggestionModificationTracker, modificationSuggestionModificationId);
     }
 
     public void removeMultiFileModification(String multiFileModificationId) {
@@ -272,7 +273,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
                 .findFirst()
                 .orElseThrow();
         guardedBlockService.removeFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId());
-        codeHighlighterService.highlightTextArea(fileModificationSuggestionModificationTracker);
+        codeHighlighterService.highlightTextArea(fileModificationSuggestionModificationTracker, fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId());
         fileModificationSuggestionModificationTracker.implementModification(fileModificationSuggestionModificationRecord.getModificationSuggestionModificationId(), fileModificationSuggestionModificationRecord.getEditedCode());
         if (fileModificationSuggestionModificationTracker.getModifications().isEmpty()) {
             activeModificationSuggestionModifications.values().remove(fileModificationSuggestionModificationTracker);

@@ -14,7 +14,6 @@ import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.Splitter;
-import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
@@ -111,10 +110,14 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
             ((EditorEx) defaultSolution).setHighlighter(editorHighlighter);
             ((EditorEx) defaultSolution).setViewer(true);
             defaultSolution.getComponent().setPreferredSize(new Dimension(Integer.MAX_VALUE, defaultSolution.getComponent().getPreferredSize().height));
-            defaultSolution = defaultSolution;
+            Editor fileModificationSuggestionEditor = fileModificationSuggestion.getSuggestedCodeEditor();
+            Document document1 = editorFactory.createDocument(fileModificationSuggestionEditor.getDocument().getText());
+            suggestedSolution = editorFactory.createEditor(document1, null);
+            ((EditorEx) suggestedSolution).setViewer(false);
+            EditorHighlighter editorHighlighter2 = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
+            ((EditorEx) suggestedSolution).setHighlighter(editorHighlighter2);
+            selectedEditor = suggestedSolution;
         });
-        suggestedSolution = fileModificationSuggestion.getSuggestedCodeEditor();
-        selectedEditor = suggestedSolution;
         setTitle("Custom DialogWrapper");
         initComponents();
     }
@@ -131,12 +134,12 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
         Splitter topSplitter = new Splitter(false, 0.3f);
         topPanel.add(topSplitter, BorderLayout.CENTER);
 
-        // JPanel with JScrollPane and JBList
+        // JPanel with JScrollPane and JList
         JBPanel listPanel = new JBPanel(new BorderLayout());
         ArrayList<Editor> editorList = new ArrayList<>();
         editorList.add(defaultSolution);
         editorList.add(suggestedSolution);
-        JBList<String> list = new JBList<>();
+        JList<String> list = new JList<>();
         list.setModel(new AbstractListModel<String>() {
             final String[] strings = { "Default", "Suggested" };
             public int getSize() { return strings.length; }
@@ -158,15 +161,17 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
         JButton acceptSolutionButton = new JButton("Accept Solution");
         acceptSolutionButton.addActionListener(e -> {
             if (selectedEditor == suggestedSolution) {
-                fileModificationTrackerService.implementModificationUpdate(fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getSuggestedCodeEditor().getDocument().getText(), false);
+                fileModificationTrackerService.implementModificationUpdate(fileModificationSuggestion.getModificationId(), suggestedSolution.getDocument().getText(), false);
             } else {
                 fileModificationTrackerService.removeModification(fileModificationSuggestion.getModificationId());
             }
+            codactorToolWindowService.closeModificationQueueViewerToolWindow();
             dispose();
         });
         JButton rejectAllChangesButton = new JButton("Reject All Changes");
         rejectAllChangesButton.addActionListener(e -> {
             fileModificationTrackerService.removeModification(fileModificationSuggestion.getModificationId());
+            codactorToolWindowService.closeModificationQueueViewerToolWindow();
             dispose();
         });
         toolbarPanel.add(acceptSolutionButton);
@@ -313,7 +318,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                     String code = codeSnippetExtractorService.getAllText(selectedEditor);
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        codeModificationService.getModifiedCodeModification(fileModificationSuggestion.getId(), code, 0, code.length(), textArea.getText(), ModificationType.MODIFY, promptContextService.getPromptContext());
+                        codeModificationService.getModifiedCodeModification(suggestedSolution, fileModificationSuggestion.getId(), code, 0, code.length(), textArea.getText(), ModificationType.MODIFY, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Modify Selected")) {
@@ -324,14 +329,14 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                     }
                     if (code != null && !code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        codeModificationService.getModifiedCodeModification(fileModificationSuggestion.getId(), code, selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.MODIFY, promptContextService.getPromptContext());
+                        codeModificationService.getModifiedCodeModification(suggestedSolution, fileModificationSuggestion.getId(), code, selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.MODIFY, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Fix")) {
                     String code = codeSnippetExtractorService.getAllText(selectedEditor);
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        codeModificationService.getModifiedCodeFix(fileModificationSuggestion.getId(), code, 0, code.length(), textArea.getText(), ModificationType.FIX, promptContextService.getPromptContext());
+                        codeModificationService.getModifiedCodeFix(suggestedSolution, fileModificationSuggestion.getId(), code, 0, code.length(), textArea.getText(), ModificationType.FIX, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Fix Selected")) {
@@ -343,13 +348,13 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                     }
                     if (code != null && !code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        codeModificationService.getModifiedCodeFix(fileModificationSuggestion.getId(), code, selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.FIX, promptContextService.getPromptContext());
+                        codeModificationService.getModifiedCodeFix(suggestedSolution, fileModificationSuggestion.getId(), code, selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.FIX, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create")) {
                     if (!textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        codeModificationService.getModifiedCodeCreation(fileModificationSuggestion.getFilePath(), 0, 0, textArea.getText(), promptContextService.getPromptContext());
+                        codeModificationService.getModifiedCodeCreation(suggestedSolution, fileModificationSuggestion.getFilePath(), 0, 0, textArea.getText(), promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create Files")) {

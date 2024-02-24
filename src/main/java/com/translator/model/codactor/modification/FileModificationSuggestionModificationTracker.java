@@ -1,6 +1,7 @@
 package com.translator.model.codactor.modification;
 
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.RangeMarker;
 import com.translator.service.codactor.editor.RangeReplaceService;
 
@@ -41,16 +42,16 @@ public class FileModificationSuggestionModificationTracker {
     }
 
 
-    public String addModificationSuggestionModification(String filePath, int startIndex, int endIndex, ModificationType modificationType) {
+    public String addModificationSuggestionModification(Editor editor, String filePath, int startIndex, int endIndex, ModificationType modificationType) {
         for (FileModificationSuggestionModification m : modifications) {
             // Check if the proposed modification would overlap with any existing modifications in this tracker
-            if ((startIndex <= m.getRangeMarker().getStartOffset() && endIndex >= m.getRangeMarker().getStartOffset()) || (startIndex <= m.getRangeMarker().getEndOffset() && endIndex >= m.getRangeMarker().getEndOffset())) {
+            if (m.getEditor().equals(editor) && (startIndex <= m.getRangeMarker().getStartOffset() && endIndex >= m.getRangeMarker().getStartOffset()) || (startIndex <= m.getRangeMarker().getEndOffset() && endIndex >= m.getRangeMarker().getEndOffset())) {
                 return "Error: Can't modify code that is already being modified. Your modification boundaries clash with modification id: " + m.getId() + " with code snippet: \n" + m.getBeforeText();
             }
         }
         Document document = fileModificationSuggestion.getSuggestedCodeEditor().getDocument();
         RangeMarker rangeMarker = document.createRangeMarker(startIndex, endIndex);
-        FileModificationSuggestionModification fileModificationSuggestionModification = new FileModificationSuggestionModification(filePath, fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getId(), rangeMarker, fileModificationSuggestion.getBeforeCode(), modificationType);
+        FileModificationSuggestionModification fileModificationSuggestionModification = new FileModificationSuggestionModification(editor, filePath, fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getId(), rangeMarker, fileModificationSuggestion.getBeforeCode(), modificationType);
         modifications.add(fileModificationSuggestionModification);
         return fileModificationSuggestionModification.getId();
     }
@@ -81,7 +82,7 @@ public class FileModificationSuggestionModificationTracker {
                         int formerStartIndex = m.getRangeMarker().getStartOffset();
                         int formerEndIndex = m.getRangeMarker().getEndOffset();
                         modifications.remove(m);
-                        rangeReplaceService.replaceRange(fileModificationSuggestion.getSuggestedCodeEditor(), formerStartIndex, formerEndIndex, modification);
+                        rangeReplaceService.replaceRange(m.getEditor(), formerStartIndex, formerEndIndex, modification);
                         break;
                     }
                 }
