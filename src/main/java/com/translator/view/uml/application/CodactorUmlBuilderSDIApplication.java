@@ -62,7 +62,7 @@ import java.util.prefs.Preferences;
  * <pre>
  *  Clear ({@link ClearFileAction#ID}})
  *  New ({@link NewFileAction#ID}})
- *  New com.translator.listener.pacman.Window ({@link NewWindowAction#ID}})
+ *  New com.translator.io.listener.pacman.Window ({@link NewWindowAction#ID}})
  *  Load... ({@link LoadFileAction#ID}})
  *  Open... ({@link OpenFileAction#ID}})
  *  Load Directory... ({@link LoadDirectoryAction#ID}})

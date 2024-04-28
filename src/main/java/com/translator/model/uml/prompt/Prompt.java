@@ -6,6 +6,7 @@ public class Prompt {
     private String myId;
     private String nodeId;
     private String prompt;
+    private String functions;
     private boolean processed;
 
     public Prompt(String nodeId, String prompt) {
@@ -37,6 +38,14 @@ public class Prompt {
 
     public void setPrompt(String prompt) {
         this.prompt = prompt;
+    }
+
+    public String getFunctions() {
+        return functions;
+    }
+
+    public void setFunctions(String functions) {
+        this.functions = functions;
     }
 
     public boolean isProcessed() {

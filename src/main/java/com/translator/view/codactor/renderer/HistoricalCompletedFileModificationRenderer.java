@@ -1,7 +1,7 @@
 package com.translator.view.codactor.renderer;
 
-import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
-import com.translator.model.codactor.modification.RecordType;
+import com.translator.model.codactor.ai.history.data.HistoricalFileModificationDataHolder;
+import com.translator.model.codactor.ai.modification.RecordType;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
 

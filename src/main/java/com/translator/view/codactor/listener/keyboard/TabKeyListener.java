@@ -1,9 +1,9 @@
 package com.translator.view.codactor.listener.keyboard;
 
 import com.intellij.ui.components.JBTextArea;
-import com.translator.model.codactor.modification.FileModification;
-import com.translator.model.codactor.modification.FileModificationTracker;
-import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
+import com.translator.model.codactor.ai.modification.FileModification;
+import com.translator.model.codactor.ai.modification.FileModificationTracker;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 
 import java.awt.event.KeyEvent;
@@ -11,16 +11,16 @@ import java.awt.event.KeyListener;
 
 public class TabKeyListener implements KeyListener {
     private String filePath;
-    private final FileModificationTrackerService fileModificationTrackerService;
+    private final FileModificationManagementService fileModificationManagementService;
     private final CodactorToolWindowService codactorToolWindowService;
     private final JBTextArea jBTextArea;
 
     public TabKeyListener(String filePath,
-                          FileModificationTrackerService fileModificationTrackerService,
+                          FileModificationManagementService fileModificationManagementService,
                           CodactorToolWindowService codactorToolWindowService,
                           JBTextArea jBTextArea) {
         this.filePath = filePath;
-        this.fileModificationTrackerService = fileModificationTrackerService;
+        this.fileModificationManagementService = fileModificationManagementService;
         this.codactorToolWindowService = codactorToolWindowService;
         this.jBTextArea = jBTextArea;
     }
@@ -29,7 +29,7 @@ public class TabKeyListener implements KeyListener {
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_TAB) {
             int caretPosition = jBTextArea.getCaretPosition();
-            FileModificationTracker fileModificationTracker = fileModificationTrackerService.getActiveModificationFiles().get(filePath);
+            FileModificationTracker fileModificationTracker = fileModificationManagementService.getActiveModificationFiles().get(filePath);
             if (fileModificationTracker == null) {
                 return;
             }
@@ -37,7 +37,7 @@ public class TabKeyListener implements KeyListener {
                 int minCaretPosition = fileModification.getRangeMarker().getStartOffset();
                 int maxCaretPosition = fileModification.getRangeMarker().getEndOffset();
                 if (caretPosition >= minCaretPosition && caretPosition <= maxCaretPosition) {
-                    fileModificationTrackerService.implementModificationUpdate(fileModification.getId(), fileModification.getModificationOptions().get(0).getSuggestedCodeEditor().getDocument().getText(), false);
+                    fileModificationManagementService.implementModificationUpdate(fileModification.getId(), fileModification.getModificationOptions().get(0).getSuggestedCodeEditor().getDocument().getText(), false);
                     //if (codactorToolWindowService.getRightComponent() instanceof ProvisionalModificationViewer) {
                         //codactorToolWindowService.closeModificationQueueViewerToolWindow();
                     //}

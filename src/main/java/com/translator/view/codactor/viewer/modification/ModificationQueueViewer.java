@@ -6,15 +6,17 @@ import com.intellij.openapi.ui.JBMenuItem;
 import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
-import com.translator.model.codactor.modification.FileModification;
-import com.translator.model.codactor.modification.FileModificationSuggestionModification;
-import com.translator.model.codactor.modification.data.FileModificationDataHolder;
-import com.translator.model.codactor.modification.data.ModificationObjectType;
-import com.translator.service.codactor.file.FileOpenerService;
-import com.translator.service.codactor.file.FileReaderService;
-import com.translator.service.codactor.modification.FileModificationRestarterService;
-import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
-import com.translator.service.codactor.task.BackgroundTaskMapperService;
+import com.translator.model.codactor.ai.modification.FileModification;
+import com.translator.model.codactor.ai.modification.FileModificationSuggestionModification;
+import com.translator.model.codactor.ai.modification.FileModificationTracker;
+import com.translator.model.codactor.ai.modification.data.FileModificationDataHolder;
+import com.translator.model.codactor.ai.modification.data.ModificationObjectType;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.ide.file.FileOpenerService;
+import com.translator.service.codactor.ide.file.FileReaderService;
+import com.translator.service.codactor.ai.modification.AiFileModificationRestarterService;
+import com.translator.service.codactor.io.BackgroundTaskMapperService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.FileModificationErrorDialog;
 import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFactory;
@@ -36,8 +38,9 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
     private JBPopupMenu jBPopupMenu;
     private ProvisionalModificationViewer provisionalModificationViewer;
     private CodactorToolWindowService codactorToolWindowService;
+    private FileModificationManagementService fileModificationManagementService;
     private FileModificationTrackerService fileModificationTrackerService;
-    private FileModificationRestarterService fileModificationRestarterService;
+    private AiFileModificationRestarterService aiFileModificationRestarterService;
     private FileReaderService fileReaderService;
     private FileOpenerService fileOpenerService;
     private FileModificationErrorDialogFactory fileModificationErrorDialogFactory;
@@ -50,8 +53,8 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                                    CodactorToolWindowService codactorToolWindowService,
                                    FileReaderService fileReaderService,
                                    FileOpenerService fileOpenerService,
-                                   FileModificationTrackerService fileModificationTrackerService,
-                                   FileModificationRestarterService fileModificationRestarterService,
+                                   FileModificationManagementService fileModificationManagementService,
+                                   AiFileModificationRestarterService aiFileModificationRestarterService,
                                    FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                    BackgroundTaskMapperService backgroundTaskMapperService) {
         this.project = project;
@@ -59,8 +62,9 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
         this.codactorToolWindowService = codactorToolWindowService;
         this.fileReaderService = fileReaderService;
         this.fileOpenerService = fileOpenerService;
-        this.fileModificationTrackerService = fileModificationTrackerService;
-        this.fileModificationRestarterService = fileModificationRestarterService;
+        this.fileModificationManagementService = fileModificationManagementService;
+
+        this.aiFileModificationRestarterService = aiFileModificationRestarterService;
         this.fileModificationErrorDialogFactory = fileModificationErrorDialogFactory;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
         initComponents();
@@ -100,7 +104,11 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                 if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION) {
                     FileModification fileModification = fileModificationDataHolder.getFileModification();
                     System.out.println("This gets called 1");
-                    fileOpenerService.openFileInEditor(fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset());
+                    if (fileModification.getRangeMarker() != null) {
+                        fileOpenerService.openFileInEditor(fileModification.getFilePath(), fileModification.getRangeMarker().getStartOffset());
+                    } else {
+                        fileOpenerService.openFileInEditor(fileModification.getFilePath());
+                    }
                     if (fileModification.isError()) {
                         FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModification.getId(), fileModification.getFilePath(), "", fileModification.getModificationType());
                         fileModificationErrorDialog.setVisible(true);
@@ -138,7 +146,7 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                                 retryItem.addActionListener(new ActionListener() {
                                     @Override
                                     public void actionPerformed(ActionEvent a) {
-                                        fileModificationRestarterService.restartFileModification(fileModification);
+                                        aiFileModificationRestarterService.restartFileModification(fileModification);
                                     }
                                 });
                             } else {
@@ -146,7 +154,7 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                                 pauseItem.addActionListener(new ActionListener() {
                                     @Override
                                     public void actionPerformed(ActionEvent a) {
-                                        fileModificationTrackerService.errorFileModification(fileModification.getId());
+                                        fileModificationManagementService.errorFileModification(fileModification.getId());
                                     }
                                 });
                             }
@@ -155,7 +163,7 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                         removeItem.addActionListener(new ActionListener() {
                             @Override
                             public void actionPerformed(ActionEvent a) {
-                                fileModificationTrackerService.removeModification(fileModification.getId());
+                                fileModificationManagementService.removeModification(fileModification.getId());
                             }
                         });
                     } else if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {

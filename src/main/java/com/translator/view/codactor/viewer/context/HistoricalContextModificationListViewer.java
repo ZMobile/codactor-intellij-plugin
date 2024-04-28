@@ -5,8 +5,8 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.model.codactor.api.translator.history.DesktopCodeModificationHistoryResponseResource;
-import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
-import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
+import com.translator.model.codactor.ai.history.data.HistoricalFileModificationDataHolder;
+import com.translator.model.codactor.ai.history.data.HistoricalObjectDataHolder;
 import com.translator.view.codactor.renderer.HistoricalObjectDataHolderRenderer;
 import com.translator.view.codactor.renderer.SeparatorListCellRenderer;
 

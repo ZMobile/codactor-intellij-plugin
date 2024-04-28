@@ -1,6 +1,6 @@
 package com.translator.view.codactor.renderer;
 
-import com.translator.model.codactor.inquiry.Inquiry;
+import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
 

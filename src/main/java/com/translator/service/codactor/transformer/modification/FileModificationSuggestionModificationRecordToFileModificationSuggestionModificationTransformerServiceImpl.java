@@ -1,7 +1,7 @@
 package com.translator.service.codactor.transformer.modification;
 
-import com.translator.model.codactor.modification.FileModificationSuggestionModification;
-import com.translator.model.codactor.modification.FileModificationSuggestionModificationRecord;
+import com.translator.model.codactor.ai.modification.FileModificationSuggestionModification;
+import com.translator.model.codactor.ai.modification.FileModificationSuggestionModificationRecord;
 
 public class FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerServiceImpl implements FileModificationSuggestionModificationRecordToFileModificationSuggestionModificationTransformerService {
     @Override

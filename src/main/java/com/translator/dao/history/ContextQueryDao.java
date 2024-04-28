@@ -1,6 +1,6 @@
 package com.translator.dao.history;
 
-import com.translator.model.codactor.history.HistoricalContextObjectHolder;
+import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
 
 import java.util.List;
 

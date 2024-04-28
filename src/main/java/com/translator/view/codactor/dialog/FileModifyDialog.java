@@ -12,10 +12,10 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
-import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.modification.MassCodeModificationService;
-import com.translator.service.codactor.modification.multi.MultiFileModificationService;
-import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.service.codactor.ai.chat.context.PromptContextService;
+import com.translator.service.codactor.ai.modification.multi.MassAiCodeModificationService;
+import com.translator.service.codactor.ai.modification.multi.MultiFileAiModificationService;
+import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
@@ -30,8 +30,8 @@ public class FileModifyDialog extends JDialog {
     private CodactorToolWindowService codactorToolWindowService;
     private PromptContextService promptContextService;
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
-    private MassCodeModificationService massCodeModificationService;
-    private MultiFileModificationService multiFileModificationService;
+    private MassAiCodeModificationService massAiCodeModificationService;
+    private MultiFileAiModificationService multiFileAiModificationService;
     private OpenAiModelService openAiModelService;
     private JList<String> fileList;
     private DefaultListModel<String> listModel;
@@ -51,16 +51,16 @@ public class FileModifyDialog extends JDialog {
                             CodactorToolWindowService codactorToolWindowService,
                             @Assisted PromptContextService promptContextService,
                             PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
-                            MassCodeModificationService massCodeModificationService,
-                            MultiFileModificationService multiFileModificationService,
+                            MassAiCodeModificationService massAiCodeModificationService,
+                            MultiFileAiModificationService multiFileAiModificationService,
                             OpenAiModelService openAiModelService,
                             @Assisted List<VirtualFile> selectedItems) {
         this.project = project;
         this.codactorToolWindowService = codactorToolWindowService;
         this.promptContextService = promptContextService;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
-        this.massCodeModificationService = massCodeModificationService;
-        this.multiFileModificationService = multiFileModificationService;
+        this.massAiCodeModificationService = massAiCodeModificationService;
+        this.multiFileAiModificationService = multiFileAiModificationService;
         this.openAiModelService = openAiModelService;
         setLayout(new BorderLayout());
         setTitle("Modify Code");
@@ -246,11 +246,11 @@ public class FileModifyDialog extends JDialog {
                 }
 
                 if (applyToEachFileButton.isSelected()) {
-                    massCodeModificationService.getModifiedCode(selectedFiles, description.getText(), promptContextService.getPromptContext());
+                    massAiCodeModificationService.getModifiedCode(selectedFiles, description.getText(), promptContextService.getPromptContext());
                     promptContextService.clearPromptContext();
                 } else {
                     try {
-                        multiFileModificationService.modifyCodeFiles(selectedFiles, description.getText(), promptContextService.getPromptContext());
+                        multiFileAiModificationService.modifyCodeFiles(selectedFiles, description.getText(), promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     } catch (InterruptedException e) {
                         e.printStackTrace();

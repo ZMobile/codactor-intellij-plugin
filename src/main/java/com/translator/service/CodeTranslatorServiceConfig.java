@@ -9,56 +9,59 @@ import com.intellij.openapi.project.Project;
 import com.translator.dao.CodeTranslatorDaoConfig;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.dao.modification.CodeModificationDao;
-import com.translator.service.codactor.connection.AzureConnectionService;
-import com.translator.service.codactor.connection.AzureConnectionServiceImpl;
-import com.translator.service.codactor.connection.CodactorConnectionService;
-import com.translator.service.codactor.connection.CodactorConnectionServiceImpl;
-import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.context.PromptContextServiceImpl;
-import com.translator.service.codactor.copy.DirectoryCopierService;
-import com.translator.service.codactor.copy.DirectoryCopierServiceImpl;
-import com.translator.service.codactor.directory.FileDirectoryStructureQueryService;
-import com.translator.service.codactor.directory.FileDirectoryStructureQueryServiceImpl;
-import com.translator.service.codactor.editor.*;
-import com.translator.service.codactor.editor.EditorService;
-import com.translator.service.codactor.editor.EditorServiceImpl;
-import com.translator.service.codactor.editor.diff.DiffEditorGeneratorService;
-import com.translator.service.codactor.editor.diff.DiffEditorGeneratorServiceImpl;
-import com.translator.service.codactor.editor.diff.GitDiffStingGeneratorService;
-import com.translator.service.codactor.editor.diff.GitDiffStingGeneratorServiceImpl;
-import com.translator.service.codactor.editor.psi.*;
+import com.translator.service.codactor.ai.modification.diff.AiFileModificationSuggestionDiffViewerService;
+import com.translator.service.codactor.ai.modification.diff.AiFileModificationSuggestionDiffViewerServiceImpl;
+import com.translator.service.codactor.ai.modification.multi.MassAiCodeModificationService;
+import com.translator.service.codactor.ai.modification.multi.MassAiCodeModificationServiceImpl;
+import com.translator.service.codactor.ai.modification.tracking.*;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementServiceImpl;
+import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
+import com.translator.service.codactor.ai.openai.connection.AzureConnectionServiceImpl;
+import com.translator.service.codactor.ai.openai.connection.CodactorConnectionService;
+import com.translator.service.codactor.ai.openai.connection.CodactorConnectionServiceImpl;
+import com.translator.service.codactor.ai.chat.context.PromptContextService;
+import com.translator.service.codactor.ai.chat.context.PromptContextServiceImpl;
+import com.translator.service.codactor.ide.directory.copy.DirectoryCopierService;
+import com.translator.service.codactor.ide.directory.copy.DirectoryCopierServiceImpl;
+import com.translator.service.codactor.ide.directory.FileDirectoryStructureQueryService;
+import com.translator.service.codactor.ide.directory.FileDirectoryStructureQueryServiceImpl;
+import com.translator.service.codactor.ide.editor.*;
+import com.translator.service.codactor.ide.editor.EditorService;
+import com.translator.service.codactor.ide.editor.EditorServiceImpl;
+import com.translator.service.codactor.ide.editor.diff.DiffEditorGeneratorService;
+import com.translator.service.codactor.ide.editor.diff.DiffEditorGeneratorServiceImpl;
+import com.translator.service.codactor.ide.editor.diff.GitDiffStingGeneratorService;
+import com.translator.service.codactor.ide.editor.diff.GitDiffStingGeneratorServiceImpl;
+import com.translator.service.codactor.ide.editor.psi.*;
 import com.translator.service.codactor.factory.CodeFileGeneratorServiceFactory;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
-import com.translator.service.codactor.file.*;
-import com.translator.service.codactor.functions.*;
-import com.translator.service.codactor.functions.search.ProjectSearchService;
-import com.translator.service.codactor.functions.search.ProjectSearchServiceImpl;
-import com.translator.service.codactor.inquiry.*;
+import com.translator.service.codactor.ide.file.*;
+import com.translator.service.codactor.ai.chat.functions.*;
+import com.translator.service.codactor.ai.chat.functions.search.ProjectSearchService;
+import com.translator.service.codactor.ai.chat.functions.search.ProjectSearchServiceImpl;
+import com.translator.service.codactor.ai.chat.inquiry.*;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
-import com.translator.service.codactor.modification.*;
-import com.translator.service.codactor.modification.history.FileModificationHistoryService;
-import com.translator.service.codactor.modification.history.FileModificationHistoryServiceImpl;
-import com.translator.service.codactor.modification.json.FileModificationDataHolderJsonCompatibilityService;
-import com.translator.service.codactor.modification.json.FileModificationDataHolderJsonCompatibilityServiceImpl;
-import com.translator.service.codactor.modification.multi.MultiFileModificationService;
-import com.translator.service.codactor.modification.multi.MultiFileModificationServiceImpl;
-import com.translator.service.codactor.modification.tracking.CodeRangeTrackerService;
-import com.translator.service.codactor.modification.tracking.CodeRangeTrackerServiceImpl;
-import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
-import com.translator.service.codactor.modification.tracking.FileModificationTrackerServiceImpl;
-import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerService;
-import com.translator.service.codactor.modification.tracking.listener.EditorClickHandlerServiceImpl;
-import com.translator.service.codactor.modification.tracking.listener.TabKeyListenerService;
-import com.translator.service.codactor.modification.tracking.listener.TabKeyListenerServiceImpl;
-import com.translator.service.codactor.connection.DefaultConnectionService;
-import com.translator.service.codactor.connection.DefaultConnectionServiceImpl;
-import com.translator.service.codactor.openai.OpenAiModelService;
-import com.translator.service.codactor.openai.OpenAiModelServiceImpl;
-import com.translator.service.codactor.runner.CodeRunnerService;
-import com.translator.service.codactor.runner.CodeRunnerServiceImpl;
-import com.translator.service.codactor.task.BackgroundTaskMapperService;
-import com.translator.service.codactor.task.BackgroundTaskMapperServiceImpl;
+import com.translator.service.codactor.ai.modification.*;
+import com.translator.service.codactor.ai.modification.history.FileModificationHistoryService;
+import com.translator.service.codactor.ai.modification.history.FileModificationHistoryServiceImpl;
+import com.translator.service.codactor.ai.modification.json.FileModificationDataHolderJsonCompatibilityService;
+import com.translator.service.codactor.ai.modification.json.FileModificationDataHolderJsonCompatibilityServiceImpl;
+import com.translator.service.codactor.ai.modification.multi.MultiFileAiModificationService;
+import com.translator.service.codactor.ai.modification.multi.MultiFileAiModificationServiceImpl;
+import com.translator.service.codactor.ide.handler.EditorClickHandlerService;
+import com.translator.service.codactor.ide.handler.EditorClickHandlerServiceImpl;
+import com.translator.service.codactor.io.TabKeyListenerService;
+import com.translator.service.codactor.io.TabKeyListenerServiceImpl;
+import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
+import com.translator.service.codactor.ai.openai.connection.DefaultConnectionServiceImpl;
+import com.translator.service.codactor.ai.openai.OpenAiModelService;
+import com.translator.service.codactor.ai.openai.OpenAiModelServiceImpl;
+import com.translator.service.codactor.ai.runner.CodeRunnerService;
+import com.translator.service.codactor.ai.runner.CodeRunnerServiceImpl;
+import com.translator.service.codactor.io.BackgroundTaskMapperService;
+import com.translator.service.codactor.io.BackgroundTaskMapperServiceImpl;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerServiceImpl;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
@@ -103,9 +106,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         install(new FactoryModuleBuilder().build(PromptContextServiceFactory.class));
         install(new FactoryModuleBuilder().build(CodeFileGeneratorServiceFactory.class));
         bind(PromptContextService.class).to(PromptContextServiceImpl.class).asEagerSingleton();
-        bind(MassCodeModificationService.class).to(MassCodeModificationServiceImpl.class);
-        bind(CodeModificationService.class).to(CodeModificationServiceImpl.class);
-        bind(CodeRecorderService.class).to(CodeRecorderServiceImpl.class);
+        bind(MassAiCodeModificationService.class).to(MassAiCodeModificationServiceImpl.class);
+        bind(AiCodeModificationService.class).to(AiCodeModificationServiceImpl.class);
+        bind(AiCodeModificationRecorderService.class).to(AiCodeModificationRecorderServiceImpl.class);
         bind(DefaultConnectionService.class).to(DefaultConnectionServiceImpl.class).asEagerSingleton();
         bind(OpenAiModelService.class).to(OpenAiModelServiceImpl.class).asEagerSingleton();
         bind(FileCreatorService.class).to(FileCreatorServiceImpl.class);
@@ -138,10 +141,10 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(NodeQueryService.class).to(NodeQueryServiceImpl.class);
         bind(NodeRunnerManagerService.class).to(NodeRunnerManagerServiceImpl.class);
         bind(PromptNodeRunnerService.class).to(PromptNodeRunnerServiceImpl.class);
-        bind(FileModificationRestarterService.class).to(FileModificationRestarterServiceImpl.class);
+        bind(AiFileModificationRestarterService.class).to(AiFileModificationRestarterServiceImpl.class);
         bind(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer.class).to(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformerImpl.class);
         bind(DiffEditorGeneratorService.class).to(DiffEditorGeneratorServiceImpl.class);
-        bind(FileModificationSuggestionDiffViewerService.class).to(FileModificationSuggestionDiffViewerServiceImpl.class);
+        bind(AiFileModificationSuggestionDiffViewerService.class).to(AiFileModificationSuggestionDiffViewerServiceImpl.class);
         bind(CodactorFunctionGeneratorService.class).to(CodactorFunctionGeneratorServiceImpl.class);
         bind(CodactorFunctionToLabelMapperService.class).to(CodactorFunctionToLabelMapperServiceImpl.class);
         bind(InquiryChatListFunctionCallCompressorService.class).to(InquiryChatListFunctionCallCompressorServiceImpl.class);
@@ -178,19 +181,19 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
 
     @Singleton
     @Provides
-    public FileModificationTrackerService getFileModificationTrackerService(Project project,
-                                                                            CodeHighlighterService codeHighlighterService,
-                                                                            CodeSnippetExtractorService codeSnippetExtractorService,
-                                                                            CodeRangeTrackerService codeRangeTrackerService,
-                                                                            GuardedBlockService guardedBlockService,
-                                                                            RangeReplaceService rangeReplaceService,
-                                                                            EditorClickHandlerService editorClickHandlerService,
-                                                                            RenameFileService renameFileService,
-                                                                            BackgroundTaskMapperService backgroundTaskMapperService,
-                                                                            DiffEditorGeneratorService diffEditorGeneratorService,
-                                                                            FileCreatorService fileCreatorService,
-                                                                            FileRemoverService fileRemoverService) {
-        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService, fileCreatorService, fileRemoverService);
+    public FileModificationManagementService getFileModificationTrackerService(Project project,
+                                                                               CodeHighlighterService codeHighlighterService,
+                                                                               CodeSnippetExtractorService codeSnippetExtractorService,
+                                                                               CodeRangeTrackerService codeRangeTrackerService,
+                                                                               GuardedBlockService guardedBlockService,
+                                                                               RangeReplaceService rangeReplaceService,
+                                                                               EditorClickHandlerService editorClickHandlerService,
+                                                                               RenameFileService renameFileService,
+                                                                               BackgroundTaskMapperService backgroundTaskMapperService,
+                                                                               DiffEditorGeneratorService diffEditorGeneratorService,
+                                                                               FileCreatorService fileCreatorService,
+                                                                               FileRemoverService fileRemoverService) {
+        return new FileModificationManagementServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService, fileCreatorService, fileRemoverService);
     }
 
     @Singleton
@@ -198,29 +201,29 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
     public MassCodeFileGeneratorService getCodeFileGeneratorService(Project project,
                                                                     InquiryDao inquiryDao,
                                                                     CodeModificationDao codeModificationDao,
-                                                                    FileModificationTrackerService fileModificationTrackerService,
+                                                                    FileModificationManagementService fileModificationManagementService,
                                                                     DefaultConnectionService defaultConnectionService,
                                                                     OpenAiModelService openAiModelService,
                                                                     FileCreatorService fileCreatorService,
                                                                     InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
                                                                     AzureConnectionService azureConnectionService) {
-        return new MassCodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationDao, fileModificationTrackerService, defaultConnectionService, openAiModelService, fileCreatorService, inquirySystemMessageGeneratorService, azureConnectionService);
+        return new MassCodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationDao, fileModificationManagementService, defaultConnectionService, openAiModelService, fileCreatorService, inquirySystemMessageGeneratorService, azureConnectionService);
     }
 
     @Singleton
     @Provides
-    public MultiFileModificationService multiFileModificationService(Project project,
-                                                                     InquiryDao inquiryDao,
-                                                                     CodeModificationDao codeModificationDao,
-                                                                     FileModificationTrackerService fileModificationTrackerService,
-                                                                     FileModificationRestarterService fileModificationRestarterService,
-                                                                     CodeSnippetExtractorService codeSnippetExtractorService,
-                                                                     DefaultConnectionService defaultConnectionService,
-                                                                     OpenAiModelService openAiModelService,
-                                                                     InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
-                                                                     AzureConnectionService azureConnectionService,
-                                                                     FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
-                                                                     Gson gson) {
-        return new MultiFileModificationServiceImpl(project, inquiryDao, codeModificationDao, fileModificationTrackerService, fileModificationRestarterService, codeSnippetExtractorService, defaultConnectionService, openAiModelService, inquirySystemMessageGeneratorService, azureConnectionService, fileModificationErrorDialogFactory, gson);
+    public MultiFileAiModificationService multiFileModificationService(Project project,
+                                                                       InquiryDao inquiryDao,
+                                                                       CodeModificationDao codeModificationDao,
+                                                                       FileModificationManagementService fileModificationManagementService,
+                                                                       AiFileModificationRestarterService aiFileModificationRestarterService,
+                                                                       CodeSnippetExtractorService codeSnippetExtractorService,
+                                                                       DefaultConnectionService defaultConnectionService,
+                                                                       OpenAiModelService openAiModelService,
+                                                                       InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
+                                                                       AzureConnectionService azureConnectionService,
+                                                                       FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
+                                                                       Gson gson) {
+        return new MultiFileAiModificationServiceImpl(project, inquiryDao, codeModificationDao, fileModificationManagementService, aiFileModificationRestarterService, codeSnippetExtractorService, defaultConnectionService, openAiModelService, inquirySystemMessageGeneratorService, azureConnectionService, fileModificationErrorDialogFactory, gson);
     }
 }

@@ -11,12 +11,11 @@ import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
-import com.translator.model.codactor.file.FileItem;
-import com.translator.service.codactor.file.SelectedFileFetcherService;
+import com.translator.model.codactor.ide.file.FileItem;
+import com.translator.service.codactor.ide.file.SelectedFileFetcherService;
 import com.translator.view.uml.editor.CodactorUmlBuilderSVGEditor;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 

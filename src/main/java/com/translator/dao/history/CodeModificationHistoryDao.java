@@ -1,7 +1,7 @@
 package com.translator.dao.history;
 
 import com.translator.model.codactor.api.translator.history.DesktopCodeModificationHistoryResponseResource;
-import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
+import com.translator.model.codactor.ai.history.data.HistoricalFileModificationDataHolder;
 
 public interface CodeModificationHistoryDao {
     DesktopCodeModificationHistoryResponseResource getRecentModifications();

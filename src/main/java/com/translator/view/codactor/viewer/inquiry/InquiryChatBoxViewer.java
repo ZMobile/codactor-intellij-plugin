@@ -3,9 +3,9 @@ package com.translator.view.codactor.viewer.inquiry;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
-import com.translator.model.codactor.inquiry.Inquiry;
-import com.translator.model.codactor.inquiry.InquiryChat;
-import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.model.codactor.ai.chat.Inquiry;
+import com.translator.model.codactor.ai.chat.InquiryChat;
+import com.translator.service.codactor.ai.openai.OpenAiModelService;
 
 import javax.swing.*;
 import java.awt.*;

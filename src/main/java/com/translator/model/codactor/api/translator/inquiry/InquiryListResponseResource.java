@@ -1,6 +1,6 @@
 package com.translator.model.codactor.api.translator.inquiry;
 
-import com.translator.model.codactor.inquiry.Inquiry;
+import com.translator.model.codactor.ai.chat.Inquiry;
 
 import java.util.List;
 

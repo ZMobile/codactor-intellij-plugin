@@ -1,10 +1,10 @@
 package com.translator.view.codactor.settings;
 
 import com.translator.dao.firebase.FirebaseTokenService;
-import com.translator.service.codactor.connection.AzureConnectionService;
-import com.translator.service.codactor.connection.CodactorConnectionService;
-import com.translator.service.codactor.connection.CodactorConnectionType;
-import com.translator.service.codactor.connection.DefaultConnectionService;
+import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
+import com.translator.service.codactor.ai.openai.connection.CodactorConnectionService;
+import com.translator.service.codactor.ai.openai.connection.CodactorConnectionType;
+import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 
 
 import javax.swing.*;

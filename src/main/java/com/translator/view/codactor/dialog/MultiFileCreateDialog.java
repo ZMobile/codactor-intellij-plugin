@@ -13,10 +13,10 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.intellij.ui.components.JBTextField;
-import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.service.codactor.context.PromptContextService;
-import com.translator.service.codactor.file.MassCodeFileGeneratorService;
-import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
+import com.translator.service.codactor.ai.chat.context.PromptContextService;
+import com.translator.service.codactor.ide.file.MassCodeFileGeneratorService;
+import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 

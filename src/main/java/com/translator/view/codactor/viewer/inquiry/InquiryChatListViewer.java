@@ -11,15 +11,14 @@ import com.intellij.openapi.ui.JBMenuItem;
 import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
-import com.translator.model.codactor.inquiry.Inquiry;
-import com.translator.model.codactor.inquiry.InquiryChat;
-import com.translator.model.codactor.inquiry.InquiryChatType;
-import com.translator.service.codactor.context.PromptContextService;
+import com.translator.model.codactor.ai.chat.Inquiry;
+import com.translator.model.codactor.ai.chat.InquiryChat;
+import com.translator.model.codactor.ai.chat.InquiryChatType;
+import com.translator.service.codactor.ai.chat.context.PromptContextService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
-import com.translator.service.codactor.functions.InquiryChatListFunctionCallCompressorService;
-import com.translator.service.codactor.functions.InquiryFunctionCallProcessorService;
-import com.translator.service.codactor.openai.OpenAiModelService;
-import com.translator.service.codactor.openai.OpenAiModelServiceImpl;
+import com.translator.service.codactor.ai.chat.functions.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.ai.chat.functions.InquiryFunctionCallProcessorService;
+import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.MultiFileCreateDialog;
@@ -61,6 +60,7 @@ public class InquiryChatListViewer extends JPanel {
     private InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService;
     private PromptContextServiceFactory promptContextServiceFactory;
     private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
+    private boolean debugView;
 
     public InquiryChatListViewer(Gson gson,
                                  InquiryViewer inquiryViewer,
@@ -79,6 +79,7 @@ public class InquiryChatListViewer extends JPanel {
         this.openAiModelService = openAiModelService;
         this.inquiryFunctionCallProcessorService = inquiryFunctionCallProcessorService;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
+        this.debugView = false;
         initComponents();
     }
 
@@ -116,8 +117,14 @@ public class InquiryChatListViewer extends JPanel {
                                 text.append("\n");
                             }
                             if (component1 instanceof JTextPane) {
-                                JTextPane jBTextArea = (JTextPane) component1;
-                                text.append(jBTextArea.getText());
+                                JTextPane jTextPane = (JTextPane) component1;
+                                HTMLDocument doc = (HTMLDocument)jTextPane.getDocument();
+                                int length = doc.getLength();
+                                try {
+                                    text.append(doc.getText(0, length));
+                                } catch (BadLocationException ex) {
+                                    throw new RuntimeException(ex);
+                                }
                                 firstComponentCopied = true;
                             } else if (component1 instanceof FixedHeightPanel) {
                                 FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
@@ -126,6 +133,10 @@ public class InquiryChatListViewer extends JPanel {
                                     text.append(editor.getDocument().getText());
                                     firstComponentCopied = true;
                                 }
+                            } else if (component1 instanceof JLabel) {
+                                JLabel jLabel = (JLabel) component1;
+                                text.append(jLabel.getText());
+                                text.append("\n");
                             }
                         }
                         StringSelection selection = new StringSelection(text.toString());
@@ -177,43 +188,8 @@ public class InquiryChatListViewer extends JPanel {
                 }
                 if (e.getClickCount() == 2) {
                     //Component component = inquiryChatViewer.getComponentAt(e.getPoint());
-                    StringBuilder text = new StringBuilder();
-                    boolean firstComponentCopied = false;
-                    for (int i = 0; i < inquiryChatViewer.getComponents().length; i++) {
-                        Component component1 = inquiryChatViewer.getComponents()[i];
-                        if (firstComponentCopied) {
-                            text.append("\n");
-                            text.append("\n");
-                        }
-                        if (component1 instanceof JTextPane) {
-                            JTextPane jTextPane = (JTextPane) component1;
-                            HTMLDocument doc = (HTMLDocument)jTextPane.getDocument();
-                            int length = doc.getLength();
-                            try {
-                                text.append(doc.getText(0, length));
-                            } catch (BadLocationException ex) {
-                                throw new RuntimeException(ex);
-                            }
-                            firstComponentCopied = true;
-                        } else if (component1 instanceof FixedHeightPanel) {
-                            FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
-                            Editor editor = fixedHeightPanel.getEditor();
-                            if (editor != null) {
-                                text.append(editor.getDocument().getText());
-                                firstComponentCopied = true;
-                            }
-                        } else if (component1 instanceof JToolBar) {
-                            JToolBar jToolBar = (JToolBar) component1;
-                            for (Component component2 : jToolBar.getComponents()) {
-                                if (component2 instanceof JLabel) {
-                                    JLabel jLabel = (JLabel) component2;
-                                    text.append(jLabel.getText());
-                                    text.append("\n");
-                                }
-                            }
-                        }
-                    }
-                    new TextAreaWindow(text.toString());
+                    String text = convertInquiryChatViewerToText(inquiryChatViewer);
+                    new TextAreaWindow(text);
                 } else if (selectedChat == lastSelectedChat) {
                     inquiryChatList.clearSelection();
                     inquiryChatList.setSelectedIndex(-1);
@@ -317,6 +293,53 @@ public class InquiryChatListViewer extends JPanel {
         jBScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         add(jBScrollPane, BorderLayout.CENTER);
+    }
+
+    private String convertInquiryChatViewerToText(InquiryChatViewer inquiryChatViewer) {
+        StringBuilder text = new StringBuilder();
+        boolean firstComponentCopied = false;
+        for (int i = 0; i < inquiryChatViewer.getComponents().length; i++) {
+            Component component1 = inquiryChatViewer.getComponents()[i];
+            if (firstComponentCopied) {
+                text.append("\n");
+                text.append("\n");
+            }
+            if (component1 instanceof JTextPane) {
+                JTextPane jTextPane = (JTextPane) component1;
+                HTMLDocument doc = (HTMLDocument)jTextPane.getDocument();
+                int length = doc.getLength();
+                try {
+                    text.append(doc.getText(0, length));
+                } catch (BadLocationException ex) {
+                    throw new RuntimeException(ex);
+                }
+                firstComponentCopied = true;
+            } else if (component1 instanceof FixedHeightPanel) {
+                FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
+                for (Component component2 : fixedHeightPanel.getComponents()) {
+                    if (component2 instanceof JLabel) {
+                        JLabel jLabel = (JLabel) component2;
+                        text.append(jLabel.getText());
+                        text.append("\n");
+                    }
+                }
+                Editor editor = fixedHeightPanel.getEditor();
+                if (editor != null) {
+                    text.append(editor.getDocument().getText());
+                    firstComponentCopied = true;
+                }
+            } else if (component1 instanceof JToolBar) {
+                JToolBar jToolBar = (JToolBar) component1;
+                for (Component component2 : jToolBar.getComponents()) {
+                    if (component2 instanceof JLabel) {
+                        JLabel jLabel = (JLabel) component2;
+                        text.append(jLabel.getText());
+                        text.append("\n");
+                    }
+                }
+            }
+        }
+        return text.toString();
     }
 
     private void updateSelectionHighlighting() {
@@ -459,8 +482,19 @@ public class InquiryChatListViewer extends JPanel {
             inquiryViewer.getInquiryChatBoxViewer().getWhatDoesThisDoButton().setEnabled(false);
         }
         Collections.reverse(finalizedChatList);
-        List<InquiryChatViewer> compressedInquiryChatViewers = inquiryChatListFunctionCallCompressorService.compress(finalizedChatList);
-        for (InquiryChatViewer inquiryChatListViewer : compressedInquiryChatViewers) {
+        List<InquiryChatViewer> inquiryChatViewers;
+        if (!debugView) {
+            inquiryChatViewers = inquiryChatListFunctionCallCompressorService.compress(finalizedChatList);
+        } else {
+            inquiryChatViewers = new ArrayList<>();
+            for (InquiryChat inquiryChat : finalizedChatList) {
+                InquiryChatViewer inquiryChatViewer = new InquiryChatViewer.Builder()
+                        .withInquiryChat(inquiryChat)
+                        .build();
+                inquiryChatViewers.add(inquiryChatViewer);
+            }
+        }
+        for (InquiryChatViewer inquiryChatListViewer : inquiryChatViewers) {
             model.addElement(inquiryChatListViewer);
         }
         ComponentListener componentListener = new ComponentAdapter() {
@@ -655,5 +689,10 @@ public class InquiryChatListViewer extends JPanel {
 
     public OpenAiModelService getOpenAiModelService() {
         return openAiModelService;
+    }
+
+    public void setDebugView(boolean debugView) {
+        this.debugView = debugView;
+        updateInquiryContents(inquiry);
     }
 }

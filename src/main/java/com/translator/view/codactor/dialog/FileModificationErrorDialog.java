@@ -7,12 +7,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
-import com.translator.model.codactor.modification.FileModification;
-import com.translator.model.codactor.modification.ModificationType;
-import com.translator.service.codactor.modification.FileModificationRestarterService;
-import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
-import com.translator.service.codactor.connection.DefaultConnectionService;
-import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.model.codactor.ai.modification.FileModification;
+import com.translator.model.codactor.ai.modification.ModificationType;
+import com.translator.service.codactor.ai.modification.AiFileModificationRestarterService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
+import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
+import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.view.codactor.settings.CodactorConfigurable;
 
 import javax.swing.*;
@@ -26,8 +26,8 @@ public class FileModificationErrorDialog extends JDialog {
     private String filePath;
     private DefaultConnectionService defaultConnectionService;
     private OpenAiModelService openAiModelService;
-    private FileModificationTrackerService fileModificationTrackerService;
-    private FileModificationRestarterService fileModificationRestarterService;
+    private FileModificationManagementService fileModificationManagementService;
+    private AiFileModificationRestarterService aiFileModificationRestarterService;
 
     @Inject
     public FileModificationErrorDialog(@Assisted("modificationId") String modificationId,
@@ -37,15 +37,15 @@ public class FileModificationErrorDialog extends JDialog {
                                        Project project,
                                        DefaultConnectionService defaultConnectionService,
                                        OpenAiModelService openAiModelService,
-                                       FileModificationTrackerService fileModificationTrackerService,
-                                       FileModificationRestarterService fileModificationRestarterService) {
+                                       FileModificationManagementService fileModificationManagementService,
+                                       AiFileModificationRestarterService aiFileModificationRestarterService) {
         super();
         this.project = project;
         this.filePath = filePath;
         this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
-        this.fileModificationTrackerService = fileModificationTrackerService;
-        this.fileModificationRestarterService = fileModificationRestarterService;
+        this.fileModificationManagementService = fileModificationManagementService;
+        this.aiFileModificationRestarterService = aiFileModificationRestarterService;
 
         JBPanel messagePanel = new JBPanel();
         if (error != null) {
@@ -60,7 +60,7 @@ public class FileModificationErrorDialog extends JDialog {
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                fileModificationTrackerService.removeModification(modificationId);
+                fileModificationManagementService.removeModification(modificationId);
                 dispose();
             }
         });
@@ -77,8 +77,8 @@ public class FileModificationErrorDialog extends JDialog {
         retryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
-                fileModificationRestarterService.restartFileModification(fileModification);
+                FileModification fileModification = fileModificationManagementService.getModification(modificationId);
+                aiFileModificationRestarterService.restartFileModification(fileModification);
                 dispose();
             }
         });

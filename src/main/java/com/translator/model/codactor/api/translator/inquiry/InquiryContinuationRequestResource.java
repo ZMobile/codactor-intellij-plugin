@@ -1,6 +1,6 @@
 package com.translator.model.codactor.api.translator.inquiry;
 
-import com.translator.model.codactor.inquiry.function.ChatGptFunction;
+import com.translator.model.codactor.ai.chat.function.GptFunction;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public class InquiryContinuationRequestResource {
         private boolean azure;
         private String azureResource;
         private String azureDeployment;
-        private List<ChatGptFunction> functions;
+        private List<GptFunction> functions;
 
         public Builder withPreviousInquiryChatId(String previousInquiryChatId) {
             this.previousInquiryChatId = previousInquiryChatId;
@@ -51,7 +51,7 @@ public class InquiryContinuationRequestResource {
             return this;
         }
 
-        public Builder withFunctions(List<ChatGptFunction> functions) {
+        public Builder withFunctions(List<GptFunction> functions) {
             this.functions = functions;
             return this;
         }
@@ -68,7 +68,7 @@ public class InquiryContinuationRequestResource {
     private boolean azure;
     private String azureResource;
     private String azureDeployment;
-    private List<ChatGptFunction> functions;
+    private List<GptFunction> functions;
 
     public InquiryContinuationRequestResource(String previousInquiryChatId,
                                               String question,
@@ -77,7 +77,7 @@ public class InquiryContinuationRequestResource {
                                               boolean azure,
                                               String azureResource,
                                               String azureDeployment,
-                                              List<ChatGptFunction> functions) {
+                                              List<GptFunction> functions) {
         this.previousInquiryChatId = previousInquiryChatId;
         this.question = question;
         this.openAiApiKey = openAiApiKey;

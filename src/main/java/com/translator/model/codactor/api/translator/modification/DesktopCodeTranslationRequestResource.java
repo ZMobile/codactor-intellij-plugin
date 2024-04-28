@@ -1,6 +1,6 @@
 package com.translator.model.codactor.api.translator.modification;
 
-import com.translator.model.codactor.history.HistoricalContextObjectHolder;
+import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
 
 import java.util.List;
 

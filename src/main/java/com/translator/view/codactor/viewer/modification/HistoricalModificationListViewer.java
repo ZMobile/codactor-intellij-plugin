@@ -7,11 +7,11 @@ import com.intellij.ui.components.JBScrollPane;
 import com.translator.CodactorInjector;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.model.codactor.api.translator.history.DesktopCodeModificationHistoryResponseResource;
-import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
-import com.translator.model.codactor.inquiry.Inquiry;
-import com.translator.model.codactor.modification.FileModificationSuggestionModificationRecord;
-import com.translator.model.codactor.modification.FileModificationSuggestionRecord;
-import com.translator.model.codactor.modification.RecordType;
+import com.translator.model.codactor.ai.history.data.HistoricalFileModificationDataHolder;
+import com.translator.model.codactor.ai.chat.Inquiry;
+import com.translator.model.codactor.ai.modification.FileModificationSuggestionModificationRecord;
+import com.translator.model.codactor.ai.modification.FileModificationSuggestionRecord;
+import com.translator.model.codactor.ai.modification.RecordType;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.renderer.HistoricalCompletedFileModificationRenderer;
@@ -21,8 +21,6 @@ import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 

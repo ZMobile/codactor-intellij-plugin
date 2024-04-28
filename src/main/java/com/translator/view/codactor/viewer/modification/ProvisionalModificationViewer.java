@@ -7,14 +7,15 @@ package com.translator.view.codactor.viewer.modification;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
-import com.translator.model.codactor.modification.FileModification;
-import com.translator.model.codactor.modification.FileModificationSuggestion;
-import com.translator.model.codactor.modification.ModificationType;
-import com.translator.service.codactor.file.FileOpenerService;
-import com.translator.service.codactor.modification.FileModificationSuggestionDiffViewerService;
-import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
+import com.translator.model.codactor.ai.modification.FileModification;
+import com.translator.model.codactor.ai.modification.FileModificationSuggestion;
+import com.translator.model.codactor.ai.modification.ModificationType;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
+import com.translator.service.codactor.ide.file.FileOpenerService;
+import com.translator.service.codactor.ai.modification.diff.AiFileModificationSuggestionDiffViewerService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
-import com.translator.view.codactor.dialog.ProvisionalModificationCustomizerDialog;
+import com.translator.view.codactor.dialog.modification.ProvisionalModificationCustomizerDialog;
+import com.translator.view.codactor.dialog.modification.ProvisionalModificationCustomizerDialogManager;
 import com.translator.view.codactor.factory.dialog.ProvisionalModificationCustomizerDialogFactory;
 import com.translator.view.codactor.renderer.CodeSnippetRenderer;
 import com.translator.view.codactor.viewer.CodeSnippetViewer;
@@ -43,21 +44,24 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
     private JButton queueButton;
     private String fileModificationId;
     private CodactorToolWindowService codactorToolWindowService;
-    private FileModificationTrackerService fileModificationTrackerService;
+    private FileModificationManagementService fileModificationManagementService;
+    private ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager;
     private FileOpenerService fileOpenerService;
-    private FileModificationSuggestionDiffViewerService fileModificationSuggestionDiffViewerService;
+    private AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService;
     private ProvisionalModificationCustomizerDialogFactory provisionalModificationCustomizerDialogFactory;
 
     @Inject
     public ProvisionalModificationViewer(CodactorToolWindowService codactorToolWindowService,
-                                         FileModificationTrackerService fileModificationTrackerService,
+                                         FileModificationManagementService fileModificationManagementService,
+                                         ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager,
                                          FileOpenerService fileOpenerService,
-                                         FileModificationSuggestionDiffViewerService fileModificationSuggestionDiffViewerService,
+                                         AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService,
                                          ProvisionalModificationCustomizerDialogFactory provisionalModificationCustomizerDialogFactory) {
         this.codactorToolWindowService = codactorToolWindowService;
-        this.fileModificationTrackerService = fileModificationTrackerService;
+        this.fileModificationManagementService = fileModificationManagementService;
+        this.provisionalModificationCustomizerDialogManager = provisionalModificationCustomizerDialogManager;
         this.fileOpenerService = fileOpenerService;
-        this.fileModificationSuggestionDiffViewerService = fileModificationSuggestionDiffViewerService;
+        this.aiFileModificationSuggestionDiffViewerService = aiFileModificationSuggestionDiffViewerService;
         this.provisionalModificationCustomizerDialogFactory = provisionalModificationCustomizerDialogFactory;
         initComponents();
     }
@@ -126,8 +130,8 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             @Override
             public void actionPerformed(ActionEvent e) {
                 FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
-                fileModificationTrackerService.implementModificationUpdate(fileModificationId, fileModificationSuggestion.getSuggestedCodeEditor().getDocument().getText(), false);
-                List<FileModification> modifications = fileModificationTrackerService.getAllFileModifications();
+                fileModificationManagementService.implementModificationUpdate(fileModificationId, fileModificationSuggestion.getSuggestedCodeEditor().getDocument().getText(), false);
+                List<FileModification> modifications = fileModificationManagementService.getAllFileModifications();
                 boolean anyDone = false;
                 FileModification nextModification = null;
                 for (FileModification modification : modifications) {
@@ -154,8 +158,8 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         rejectAllButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                fileModificationTrackerService.removeModification(fileModificationId);
-                List<FileModification> modifications = fileModificationTrackerService.getAllFileModifications();
+                fileModificationManagementService.removeModification(fileModificationId);
+                List<FileModification> modifications = fileModificationManagementService.getAllFileModifications();
                 boolean anyDone = false;
                 FileModification nextModification = null;
                 for (FileModification modification : modifications) {
@@ -178,9 +182,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         customizeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ProvisionalModificationCustomizerDialog provisionalModificationCustomizerDialog = provisionalModificationCustomizerDialogFactory.create(fileModification.getModificationOptions().get(0));
-                provisionalModificationCustomizerDialog.setVisible(true);
-                fileModificationTrackerService.addProvisionalModificationCustomizer(provisionalModificationCustomizerDialog);
+                provisionalModificationCustomizerDialogManager.addProvisionalModificationCustomizerDialog(fileModification.getModificationOptions().get(0));
             }
         });
 
@@ -190,7 +192,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
                 FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
                 String beforeCode = fileModificationSuggestion.getBeforeCode();
                 String afterCode = fileModificationSuggestion.getSuggestedCodeEditor().getDocument().getText();
-                fileModificationSuggestionDiffViewerService.showDiffViewer(fileModification.getFilePath(), beforeCode, afterCode);
+                aiFileModificationSuggestionDiffViewerService.showDiffViewer(fileModification.getFilePath(), beforeCode, afterCode);
             }
         });
 

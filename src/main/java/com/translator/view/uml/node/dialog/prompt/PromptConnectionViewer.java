@@ -27,7 +27,8 @@ public class PromptConnectionViewer extends JPanel {
     private PromptNode promptNode;
     private Drawing drawing;
     private Gson gson;
-    private JBTable table;
+    private JBTable inputTable;
+    private JBTable outputTable;
     private NodeDialogWindowMapperService nodeDialogWindowMapperService;
     private PromptHighlighterService promptHighlighterService;
     private List<MetadataLabeledLineConnectionFigure> inputFigures;
@@ -48,52 +49,142 @@ public class PromptConnectionViewer extends JPanel {
         this.inputFigures = new ArrayList<>();
         this.outputFigures = new ArrayList<>();
         setLayout(new BorderLayout()); // Set the layout to BorderLayout
-        String[] columnNames = {"Connection ID", "Key", "Input/Output"};
+        /*String[] columnNames = {"Connection ID", "Key", "Input/Output"};
         Object[][] data = {
+
+        }*/
+
+
+        String[] inputColumns = {"Connection ID", "Content-Type", "Key","Required By"};
+        String[] outputColumns = {"Connection ID", "Content-Type", "Key", "Sent By"};
+
+        Object[][] inputData = {
 
         };
 
-        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+
+        Object[][] outputData = {
+
+        };
+
+        DefaultTableModel inputModel = new DefaultTableModel(inputData, inputColumns) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 // Make the "Connection ID" column non-editable
-                if (column == 0) {
-                    return false;
-                } else {
-                    return true;
-                }
+                return column != 0;
             }
 
             @Override
             public Class<?> getColumnClass(int columnIndex) {
-                if (columnIndex == 2) {
+                if (columnIndex == 0) {
+                    return String.class;
+                } else if (columnIndex == 1) {
                     return JComboBox.class;
+                } else if (columnIndex == 2) {
+                    return String.class;
+                } else if (columnIndex == 3) {
+                    return Integer.class;
                 } else {
                     return super.getColumnClass(columnIndex);
                 }
             }
         };
 
-        table = new JBTable(model);
-        table.setFillsViewportHeight(true); // Ensure the table takes up all available space in the view
-        add(table, BorderLayout.CENTER);
-        JComboBox<String> comboBox = new ComboBox<>(new String[]{"Input", "Output"});
-        table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(comboBox));
-        table.setMinimumSize(new Dimension(0, 50));
-        updateConnections();
-        add(table, BorderLayout.CENTER);
+        DefaultTableModel outputModel = new DefaultTableModel(outputData, outputColumns) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Make the "Connection ID" column non-editable
+                return column != 0;
+            }
 
-        JToolBar jToolBar = new JToolBar();
-        jToolBar.setFloatable(false);
-        jToolBar.setBorderPainted(false);
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex == 0) {
+                    return String.class;
+                } else if (columnIndex == 1) {
+                    return JComboBox.class;
+                } else if (columnIndex == 2) {
+                    return String.class;
+                } else if (columnIndex == 3) {
+                    return Integer.class;
+                } else {
+                    return super.getColumnClass(columnIndex);
+                }
+            }
+        };
 
-        JLabel label = new JLabel("Connections");
-        label.setHorizontalTextPosition(SwingConstants.CENTER);
-        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        inputTable =new
 
-        jToolBar.add(label);
+        JBTable(inputModel);
 
-        add(jToolBar, BorderLayout.NORTH); // Add the toolBar to the SOUTH region
+        outputTable =new
+
+        JBTable(outputModel);
+
+        inputTable.setFillsViewportHeight(true); // Ensure the table takes up all available space in the view
+        outputTable.setFillsViewportHeight(true);
+
+            JComboBox<String> comboBox = new ComboBox<>(new String[]{"Input", "Output"});
+        inputTable.getColumnModel().
+
+            getColumn(2).
+
+            setCellEditor(new DefaultCellEditor(comboBox));
+        outputTable.getColumnModel().
+
+            getColumn(2).
+
+            setCellEditor(new DefaultCellEditor(comboBox));
+
+        inputTable.setMinimumSize(new
+
+            Dimension(0,50));
+        outputTable.setMinimumSize(new
+
+            Dimension(0,50));
+
+            //updateConnections();
+
+
+        JLabel label1 = new JLabel("Inputs");
+        label1.setHorizontalTextPosition(SwingConstants.CENTER);
+        label1.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JToolBar jToolBar1 = new JToolBar();
+        jToolBar1.setFloatable(false);
+        jToolBar1.setBorderPainted(false);
+
+        jToolBar1.add(label1);
+
+
+        JToolBar jToolBar2 = new JToolBar();
+        jToolBar2.setFloatable(false);
+        jToolBar2.setBorderPainted(false);
+
+        jToolBar2.add(label1);
+
+        JLabel label2 = new JLabel("Outputs");
+        label2.setHorizontalTextPosition(SwingConstants.CENTER);
+        label2.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        jToolBar2.add(label2);
+
+        JPanel northPanel = new JPanel(new BorderLayout());
+
+        northPanel.add(jToolBar1, BorderLayout.NORTH);
+        northPanel.add(inputTable, BorderLayout.CENTER);
+
+        add(northPanel, BorderLayout.NORTH);
+
+        JPanel southPanel = new JPanel(new BorderLayout());
+
+        southPanel.add(jToolBar2, BorderLayout.NORTH);
+        southPanel.add(outputTable, BorderLayout.CENTER);
+
+        add(southPanel, BorderLayout.SOUTH);
+
+        // You need to add your own functionality to handle the movement of rows between tables when the "Input/Output" column is changed
+
     }
 
     public void updateConnections() {
@@ -116,38 +207,31 @@ public class PromptConnectionViewer extends JPanel {
 
         List<Object[]> rowData = new ArrayList<>();
 
+        DefaultTableModel inputModel = (DefaultTableModel) this.inputTable.getModel();
+        DefaultTableModel outputModel = (DefaultTableModel) this.outputTable.getModel();
+        inputModel.setRowCount(0);
+        outputModel.setRowCount(0);
+
         for (MetadataLabeledLineConnectionFigure input : inputFigures) {
             Connection connection = gson.fromJson(input.getMetadata(), Connection.class);
-            Object[] row = {connection.getId(), connection.getInputKey(), "Input"};
-            rowData.add(row);
+            Object[] row = {connection.getId(), connection.getInputKey(), "Input", 0};
+            inputModel.addRow(row);
         }
 
         for (MetadataLabeledLineConnectionFigure output : outputFigures) {
             Connection connection = gson.fromJson(output.getMetadata(), Connection.class);
-            Object[] row = {connection.getId(), connection.getOutputKey(), "Output"};
-            rowData.add(row);
+            Object[] row = {connection.getId(), connection.getOutputKey(), "Output", 0};
+            outputModel.addRow(row);
         }
 
-        DefaultTableModel model = new DefaultTableModel(rowData.toArray(new Object[0][]), new String[]{"Connection ID", "Key (Editable)", "Input/Output"}) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return column == 1; // Only second column is editable now
-            }
-
-            @Override
-            public Class<?> getColumnClass(int columnIndex) {
-                return super.getColumnClass(columnIndex);
-            }
-        };
-
-        model.addTableModelListener(new TableModelListener() {
+        inputModel.addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
                 if (e.getType() == TableModelEvent.UPDATE) {
                     int row = e.getFirstRow();
                     int column = e.getColumn();
-                    Object data = model.getValueAt(row, column);
-                    String connectionId = model.getValueAt(row, 0).toString();
+                    Object data = inputModel.getValueAt(row, column);
+                    String connectionId = inputModel.getValueAt(row, 0).toString();
 
                     if (column == 1) { // If the "Key" column is changed
                         setConnectionKey(connectionId, data.toString());
@@ -157,20 +241,24 @@ public class PromptConnectionViewer extends JPanel {
             }
         });
 
-        JBTable table = new JBTable(model);
-        table.setFillsViewportHeight(true);
-
-// Create a JPanel and add the table to it
         JPanel panel = new JPanel(new BorderLayout());
 
 // Manually create and set the table header
-        JTableHeader header = table.getTableHeader();
+        /*JTableHeader header = table.getTableHeader();
         panel.add(header, BorderLayout.NORTH);
         panel.add(table, BorderLayout.CENTER);
         panel.setMinimumSize(new Dimension(0, 50));
 
-        this.add(panel, BorderLayout.CENTER);
+        this.add(panel, BorderLayout.CENTER);*/
 
+
+        /* Add listener on inputModel to handle row moving when Input is changed to Output */
+
+
+        /* Add listener on outputModel to handle row moving when Output is changed to Input */
+
+
+        // Refresh the panel
         this.revalidate();
         this.repaint();
     }

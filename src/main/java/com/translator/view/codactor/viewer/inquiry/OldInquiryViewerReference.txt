@@ -245,7 +245,7 @@ public class InquiryViewer extends JPanel {
                 if (inquiry.getAfterCode() != null || !inquiry.getChats().isEmpty()) {
                     updateInquiryContents(new Inquiry(null, null, null, null, null, null, null, null, null, null));
                 }
-                //ProvisionalModificationCustomizer provisionalModificationCustomizer = new ProvisionalModificationCustomizer(fileModification, codeModificationService, fileModificationTrackerService, aiTaskExecutor, codeSnippetListViewer, splitPaneService);
+                //ProvisionalModificationCustomizer provisionalModificationCustomizer = new ProvisionalModificationCustomizer(fileModification, aiCodeModificationService, fileModificationManagementService, aiTaskExecutor, codeSnippetListViewer, splitPaneService);
                 provisionalModificationCustomizer.setVisible(true);//
             }
         });

@@ -7,7 +7,7 @@ package com.translator.dao.modification;
 import com.google.gson.Gson;
 import com.translator.dao.firebase.FirebaseTokenService;
 import com.translator.model.codactor.api.translator.modification.*;
-import com.translator.model.codactor.modification.FileModificationSuggestionModificationRecord;
+import com.translator.model.codactor.ai.modification.FileModificationSuggestionModificationRecord;
 import org.apache.commons.io.IOUtils;
 
 import javax.inject.Inject;

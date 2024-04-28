@@ -6,7 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.CodactorInjector;
 import com.translator.dao.inquiry.InquiryDao;
-import com.translator.model.codactor.inquiry.Inquiry;
+import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.renderer.InquiryRenderer;

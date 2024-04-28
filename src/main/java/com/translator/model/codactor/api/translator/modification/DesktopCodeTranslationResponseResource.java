@@ -1,6 +1,6 @@
 package com.translator.model.codactor.api.translator.modification;
 
-import com.translator.model.codactor.modification.FileModificationSuggestionRecord;
+import com.translator.model.codactor.ai.modification.FileModificationSuggestionRecord;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;

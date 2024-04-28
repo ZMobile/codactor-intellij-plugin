@@ -7,10 +7,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.translator.CodactorInjector;
 import com.translator.dao.firebase.FirebaseTokenService;
-import com.translator.service.codactor.connection.AzureConnectionService;
-import com.translator.service.codactor.connection.CodactorConnectionService;
-import com.translator.service.codactor.connection.DefaultConnectionService;
-import com.translator.view.codactor.settings.CodactorSettingsPage;
+import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
+import com.translator.service.codactor.ai.openai.connection.CodactorConnectionService;
+import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 

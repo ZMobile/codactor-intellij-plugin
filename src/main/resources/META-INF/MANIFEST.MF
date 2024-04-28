@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-com.translator.listener.pacman.Main-Class: com.translator.MainFrame
+com.translator.io.listener.pacman.Main-Class: com.translator.MainFrame
 

@@ -10,9 +10,9 @@ import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
 import com.translator.CodactorInjector;
-import com.translator.service.codactor.context.PromptContextService;
+import com.translator.service.codactor.ai.chat.context.PromptContextService;
+import com.translator.service.codactor.ai.modification.AiCodeModificationService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
-import com.translator.service.codactor.modification.CodeModificationService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.FileCreateDialog;
 import com.translator.view.codactor.factory.dialog.FileCreateDialogFactory;
@@ -71,11 +71,11 @@ public class CustomCreateFileAction extends CreateElementActionBase {
 
         if (!description.isEmpty()) {
             Injector injector = CodactorInjector.getInstance().getInjector(project);
-            CodeModificationService codeModificationService = injector.getInstance(CodeModificationService.class);
+            AiCodeModificationService aiCodeModificationService = injector.getInstance(AiCodeModificationService.class);
             CodactorToolWindowService codactorToolWindowService = injector.getInstance(CodactorToolWindowService.class);
             PromptContextService promptContextService = injector.getInstance(PromptContextService.class);
             String newDescription = "The code for " + fileName + ": " + description;
-            codeModificationService.createAndImplementCode(filePath, newDescription, promptContextService.getPromptContext());
+            aiCodeModificationService.createAndImplementCode(filePath, newDescription, promptContextService.getPromptContext());
             promptContextService.clearPromptContext();
             codactorToolWindowService.openModificationQueueViewerToolWindow();
         }

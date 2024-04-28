@@ -10,13 +10,13 @@ import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
-import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.inquiry.Inquiry;
-import com.translator.model.codactor.inquiry.InquiryChat;
-import com.translator.model.codactor.inquiry.InquiryChatType;
+import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
+import com.translator.model.codactor.ai.chat.Inquiry;
+import com.translator.model.codactor.ai.chat.InquiryChat;
+import com.translator.model.codactor.ai.chat.InquiryChatType;
 import com.translator.model.uml.draw.node.PromptNode;
 import com.translator.model.uml.prompt.Prompt;
-import com.translator.service.codactor.task.BackgroundTaskMapperService;
+import com.translator.service.codactor.io.BackgroundTaskMapperService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorServiceImpl;
 import com.translator.service.uml.node.PromptHighlighterService;
@@ -118,7 +118,7 @@ public class PromptViewer extends JPanel {
                         return;
                     }
                     InquiryChatViewer inquiryChatViewer = promptList.getModel().getElementAt(selectedChat);
-                    StringBuilder text = new StringBuilder();
+                    /*StringBuilder text = new StringBuilder();
                     boolean firstComponentCopied = false;
                     for (int i = 0; i < inquiryChatViewer.getComponents().length; i++) {
                         Component component1 = inquiryChatViewer.getComponents()[i];
@@ -137,10 +137,21 @@ public class PromptViewer extends JPanel {
                                 text.append(editor.getDocument().getText());
                                 firstComponentCopied = true;
                             }
+                        } else if (component1 instanceof JTextPane) {
+                            JTextPane jTextPane = (JTextPane) component1;
+                            HTMLDocument doc = (HTMLDocument)jTextPane.getDocument();
+                            int length = doc.getLength();
+                            try {
+                                text.append(doc.getText(0, length));
+                            } catch (BadLocationException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                            firstComponentCopied = true;
                         }
-                    }
+                    }*/
+                    String text =  promptNode.getPromptList().get(selectedChat).getPrompt();
                     if (promptNode.isProcessed()) {
-                        new TextAreaWindow(text.toString());
+                        new TextAreaWindow(text);
                     } else {
                         TextAreaWindow.TextAreaWindowActionListener textAreaWindowActionListener = new TextAreaWindow.TextAreaWindowActionListener() {
                             @Override
@@ -255,6 +266,14 @@ public class PromptViewer extends JPanel {
                             editor.getMarkupModel().removeAllHighlighters();
                             editor.getMarkupModel().addRangeHighlighter(0, editor.getDocument().getText().length(), HighlighterLayer.SELECTION - 1, new TextAttributes(null, highlightColor, null, EffectType.BOXED, Font.PLAIN), HighlighterTargetArea.EXACT_RANGE);
                         }
+                    } else if (component instanceof JTextPane) {
+                        JTextPane jTextPane = (JTextPane) component;
+                        jTextPane.getHighlighter().removeAllHighlights();
+                        try {
+                            jTextPane.getHighlighter().addHighlight(0, jTextPane.getText().length(), new DefaultHighlighter.DefaultHighlightPainter(highlightColor));
+                        } catch (BadLocationException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
                 promptHighlighterService.highlightPromptsWithoutRemoval(promptNodeDialog);
@@ -270,6 +289,9 @@ public class PromptViewer extends JPanel {
                         Editor editor = fixedHeightPanel.getEditor();
                         editor.getMarkupModel().removeAllHighlighters();
                     }
+                } else if (component instanceof JTextPane) {
+                    JTextPane jTextPane = (JTextPane) component;
+                    jTextPane.getHighlighter().removeAllHighlights();
                 }
             }
             promptHighlighterService.highlightPromptsWithoutRemoval(promptNodeDialog);

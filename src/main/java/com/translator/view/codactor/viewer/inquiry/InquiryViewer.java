@@ -5,13 +5,13 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.intellij.openapi.project.Project;
 import com.translator.CodactorInjector;
-import com.translator.model.codactor.inquiry.Inquiry;
-import com.translator.model.codactor.modification.RecordType;
+import com.translator.model.codactor.ai.chat.Inquiry;
+import com.translator.model.codactor.ai.modification.RecordType;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
-import com.translator.service.codactor.functions.InquiryChatListFunctionCallCompressorService;
-import com.translator.service.codactor.functions.InquiryFunctionCallProcessorService;
-import com.translator.service.codactor.inquiry.InquiryService;
-import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.service.codactor.ai.chat.functions.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.ai.chat.functions.InquiryFunctionCallProcessorService;
+import com.translator.service.codactor.ai.chat.inquiry.InquiryService;
+import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
@@ -21,6 +21,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 /**
  *
@@ -96,6 +98,20 @@ public class InquiryViewer extends JPanel {
             }
         });
         toolbar.add(newInquiryButton);
+        JCheckBox debugViewCheckBox = new JCheckBox("Debug View");
+        toolbar.add(debugViewCheckBox);
+        debugViewCheckBox.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                if(e.getStateChange() == ItemEvent.SELECTED) {//checkbox has been selected
+                    inquiryChatListViewer.setDebugView(true);
+                } else {//checkbox has been deselected
+                    inquiryChatListViewer.setDebugView(false);
+                    // Your code goes here...
+                };
+            }
+        });
+
+
 
         /*queueButton = new JButton("Queue");
         queueButton.setFocusable(false);

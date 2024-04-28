@@ -5,7 +5,7 @@
 package com.translator.dao.modification;
 
 import com.translator.model.codactor.api.translator.modification.*;
-import com.translator.model.codactor.modification.FileModificationSuggestionModificationRecord;
+import com.translator.model.codactor.ai.modification.FileModificationSuggestionModificationRecord;
 
 /**
  *

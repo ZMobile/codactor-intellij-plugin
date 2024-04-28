@@ -1,11 +1,11 @@
 package com.translator.service.codactor.transformer.modification;
 
 import com.google.inject.Inject;
-import com.translator.model.codactor.modification.FileModification;
-import com.translator.model.codactor.modification.FileModificationTracker;
-import com.translator.model.codactor.modification.data.FileModificationRangeData;
-import com.translator.service.codactor.editor.CodeSnippetExtractorService;
-import com.translator.service.codactor.editor.CodeSnippetIndexGetterService;
+import com.translator.model.codactor.ai.modification.FileModification;
+import com.translator.model.codactor.ai.modification.FileModificationTracker;
+import com.translator.model.codactor.ai.modification.data.FileModificationRangeData;
+import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.ide.editor.CodeSnippetIndexGetterService;
 
 import java.util.ArrayList;
 import java.util.List;

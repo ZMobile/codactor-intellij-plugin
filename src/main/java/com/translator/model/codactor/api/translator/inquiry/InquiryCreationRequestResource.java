@@ -1,9 +1,9 @@
 package com.translator.model.codactor.api.translator.inquiry;
 
 
-import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.inquiry.function.ChatGptFunction;
-import com.translator.model.codactor.modification.RecordType;
+import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
+import com.translator.model.codactor.ai.chat.function.GptFunction;
+import com.translator.model.codactor.ai.modification.RecordType;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ public class InquiryCreationRequestResource {
         private boolean azure;
         private String azureResource;
         private String azureDeployment;
-        private List<ChatGptFunction> functions;
+        private List<GptFunction> functions;
         private List<HistoricalContextObjectHolder> priorContext;
         private String systemMessage;
 
@@ -74,7 +74,7 @@ public class InquiryCreationRequestResource {
             return this;
         }
 
-        public Builder withFunctions(List<ChatGptFunction> functions) {
+        public Builder withFunctions(List<GptFunction> functions) {
             this.functions = functions;
             return this;
         }
@@ -104,7 +104,7 @@ public class InquiryCreationRequestResource {
     private boolean azure;
     private String azureResource;
     private String azureDeployment;
-    private List<ChatGptFunction> functions;
+    private List<GptFunction> functions;
     private List<HistoricalContextObjectHolder> priorContext;
     private String systemMessage;
 
@@ -118,7 +118,7 @@ public class InquiryCreationRequestResource {
                                           boolean azure,
                                           String azureResource,
                                           String azureDeployment,
-                                          List<ChatGptFunction> functions,
+                                          List<GptFunction> functions,
                                           List<HistoricalContextObjectHolder> priorContext,
                                           String systemMessage) {
         this.subjectRecordId = subjectRecordId;
@@ -192,11 +192,11 @@ public class InquiryCreationRequestResource {
         this.model = model;
     }
 
-    public List<ChatGptFunction> getFunctions() {
+    public List<GptFunction> getFunctions() {
         return functions;
     }
 
-    public void setFunctions(List<ChatGptFunction> functions) {
+    public void setFunctions(List<GptFunction> functions) {
         this.functions = functions;
     }
 

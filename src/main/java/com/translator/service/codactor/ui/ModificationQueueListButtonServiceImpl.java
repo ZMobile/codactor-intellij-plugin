@@ -1,18 +1,18 @@
 package com.translator.service.codactor.ui;
 
-import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
 
 public class ModificationQueueListButtonServiceImpl implements ModificationQueueListButtonService {
-    private FileModificationTrackerService fileModificationTrackerService;
+    private FileModificationManagementService fileModificationManagementService;
     private JToggleButton modificationQueueListButton;
     private Color defaultColor;
 
     @Inject
-    public ModificationQueueListButtonServiceImpl(FileModificationTrackerService fileModificationTrackerService) {
+    public ModificationQueueListButtonServiceImpl(FileModificationManagementService fileModificationManagementService) {
         //this.fileModificationTrackerService = fileModificationTrackerService;
     }
 

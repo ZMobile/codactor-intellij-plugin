@@ -1,7 +1,7 @@
 package com.translator.service.codactor.transformer;
 
-import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.history.data.HistoricalObjectDataHolder;
+import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
+import com.translator.model.codactor.ai.history.data.HistoricalObjectDataHolder;
 
 import java.util.ArrayList;
 import java.util.List;

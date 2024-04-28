@@ -28,7 +28,7 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="com.translator.CodactorInjector"/>
-        <projectService serviceImplementation="com.translator.listener.ProjectManagerListenerImpl"/>
+        <projectService serviceImplementation="com.translator.io.listener.ProjectManagerListenerImpl"/>
         <toolWindow
                 id="Codactor"
                 anchor="bottom"
@@ -44,7 +44,7 @@
                 anchor="right"
                 icon="/META-INF/toolWindowIconDark.svg"
                 factoryClass="com.translator.view.codactor.factory.InquiryToolWindowFactory"/>
-        <postStartupActivity implementation="com.translator.listener.MyStartupActivity"/>
+        <postStartupActivity implementation="com.translator.io.activity.MyStartupActivity"/>
     </extensions>
     <actions>
         <action id="CustomCreateMultiFile"

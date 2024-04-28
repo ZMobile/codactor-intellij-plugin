@@ -1,8 +1,8 @@
 package com.translator.view.codactor.listener;
 
-import com.translator.model.codactor.modification.FileModification;
-import com.translator.model.codactor.modification.FileModificationSuggestionModification;
-import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
+import com.translator.model.codactor.ai.modification.FileModification;
+import com.translator.model.codactor.ai.modification.FileModificationSuggestionModification;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -14,19 +14,19 @@ public class UneditableSegmentListener implements UndoableEditListener {
     private String fileModificationId;
     private int previousStartIndex;
     private int previousEndIndex;
-    private FileModificationTrackerService fileModificationTrackerService;
+    private FileModificationManagementService fileModificationManagementService;
     private boolean modificationSuggestionModification;
 
-    public UneditableSegmentListener(String fileModificationId, FileModificationTrackerService fileModificationTrackerService, boolean modificationSuggestionModification) {
+    public UneditableSegmentListener(String fileModificationId, FileModificationManagementService fileModificationManagementService, boolean modificationSuggestionModification) {
         this.fileModificationId = fileModificationId;
-        this.fileModificationTrackerService = fileModificationTrackerService;
+        this.fileModificationManagementService = fileModificationManagementService;
         this.modificationSuggestionModification = modificationSuggestionModification;
         if (modificationSuggestionModification) {
-            FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationTrackerService.getModificationSuggestionModification(fileModificationId);
+            FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationManagementService.getModificationSuggestionModification(fileModificationId);
             previousStartIndex = fileModificationSuggestionModification.getRangeMarker().getStartOffset();
             previousEndIndex = fileModificationSuggestionModification.getRangeMarker().getEndOffset();
         } else {
-            FileModification fileModification = fileModificationTrackerService.getModification(fileModificationId);
+            FileModification fileModification = fileModificationManagementService.getModification(fileModificationId);
             previousStartIndex = fileModification.getRangeMarker().getStartOffset();
             previousEndIndex = fileModification.getRangeMarker().getEndOffset();
         }
@@ -42,11 +42,11 @@ public class UneditableSegmentListener implements UndoableEditListener {
         int startIndex;
         int endIndex;
         if (modificationSuggestionModification) {
-            FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationTrackerService.getModificationSuggestionModification(fileModificationId);
+            FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationManagementService.getModificationSuggestionModification(fileModificationId);
             startIndex = fileModificationSuggestionModification.getRangeMarker().getStartOffset();
             endIndex = fileModificationSuggestionModification.getRangeMarker().getEndOffset();
             } else {
-            FileModification fileModification = fileModificationTrackerService.getModification(fileModificationId);
+            FileModification fileModification = fileModificationManagementService.getModification(fileModificationId);
             startIndex = fileModification.getRangeMarker().getStartOffset();
             endIndex = fileModification.getRangeMarker().getEndOffset();
         }

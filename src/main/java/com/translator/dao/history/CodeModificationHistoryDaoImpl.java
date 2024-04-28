@@ -3,7 +3,7 @@ package com.translator.dao.history;
 import com.google.gson.Gson;
 import com.translator.dao.firebase.FirebaseTokenService;
 import com.translator.model.codactor.api.translator.history.DesktopCodeModificationHistoryResponseResource;
-import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
+import com.translator.model.codactor.ai.history.data.HistoricalFileModificationDataHolder;
 import org.apache.commons.io.IOUtils;
 
 import javax.inject.Inject;

@@ -2,8 +2,7 @@ package com.translator.service.codactor.ui;
 
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.ui.ComboBox;
-import com.translator.service.codactor.editor.EditorService;
-import lombok.Getter;
+import com.translator.service.codactor.ide.editor.EditorService;
 
 import javax.inject.Inject;
 

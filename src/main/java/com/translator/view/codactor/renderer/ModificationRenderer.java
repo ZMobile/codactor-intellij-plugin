@@ -2,12 +2,12 @@ package com.translator.view.codactor.renderer;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
-import com.translator.model.codactor.modification.FileModification;
-import com.translator.model.codactor.modification.FileModificationSuggestionModification;
-import com.translator.model.codactor.modification.MultiFileModification;
-import com.translator.model.codactor.modification.data.FileModificationDataHolder;
-import com.translator.model.codactor.modification.data.ModificationObjectType;
-import com.translator.service.codactor.file.FileReaderService;
+import com.translator.model.codactor.ai.modification.FileModification;
+import com.translator.model.codactor.ai.modification.FileModificationSuggestionModification;
+import com.translator.model.codactor.ai.modification.MultiFileModification;
+import com.translator.model.codactor.ai.modification.data.FileModificationDataHolder;
+import com.translator.model.codactor.ai.modification.data.ModificationObjectType;
+import com.translator.service.codactor.ide.file.FileReaderService;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
 

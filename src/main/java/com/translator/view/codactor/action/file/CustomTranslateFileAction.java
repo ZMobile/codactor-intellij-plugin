@@ -7,7 +7,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.CodactorInjector;
-import com.translator.service.codactor.context.PromptContextService;
+import com.translator.service.codactor.ai.chat.context.PromptContextService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.view.codactor.dialog.FileTranslateDialog;
 import com.translator.view.codactor.factory.dialog.FileTranslateDialogFactory;

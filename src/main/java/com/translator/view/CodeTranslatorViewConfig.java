@@ -9,27 +9,29 @@ import com.intellij.openapi.project.Project;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.CodeTranslatorServiceConfig;
-import com.translator.service.codactor.editor.CodeHighlighterService;
-import com.translator.service.codactor.editor.CodeSnippetExtractorService;
-import com.translator.service.codactor.editor.psi.FindImplementationsService;
-import com.translator.service.codactor.editor.psi.FindUsagesService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.ide.editor.CodeHighlighterService;
+import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.ide.editor.psi.FindImplementationsService;
+import com.translator.service.codactor.ide.editor.psi.FindUsagesService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
-import com.translator.service.codactor.file.FileOpenerService;
-import com.translator.service.codactor.file.FileReaderService;
-import com.translator.service.codactor.file.SelectedFileFetcherService;
-import com.translator.service.codactor.functions.InquiryChatListFunctionCallCompressorService;
-import com.translator.service.codactor.functions.InquiryFunctionCallProcessorService;
-import com.translator.service.codactor.inquiry.InquiryService;
-import com.translator.service.codactor.modification.CodeModificationService;
-import com.translator.service.codactor.modification.FileModificationRestarterService;
-import com.translator.service.codactor.modification.FileModificationSuggestionDiffViewerService;
-import com.translator.service.codactor.modification.tracking.FileModificationTrackerService;
-import com.translator.service.codactor.openai.OpenAiModelService;
-import com.translator.service.codactor.task.BackgroundTaskMapperService;
+import com.translator.service.codactor.ide.file.FileOpenerService;
+import com.translator.service.codactor.ide.file.FileReaderService;
+import com.translator.service.codactor.ide.file.SelectedFileFetcherService;
+import com.translator.service.codactor.ai.chat.functions.InquiryChatListFunctionCallCompressorService;
+import com.translator.service.codactor.ai.chat.functions.InquiryFunctionCallProcessorService;
+import com.translator.service.codactor.ai.chat.inquiry.InquiryService;
+import com.translator.service.codactor.ai.modification.AiCodeModificationService;
+import com.translator.service.codactor.ai.modification.AiFileModificationRestarterService;
+import com.translator.service.codactor.ai.modification.diff.AiFileModificationSuggestionDiffViewerService;
+import com.translator.service.codactor.ai.openai.OpenAiModelService;
+import com.translator.service.codactor.io.BackgroundTaskMapperService;
 import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.console.CodactorConsole;
+import com.translator.view.codactor.dialog.modification.ProvisionalModificationCustomizerDialogManager;
 import com.translator.view.codactor.factory.InquiryViewerFactory;
 import com.translator.view.codactor.factory.dialog.*;
 import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
@@ -79,11 +81,11 @@ public class CodeTranslatorViewConfig extends AbstractModule {
     @Singleton
     @Provides
     public ProvisionalModificationViewer codeSnippetListViewer(CodactorToolWindowService codactorToolWindowService,
-                                                               FileModificationTrackerService fileModificationTrackerService,
+                                                               FileModificationManagementService fileModificationManagementService,
                                                                FileOpenerService fileOpenerService,
-                                                               FileModificationSuggestionDiffViewerService fileModificationSuggestionDiffViewerService,
+                                                               AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService,
                                                                ProvisionalModificationCustomizerDialogFactory provisionalModificationCustomizerDialogFactory) {
-        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationTrackerService, fileOpenerService, fileModificationSuggestionDiffViewerService, provisionalModificationCustomizerDialogFactory);
+        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationManagementService, fileOpenerService, aiFileModificationSuggestionDiffViewerService, provisionalModificationCustomizerDialogFactory);
     }
 
     @Singleton
@@ -125,11 +127,11 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                                            CodactorToolWindowService codactorToolWindowService,
                                                            FileReaderService fileReaderService,
                                                            FileOpenerService fileOpenerService,
-                                                           FileModificationTrackerService fileModificationTrackerService,
-                                                           FileModificationRestarterService fileModificationRestarterService,
+                                                           FileModificationManagementService fileModificationManagementService,
+                                                           AiFileModificationRestarterService aiFileModificationRestarterService,
                                                            FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                                            BackgroundTaskMapperService backgroundTaskMapperService) {
-        return new ModificationQueueViewer(project, provisionalModificationViewer, codactorToolWindowService, fileReaderService, fileOpenerService, fileModificationTrackerService, fileModificationRestarterService, fileModificationErrorDialogFactory, backgroundTaskMapperService);
+        return new ModificationQueueViewer(project, provisionalModificationViewer, codactorToolWindowService, fileReaderService, fileOpenerService, fileModificationManagementService, aiFileModificationRestarterService, fileModificationErrorDialogFactory, backgroundTaskMapperService);
     }
 
     @Singleton
@@ -142,7 +144,7 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            InquiryService inquiryService,
                                            OpenAiModelService openAiModelService,
                                            ModificationTypeComboBoxService modificationTypeComboBoxService,
-                                           CodeModificationService codeModificationService,
+                                           AiCodeModificationService aiCodeModificationService,
                                            Gson gson,
                                            FindImplementationsService findImplementationsService,
                                            FindUsagesService findUsagesService,
@@ -150,8 +152,16 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
-                                           InquiryViewerFactory inquiryViewerFactory) {
-        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, modificationTypeComboBoxService, codeModificationService, gson, findImplementationsService, findUsagesService, codeHighlighterService, codactorUmlBuilderApplication, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory);
+                                           InquiryViewerFactory inquiryViewerFactory,
+                                           InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService) {
+        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, modificationTypeComboBoxService, aiCodeModificationService, gson, findImplementationsService, findUsagesService, codeHighlighterService, codactorUmlBuilderApplication, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory, inquiryFunctionCallProcessorService);
+    }
+
+    @Singleton
+    @Provides
+    public ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager(ProvisionalModificationCustomizerDialogFactory provisionalModificationCustomizerDialogFactory,
+                                                                                                         FileModificationTrackerService fileModificationTrackerService) {
+        return new ProvisionalModificationCustomizerDialogManager(provisionalModificationCustomizerDialogFactory, fileModificationTrackerService);
     }
 
     @Singleton

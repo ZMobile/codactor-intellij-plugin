@@ -1,6 +1,6 @@
 package com.translator.model.uml.draw.node;
 
-import com.translator.model.codactor.inquiry.Inquiry;
+import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.uml.prompt.Prompt;
 
 import java.util.ArrayList;

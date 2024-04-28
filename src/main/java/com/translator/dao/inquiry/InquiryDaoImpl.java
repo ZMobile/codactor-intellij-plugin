@@ -6,11 +6,11 @@ import com.translator.model.codactor.api.translator.inquiry.GeneralInquiryCreati
 import com.translator.model.codactor.api.translator.inquiry.InquiryContinuationRequestResource;
 import com.translator.model.codactor.api.translator.inquiry.InquiryCreationRequestResource;
 import com.translator.model.codactor.api.translator.inquiry.InquiryListResponseResource;
-import com.translator.model.codactor.history.HistoricalContextObjectHolder;
-import com.translator.model.codactor.inquiry.Inquiry;
-import com.translator.model.codactor.inquiry.function.ChatGptFunction;
-import com.translator.model.codactor.inquiry.function.FunctionCallResponseRequestResource;
-import com.translator.model.codactor.modification.RecordType;
+import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
+import com.translator.model.codactor.ai.chat.Inquiry;
+import com.translator.model.codactor.ai.chat.function.GptFunction;
+import com.translator.model.codactor.ai.chat.function.FunctionCallResponseRequestResource;
+import com.translator.model.codactor.ai.modification.RecordType;
 import org.apache.commons.io.IOUtils;
 
 import javax.inject.Inject;
@@ -135,7 +135,7 @@ public class InquiryDaoImpl implements InquiryDao {
     }
 
     @Override
-    public Inquiry createInquiry(String subjectRecordId, RecordType recordType, String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> chatGptFunctions, String systemMessage) {
+    public Inquiry createInquiry(String subjectRecordId, RecordType recordType, String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<HistoricalContextObjectHolder> priorContext, List<GptFunction> gptFunctions, String systemMessage) {
         InquiryCreationRequestResource inquiryCreationRequestResource = new InquiryCreationRequestResource.Builder()
                 .withSubjectRecordId(subjectRecordId)
                 .withRecordType(recordType)
@@ -146,7 +146,7 @@ public class InquiryDaoImpl implements InquiryDao {
                 .withAzureResource(azureResource)
                 .withAzureDeployment(azureDeployment)
                 .withPriorContext(priorContext)
-                .withFunctions(chatGptFunctions)
+                .withFunctions(gptFunctions)
                 .withSystemMessage(systemMessage)
                 .build();
         if (inquiryCreationRequestResource.getPriorContext() == null) {
@@ -221,7 +221,7 @@ public class InquiryDaoImpl implements InquiryDao {
     }
 
     @Override
-    public Inquiry createInquiry(String filePath, String code, String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions, String systemMessage) {
+    public Inquiry createInquiry(String filePath, String code, String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<HistoricalContextObjectHolder> priorContext, List<GptFunction> functions, String systemMessage) {
         InquiryCreationRequestResource inquiryCreationRequestResource = new InquiryCreationRequestResource.Builder()
                 .withFilePath(filePath)
                 .withCode(code)
@@ -273,7 +273,7 @@ public class InquiryDaoImpl implements InquiryDao {
     }
 
     @Override
-    public Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<HistoricalContextObjectHolder> priorContext, List<ChatGptFunction> functions, String systemMessage) {
+    public Inquiry createGeneralInquiry(String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<HistoricalContextObjectHolder> priorContext, List<GptFunction> functions, String systemMessage) {
         GeneralInquiryCreationRequestResource inquiryCreationRequestResource = new GeneralInquiryCreationRequestResource.Builder()
                 .withQuestion(question)
                 .withOpenAiApiKey(openAiApiKey)
@@ -317,7 +317,7 @@ public class InquiryDaoImpl implements InquiryDao {
     }
 
     @Override
-    public Inquiry continueInquiry(String previousInquiryChatId, String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<ChatGptFunction> functions) {
+    public Inquiry continueInquiry(String previousInquiryChatId, String question, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<GptFunction> functions) {
         InquiryContinuationRequestResource inquiryContinuationRequestResource = new InquiryContinuationRequestResource.Builder()
                 .withPreviousInquiryChatId(previousInquiryChatId)
                 .withQuestion(question)
@@ -356,7 +356,7 @@ public class InquiryDaoImpl implements InquiryDao {
     }
 
     @Override
-    public Inquiry respondToFunctionCall(String previousInquiryChatId, String functionName, String content, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<ChatGptFunction> functions) {
+    public Inquiry respondToFunctionCall(String previousInquiryChatId, String functionName, String content, String openAiApiKey, String model, boolean azure, String azureResource, String azureDeployment, List<GptFunction> functions) {
         System.out.println("Early testo function name: " + functionName);
         FunctionCallResponseRequestResource functionCallResponseRequestResource = new FunctionCallResponseRequestResource.Builder()
                 .withPreviousInquiryChatId(previousInquiryChatId)

@@ -1,7 +1,7 @@
 package com.translator.view.codactor.dialog;
 
 import com.intellij.ui.components.JBTextArea;
-import com.translator.service.codactor.connection.DefaultConnectionService;
+import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 
 import javax.swing.*;
 import java.awt.*;

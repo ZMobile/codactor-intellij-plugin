@@ -8,10 +8,10 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.translator.service.codactor.context.PromptContextService;
+import com.translator.service.codactor.ai.chat.context.PromptContextService;
 import com.translator.service.codactor.factory.CodeFileGeneratorServiceFactory;
-import com.translator.service.codactor.file.CodeFileGeneratorService;
-import com.translator.service.codactor.openai.OpenAiModelService;
+import com.translator.service.codactor.ide.file.CodeFileGeneratorService;
+import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
 import javax.swing.*;

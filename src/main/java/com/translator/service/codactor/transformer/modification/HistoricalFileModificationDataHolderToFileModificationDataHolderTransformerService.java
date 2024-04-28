@@ -1,7 +1,7 @@
 package com.translator.service.codactor.transformer.modification;
 
-import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
-import com.translator.model.codactor.modification.data.FileModificationDataHolder;
+import com.translator.model.codactor.ai.history.data.HistoricalFileModificationDataHolder;
+import com.translator.model.codactor.ai.modification.data.FileModificationDataHolder;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
 package com.translator.model.codactor.api.translator.history;
 
-import com.translator.model.codactor.history.data.HistoricalFileModificationDataHolder;
+import com.translator.model.codactor.ai.history.data.HistoricalFileModificationDataHolder;
 
 import java.util.List;
 

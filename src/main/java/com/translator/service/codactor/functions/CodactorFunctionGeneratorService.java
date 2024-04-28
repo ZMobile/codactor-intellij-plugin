@@ -1,9 +1,0 @@
-package com.translator.service.codactor.functions;
-
-import com.translator.model.codactor.inquiry.function.ChatGptFunction;
-
-import java.util.List;
-
-public interface CodactorFunctionGeneratorService {
-    List<ChatGptFunction> generateCodactorFunctions();
-}
