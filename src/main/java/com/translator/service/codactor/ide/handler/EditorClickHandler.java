@@ -5,7 +5,6 @@ import com.intellij.openapi.editor.event.EditorMouseEvent;
 import com.intellij.openapi.editor.event.EditorMouseListener;
 import com.translator.model.codactor.ai.modification.FileModification;
 import com.translator.model.codactor.ai.modification.FileModificationTracker;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.viewer.modification.ProvisionalModificationViewer;
 

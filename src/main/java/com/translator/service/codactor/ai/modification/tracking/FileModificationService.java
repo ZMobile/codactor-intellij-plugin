@@ -28,4 +28,6 @@ public interface FileModificationService {
     void undoReadyFileModification(FileModification fileModification);
 
     void errorFileModification(FileModification fileModification);
+
+    void retryFileModification(FileModification fileModification);
 }

@@ -25,7 +25,6 @@ import com.translator.model.codactor.ai.chat.InquiryChat;
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.model.codactor.ai.modification.RecordType;
 import com.translator.model.codactor.thread.BooleanWaiter;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ai.chat.inquiry.InquirySystemMessageGeneratorService;

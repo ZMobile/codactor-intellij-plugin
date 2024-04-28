@@ -14,8 +14,6 @@ import com.translator.service.codactor.ai.modification.diff.AiFileModificationSu
 import com.translator.service.codactor.ai.modification.multi.MassAiCodeModificationService;
 import com.translator.service.codactor.ai.modification.multi.MassAiCodeModificationServiceImpl;
 import com.translator.service.codactor.ai.modification.tracking.*;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementServiceImpl;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionServiceImpl;
 import com.translator.service.codactor.ai.openai.connection.CodactorConnectionService;

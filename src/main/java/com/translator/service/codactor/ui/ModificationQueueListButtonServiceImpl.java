@@ -1,7 +1,5 @@
 package com.translator.service.codactor.ui;
 
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
-
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;

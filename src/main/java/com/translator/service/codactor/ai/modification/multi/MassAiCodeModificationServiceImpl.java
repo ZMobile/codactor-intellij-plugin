@@ -9,7 +9,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.service.codactor.ai.modification.AiCodeModificationService;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 
 import javax.inject.Inject;
 import java.util.List;

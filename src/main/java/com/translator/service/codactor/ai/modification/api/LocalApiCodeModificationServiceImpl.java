@@ -2,7 +2,6 @@ package com.translator.service.codactor.ai.modification.api;
 
 import com.intellij.openapi.project.Project;
 import com.translator.dao.firebase.FirebaseTokenService;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;

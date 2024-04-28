@@ -6,7 +6,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.model.codactor.ai.modification.FileModificationTracker;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ide.editor.EditorExtractorService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 

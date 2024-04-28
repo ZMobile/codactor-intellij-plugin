@@ -22,9 +22,7 @@ import com.translator.model.codactor.ai.modification.FileModificationSuggestion;
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.service.codactor.ai.chat.context.PromptContextService;
 import com.translator.service.codactor.ai.modification.AiCodeModificationService;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerServiceImpl;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.ai.chat.inquiry.InquiryService;
@@ -56,7 +54,6 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
     private AiCodeModificationService aiCodeModificationService;
     private InquiryService inquiryService;
     private PromptContextService promptContextService;
-    private FileModificationManagementService fileModificationManagementService;
     private FileModificationTrackerService fileModificationTrackerService;
     private OpenAiModelService openAiModelService;
     private ModificationTypeComboBoxService modificationTypeComboBoxService;
@@ -90,7 +87,6 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.codactorToolWindowService = codactorToolWindowService;
         this.inquiryService = inquiryService;
-        this.fileModificationManagementService = fileModificationManagementService;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.openAiModelService = openAiModelService;
         this.modificationTypeComboBoxService = modificationTypeComboBoxService;
@@ -107,7 +103,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
         } else {
             extension = fileModificationSuggestion.getFilePath().substring(fileModificationSuggestion.getFilePath().lastIndexOf(".") + 1);
         }
-        FileModification fileModification = fileModificationManagementService.getModification(fileModificationSuggestion.getModificationId());
+        FileModification fileModification = fileModificationTrackerService.getModification(fileModificationSuggestion.getModificationId());
         FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(extension);
         ApplicationManager.getApplication().invokeAndWait(() -> {
             Document document = editorFactory.createDocument(fileModification.getBeforeText());
@@ -167,16 +163,16 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
         JButton acceptSolutionButton = new JButton("Accept Solution");
         acceptSolutionButton.addActionListener(e -> {
             if (selectedEditor == suggestedSolution) {
-                fileModificationManagementService.implementModificationUpdate(fileModificationSuggestion.getModificationId(), suggestedSolution.getDocument().getText(), false);
+                fileModificationTrackerService.implementModification(fileModificationSuggestion.getModificationId(), suggestedSolution.getDocument().getText(), false);
             } else {
-                fileModificationManagementService.removeModification(fileModificationSuggestion.getModificationId());
+                fileModificationTrackerService.removeModification(fileModificationSuggestion.getModificationId());
             }
             codactorToolWindowService.closeModificationQueueViewerToolWindow();
             dispose();
         });
         JButton rejectAllChangesButton = new JButton("Reject All Changes");
         rejectAllChangesButton.addActionListener(e -> {
-            fileModificationManagementService.removeModification(fileModificationSuggestion.getModificationId());
+            fileModificationTrackerService.removeModification(fileModificationSuggestion.getModificationId());
             codactorToolWindowService.closeModificationQueueViewerToolWindow();
             dispose();
         });

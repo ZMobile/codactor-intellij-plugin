@@ -8,11 +8,12 @@ import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.translator.model.codactor.ai.modification.FileModification;
 import com.translator.model.codactor.ai.modification.FileModificationSuggestionModification;
-import com.translator.model.codactor.ai.modification.FileModificationTracker;
 import com.translator.model.codactor.ai.modification.data.FileModificationDataHolder;
 import com.translator.model.codactor.ai.modification.data.ModificationObjectType;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
+import com.translator.service.codactor.ai.modification.queued.QueuedFileModificationObjectHolderQueryService;
 import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.multi.MultiFileModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.suggestion.modification.FileModificationSuggestionModificationTrackerService;
 import com.translator.service.codactor.ide.file.FileOpenerService;
 import com.translator.service.codactor.ide.file.FileReaderService;
 import com.translator.service.codactor.ai.modification.AiFileModificationRestarterService;
@@ -24,8 +25,6 @@ import com.translator.view.codactor.renderer.ModificationRenderer;
 import com.translator.view.codactor.renderer.SeparatorListCellRenderer;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -38,8 +37,10 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
     private JBPopupMenu jBPopupMenu;
     private ProvisionalModificationViewer provisionalModificationViewer;
     private CodactorToolWindowService codactorToolWindowService;
-    private FileModificationManagementService fileModificationManagementService;
+    private QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService;
     private FileModificationTrackerService fileModificationTrackerService;
+    private FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService;
+    private MultiFileModificationTrackerService multiFileModificationTrackerService;
     private AiFileModificationRestarterService aiFileModificationRestarterService;
     private FileReaderService fileReaderService;
     private FileOpenerService fileOpenerService;
@@ -53,7 +54,10 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                                    CodactorToolWindowService codactorToolWindowService,
                                    FileReaderService fileReaderService,
                                    FileOpenerService fileOpenerService,
-                                   FileModificationManagementService fileModificationManagementService,
+                                   FileModificationTrackerService fileModificationTrackerService,
+                                   FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService,
+                                   MultiFileModificationTrackerService multiFileModificationTrackerService,
+                                   QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService,
                                    AiFileModificationRestarterService aiFileModificationRestarterService,
                                    FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                    BackgroundTaskMapperService backgroundTaskMapperService) {
@@ -62,8 +66,13 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
         this.codactorToolWindowService = codactorToolWindowService;
         this.fileReaderService = fileReaderService;
         this.fileOpenerService = fileOpenerService;
-        this.fileModificationManagementService = fileModificationManagementService;
-
+        this.fileModificationTrackerService = fileModificationTrackerService;
+        this.fileModificationSuggestionModificationTrackerService = fileModificationSuggestionModificationTrackerService;
+        this.multiFileModificationTrackerService = multiFileModificationTrackerService;
+        this.queuedFileModificationObjectHolderQueryService = queuedFileModificationObjectHolderQueryService;
+        this.fileModificationTrackerService.addModificationUpdateListener(fileModification -> updateModificationList(queuedFileModificationObjectHolderQueryService.getQueuedFileModificationObjectHolders()));
+        this.fileModificationSuggestionModificationTrackerService.addModificationSuggestionModificationListener(fileModificationSuggestionModification -> updateModificationList(queuedFileModificationObjectHolderQueryService.getQueuedFileModificationObjectHolders()));
+        this.multiFileModificationTrackerService.addMultiFileModificationListener(multiFileModification -> updateModificationList(queuedFileModificationObjectHolderQueryService.getQueuedFileModificationObjectHolders()));
         this.aiFileModificationRestarterService = aiFileModificationRestarterService;
         this.fileModificationErrorDialogFactory = fileModificationErrorDialogFactory;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
@@ -143,29 +152,14 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                         if (!fileModification.isDone()) {
                             if (fileModification.isError()) {
                                 showRetry = true;
-                                retryItem.addActionListener(new ActionListener() {
-                                    @Override
-                                    public void actionPerformed(ActionEvent a) {
-                                        aiFileModificationRestarterService.restartFileModification(fileModification);
-                                    }
-                                });
+                                retryItem.addActionListener(a -> aiFileModificationRestarterService.restartFileModification(fileModification));
                             } else {
                                 showPause = true;
-                                pauseItem.addActionListener(new ActionListener() {
-                                    @Override
-                                    public void actionPerformed(ActionEvent a) {
-                                        fileModificationManagementService.errorFileModification(fileModification.getId());
-                                    }
-                                });
+                                pauseItem.addActionListener(a -> fileModificationTrackerService.errorFileModification(fileModification.getId()));
                             }
                         }
                         showRemove = true;
-                        removeItem.addActionListener(new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent a) {
-                                fileModificationManagementService.removeModification(fileModification.getId());
-                            }
-                        });
+                        removeItem.addActionListener(a -> fileModificationTrackerService.removeModification(fileModification.getId()));
                     } else if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION_SUGGESTION_MODIFICATION) {
                         FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationDataHolder.getFileModificationSuggestionModification();
                         if (fileModificationSuggestionModification.isError()) {
@@ -196,7 +190,7 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
         });
     }
 
-    public void updateModificationList(List<FileModificationDataHolder> fileModificationDataHolders) {
+    private void updateModificationList(List<FileModificationDataHolder> fileModificationDataHolders) {
         DefaultListModel<FileModificationDataHolder> model = new DefaultListModel<>();
         for (FileModificationDataHolder fileModificationDataHolder : fileModificationDataHolders) {
             model.addElement(fileModificationDataHolder);

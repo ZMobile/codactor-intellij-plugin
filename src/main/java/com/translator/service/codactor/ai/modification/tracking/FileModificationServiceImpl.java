@@ -126,4 +126,9 @@ public class FileModificationServiceImpl implements FileModificationService {
         fileModification.setError(true);
         codeHighlighterService.highlightTextArea(fileModification);
     }
+
+    @Override
+    public void retryFileModification(FileModification fileModification) {
+        fileModification.setError(false);
+    }
 }

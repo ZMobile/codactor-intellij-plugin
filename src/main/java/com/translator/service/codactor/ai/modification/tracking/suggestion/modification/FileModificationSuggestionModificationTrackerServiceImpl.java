@@ -3,25 +3,22 @@ package com.translator.service.codactor.ai.modification.tracking.suggestion.modi
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.RangeMarker;
-import com.translator.model.codactor.ai.modification.FileModificationSuggestion;
-import com.translator.model.codactor.ai.modification.FileModificationSuggestionModification;
-import com.translator.model.codactor.ai.modification.FileModificationSuggestionModificationTracker;
-import com.translator.model.codactor.ai.modification.ModificationType;
+import com.translator.model.codactor.ai.modification.*;
 
 import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import javax.swing.*;
+import java.util.*;
 
 public class FileModificationSuggestionModificationTrackerServiceImpl implements FileModificationSuggestionModificationTrackerService {
-    private Map<String, FileModificationSuggestionModificationTracker> activeModificationSuggestionModifications;
+    private final Map<String, FileModificationSuggestionModificationTracker> activeModificationSuggestionModifications;
     private final FileModificationSuggestionModificationService fileModificationSuggestionModificationService;
+    private final List<FileModificationSuggestionModificationListener> modificationSuggestionModificationUpdateListeners;
 
     @Inject
     public FileModificationSuggestionModificationTrackerServiceImpl(FileModificationSuggestionModificationService fileModificationSuggestionModificationService) {
         this.activeModificationSuggestionModifications = new HashMap<>();
         this.fileModificationSuggestionModificationService = fileModificationSuggestionModificationService;
+        this.modificationSuggestionModificationUpdateListeners = new ArrayList<>();
     }
 
     @Override
@@ -36,6 +33,8 @@ public class FileModificationSuggestionModificationTrackerServiceImpl implements
         for (FileModificationSuggestionModification m : fileModificationSuggestionModificationTracker.getModifications()) {
             // Check if the proposed modification would overlap with any existing modifications in this tracker
             if (m.getEditor().equals(editor) && (startIndex <= m.getRangeMarker().getStartOffset() && endIndex >= m.getRangeMarker().getStartOffset()) || (startIndex <= m.getRangeMarker().getEndOffset() && endIndex >= m.getRangeMarker().getEndOffset())) {
+                JOptionPane.showMessageDialog(null, "Can't modify code that is already being modified", "Error",
+                        JOptionPane.ERROR_MESSAGE);
                 return "Error: Can't modify code that is already being modified. Your modification boundaries clash with modification id: " + m.getId() + " with code snippet: \n" + m.getBeforeText();
             }
         }
@@ -68,8 +67,18 @@ public class FileModificationSuggestionModificationTrackerServiceImpl implements
         return activeModificationSuggestionModifications;
     }
 
+    @Override
+    public List<FileModificationSuggestionModification> getAllFileModificationSuggestionModifications() {
+        List<FileModificationSuggestionModification> fileModificationSuggestionModifications = new ArrayList<>();
+        for (FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker : activeModificationSuggestionModifications.values()) {
+            fileModificationSuggestionModifications.addAll(fileModificationSuggestionModificationTracker.getModifications());
+        }
+        return fileModificationSuggestionModifications;
+    }
+
+    @Override
     public void implementModification(String modificationSuggestionModificationId, String modification) {
-        FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = getTrackerWithModificationSuggestionModification(modificationSuggestionModificationId);
+        FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = getTrackerWithModificationSuggestionModificationId(modificationSuggestionModificationId);
         if (fileModificationSuggestionModificationTracker == null) {
             return;
         }
@@ -78,23 +87,32 @@ public class FileModificationSuggestionModificationTrackerServiceImpl implements
         removeModificationSuggestionModification(modificationSuggestionModificationId);
     }
 
-    public FileModificationSuggestionModificationTracker getTrackerWithModificationSuggestionModification(String modificationSuggestionModificationId) {
-        return getActiveModificationSuggestionModifications().values().stream()
-                .filter(m -> m.hasModificationSuggestionModification(modificationSuggestionModificationId))
-                .findFirst()
-                .orElse(null);
-    }
-
-    public FileModificationSuggestionModificationTracker getWithModificationSuggestionModificationId(String modificationSuggestionModificationId) {
+    @Override
+    public FileModificationSuggestionModificationTracker getTrackerWithModificationSuggestionModificationId(String modificationSuggestionModificationId) {
         return activeModificationSuggestionModifications.values().stream()
                 .filter(m -> m.hasModificationSuggestionModification(modificationSuggestionModificationId))
                 .findFirst()
                 .orElse(null);
     }
 
+    @Override
     public boolean hasModificationSuggestionModification(String suggestionId, String modificationSuggestionModificationId) {
         FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = getActiveModificationSuggestionModifications().get(suggestionId);
         return fileModificationSuggestionModificationTracker.getModifications().stream()
                 .anyMatch(m -> m.getId().equals(modificationSuggestionModificationId));
+    }
+
+    @Override
+    public FileModificationSuggestionModification getModificationSuggestionModification(String modificationSuggestionModificationId) {
+        FileModificationSuggestionModificationTracker fileModificationSuggestionModificationTracker = getTrackerWithModificationSuggestionModificationId(modificationSuggestionModificationId);
+        if (fileModificationSuggestionModificationTracker == null) {
+            return null;
+        }
+        return fileModificationSuggestionModificationTracker.getModificationSuggestionModification(modificationSuggestionModificationId);
+    }
+
+    @Override
+    public void addModificationSuggestionModificationListener(FileModificationSuggestionModificationListener listener) {
+        modificationSuggestionModificationUpdateListeners.add(listener);
     }
 }

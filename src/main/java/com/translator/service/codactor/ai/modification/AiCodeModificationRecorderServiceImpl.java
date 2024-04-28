@@ -10,7 +10,6 @@ import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.ai.modification.*;
 import com.translator.model.codactor.io.CancellableRunnable;
 import com.translator.model.codactor.io.CustomBackgroundTask;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;

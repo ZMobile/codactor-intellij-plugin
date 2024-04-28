@@ -8,7 +8,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.translator.model.codactor.ai.modification.FileModification;
 import com.translator.model.codactor.ai.modification.FileModificationSuggestionModification;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.suggestion.modification.FileModificationSuggestionModificationTrackerService;
 
 import javax.inject.Inject;
 import java.util.HashMap;
@@ -16,23 +17,25 @@ import java.util.Map;
 
 public class GuardedBlockServiceImpl implements GuardedBlockService {
     private final Project project;
-    private final FileModificationManagementService fileModificationManagementService;
+    private final FileModificationTrackerService fileModificationTrackerService;
+    private final FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService;
     private final CodeSnippetExtractorService codeSnippetExtractorService;
     private final Map<String, RangeMarker> guardedBlocks;
 
     @Inject
     public GuardedBlockServiceImpl(Project project,
                                    CodeSnippetExtractorService codeSnippetExtractorService,
-                                   FileModificationManagementService fileModificationManagementService) {
+                                   FileModificationTrackerService fileModificationTrackerService,
+                                   FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService) {
         this.project = project;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
+        this.fileModificationSuggestionModificationTrackerService = fileModificationSuggestionModificationTrackerService;
         this.guardedBlocks = new HashMap<>();
     }
 
     public void addFileModificationGuardedBlock(String fileModificationId, int startOffset, int endOffset) {
-        System.out.println("This gets called 1");
-        FileModification fileModification = fileModificationManagementService.getModification(fileModificationId);
+        FileModification fileModification = fileModificationTrackerService.getModification(fileModificationId);
         String filePath = fileModification.getFilePath();
         ApplicationManager.getApplication().invokeLater(() -> {
         VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl("file://" + filePath);
@@ -52,22 +55,19 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
     }
 
     public void removeFileModificationGuardedBlock(String fileModificationId) {
-        System.out.println("This gets called 2");
         RangeMarker guardedBlock = guardedBlocks.get(fileModificationId);
         if (guardedBlock != null) {
             Document document = guardedBlock.getDocument();
-            System.out.println("This gets called 3");
             ApplicationManager.getApplication().invokeLater(() -> {
                         document.removeGuardedBlock(guardedBlock);
                         guardedBlocks.remove(fileModificationId);
-                        System.out.println("Guarded block disposed");
             });
             //uneditableSegmentListenerService.removeUneditableFileModificationSegmentListener(fileModificationId);
         }
     }
 
     public void addFileModificationSuggestionModificationGuardedBlock(String fileModificationSuggestionModificationId, int startOffset, int endOffset) {
-        FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationManagementService.getModificationSuggestionModification(fileModificationSuggestionModificationId);
+        FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationSuggestionModificationTrackerService.getModificationSuggestionModification(fileModificationSuggestionModificationId);
         ApplicationManager.getApplication().invokeLater(() -> {
                     Document document = fileModificationSuggestionModification.getEditor().getDocument();
                     RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);

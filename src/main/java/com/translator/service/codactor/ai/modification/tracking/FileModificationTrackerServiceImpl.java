@@ -12,14 +12,10 @@ import com.translator.service.codactor.ide.editor.GuardedBlockService;
 import com.translator.service.codactor.ide.handler.EditorClickHandlerService;
 
 import javax.inject.Inject;
+import javax.swing.*;
 import java.util.*;
 
 public class FileModificationTrackerServiceImpl implements FileModificationTrackerService {
-
-    public interface FileModificationListener {
-        void onModificationUpdate(FileModification fileModification);
-    }
-
     private final Project project;
     private final Map<String, FileModificationTracker> activeModificationFiles;
     private final FileModificationService fileModificationService;
@@ -64,6 +60,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             RangeMarker existingRangeMarker = m.getRangeMarker();
             if (existingRangeMarker != null && existingRangeMarker.isValid()) {
                 if ((startIndex <= existingRangeMarker.getStartOffset() && endIndex >= existingRangeMarker.getStartOffset()) || (startIndex <= existingRangeMarker.getEndOffset() && endIndex >= existingRangeMarker.getEndOffset())) {
+                    JOptionPane.showMessageDialog(null, "Can't modify code that is already being modified", "Error",
+                            JOptionPane.ERROR_MESSAGE);
                     return "Error: Can't modify code that is already being modified. Your modification boundaries clash with modification id: " + m.getId() + " with code snippet: \n" + m.getBeforeText() + "\n";
                 }
             }
@@ -206,6 +204,18 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             listener.onModificationUpdate(fileModification);
         }
         for (FileModificationListener listener : modificationErrorListeners) {
+            listener.onModificationUpdate(fileModification);
+        }
+    }
+
+    @Override
+    public void retryFileModification(String modificationId) {
+        FileModification fileModification = getModification(modificationId);
+        if (fileModification == null) {
+            return;
+        }
+        fileModificationService.retryFileModification(fileModification);
+        for (FileModificationListener listener : modificationUpdateListeners) {
             listener.onModificationUpdate(fileModification);
         }
     }

@@ -2,7 +2,6 @@ package com.translator.view.codactor.listener;
 
 import com.translator.model.codactor.ai.modification.FileModification;
 import com.translator.model.codactor.ai.modification.FileModificationSuggestionModification;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

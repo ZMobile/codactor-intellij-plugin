@@ -10,7 +10,6 @@ import com.intellij.ui.components.JBPanel;
 import com.translator.model.codactor.ai.modification.FileModification;
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.service.codactor.ai.modification.AiFileModificationRestarterService;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.view.codactor.settings.CodactorConfigurable;

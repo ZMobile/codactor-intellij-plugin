@@ -9,7 +9,6 @@ import com.translator.model.codactor.ai.modification.FileModificationSuggestion;
 import com.translator.model.codactor.ai.modification.FileModificationSuggestionModification;
 import com.translator.model.codactor.ai.modification.data.FileModificationDataHolder;
 import com.translator.model.codactor.ai.modification.data.ModificationObjectType;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.transformer.modification.HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService;
 
 import java.util.ArrayList;

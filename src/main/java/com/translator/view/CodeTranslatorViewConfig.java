@@ -9,7 +9,6 @@ import com.intellij.openapi.project.Project;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.CodeTranslatorServiceConfig;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;

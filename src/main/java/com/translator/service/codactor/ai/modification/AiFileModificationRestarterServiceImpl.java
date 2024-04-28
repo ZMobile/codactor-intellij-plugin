@@ -11,7 +11,6 @@ import com.translator.model.codactor.ai.modification.FileModificationSuggestionR
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.model.codactor.io.CancellableRunnable;
 import com.translator.model.codactor.io.CustomBackgroundTask;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 import com.translator.service.codactor.ai.openai.OpenAiModelService;

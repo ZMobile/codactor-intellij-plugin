@@ -19,7 +19,6 @@ import com.translator.model.codactor.ai.modification.data.FileModificationDataHo
 import com.translator.model.codactor.ai.modification.data.FileModificationDataReferenceHolder;
 import com.translator.model.codactor.ai.modification.data.FileModificationRangeData;
 import com.translator.service.codactor.ai.modification.AiCodeModificationService;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ide.directory.FileDirectoryStructureQueryService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ide.editor.CodeSnippetIndexGetterService;

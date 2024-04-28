@@ -11,7 +11,6 @@ import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.ai.modification.*;
 import com.translator.model.codactor.io.CancellableRunnable;
 import com.translator.model.codactor.io.CustomBackgroundTask;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
@@ -22,6 +21,7 @@ import com.translator.view.codactor.dialog.FileModificationErrorDialog;
 import com.translator.view.codactor.factory.dialog.FileModificationErrorDialogFactory;
 
 import javax.inject.Inject;
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -224,7 +224,11 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             }
         }
         FileModificationSuggestion fileModificationSuggestion = fileModificationManagementService.getModificationSuggestion(suggestionId);
-        String modificationId = fileModificationManagementService.addModificationSuggestionModification(editor, fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
+        String fileModificationSuggestionModificationId  = fileModificationManagementService.addModificationSuggestionModification(editor, fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
+        if (fileModificationSuggestionModificationId == null || fileModificationSuggestionModificationId.startsWith("Error")) {
+            JOptionPane.showMessageDialog(null, "Can't modify code that is already being modified", "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -235,24 +239,24 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), suggestionId, code, modification, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
             FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationDao.getModifiedCodeModification(desktopCodeModificationRequestResource);
             if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
-                fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
+                fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(fileModificationSuggestionModificationId);
                 fileModificationManagementService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
             } else {
                 if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), "", modificationType);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModificationSuggestionModificationId, fileModificationSuggestion.getFilePath(), "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), modificationType);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModificationSuggestionModificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), modificationType);
                     fileModificationErrorDialog.setVisible(true);
                 }
-                fileModificationManagementService.removeModificationSuggestionModification(modificationId);
+                fileModificationManagementService.removeModificationSuggestionModification(fileModificationSuggestionModificationId);
             }
-            backgroundTaskMapperService.removeTask(modificationId);
+            backgroundTaskMapperService.removeTask(fileModificationSuggestionModificationId);
         };
         Runnable cancelTask = () -> {};
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification Suggestion Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
-        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+        backgroundTaskMapperService.addTask(fileModificationSuggestionModificationId, backgroundTask);
     }
 
     @Override

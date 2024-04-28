@@ -8,7 +8,6 @@ import com.intellij.openapi.actionSystem.KeyboardShortcut;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManagerListener;
 import com.translator.CodactorInjector;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.handler.EditorClickHandlerService;
 import com.translator.service.codactor.ui.ModificationTypeComboBoxService;

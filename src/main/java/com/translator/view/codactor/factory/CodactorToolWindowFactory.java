@@ -7,7 +7,6 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.translator.CodactorInjector;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.console.CodactorConsole;
 import com.translator.view.codactor.viewer.modification.ModificationQueueViewer;

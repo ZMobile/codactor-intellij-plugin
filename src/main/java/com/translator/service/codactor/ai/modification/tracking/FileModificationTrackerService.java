@@ -10,6 +10,10 @@ import java.util.List;
 import java.util.Map;
 
 public interface FileModificationTrackerService {
+        interface FileModificationListener {
+                void onModificationUpdate(FileModification fileModification);
+        }
+
         String addModification(String filePath, String modification, int startIndex, int endIndex, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext);
 
         void removeModification(String modificationId);
@@ -28,14 +32,16 @@ public interface FileModificationTrackerService {
 
         void errorFileModification(String modificationId);
 
-        void addModificationUpdateListener(FileModificationTrackerServiceImpl.FileModificationListener listener);
+        void retryFileModification(String modificationId);
 
-        void addModificationImplementedListener(FileModificationTrackerServiceImpl.FileModificationListener listener);
+        void addModificationUpdateListener(FileModificationListener listener);
 
-        void addModificationErrorListener(FileModificationTrackerServiceImpl.FileModificationListener listener);
+        void addModificationImplementedListener(FileModificationListener listener);
 
-        void addModificationAddedListener(FileModificationTrackerServiceImpl.FileModificationListener listener);
-        void addModificationRemovedListener(FileModificationTrackerServiceImpl.FileModificationListener listener);
+        void addModificationErrorListener(FileModificationListener listener);
 
-        void addModificationReadyListener(FileModificationTrackerServiceImpl.FileModificationListener listener);
+        void addModificationAddedListener(FileModificationListener listener);
+        void addModificationRemovedListener(FileModificationListener listener);
+
+        void addModificationReadyListener(FileModificationListener listener);
 }

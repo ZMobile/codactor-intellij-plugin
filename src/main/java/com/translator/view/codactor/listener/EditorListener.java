@@ -11,7 +11,6 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.CodactorInjector;
 import com.translator.model.codactor.ai.modification.FileModificationTracker;
-import com.translator.service.codactor.ai.modification.tracking.FileModificationManagementService;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.handler.EditorClickHandlerService;
 import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
