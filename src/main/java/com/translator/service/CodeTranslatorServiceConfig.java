@@ -13,7 +13,17 @@ import com.translator.service.codactor.ai.modification.diff.AiFileModificationSu
 import com.translator.service.codactor.ai.modification.diff.AiFileModificationSuggestionDiffViewerServiceImpl;
 import com.translator.service.codactor.ai.modification.multi.MassAiCodeModificationService;
 import com.translator.service.codactor.ai.modification.multi.MassAiCodeModificationServiceImpl;
+import com.translator.service.codactor.ai.modification.queued.QueuedFileModificationObjectHolderQueryService;
+import com.translator.service.codactor.ai.modification.queued.QueuedFileModificationObjectHolderQueryServiceImpl;
 import com.translator.service.codactor.ai.modification.tracking.*;
+import com.translator.service.codactor.ai.modification.tracking.multi.MultiFileModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.multi.MultiFileModificationTrackerServiceImpl;
+import com.translator.service.codactor.ai.modification.tracking.suggestion.FileModificationSuggestionService;
+import com.translator.service.codactor.ai.modification.tracking.suggestion.FileModificationSuggestionServiceImpl;
+import com.translator.service.codactor.ai.modification.tracking.suggestion.modification.FileModificationSuggestionModificationService;
+import com.translator.service.codactor.ai.modification.tracking.suggestion.modification.FileModificationSuggestionModificationServiceImpl;
+import com.translator.service.codactor.ai.modification.tracking.suggestion.modification.FileModificationSuggestionModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.suggestion.modification.FileModificationSuggestionModificationTrackerServiceImpl;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionServiceImpl;
 import com.translator.service.codactor.ai.openai.connection.CodactorConnectionService;
@@ -110,6 +120,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(DefaultConnectionService.class).to(DefaultConnectionServiceImpl.class).asEagerSingleton();
         bind(OpenAiModelService.class).to(OpenAiModelServiceImpl.class).asEagerSingleton();
         bind(FileCreatorService.class).to(FileCreatorServiceImpl.class);
+        bind(FileTranslatorService.class).to(FileTranslatorServiceImpl.class);
         bind(FileRemoverService.class).to(FileRemoverServiceImpl.class);
         bind(FileReaderService.class).to(FileReaderServiceImpl.class);
         bind(FileOpenerService.class).to(FileOpenerServiceImpl.class);
@@ -179,19 +190,58 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
 
     @Singleton
     @Provides
+    public MultiFileModificationTrackerService getMultiFileModificationTrackerService() {
+        return new MultiFileModificationTrackerServiceImpl();
+    }
+
+    @Singleton
+    @Provides
     public FileModificationTrackerService getFileModificationTrackerService(Project project,
-                                                                               CodeHighlighterService codeHighlighterService,
-                                                                               CodeSnippetExtractorService codeSnippetExtractorService,
-                                                                               CodeRangeTrackerService codeRangeTrackerService,
-                                                                               GuardedBlockService guardedBlockService,
-                                                                               RangeReplaceService rangeReplaceService,
-                                                                               EditorClickHandlerService editorClickHandlerService,
-                                                                               RenameFileService renameFileService,
-                                                                               BackgroundTaskMapperService backgroundTaskMapperService,
-                                                                               DiffEditorGeneratorService diffEditorGeneratorService,
-                                                                               FileCreatorService fileCreatorService,
-                                                                               FileRemoverService fileRemoverService) {
-        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService, fileCreatorService, fileRemoverService);
+                                                                            FileModificationService fileModificationService,
+                                                                            FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService,
+                                                                            EditorClickHandlerService editorClickHandlerService) {
+        return new FileModificationTrackerServiceImpl(project, fileModificationService, fileModificationSuggestionModificationTrackerService, editorClickHandlerService);
+    }
+
+    @Provides
+    public FileModificationService fileModificationService(Project project,
+                                                           FileModificationSuggestionService fileModificationSuggestionService,
+                                                           CodeSnippetExtractorService codeSnippetExtractorService,
+                                                           RangeReplaceService rangeReplaceService,
+                                                           CodeRangeTrackerService codeRangeTrackerService,
+                                                           CodeHighlighterService codeHighlighterService,
+                                                           GuardedBlockService guardedBlockService,
+                                                           BackgroundTaskMapperService backgroundTaskMapperService,
+                                                           FileCreatorService fileCreatorService,
+                                                           FileTranslatorService fileTranslatorService) {
+        return new FileModificationServiceImpl(project, fileModificationSuggestionService, codeSnippetExtractorService, rangeReplaceService, codeRangeTrackerService, codeHighlighterService, guardedBlockService, backgroundTaskMapperService, fileCreatorService, fileTranslatorService);
+    }
+
+    @Provides
+    public FileModificationSuggestionService fileModificationSuggestionService(Project project,
+                                                                               DiffEditorGeneratorService diffEditorGeneratorService) {
+        return new FileModificationSuggestionServiceImpl(project, diffEditorGeneratorService);
+    }
+
+    @Singleton
+    @Provides
+    public FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService(FileModificationSuggestionModificationService fileModificationSuggestionModificationService) {
+        return new FileModificationSuggestionModificationTrackerServiceImpl(fileModificationSuggestionModificationService);
+    }
+
+    @Provides
+    public FileModificationSuggestionModificationService fileModificationSuggestionModificationService(CodeHighlighterService codeHighlighterService,
+                                                                                                       GuardedBlockService guardedBlockService,
+                                                                                                       RangeReplaceService rangeReplaceService,
+                                                                                                       DiffEditorGeneratorService diffEditorGeneratorService) {
+        return new FileModificationSuggestionModificationServiceImpl(codeHighlighterService, guardedBlockService, rangeReplaceService, diffEditorGeneratorService);
+    }
+
+    @Provides
+    public QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService(FileModificationTrackerService fileModificationTrackerService,
+                                                                                                         FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService,
+                                                                                                         MultiFileModificationTrackerService multiFileModificationTrackerService) {
+        return new QueuedFileModificationObjectHolderQueryServiceImpl(fileModificationTrackerService, fileModificationSuggestionModificationTrackerService, multiFileModificationTrackerService);
     }
 
     @Singleton
@@ -199,13 +249,14 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
     public MassCodeFileGeneratorService getCodeFileGeneratorService(Project project,
                                                                     InquiryDao inquiryDao,
                                                                     CodeModificationDao codeModificationDao,
+                                                                    MultiFileModificationTrackerService multiFileModificationTrackerService,
                                                                     FileModificationTrackerService fileModificationTrackerService,
                                                                     DefaultConnectionService defaultConnectionService,
                                                                     OpenAiModelService openAiModelService,
                                                                     FileCreatorService fileCreatorService,
                                                                     InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
                                                                     AzureConnectionService azureConnectionService) {
-        return new MassCodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationDao, fileModificationTrackerService, defaultConnectionService, openAiModelService, fileCreatorService, inquirySystemMessageGeneratorService, azureConnectionService);
+        return new MassCodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationDao, multiFileModificationTrackerService, fileModificationTrackerService, defaultConnectionService, openAiModelService, fileCreatorService, inquirySystemMessageGeneratorService, azureConnectionService);
     }
 
     @Singleton
@@ -214,6 +265,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                            InquiryDao inquiryDao,
                                                                            CodeModificationDao codeModificationDao,
                                                                            FileModificationTrackerService fileModificationTrackerService,
+                                                                           MultiFileModificationTrackerService multiFileModificationTrackerService,
                                                                            AiFileModificationRestarterService aiFileModificationRestarterService,
                                                                            CodeSnippetExtractorService codeSnippetExtractorService,
                                                                            DefaultConnectionService defaultConnectionService,
@@ -222,6 +274,6 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                            AzureConnectionService azureConnectionService,
                                                                            FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                                                            Gson gson) {
-        return new MultiFileAiCodeModificationServiceImpl(project, inquiryDao, codeModificationDao, fileModificationTrackerService, aiFileModificationRestarterService, codeSnippetExtractorService, defaultConnectionService, openAiModelService, inquirySystemMessageGeneratorService, azureConnectionService, fileModificationErrorDialogFactory, gson);
+        return new MultiFileAiCodeModificationServiceImpl(project, inquiryDao, codeModificationDao, fileModificationTrackerService, multiFileModificationTrackerService, aiFileModificationRestarterService, codeSnippetExtractorService, defaultConnectionService, openAiModelService, inquirySystemMessageGeneratorService, azureConnectionService, fileModificationErrorDialogFactory, gson);
     }
 }

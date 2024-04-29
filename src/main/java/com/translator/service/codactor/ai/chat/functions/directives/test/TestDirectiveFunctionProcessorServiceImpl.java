@@ -171,7 +171,7 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                 assert modificationTypeString != null;
                 ModificationType modificationType;
                 String modificationId = "Error: no modification type specified.";
-                switch (modificationTypeString) {
+                /*switch (modificationTypeString) {
                     case "modify":
                         if (startSnippetString == null && endSnippetString == null) {
                             modificationType = ModificationType.MODIFY;
@@ -209,7 +209,7 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                     return "{" +
                             "\"message\": \"Error: Unspecified.\"" +
                             "}";
-                }
+                }*/
             } else if (gptFunctionCall.getName().equalsIgnoreCase("modify_unit_test")) {
                 String path = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "path");
                 if (path == null) {
@@ -305,7 +305,7 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                 assert modificationTypeString != null;
                 ModificationType modificationType;
                 String modificationId = "Error: no modification type specified.";
-                switch (modificationTypeString) {
+                /*switch (modificationTypeString) {
                     case "modify":
                         if (startSnippetString == null && endSnippetString == null) {
                             modificationType = ModificationType.MODIFY;
@@ -343,7 +343,7 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                     return "{" +
                             "\"message\": \"Error: Unspecified.\"" +
                             "}";
-                }
+                }*/
             } else if (gptFunctionCall.getName().equalsIgnoreCase("run_unit_test")) {
 
             } else if (gptFunctionCall.getName().equalsIgnoreCase("run_unit_test_with_coverage")) {

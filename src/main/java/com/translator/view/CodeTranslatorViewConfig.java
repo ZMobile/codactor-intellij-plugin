@@ -9,7 +9,10 @@ import com.intellij.openapi.project.Project;
 import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.CodeTranslatorServiceConfig;
+import com.translator.service.codactor.ai.modification.queued.QueuedFileModificationObjectHolderQueryService;
 import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.multi.MultiFileModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.suggestion.modification.FileModificationSuggestionModificationTrackerService;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ide.editor.psi.FindImplementationsService;
@@ -79,12 +82,12 @@ public class CodeTranslatorViewConfig extends AbstractModule {
 
     @Singleton
     @Provides
-    public ProvisionalModificationViewer codeSnippetListViewer(CodactorToolWindowService codactorToolWindowService,
+    public ProvisionalModificationViewer provisionalModificationViewer(CodactorToolWindowService codactorToolWindowService,
                                                                FileModificationTrackerService fileModificationTrackerService,
+                                                               ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager,
                                                                FileOpenerService fileOpenerService,
-                                                               AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService,
-                                                               ProvisionalModificationCustomizerDialogFactory provisionalModificationCustomizerDialogFactory) {
-        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationTrackerService, fileOpenerService, aiFileModificationSuggestionDiffViewerService, provisionalModificationCustomizerDialogFactory);
+                                                               AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService) {
+        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationTrackerService, provisionalModificationCustomizerDialogManager, fileOpenerService, aiFileModificationSuggestionDiffViewerService);
     }
 
     @Singleton
@@ -127,10 +130,13 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                                            FileReaderService fileReaderService,
                                                            FileOpenerService fileOpenerService,
                                                            FileModificationTrackerService fileModificationTrackerService,
+                                                           FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService,
+                                                           MultiFileModificationTrackerService multiFileModificationTrackerService,
+                                                           QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService,
                                                            AiFileModificationRestarterService aiFileModificationRestarterService,
                                                            FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                                            BackgroundTaskMapperService backgroundTaskMapperService) {
-        return new ModificationQueueViewer(project, provisionalModificationViewer, codactorToolWindowService, fileReaderService, fileOpenerService, fileModificationTrackerService, aiFileModificationRestarterService, fileModificationErrorDialogFactory, backgroundTaskMapperService);
+        return new ModificationQueueViewer(project, provisionalModificationViewer, codactorToolWindowService, fileReaderService, fileOpenerService, fileModificationTrackerService, fileModificationSuggestionModificationTrackerService, multiFileModificationTrackerService, queuedFileModificationObjectHolderQueryService, aiFileModificationRestarterService, fileModificationErrorDialogFactory, backgroundTaskMapperService);
     }
 
     @Singleton

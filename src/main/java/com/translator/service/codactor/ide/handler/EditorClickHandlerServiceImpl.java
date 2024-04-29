@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.model.codactor.ai.modification.FileModificationTracker;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ide.editor.EditorExtractorService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 
@@ -14,18 +15,15 @@ import java.util.Map;
 
 public class EditorClickHandlerServiceImpl implements EditorClickHandlerService {
     private final Project project;
-    private final FileModificationTrackerService fileModificationTrackerService;
     private final CodactorToolWindowService codactorToolWindowService;
     private final EditorExtractorService editorExtractorService;
     private final Map<String, EditorClickHandler> editorClickHandlerMap;
 
     @Inject
     public EditorClickHandlerServiceImpl(Project project,
-                                         FileModificationTrackerService fileModificationTrackerService,
                                          CodactorToolWindowService codactorToolWindowService,
                                          EditorExtractorService editorExtractorService) {
         this.project = project;
-        this.fileModificationTrackerService = fileModificationTrackerService;
         this.codactorToolWindowService = codactorToolWindowService;
         this.editorExtractorService = editorExtractorService;
         this.editorClickHandlerMap = new HashMap<>();
@@ -52,7 +50,7 @@ public class EditorClickHandlerServiceImpl implements EditorClickHandlerService 
         if (editorClickHandlerMap.containsKey(fileModificationTracker.getFilePath())) {
             return;
         }
-        EditorClickHandler editorClickHandler = new EditorClickHandler(fileModificationTrackerService, codactorToolWindowService, fileModificationTracker);
+        EditorClickHandler editorClickHandler = new EditorClickHandler(codactorToolWindowService, fileModificationTracker);
         editor.addEditorMouseListener(editorClickHandler);
         editorClickHandlerMap.put(fileModificationTracker.getFilePath(), editorClickHandler);
     }

@@ -39,7 +39,7 @@ public class FileModificationServiceImpl implements FileModificationService {
                                        RangeReplaceService rangeReplaceService,
                                        CodeRangeTrackerService codeRangeTrackerService,
                                        CodeHighlighterService codeHighlighterService,
-                                        GuardedBlockService guardedBlockService,
+                                       GuardedBlockService guardedBlockService,
                                        BackgroundTaskMapperService backgroundTaskMapperService,
                                        FileCreatorService fileCreatorService,
                                        FileTranslatorService fileTranslatorService) {

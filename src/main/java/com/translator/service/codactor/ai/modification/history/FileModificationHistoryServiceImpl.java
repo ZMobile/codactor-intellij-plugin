@@ -36,7 +36,7 @@ public class FileModificationHistoryServiceImpl implements FileModificationHisto
     public List<FileModificationDataHolder> getRecentHistoricalFileModifications() {
         DesktopCodeModificationHistoryResponseResource desktopCompletedCodeModificationHistoryResponseResource = codeModificationHistoryDao.getRecentModifications();
         List<FileModificationDataHolder> completedFileModificationObjects = historicalFileModificationDataHolderToFileModificationDataHolderTransformerService.convert(desktopCompletedCodeModificationHistoryResponseResource.getModificationHistory());
-        List<FileModificationDataHolder> queuedModificationObjects = fileModificationTrackerService.getQueuedFileModificationObjectHolders();
+        List<FileModificationDataHolder> queuedModificationObjects = queuedFileModificationObjectHolderQueryService.getQueuedFileModificationObjectHolders();
         Map<String, FileModificationDataHolder> mergedModificationObjects = new HashMap<>();
         for (FileModificationDataHolder fileModificationDataHolder : queuedModificationObjects) {
             if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION) {

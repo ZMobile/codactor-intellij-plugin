@@ -47,21 +47,18 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
     private ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager;
     private FileOpenerService fileOpenerService;
     private AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService;
-    private ProvisionalModificationCustomizerDialogFactory provisionalModificationCustomizerDialogFactory;
 
     @Inject
     public ProvisionalModificationViewer(CodactorToolWindowService codactorToolWindowService,
                                          FileModificationTrackerService fileModificationTrackerService,
                                          ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager,
                                          FileOpenerService fileOpenerService,
-                                         AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService,
-                                         ProvisionalModificationCustomizerDialogFactory provisionalModificationCustomizerDialogFactory) {
+                                         AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService) {
         this.codactorToolWindowService = codactorToolWindowService;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.provisionalModificationCustomizerDialogManager = provisionalModificationCustomizerDialogManager;
         this.fileOpenerService = fileOpenerService;
         this.aiFileModificationSuggestionDiffViewerService = aiFileModificationSuggestionDiffViewerService;
-        this.provisionalModificationCustomizerDialogFactory = provisionalModificationCustomizerDialogFactory;
         initComponents();
     }
 

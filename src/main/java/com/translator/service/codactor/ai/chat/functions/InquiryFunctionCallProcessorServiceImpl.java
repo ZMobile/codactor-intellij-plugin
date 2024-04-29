@@ -78,7 +78,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                                    CodeSnippetExtractorService codeSnippetExtractorService,
                                                    CodeSnippetIndexGetterService codeSnippetIndexGetterService,
                                                    FileModificationTrackerService fileModificationTrackerService,
-                                                    QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService,
+                                                   QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService,
                                                    FileModificationHistoryService fileModificationHistoryService,
                                                    AiFileModificationRestarterService aiFileModificationRestarterService,
                                                    AiCodeModificationRecorderService aiCodeModificationRecorderService,
@@ -100,6 +100,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.codeSnippetIndexGetterService = codeSnippetIndexGetterService;
         this.fileModificationTrackerService = fileModificationTrackerService;
+        this.queuedFileModificationObjectHolderQueryService = queuedFileModificationObjectHolderQueryService;
         this.fileModificationHistoryService = fileModificationHistoryService;
         this.aiFileModificationRestarterService = aiFileModificationRestarterService;
         this.aiCodeModificationRecorderService = aiCodeModificationRecorderService;

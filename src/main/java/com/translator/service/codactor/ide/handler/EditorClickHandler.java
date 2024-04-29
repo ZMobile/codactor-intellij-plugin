@@ -11,14 +11,11 @@ import com.translator.view.codactor.viewer.modification.ProvisionalModificationV
 import java.awt.event.MouseEvent;
 
 public class EditorClickHandler implements EditorMouseListener {
-    private FileModificationTrackerService fileModificationTrackerService;
     private CodactorToolWindowService codactorToolWindowService;
     private FileModificationTracker fileModificationTracker;
 
-    public EditorClickHandler(FileModificationTrackerService fileModificationTrackerService,
-                              CodactorToolWindowService codactorToolWindowService,
+    public EditorClickHandler(CodactorToolWindowService codactorToolWindowService,
                               FileModificationTracker fileModificationTracker) {
-        this.fileModificationTrackerService = fileModificationTrackerService;
         this.codactorToolWindowService = codactorToolWindowService;
         this.fileModificationTracker = fileModificationTracker;
     }
