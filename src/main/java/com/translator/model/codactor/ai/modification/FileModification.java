@@ -34,10 +34,7 @@ public class FileModification {
         this.priorContext = priorContext;
         this.modificationType = modificationType;
         this.modificationOptions = new ArrayList<>();
-        this.fileModificationReadyListeners = new ArrayList<>();
-        this.fileModificationRemovedListeners = new ArrayList<>();
-        this.fileModificationImplementedListeners = new ArrayList<>();
-        this.fileCreationAtFilePathOnAcceptance = false;
+         this.fileCreationAtFilePathOnAcceptance = false;
         this.fileDeletionAtFilePathOnAcceptance = false;
         this.done = false;
         this.error = false;

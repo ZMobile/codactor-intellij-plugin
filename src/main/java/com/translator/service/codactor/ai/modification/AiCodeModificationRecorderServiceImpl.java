@@ -10,6 +10,7 @@ import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.ai.modification.*;
 import com.translator.model.codactor.io.CancellableRunnable;
 import com.translator.model.codactor.io.CustomBackgroundTask;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
@@ -28,7 +29,7 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
     private CodeModificationDao codeModificationDao;
     private FirebaseTokenService firebaseTokenService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
-    private FileModificationManagementService fileModificationManagementService;
+    private FileModificationTrackerService fileModificationTrackerService;
     private DefaultConnectionService defaultConnectionService;
     private OpenAiModelService openAiModelService;
     private BackgroundTaskMapperService backgroundTaskMapperService;
@@ -41,7 +42,7 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
                                                  CodeModificationDao codeModificationDao,
                                                  FirebaseTokenService firebaseTokenService,
                                                  CodeSnippetExtractorService codeSnippetExtractorService,
-                                                 FileModificationManagementService fileModificationManagementService,
+                                                 FileModificationTrackerService fileModificationTrackerService,
                                                  DefaultConnectionService defaultConnectionService,
                                                  OpenAiModelService openAiModelService,
                                                  BackgroundTaskMapperService backgroundTaskMapperService,
@@ -52,7 +53,7 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
         this.codeModificationDao = codeModificationDao;
         this.firebaseTokenService = firebaseTokenService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
         this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
@@ -72,7 +73,7 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             }
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
-        String modificationId = fileModificationManagementService.addModification(filePath, modification, startIndex, endIndex, modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, modification, startIndex, endIndex, modificationType, priorContext);
         if (modificationId == null || modificationId.startsWith("Error")) {
             return modificationId;
         }
@@ -87,9 +88,9 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             desktopCodeModificationRequestResource.setOverrideCode(overrideCode);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getModifiedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
@@ -118,7 +119,7 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
-        String modificationId = fileModificationManagementService.addModification(filePath, modification, 0, code.length(), modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, modification, 0, code.length(), modificationType, priorContext);
         if (modificationId == null || modificationId.startsWith("Error")) {
             return modificationId;
         }
@@ -133,9 +134,9 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             desktopCodeModificationRequestResource.setOverrideCode(overrideCode);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getModifiedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
@@ -164,7 +165,7 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             }
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
-        String modificationId = fileModificationManagementService.addModification(filePath, error, startIndex, endIndex, modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, error, startIndex, endIndex, modificationType, priorContext);
         if (modificationId == null || modificationId.startsWith("Error")) {
             return modificationId;
         }
@@ -179,9 +180,9 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             desktopCodeModificationRequestResource.setOverrideCode(overrideCode);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getFixedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
@@ -210,7 +211,7 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
-        String modificationId = fileModificationManagementService.addModification(filePath, error, 0, code.length(), modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, error, 0, code.length(), modificationType, priorContext);
         if (modificationId == null || modificationId.startsWith("Error")) {
             return modificationId;
         }
@@ -225,9 +226,9 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             desktopCodeModificationRequestResource.setOverrideCode(overrideCode);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getFixedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
@@ -255,7 +256,7 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
                 return "Error: User not authenticated. Please authenticate and try again.";
             }
         }
-        String modificationId = fileModificationManagementService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
         if (modificationId == null || modificationId.startsWith("Error")) {
             return modificationId;
         }
@@ -270,9 +271,9 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             desktopCodeCreationRequestResource.setOverrideCode(overrideCode);
             DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
             if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && !desktopCodeCreationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
                     fileModificationErrorDialog.setVisible(true);
@@ -300,11 +301,11 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
                 return "Error: User not authenticated. Please authenticate and try again.";
             }
         }
-        String modificationId = fileModificationManagementService.addModification(filePath, description, 0, 0, ModificationType.CREATE, new ArrayList<>());
+        String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, new ArrayList<>());
         if (modificationId == null || modificationId.startsWith("Error")) {
             return modificationId;
         }
-        FileModification fileModification = fileModificationManagementService.getModification(modificationId);
+        FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
         fileModification.setFileCreationAtFilePathOnAcceptance(true);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
@@ -317,9 +318,9 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             desktopCodeCreationRequestResource.setOverrideCode(overrideCode);
             DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
             if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && !desktopCodeCreationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
                     fileModificationErrorDialog.setVisible(true);
@@ -348,11 +349,11 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
-        String modificationId = fileModificationManagementService.addModification(filePath, null, 0, code.length(), ModificationType.TRANSLATE, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, null, 0, code.length(), ModificationType.TRANSLATE, priorContext);
         if (modificationId == null || modificationId.startsWith("Error")) {
             return modificationId;
         }
-        FileModification fileModification = fileModificationManagementService.getModification(modificationId);
+        FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
         fileModification.setNewLanguage(newLanguage);
         fileModification.setNewFileType(newFileType);
         CancellableRunnable task = customProgressIndicator -> {
@@ -366,9 +367,9 @@ public class AiCodeModificationRecorderServiceImpl implements AiCodeModification
             desktopCodeTranslationRequestResource.setOverrideCode(overrideCode);
             DesktopCodeTranslationResponseResource desktopCodeTranslationResponseResource = codeModificationDao.getTranslatedCode(desktopCodeTranslationRequestResource);
             if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null && !desktopCodeTranslationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeTranslationResponseResource.getSubjectLine(), desktopCodeTranslationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeTranslationResponseResource.getSubjectLine(), desktopCodeTranslationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeTranslationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.TRANSLATE);
                     fileModificationErrorDialog.setVisible(true);

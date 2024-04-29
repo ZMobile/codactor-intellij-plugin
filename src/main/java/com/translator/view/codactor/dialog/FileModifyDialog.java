@@ -14,7 +14,7 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.service.codactor.ai.chat.context.PromptContextService;
 import com.translator.service.codactor.ai.modification.multi.MassAiCodeModificationService;
-import com.translator.service.codactor.ai.modification.multi.MultiFileAiModificationService;
+import com.translator.service.codactor.ai.modification.multi.MultiFileAiCodeModificationService;
 import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
@@ -31,7 +31,7 @@ public class FileModifyDialog extends JDialog {
     private PromptContextService promptContextService;
     private PromptContextBuilderDialogFactory promptContextBuilderDialogFactory;
     private MassAiCodeModificationService massAiCodeModificationService;
-    private MultiFileAiModificationService multiFileAiModificationService;
+    private MultiFileAiCodeModificationService multiFileAiCodeModificationService;
     private OpenAiModelService openAiModelService;
     private JList<String> fileList;
     private DefaultListModel<String> listModel;
@@ -52,7 +52,7 @@ public class FileModifyDialog extends JDialog {
                             @Assisted PromptContextService promptContextService,
                             PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                             MassAiCodeModificationService massAiCodeModificationService,
-                            MultiFileAiModificationService multiFileAiModificationService,
+                            MultiFileAiCodeModificationService multiFileAiCodeModificationService,
                             OpenAiModelService openAiModelService,
                             @Assisted List<VirtualFile> selectedItems) {
         this.project = project;
@@ -60,7 +60,7 @@ public class FileModifyDialog extends JDialog {
         this.promptContextService = promptContextService;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
         this.massAiCodeModificationService = massAiCodeModificationService;
-        this.multiFileAiModificationService = multiFileAiModificationService;
+        this.multiFileAiCodeModificationService = multiFileAiCodeModificationService;
         this.openAiModelService = openAiModelService;
         setLayout(new BorderLayout());
         setTitle("Modify Code");
@@ -250,7 +250,7 @@ public class FileModifyDialog extends JDialog {
                     promptContextService.clearPromptContext();
                 } else {
                     try {
-                        multiFileAiModificationService.modifyCodeFiles(selectedFiles, description.getText(), promptContextService.getPromptContext());
+                        multiFileAiCodeModificationService.modifyCodeFiles(selectedFiles, description.getText(), promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     } catch (InterruptedException e) {
                         e.printStackTrace();

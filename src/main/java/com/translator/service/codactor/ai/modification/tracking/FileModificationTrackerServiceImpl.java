@@ -159,6 +159,12 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         return null;
     }
 
+    @Override
+    public FileModificationTracker getModificationTracker(String filePath) {
+        return activeModificationFiles.get(filePath);
+    }
+
+    @Override
     public FileModificationTracker getTrackerWithModificationId(String modificationId) {
         return activeModificationFiles.values().stream()
                 .filter(m -> hasModification(m, modificationId))

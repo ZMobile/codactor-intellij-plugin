@@ -11,6 +11,8 @@ import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.ai.modification.*;
 import com.translator.model.codactor.io.CancellableRunnable;
 import com.translator.model.codactor.io.CustomBackgroundTask;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.suggestion.modification.FileModificationSuggestionModificationTrackerService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
@@ -30,7 +32,8 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
     private CodeModificationDao codeModificationDao;
     private FirebaseTokenService firebaseTokenService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
-    private FileModificationManagementService fileModificationManagementService;
+    private FileModificationTrackerService fileModificationTrackerService;
+    private FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService;
     private DefaultConnectionService defaultConnectionService;
     private OpenAiModelService openAiModelService;
     private BackgroundTaskMapperService backgroundTaskMapperService;
@@ -43,7 +46,8 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                                          CodeModificationDao codeModificationDao,
                                          FirebaseTokenService firebaseTokenService,
                                          CodeSnippetExtractorService codeSnippetExtractorService,
-                                         FileModificationManagementService fileModificationManagementService,
+                                         FileModificationTrackerService fileModificationTrackerService,
+                                         FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService,
                                          DefaultConnectionService defaultConnectionService,
                                          OpenAiModelService openAiModelService,
                                          BackgroundTaskMapperService backgroundTaskMapperService,
@@ -54,7 +58,8 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
         this.codeModificationDao = codeModificationDao;
         this.firebaseTokenService = firebaseTokenService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
+        this.fileModificationSuggestionModificationTrackerService = fileModificationSuggestionModificationTrackerService;
         this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
@@ -74,7 +79,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             }
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
-        String modificationId = fileModificationManagementService.addModification(filePath, modification, startIndex, endIndex, modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, modification, startIndex, endIndex, modificationType, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -85,9 +90,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getModifiedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
@@ -115,7 +120,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             }
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
-        String modificationId = fileModificationManagementService.addModification(filePath, modification, startIndex, endIndex, modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, modification, startIndex, endIndex, modificationType, priorContext);
         String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
                 openAiApiKey = azureConnectionService.getKey();
@@ -125,9 +130,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
         DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getModifiedCode(desktopCodeModificationRequestResource);
         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-            fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
         } else {
-            fileModificationManagementService.errorFileModification(modificationId);
+            fileModificationTrackerService.errorFileModification(modificationId);
             if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                 FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                 fileModificationErrorDialog.setVisible(true);
@@ -149,7 +154,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
-        String modificationId = fileModificationManagementService.addModification(filePath, modification, 0, code.length(), modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, modification, 0, code.length(), modificationType, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -160,9 +165,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getModifiedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
@@ -190,7 +195,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
-        String modificationId = fileModificationManagementService.addModification(filePath, modification, 0, code.length(), modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, modification, 0, code.length(), modificationType, priorContext);
         String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
                 openAiApiKey = azureConnectionService.getKey();
@@ -200,9 +205,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
         DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, modification, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getModifiedCode(desktopCodeModificationRequestResource);
         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-            fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
         } else {
-            fileModificationManagementService.errorFileModification(modificationId);
+            fileModificationTrackerService.errorFileModification(modificationId);
             if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                 FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                 fileModificationErrorDialog.setVisible(true);
@@ -214,7 +219,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
     }
 
     @Override
-    public void getModifiedCodeModification(Editor editor, String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
+    public void getModifiedCodeModification(Editor editor, FileModificationSuggestion fileModificationSuggestion, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
@@ -223,8 +228,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                 return;
             }
         }
-        FileModificationSuggestion fileModificationSuggestion = fileModificationManagementService.getModificationSuggestion(suggestionId);
-        String fileModificationSuggestionModificationId  = fileModificationManagementService.addModificationSuggestionModification(editor, fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
+        String fileModificationSuggestionModificationId  = fileModificationSuggestionModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion, editor, startIndex, endIndex, modificationType);
         if (fileModificationSuggestionModificationId == null || fileModificationSuggestionModificationId.startsWith("Error")) {
             JOptionPane.showMessageDialog(null, "Can't modify code that is already being modified", "Error",
                     JOptionPane.ERROR_MESSAGE);
@@ -236,11 +240,11 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             } else {
                 openAiApiKey = defaultConnectionService.getOpenAiApiKey();
             }
-            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), suggestionId, code, modification, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), fileModificationSuggestion.getId(), code, modification, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
             FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationDao.getModifiedCodeModification(desktopCodeModificationRequestResource);
             if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
                 fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(fileModificationSuggestionModificationId);
-                fileModificationManagementService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
+                fileModificationSuggestionModificationTrackerService.implementModification(fileModificationSuggestionModificationId, fileModificationSuggestionModificationRecord.getEditedCode());
             } else {
                 if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModificationSuggestionModificationId, fileModificationSuggestion.getFilePath(), "", modificationType);
@@ -249,7 +253,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModificationSuggestionModificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), modificationType);
                     fileModificationErrorDialog.setVisible(true);
                 }
-                fileModificationManagementService.removeModificationSuggestionModification(fileModificationSuggestionModificationId);
+                fileModificationSuggestionModificationTrackerService.removeModificationSuggestionModification(fileModificationSuggestionModificationId);
             }
             backgroundTaskMapperService.removeTask(fileModificationSuggestionModificationId);
         };
@@ -270,7 +274,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             }
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
-        String modificationId = fileModificationManagementService.addModification(filePath, error, startIndex, endIndex, modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, error, startIndex, endIndex, modificationType, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -281,9 +285,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getFixedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
@@ -311,7 +315,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             }
         }
         String code = codeSnippetExtractorService.getSnippet(filePath, startIndex, endIndex);
-        String modificationId = fileModificationManagementService.addModification(filePath, error, startIndex, endIndex, modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, error, startIndex, endIndex, modificationType, priorContext);
         String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
                 openAiApiKey = azureConnectionService.getKey();
@@ -321,9 +325,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
         DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getFixedCode(desktopCodeModificationRequestResource);
         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-            fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
         } else {
-            fileModificationManagementService.errorFileModification(modificationId);
+            fileModificationTrackerService.errorFileModification(modificationId);
             if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                 FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                 fileModificationErrorDialog.setVisible(true);
@@ -345,7 +349,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
-        String modificationId = fileModificationManagementService.addModification(filePath, error, 0, code.length(), modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, error, 0, code.length(), modificationType, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -356,9 +360,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
             DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getFixedCode(desktopCodeModificationRequestResource);
             if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
@@ -386,7 +390,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
-        String modificationId = fileModificationManagementService.addModification(filePath, error, 0, code.length(), modificationType, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, error, 0, code.length(), modificationType, priorContext);
         String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
                 openAiApiKey = azureConnectionService.getKey();
@@ -396,9 +400,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
         DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(filePath, code, error, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
         DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = codeModificationDao.getFixedCode(desktopCodeModificationRequestResource);
         if (desktopCodeModificationResponseResource.getModificationSuggestions() != null && !desktopCodeModificationResponseResource.getModificationSuggestions().isEmpty()) {
-            fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeModificationResponseResource.getSubjectLine(), desktopCodeModificationResponseResource.getModificationSuggestions());
         } else {
-            fileModificationManagementService.errorFileModification(modificationId);
+            fileModificationTrackerService.errorFileModification(modificationId);
             if (desktopCodeModificationResponseResource.getError().equals("null: null")) {
                 FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", modificationType);
                 fileModificationErrorDialog.setVisible(true);
@@ -410,7 +414,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
     }
 
     @Override
-    public void getModifiedCodeFix(Editor editor, String suggestionId, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
+    public void getModifiedCodeFix(Editor editor, FileModificationSuggestion fileModificationSuggestion, String code, int startIndex, int endIndex, String modification, ModificationType modificationType, List<HistoricalContextObjectHolder> priorContext) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
@@ -419,8 +423,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                 return;
             }
         }
-        FileModificationSuggestion fileModificationSuggestion = fileModificationManagementService.getModificationSuggestion(suggestionId);
-        String modificationId = fileModificationManagementService.addModificationSuggestionModification(editor, fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, modificationType);
+        String modificationSuggestionModificationId = fileModificationSuggestionModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion, editor, startIndex, endIndex, modificationType);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -428,27 +431,27 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             } else {
                 openAiApiKey = defaultConnectionService.getOpenAiApiKey();
             }
-            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), suggestionId, code, modification, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
+            DesktopCodeModificationRequestResource desktopCodeModificationRequestResource = new DesktopCodeModificationRequestResource(fileModificationSuggestion.getFilePath(), fileModificationSuggestion.getId(), code, modification, modificationType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
             FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationDao.getModifiedCodeFix(desktopCodeModificationRequestResource);
             if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
-                fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
-                fileModificationManagementService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
+                fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationSuggestionModificationId);
+                fileModificationSuggestionModificationTrackerService.implementModification(modificationSuggestionModificationId, fileModificationSuggestionModificationRecord.getEditedCode());
             } else {
                 if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), "", modificationType);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationSuggestionModificationId, fileModificationSuggestion.getFilePath(), "", modificationType);
                     fileModificationErrorDialog.setVisible(true);
                 } else {
-                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), modificationType);
+                    FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationSuggestionModificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), modificationType);
                     fileModificationErrorDialog.setVisible(true);
                 }
-                fileModificationManagementService.removeModificationSuggestionModification(modificationId);
+                fileModificationSuggestionModificationTrackerService.removeModificationSuggestionModification(modificationSuggestionModificationId);
             }
-            backgroundTaskMapperService.removeTask(modificationId);
+            backgroundTaskMapperService.removeTask(modificationSuggestionModificationId);
         };
         Runnable cancelTask = () -> {};
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification Suggestion Modification (" + modificationType + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
-        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+        backgroundTaskMapperService.addTask(modificationSuggestionModificationId, backgroundTask);
     }
 
     @Override
@@ -461,7 +464,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                 return;
             }
         }
-        String modificationId = fileModificationManagementService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -472,9 +475,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
             DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
             if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && !desktopCodeCreationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
                     fileModificationErrorDialog.setVisible(true);
@@ -501,7 +504,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                 return;
             }
         }
-        String modificationId = fileModificationManagementService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
         String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
                 openAiApiKey = azureConnectionService.getKey();
@@ -511,9 +514,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
         DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && !desktopCodeCreationResponseResource.getModificationSuggestions().isEmpty()) {
-            fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
         } else {
-            fileModificationManagementService.errorFileModification(modificationId);
+            fileModificationTrackerService.errorFileModification(modificationId);
             if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                 FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
                 fileModificationErrorDialog.setVisible(true);
@@ -534,13 +537,13 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                 return;
             }
         }
-        String modificationId = fileModificationManagementService.addModification(filePath, "Delete this code file", 0, 0, ModificationType.DELETE, new ArrayList<>());
-        FileModification fileModification = fileModificationManagementService.getModification(modificationId);
+        String modificationId = fileModificationTrackerService.addModification(filePath, "Delete this code file", 0, 0, ModificationType.DELETE, new ArrayList<>());
+        FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
         fileModification.setFileDeletionAtFilePathOnAcceptance(true);
         List<FileModificationSuggestionRecord> fileModificationSuggestionRecords = new ArrayList<>();
         FileModificationSuggestionRecord fileModificationSuggestionRecord = new FileModificationSuggestionRecord(firebaseTokenService.getFirebaseToken().getUserId(), fileModification.getId(), ModificationType.DELETE, filePath, "Delete this code file", fileModification.getBeforeText(), "Delete this code file", "");
         fileModificationSuggestionRecords.add(fileModificationSuggestionRecord);
-        fileModificationManagementService.readyFileModificationUpdate(modificationId, "Delete this code file", fileModificationSuggestionRecords);
+        fileModificationTrackerService.readyFileModificationUpdate(modificationId, "Delete this code file", fileModificationSuggestionRecords);
     }
 
     @Override
@@ -553,8 +556,8 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                 return;
             }
         }
-        String modificationId = fileModificationManagementService.addModification(filePath, description, 0, 0, ModificationType.CREATE, new ArrayList<>());
-        FileModification fileModification = fileModificationManagementService.getModification(modificationId);
+        String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, new ArrayList<>());
+        FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
         fileModification.setFileCreationAtFilePathOnAcceptance(true);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
@@ -566,9 +569,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>());
             DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
             if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && !desktopCodeCreationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
                     fileModificationErrorDialog.setVisible(true);
@@ -595,7 +598,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                 return;
             }
         }
-        String modificationId = fileModificationManagementService.addModification(filePath, description, 0, 0, ModificationType.CREATE, new ArrayList<>());
+        String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, new ArrayList<>());
         String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
                 openAiApiKey = azureConnectionService.getKey();
@@ -605,9 +608,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
         DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>());
         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && !desktopCodeCreationResponseResource.getModificationSuggestions().isEmpty()) {
-            fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
+            fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeCreationResponseResource.getSubjectLine(), desktopCodeCreationResponseResource.getModificationSuggestions());
         } else {
-            fileModificationManagementService.errorFileModification(modificationId);
+            fileModificationTrackerService.errorFileModification(modificationId);
             if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                 FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
                 fileModificationErrorDialog.setVisible(true);
@@ -628,7 +631,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                 return;
             }
         }
-        String modificationId = fileModificationManagementService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
+        String modificationId = fileModificationTrackerService.addModification(filePath, description, 0, 0, ModificationType.CREATE, priorContext);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -639,7 +642,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(filePath, description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
             DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
             if (desktopCodeCreationResponseResource.getModificationSuggestions() != null  && !desktopCodeCreationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), false);
+                fileModificationTrackerService.implementModification(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), false);
             } else {
                 if (desktopCodeCreationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.CREATE);
@@ -648,7 +651,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, desktopCodeCreationResponseResource.getError(), ModificationType.CREATE);
                     fileModificationErrorDialog.setVisible(true);
                 }
-                fileModificationManagementService.removeModification(modificationId);
+                fileModificationTrackerService.removeModification(modificationId);
             }
             backgroundTaskMapperService.removeTask(modificationId);
         };
@@ -659,7 +662,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
     }
 
     @Override
-    public void getModifiedCodeCreation(Editor editor, String suggestionId, int startIndex, int endIndex, String description, List<HistoricalContextObjectHolder> priorContext) {
+    public void getModifiedCodeCreation(Editor editor, FileModificationSuggestion fileModificationSuggestion, int startIndex, int endIndex, String description, List<HistoricalContextObjectHolder> priorContext) {
         String model = openAiModelService.getSelectedOpenAiModel();
         if (firebaseTokenService.getFirebaseToken() == null) {
             CodactorConfigurable configurable = new CodactorConfigurable();
@@ -668,8 +671,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
                 return;
             }
         }
-        FileModificationSuggestion fileModificationSuggestion = fileModificationManagementService.getModificationSuggestion(suggestionId);
-        String modificationId = fileModificationManagementService.addModificationSuggestionModification(editor, fileModificationSuggestion.getFilePath(), suggestionId, startIndex, endIndex, ModificationType.CREATE);
+        String modificationSuggestionModificationId = fileModificationSuggestionModificationTrackerService.addModificationSuggestionModification(fileModificationSuggestion, editor, startIndex, endIndex, ModificationType.CREATE);
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -680,23 +682,23 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(fileModificationSuggestion.getFilePath(), description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
             FileModificationSuggestionModificationRecord fileModificationSuggestionModificationRecord = codeModificationDao.getModifiedCodeCreation(desktopCodeCreationRequestResource);
             if (fileModificationSuggestionModificationRecord.getEditedCode() != null) {
-                fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationId);
-                fileModificationManagementService.implementModificationSuggestionModificationUpdate(fileModificationSuggestionModificationRecord);
+                fileModificationSuggestionModificationRecord.setModificationSuggestionModificationId(modificationSuggestionModificationId);
+                fileModificationSuggestionModificationTrackerService.implementModification(modificationSuggestionModificationId, fileModificationSuggestionModificationRecord.getEditedCode());
             } else {
                 FileModificationErrorDialog fileModificationErrorDialog;
                 if (fileModificationSuggestionModificationRecord.getError().equals("null: null")) {
-                    fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), "", ModificationType.CREATE);
+                    fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationSuggestionModificationId, fileModificationSuggestion.getFilePath(), "", ModificationType.CREATE);
                 } else {
-                    fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), ModificationType.CREATE);
+                    fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationSuggestionModificationId, fileModificationSuggestion.getFilePath(), fileModificationSuggestionModificationRecord.getError(), ModificationType.CREATE);
                 }
                 fileModificationErrorDialog.setVisible(true);
             }
-            backgroundTaskMapperService.removeTask(modificationId);
+            backgroundTaskMapperService.removeTask(modificationSuggestionModificationId);
         };
         Runnable cancelTask = () -> {};
         CustomBackgroundTask backgroundTask = new CustomBackgroundTask(project, "File Modification Suggestion Modification (" + ModificationType.CREATE + ")", task, cancelTask);
         ProgressManager.getInstance().run(backgroundTask);
-        backgroundTaskMapperService.addTask(modificationId, backgroundTask);
+        backgroundTaskMapperService.addTask(modificationSuggestionModificationId, backgroundTask);
     }
 
     @Override
@@ -710,8 +712,8 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             }
         }
         String code = codeSnippetExtractorService.getAllText(filePath);
-        String modificationId = fileModificationManagementService.addModification(filePath, null, 0, code.length(), ModificationType.TRANSLATE, priorContext);
-        FileModification fileModification = fileModificationManagementService.getModification(modificationId);
+        String modificationId = fileModificationTrackerService.addModification(filePath, null, 0, code.length(), ModificationType.TRANSLATE, priorContext);
+        FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
         fileModification.setNewLanguage(newLanguage);
         fileModification.setNewFileType(newFileType);
         CancellableRunnable task = customProgressIndicator -> {
@@ -724,9 +726,9 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
             DesktopCodeTranslationRequestResource desktopCodeTranslationRequestResource = new DesktopCodeTranslationRequestResource(filePath, code, newLanguage, newFileType, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
             DesktopCodeTranslationResponseResource desktopCodeTranslationResponseResource = codeModificationDao.getTranslatedCode(desktopCodeTranslationRequestResource);
             if (desktopCodeTranslationResponseResource.getModificationSuggestions() != null && !desktopCodeTranslationResponseResource.getModificationSuggestions().isEmpty()) {
-                fileModificationManagementService.readyFileModificationUpdate(modificationId, desktopCodeTranslationResponseResource.getSubjectLine(), desktopCodeTranslationResponseResource.getModificationSuggestions());
+                fileModificationTrackerService.readyFileModificationUpdate(modificationId, desktopCodeTranslationResponseResource.getSubjectLine(), desktopCodeTranslationResponseResource.getModificationSuggestions());
             } else {
-                fileModificationManagementService.errorFileModification(modificationId);
+                fileModificationTrackerService.errorFileModification(modificationId);
                 if (desktopCodeTranslationResponseResource.getError().equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(modificationId, filePath, "", ModificationType.TRANSLATE);
                     fileModificationErrorDialog.setVisible(true);

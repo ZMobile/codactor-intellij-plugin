@@ -46,8 +46,8 @@ import com.translator.service.codactor.ai.modification.history.FileModificationH
 import com.translator.service.codactor.ai.modification.history.FileModificationHistoryServiceImpl;
 import com.translator.service.codactor.ai.modification.json.FileModificationDataHolderJsonCompatibilityService;
 import com.translator.service.codactor.ai.modification.json.FileModificationDataHolderJsonCompatibilityServiceImpl;
-import com.translator.service.codactor.ai.modification.multi.MultiFileAiModificationService;
-import com.translator.service.codactor.ai.modification.multi.MultiFileAiModificationServiceImpl;
+import com.translator.service.codactor.ai.modification.multi.MultiFileAiCodeModificationService;
+import com.translator.service.codactor.ai.modification.multi.MultiFileAiCodeModificationServiceImpl;
 import com.translator.service.codactor.ide.handler.EditorClickHandlerService;
 import com.translator.service.codactor.ide.handler.EditorClickHandlerServiceImpl;
 import com.translator.service.codactor.io.TabKeyListenerService;
@@ -179,7 +179,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
 
     @Singleton
     @Provides
-    public FileModificationManagementService getFileModificationTrackerService(Project project,
+    public FileModificationTrackerService getFileModificationTrackerService(Project project,
                                                                                CodeHighlighterService codeHighlighterService,
                                                                                CodeSnippetExtractorService codeSnippetExtractorService,
                                                                                CodeRangeTrackerService codeRangeTrackerService,
@@ -191,7 +191,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
                                                                                DiffEditorGeneratorService diffEditorGeneratorService,
                                                                                FileCreatorService fileCreatorService,
                                                                                FileRemoverService fileRemoverService) {
-        return new FileModificationManagementServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService, fileCreatorService, fileRemoverService);
+        return new FileModificationTrackerServiceImpl(project, codeHighlighterService, codeSnippetExtractorService, codeRangeTrackerService, guardedBlockService, rangeReplaceService, editorClickHandlerService, renameFileService, backgroundTaskMapperService, diffEditorGeneratorService, fileCreatorService, fileRemoverService);
     }
 
     @Singleton
@@ -199,29 +199,29 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
     public MassCodeFileGeneratorService getCodeFileGeneratorService(Project project,
                                                                     InquiryDao inquiryDao,
                                                                     CodeModificationDao codeModificationDao,
-                                                                    FileModificationManagementService fileModificationManagementService,
+                                                                    FileModificationTrackerService fileModificationTrackerService,
                                                                     DefaultConnectionService defaultConnectionService,
                                                                     OpenAiModelService openAiModelService,
                                                                     FileCreatorService fileCreatorService,
                                                                     InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
                                                                     AzureConnectionService azureConnectionService) {
-        return new MassCodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationDao, fileModificationManagementService, defaultConnectionService, openAiModelService, fileCreatorService, inquirySystemMessageGeneratorService, azureConnectionService);
+        return new MassCodeFileGeneratorServiceImpl(project, inquiryDao, codeModificationDao, fileModificationTrackerService, defaultConnectionService, openAiModelService, fileCreatorService, inquirySystemMessageGeneratorService, azureConnectionService);
     }
 
     @Singleton
     @Provides
-    public MultiFileAiModificationService multiFileModificationService(Project project,
-                                                                       InquiryDao inquiryDao,
-                                                                       CodeModificationDao codeModificationDao,
-                                                                       FileModificationManagementService fileModificationManagementService,
-                                                                       AiFileModificationRestarterService aiFileModificationRestarterService,
-                                                                       CodeSnippetExtractorService codeSnippetExtractorService,
-                                                                       DefaultConnectionService defaultConnectionService,
-                                                                       OpenAiModelService openAiModelService,
-                                                                       InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
-                                                                       AzureConnectionService azureConnectionService,
-                                                                       FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
-                                                                       Gson gson) {
-        return new MultiFileAiModificationServiceImpl(project, inquiryDao, codeModificationDao, fileModificationManagementService, aiFileModificationRestarterService, codeSnippetExtractorService, defaultConnectionService, openAiModelService, inquirySystemMessageGeneratorService, azureConnectionService, fileModificationErrorDialogFactory, gson);
+    public MultiFileAiCodeModificationService multiFileModificationService(Project project,
+                                                                           InquiryDao inquiryDao,
+                                                                           CodeModificationDao codeModificationDao,
+                                                                           FileModificationTrackerService fileModificationTrackerService,
+                                                                           AiFileModificationRestarterService aiFileModificationRestarterService,
+                                                                           CodeSnippetExtractorService codeSnippetExtractorService,
+                                                                           DefaultConnectionService defaultConnectionService,
+                                                                           OpenAiModelService openAiModelService,
+                                                                           InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
+                                                                           AzureConnectionService azureConnectionService,
+                                                                           FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
+                                                                           Gson gson) {
+        return new MultiFileAiCodeModificationServiceImpl(project, inquiryDao, codeModificationDao, fileModificationTrackerService, aiFileModificationRestarterService, codeSnippetExtractorService, defaultConnectionService, openAiModelService, inquirySystemMessageGeneratorService, azureConnectionService, fileModificationErrorDialogFactory, gson);
     }
 }

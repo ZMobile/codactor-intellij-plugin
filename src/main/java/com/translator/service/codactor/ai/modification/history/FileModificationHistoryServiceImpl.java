@@ -9,6 +9,8 @@ import com.translator.model.codactor.ai.modification.FileModificationSuggestion;
 import com.translator.model.codactor.ai.modification.FileModificationSuggestionModification;
 import com.translator.model.codactor.ai.modification.data.FileModificationDataHolder;
 import com.translator.model.codactor.ai.modification.data.ModificationObjectType;
+import com.translator.service.codactor.ai.modification.queued.QueuedFileModificationObjectHolderQueryService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.transformer.modification.HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService;
 
 import java.util.ArrayList;
@@ -18,13 +20,15 @@ import java.util.Map;
 
 public class FileModificationHistoryServiceImpl implements FileModificationHistoryService {
     private final CodeModificationHistoryDao codeModificationHistoryDao;
-    private final FileModificationManagementService fileModificationManagementService;
+    private final QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService;
     private final HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService historicalFileModificationDataHolderToFileModificationDataHolderTransformerService;
 
     @Inject
-    public FileModificationHistoryServiceImpl(CodeModificationHistoryDao codeModificationHistoryDao, FileModificationManagementService fileModificationManagementService, HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService historicalFileModificationDataHolderToFileModificationDataHolderTransformerService) {
+    public FileModificationHistoryServiceImpl(CodeModificationHistoryDao codeModificationHistoryDao,
+                                              QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService,
+                                              HistoricalFileModificationDataHolderToFileModificationDataHolderTransformerService historicalFileModificationDataHolderToFileModificationDataHolderTransformerService) {
         this.codeModificationHistoryDao = codeModificationHistoryDao;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.queuedFileModificationObjectHolderQueryService = queuedFileModificationObjectHolderQueryService;
         this.historicalFileModificationDataHolderToFileModificationDataHolderTransformerService = historicalFileModificationDataHolderToFileModificationDataHolderTransformerService;
     }
 
@@ -32,7 +36,7 @@ public class FileModificationHistoryServiceImpl implements FileModificationHisto
     public List<FileModificationDataHolder> getRecentHistoricalFileModifications() {
         DesktopCodeModificationHistoryResponseResource desktopCompletedCodeModificationHistoryResponseResource = codeModificationHistoryDao.getRecentModifications();
         List<FileModificationDataHolder> completedFileModificationObjects = historicalFileModificationDataHolderToFileModificationDataHolderTransformerService.convert(desktopCompletedCodeModificationHistoryResponseResource.getModificationHistory());
-        List<FileModificationDataHolder> queuedModificationObjects = fileModificationManagementService.getQueuedFileModificationObjectHolders();
+        List<FileModificationDataHolder> queuedModificationObjects = fileModificationTrackerService.getQueuedFileModificationObjectHolders();
         Map<String, FileModificationDataHolder> mergedModificationObjects = new HashMap<>();
         for (FileModificationDataHolder fileModificationDataHolder : queuedModificationObjects) {
             if (fileModificationDataHolder.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION) {
@@ -65,7 +69,7 @@ public class FileModificationHistoryServiceImpl implements FileModificationHisto
     }
 
     public FileModificationDataHolder getModification(String id) {
-        List<FileModificationDataHolder> queuedModificationObjects = fileModificationManagementService.getQueuedFileModificationObjectHolders();
+        List<FileModificationDataHolder> queuedModificationObjects = queuedFileModificationObjectHolderQueryService.getQueuedFileModificationObjectHolders();
         return queuedModificationObjects.stream()
                 .filter(modificationObject ->
                         (modificationObject.getQueuedModificationObjectType() == ModificationObjectType.FILE_MODIFICATION

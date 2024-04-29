@@ -11,6 +11,7 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.CodactorInjector;
 import com.translator.model.codactor.ai.modification.FileModificationTracker;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.handler.EditorClickHandlerService;
 import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
@@ -23,19 +24,19 @@ import java.util.Map;
 public class EditorListener implements EditorFactoryListener {
     private static final Map<Project, EditorListener> activeListeners = new HashMap<>();
     private final Project project;
-    private final FileModificationManagementService fileModificationManagementService;
+    private final FileModificationTrackerService fileModificationTrackerService;
     private final EditorClickHandlerService editorClickHandlerService;
     private final CodeHighlighterService codeHighlighterService;
     private final ModificationTypeComboBoxService modificationTypeComboBoxService;
 
 
     public EditorListener(Project project,
-                          FileModificationManagementService fileModificationManagementService,
+                          FileModificationTrackerService fileModificationTrackerService,
                           EditorClickHandlerService editorClickHandlerService,
                           CodeHighlighterService codeHighlighterService,
                           ModificationTypeComboBoxService modificationTypeComboBoxService) {
         this.project = project;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
         this.editorClickHandlerService = editorClickHandlerService;
         this.codeHighlighterService = codeHighlighterService;
         this.modificationTypeComboBoxService = modificationTypeComboBoxService;
@@ -51,12 +52,12 @@ public class EditorListener implements EditorFactoryListener {
             if (!activeListeners.containsKey(editor.getProject())) {
                 Injector injector = CodactorInjector.getInstance().getInjector(editor.getProject());
                 if (injector != null) {
-                    FileModificationManagementService fileModificationManagementService = injector.getInstance(FileModificationManagementService.class);
+                    FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
                     EditorClickHandlerService editorClickHandlerService = injector.getInstance(EditorClickHandlerService.class);
                     CodeHighlighterService codeHighlighterService = injector.getInstance(CodeHighlighterService.class);
                     ModificationTypeComboBoxService modificationTypeComboBoxService = injector.getInstance(ModificationTypeComboBoxService.class);
 
-                    EditorListener.register(editor.getProject(), fileModificationManagementService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
+                    EditorListener.register(editor.getProject(), fileModificationTrackerService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
                 }
             }
             return;
@@ -71,9 +72,9 @@ public class EditorListener implements EditorFactoryListener {
                 System.out.println("Adding editor for file path: " + filePath);
                 //editorService.addEditor(filePath, editor);
             }
-            FileModificationTracker fileModificationTracker = fileModificationManagementService.getModificationTracker(filePath);
+            FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(filePath);
             if (fileModificationTracker != null) {
-                editorClickHandlerService.addEditorClickHandler(filePath, editor);
+                editorClickHandlerService.addEditorClickHandler(fileModificationTracker, editor);
                 codeHighlighterService.highlightTextArea(fileModificationTracker, editor);
                 System.out.println("Editor created for file path: " + filePath);
             }
@@ -93,12 +94,12 @@ public class EditorListener implements EditorFactoryListener {
             if (!activeListeners.containsKey(editor.getProject())) {
                 Injector injector = CodactorInjector.getInstance().getInjector(editor.getProject());
                 if (injector != null) {
-                    FileModificationManagementService fileModificationManagementService = injector.getInstance(FileModificationManagementService.class);
+                    FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
                     EditorClickHandlerService editorClickHandlerService = injector.getInstance(EditorClickHandlerService.class);
                     CodeHighlighterService codeHighlighterService = injector.getInstance(CodeHighlighterService.class);
                     ModificationTypeComboBoxService modificationTypeComboBoxService = injector.getInstance(ModificationTypeComboBoxService.class);
 
-                    EditorListener.register(editor.getProject(), fileModificationManagementService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
+                    EditorListener.register(editor.getProject(), fileModificationTrackerService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
                 }
             }
             return;
@@ -111,7 +112,7 @@ public class EditorListener implements EditorFactoryListener {
             if(isDecompiledFile) {
                 //editorService.removeEditor(filePath);
             }
-            FileModificationTracker fileModificationTracker = fileModificationManagementService.getModificationTracker(filePath);
+            FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(filePath);
             if (fileModificationTracker != null) {
                 editorClickHandlerService.removeEditorClickHandler(filePath);
             }
@@ -120,7 +121,7 @@ public class EditorListener implements EditorFactoryListener {
     }
 
      public static void register(Project project,
-                                 FileModificationManagementService fileModificationManagementService,
+                                 FileModificationTrackerService fileModificationTrackerService,
                                  EditorClickHandlerService editorClickHandlerService,
                                  CodeHighlighterService codeHighlighterService,
                                  ModificationTypeComboBoxService modificationTypeComboBoxService) {
@@ -129,7 +130,7 @@ public class EditorListener implements EditorFactoryListener {
             return;
         }
         System.out.println("Editor registered.");
-        EditorListener editorListener = new EditorListener(project, fileModificationManagementService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
+        EditorListener editorListener = new EditorListener(project, fileModificationTrackerService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
         modificationTypeComboBoxService.addSelectionListenersToAllOpenEditors();
         activeListeners.put(project, editorListener);
         EditorFactory.getInstance().addEditorFactoryListener(editorListener, Disposer.newDisposable());

@@ -24,11 +24,6 @@ public class MultiFileModificationTrackerServiceImpl implements MultiFileModific
         for (MultiFileModificationListener listener : multiFileModificationUpdateListeners) {
             listener.onMultiFileModificationUpdate(multiFileModification);
         }
-        if (modificationQueueViewer == null) {
-            Injector injector = CodactorInjector.getInstance().getInjector(project);
-            this.modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
-        }
-        modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         return multiFileModification.getId();
     }
 
@@ -38,7 +33,6 @@ public class MultiFileModificationTrackerServiceImpl implements MultiFileModific
         for (MultiFileModificationListener listener : multiFileModificationUpdateListeners) {
             listener.onMultiFileModificationUpdate(multiFileModification);
         }
-        modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
         return multiFileModification.getId();
     }
 
@@ -51,7 +45,6 @@ public class MultiFileModificationTrackerServiceImpl implements MultiFileModific
         for (MultiFileModificationListener listener : multiFileModificationUpdateListeners) {
             listener.onMultiFileModificationUpdate(multiFileModification);
         }
-        modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
     }
 
     public void setMultiFileModificationStage(String multiFileModificationId, String stage) {
@@ -63,7 +56,6 @@ public class MultiFileModificationTrackerServiceImpl implements MultiFileModific
         for (MultiFileModificationListener listener : multiFileModificationUpdateListeners) {
             listener.onMultiFileModificationUpdate(multiFileModification);
         }
-        modificationQueueViewer.updateModificationList(getQueuedFileModificationObjectHolders());
     }
 
     public List<MultiFileModification> getActiveMultiFileModifications() {

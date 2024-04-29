@@ -7,6 +7,7 @@ import com.intellij.openapi.actionSystem.KeyboardShortcut;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
 import com.translator.CodactorInjector;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ide.handler.EditorClickHandlerService;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
@@ -36,10 +37,7 @@ public class MyStartupActivity implements StartupActivity {
                 actionManager.unregisterAction(RUN_ANYTHING_ACTION_ID);
             }
 
-            FileModificationManagementService fileModificationManagementService = injector.getInstance(FileModificationManagementService.class);
-            ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
-
-            fileModificationManagementService.setModificationQueueViewer(modificationQueueViewer);
+            FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
             InquiryViewer inquiryViewer = injector.getInstance(InquiryViewer.class);
             InquiryListViewer inquiryListViewer = injector.getInstance(InquiryListViewer.class);
             inquiryViewer.setInquiryListViewer(inquiryListViewer);
@@ -53,7 +51,7 @@ public class MyStartupActivity implements StartupActivity {
             CodeHighlighterService codeHighlighterService = injector.getInstance(CodeHighlighterService.class);
             ModificationTypeComboBoxService modificationTypeComboBoxService = injector.getInstance(ModificationTypeComboBoxService.class);
 
-            EditorListener.register(project, fileModificationManagementService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
+            EditorListener.register(project, fileModificationTrackerService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
         }
     }
 }

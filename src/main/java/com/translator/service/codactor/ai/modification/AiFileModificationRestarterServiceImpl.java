@@ -11,6 +11,7 @@ import com.translator.model.codactor.ai.modification.FileModificationSuggestionR
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.model.codactor.io.CancellableRunnable;
 import com.translator.model.codactor.io.CustomBackgroundTask;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 import com.translator.service.codactor.ai.openai.OpenAiModelService;
@@ -25,7 +26,7 @@ public class AiFileModificationRestarterServiceImpl implements AiFileModificatio
     private final Project project;
     private final CodeModificationDao codeModificationDao;
     private final FirebaseTokenService firebaseTokenService;
-    private final FileModificationManagementService fileModificationManagementService;
+    private final FileModificationTrackerService fileModificationTrackerService;
     private final DefaultConnectionService defaultConnectionService;
     private final OpenAiModelService openAiModelService;
     private final BackgroundTaskMapperService backgroundTaskMapperService;
@@ -36,7 +37,7 @@ public class AiFileModificationRestarterServiceImpl implements AiFileModificatio
     public AiFileModificationRestarterServiceImpl(Project project,
                                                   CodeModificationDao codeModificationDao,
                                                   FirebaseTokenService firebaseTokenService,
-                                                  FileModificationManagementService fileModificationManagementService,
+                                                  FileModificationTrackerService fileModificationTrackerService,
                                                   DefaultConnectionService defaultConnectionService,
                                                   OpenAiModelService openAiModelService,
                                                   BackgroundTaskMapperService backgroundTaskMapperService,
@@ -45,7 +46,7 @@ public class AiFileModificationRestarterServiceImpl implements AiFileModificatio
         this.project = project;
         this.codeModificationDao = codeModificationDao;
         this.firebaseTokenService = firebaseTokenService;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
         this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;
@@ -56,8 +57,8 @@ public class AiFileModificationRestarterServiceImpl implements AiFileModificatio
     @Override
     public void restartFileModification(FileModification fileModification) {
         String model = openAiModelService.getSelectedOpenAiModel();
-        fileModificationManagementService.undoReadyFileModification(fileModification.getId());
-        fileModificationManagementService.retryFileModification(fileModification.getId());
+        fileModificationTrackerService.undoReadyFileModification(fileModification.getId());
+        fileModificationTrackerService.retryFileModification(fileModification.getId());
         CancellableRunnable task = customProgressIndicator -> {
             String openAiApiKey;
             if (azureConnectionService.isAzureConnected()) {
@@ -104,12 +105,12 @@ public class AiFileModificationRestarterServiceImpl implements AiFileModificatio
                 fileModificationSuggestionRecords = new ArrayList<>();
                 FileModificationSuggestionRecord fileModificationSuggestionRecord = new FileModificationSuggestionRecord(firebaseTokenService.getFirebaseToken().getUserId(), fileModification.getId(), ModificationType.DELETE, fileModification.getFilePath(), "Delete this code file", fileModification.getBeforeText(), "Delete this code file", "");
                 fileModificationSuggestionRecords.add(fileModificationSuggestionRecord);
-                fileModificationManagementService.readyFileModificationUpdate(fileModification.getId(), "Delete this code file", fileModificationSuggestionRecords);
+                fileModificationTrackerService.readyFileModificationUpdate(fileModification.getId(), "Delete this code file", fileModificationSuggestionRecords);
             }
             if (fileModificationSuggestionRecords != null && fileModificationSuggestionRecords.size() > 0) {
-                fileModificationManagementService.readyFileModificationUpdate(fileModification.getId(), fileModification.getSubjectLine(), fileModificationSuggestionRecords);
+                fileModificationTrackerService.readyFileModificationUpdate(fileModification.getId(), fileModification.getSubjectLine(), fileModificationSuggestionRecords);
             } else {
-                fileModificationManagementService.errorFileModification(fileModification.getId());
+                fileModificationTrackerService.errorFileModification(fileModification.getId());
                 if (error.equals("null: null")) {
                     FileModificationErrorDialog fileModificationErrorDialog = fileModificationErrorDialogFactory.create(fileModification.getId(), fileModification.getFilePath(), "", fileModification.getModificationType());
                     fileModificationErrorDialog.setVisible(true);

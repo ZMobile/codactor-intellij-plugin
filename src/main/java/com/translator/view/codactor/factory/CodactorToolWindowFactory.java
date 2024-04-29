@@ -18,9 +18,6 @@ public class CodactorToolWindowFactory implements ToolWindowFactory {
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Injector injector = CodactorInjector.getInstance().getInjector(project);
         //ConsoleView consoleView = codactorConsole.getConsoleView();
-        ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
-        FileModificationManagementService fileModificationManagementService = injector.getInstance(FileModificationManagementService.class);
-        fileModificationManagementService.setModificationQueueViewer(modificationQueueViewer);
         CodactorToolWindowService codactorToolWindowService = injector.getInstance(CodactorToolWindowService.class);
 
         // Example of how to print text to the console

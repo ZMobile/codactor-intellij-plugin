@@ -8,6 +8,7 @@ import com.intellij.openapi.actionSystem.KeyboardShortcut;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManagerListener;
 import com.translator.CodactorInjector;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.handler.EditorClickHandlerService;
 import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
@@ -42,11 +43,10 @@ public class ProjectManagerListenerImpl implements ProjectManagerListener {
                 doubleControlAction.registerCustomShortcutSet(new CustomShortcutSet(keyboardShortcut), null);
             }
             // Your code to execute when a project is opened
-            FileModificationManagementService fileModificationManagementService = injector.getInstance(FileModificationManagementService.class);
+            FileModificationTrackerService fileModificationTrackerService = injector.getInstance(FileModificationTrackerService.class);
             ModificationQueueViewer modificationQueueViewer = injector.getInstance(ModificationQueueViewer.class);
 
-            fileModificationManagementService.setModificationQueueViewer(modificationQueueViewer);
-            InquiryViewer inquiryViewer = injector.getInstance(InquiryViewer.class);
+             InquiryViewer inquiryViewer = injector.getInstance(InquiryViewer.class);
             InquiryListViewer inquiryListViewer = injector.getInstance(InquiryListViewer.class);
             inquiryViewer.setInquiryListViewer(inquiryListViewer);
             HistoricalModificationListViewer historicalModificationListViewer = injector.getInstance(HistoricalModificationListViewer.class);
@@ -59,7 +59,7 @@ public class ProjectManagerListenerImpl implements ProjectManagerListener {
             CodeHighlighterService codeHighlighterService = injector.getInstance(CodeHighlighterService.class);
             ModificationTypeComboBoxService modificationTypeComboBoxService = injector.getInstance(ModificationTypeComboBoxService.class);
 
-            EditorListener.register(project, fileModificationManagementService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
+            EditorListener.register(project, fileModificationTrackerService, editorClickHandlerService, codeHighlighterService, modificationTypeComboBoxService);
         }
     }
 

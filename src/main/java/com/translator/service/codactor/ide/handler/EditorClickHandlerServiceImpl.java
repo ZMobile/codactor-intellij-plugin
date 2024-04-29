@@ -14,18 +14,18 @@ import java.util.Map;
 
 public class EditorClickHandlerServiceImpl implements EditorClickHandlerService {
     private final Project project;
-    private final FileModificationManagementService fileModificationManagementService;
+    private final FileModificationTrackerService fileModificationTrackerService;
     private final CodactorToolWindowService codactorToolWindowService;
     private final EditorExtractorService editorExtractorService;
     private final Map<String, EditorClickHandler> editorClickHandlerMap;
 
     @Inject
     public EditorClickHandlerServiceImpl(Project project,
-                                         FileModificationManagementService fileModificationManagementService,
+                                         FileModificationTrackerService fileModificationTrackerService,
                                          CodactorToolWindowService codactorToolWindowService,
                                          EditorExtractorService editorExtractorService) {
         this.project = project;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
         this.codactorToolWindowService = codactorToolWindowService;
         this.editorExtractorService = editorExtractorService;
         this.editorClickHandlerMap = new HashMap<>();
@@ -52,7 +52,7 @@ public class EditorClickHandlerServiceImpl implements EditorClickHandlerService 
         if (editorClickHandlerMap.containsKey(fileModificationTracker.getFilePath())) {
             return;
         }
-        EditorClickHandler editorClickHandler = new EditorClickHandler(fileModificationManagementService, codactorToolWindowService, fileModificationTracker);
+        EditorClickHandler editorClickHandler = new EditorClickHandler(fileModificationTrackerService, codactorToolWindowService, fileModificationTracker);
         editor.addEditorMouseListener(editorClickHandler);
         editorClickHandlerMap.put(fileModificationTracker.getFilePath(), editorClickHandler);
     }

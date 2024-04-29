@@ -10,6 +10,7 @@ import com.intellij.ui.components.JBPanel;
 import com.translator.model.codactor.ai.modification.FileModification;
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.service.codactor.ai.modification.AiFileModificationRestarterService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.view.codactor.settings.CodactorConfigurable;
@@ -25,7 +26,7 @@ public class FileModificationErrorDialog extends JDialog {
     private String filePath;
     private DefaultConnectionService defaultConnectionService;
     private OpenAiModelService openAiModelService;
-    private FileModificationManagementService fileModificationManagementService;
+    private FileModificationTrackerService fileModificationTrackerService;
     private AiFileModificationRestarterService aiFileModificationRestarterService;
 
     @Inject
@@ -36,14 +37,14 @@ public class FileModificationErrorDialog extends JDialog {
                                        Project project,
                                        DefaultConnectionService defaultConnectionService,
                                        OpenAiModelService openAiModelService,
-                                       FileModificationManagementService fileModificationManagementService,
+                                       FileModificationTrackerService fileModificationTrackerService,
                                        AiFileModificationRestarterService aiFileModificationRestarterService) {
         super();
         this.project = project;
         this.filePath = filePath;
         this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
         this.aiFileModificationRestarterService = aiFileModificationRestarterService;
 
         JBPanel messagePanel = new JBPanel();
@@ -59,7 +60,7 @@ public class FileModificationErrorDialog extends JDialog {
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                fileModificationManagementService.removeModification(modificationId);
+                fileModificationTrackerService.removeModification(modificationId);
                 dispose();
             }
         });
@@ -76,7 +77,7 @@ public class FileModificationErrorDialog extends JDialog {
         retryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                FileModification fileModification = fileModificationManagementService.getModification(modificationId);
+                FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
                 aiFileModificationRestarterService.restartFileModification(fileModification);
                 dispose();
             }

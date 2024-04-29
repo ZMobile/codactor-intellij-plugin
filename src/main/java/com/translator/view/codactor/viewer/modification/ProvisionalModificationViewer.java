@@ -10,6 +10,7 @@ import com.intellij.ui.components.JBScrollPane;
 import com.translator.model.codactor.ai.modification.FileModification;
 import com.translator.model.codactor.ai.modification.FileModificationSuggestion;
 import com.translator.model.codactor.ai.modification.ModificationType;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ide.file.FileOpenerService;
 import com.translator.service.codactor.ai.modification.diff.AiFileModificationSuggestionDiffViewerService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
@@ -42,7 +43,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
     private JButton queueButton;
     private String fileModificationId;
     private CodactorToolWindowService codactorToolWindowService;
-    private FileModificationManagementService fileModificationManagementService;
+    private FileModificationTrackerService fileModificationTrackerService;
     private ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager;
     private FileOpenerService fileOpenerService;
     private AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService;
@@ -50,13 +51,13 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
 
     @Inject
     public ProvisionalModificationViewer(CodactorToolWindowService codactorToolWindowService,
-                                         FileModificationManagementService fileModificationManagementService,
+                                         FileModificationTrackerService fileModificationTrackerService,
                                          ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager,
                                          FileOpenerService fileOpenerService,
                                          AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService,
                                          ProvisionalModificationCustomizerDialogFactory provisionalModificationCustomizerDialogFactory) {
         this.codactorToolWindowService = codactorToolWindowService;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
         this.provisionalModificationCustomizerDialogManager = provisionalModificationCustomizerDialogManager;
         this.fileOpenerService = fileOpenerService;
         this.aiFileModificationSuggestionDiffViewerService = aiFileModificationSuggestionDiffViewerService;
@@ -128,8 +129,8 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             @Override
             public void actionPerformed(ActionEvent e) {
                 FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
-                fileModificationManagementService.implementModificationUpdate(fileModificationId, fileModificationSuggestion.getSuggestedCodeEditor().getDocument().getText(), false);
-                List<FileModification> modifications = fileModificationManagementService.getAllFileModifications();
+                fileModificationTrackerService.implementModification(fileModificationId, fileModificationSuggestion.getSuggestedCodeEditor().getDocument().getText(), false);
+                List<FileModification> modifications = fileModificationTrackerService.getAllFileModifications();
                 boolean anyDone = false;
                 FileModification nextModification = null;
                 for (FileModification modification : modifications) {
@@ -156,8 +157,8 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         rejectAllButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                fileModificationManagementService.removeModification(fileModificationId);
-                List<FileModification> modifications = fileModificationManagementService.getAllFileModifications();
+                fileModificationTrackerService.removeModification(fileModificationId);
+                List<FileModification> modifications = fileModificationTrackerService.getAllFileModifications();
                 boolean anyDone = false;
                 FileModification nextModification = null;
                 for (FileModification modification : modifications) {

@@ -9,6 +9,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.service.codactor.ai.modification.AiCodeModificationService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.multi.MultiFileModificationTrackerService;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -16,20 +18,20 @@ import java.util.List;
 public class MassAiCodeModificationServiceImpl implements MassAiCodeModificationService {
     private Project project;
     private AiCodeModificationService aiCodeModificationService;
-    private FileModificationManagementService fileModificationManagementService;
+    private MultiFileModificationTrackerService multiFileModificationTrackerService;
 
     @Inject
     public MassAiCodeModificationServiceImpl(Project project,
                                              AiCodeModificationService aiCodeModificationService,
-                                             FileModificationManagementService fileModificationManagementService) {
+                                             MultiFileModificationTrackerService multiFileModificationTrackerService) {
         this.project = project;
         this.aiCodeModificationService = aiCodeModificationService;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.multiFileModificationTrackerService = multiFileModificationTrackerService;
     }
 
     @Override
     public void getModifiedCode(List<String> filePaths, String modification, List<HistoricalContextObjectHolder> priorContext) {
-        String multiFileModificationId = fileModificationManagementService.addMultiFileModification(modification);
+        String multiFileModificationId = multiFileModificationTrackerService.addMultiFileModification(modification);
         for (String filePath : filePaths) {
             //Get the document to find the start and end index. It needs to be some read action
             ApplicationManager.getApplication().invokeLater(() -> {
@@ -54,12 +56,12 @@ public class MassAiCodeModificationServiceImpl implements MassAiCodeModification
                 e.printStackTrace();
             }
         }
-        fileModificationManagementService.removeMultiFileModification(multiFileModificationId);
+        multiFileModificationTrackerService.removeMultiFileModification(multiFileModificationId);
     }
 
     @Override
     public void getFixedCode(List<String> filePaths, String error, List<HistoricalContextObjectHolder> priorContext) {
-        String multiFileModificationId = fileModificationManagementService.addMultiFileModification(error);
+        String multiFileModificationId = multiFileModificationTrackerService.addMultiFileModification(error);
         for (String filePath : filePaths) {
             //Get the document to find the start and end index. It needs to be some read action
             ApplicationManager.getApplication().invokeLater(() -> {
@@ -84,12 +86,12 @@ public class MassAiCodeModificationServiceImpl implements MassAiCodeModification
                 e.printStackTrace();
             }
         }
-        fileModificationManagementService.removeMultiFileModification(multiFileModificationId);
+        multiFileModificationTrackerService.removeMultiFileModification(multiFileModificationId);
     }
 
     @Override
     public void getTranslatedCode(List<String> filePaths, String newLanguage, String newFileType, List<HistoricalContextObjectHolder> priorContext) {
-        String multiFileModificationId = fileModificationManagementService.addMultiFileModification("Translate files to " + newLanguage);
+        String multiFileModificationId = multiFileModificationTrackerService.addMultiFileModification("Translate files to " + newLanguage);
         for (String filePath : filePaths) {
             //Get the document to find the start and end index. It needs to be some read action
             ApplicationManager.getApplication().invokeLater(() -> {
@@ -102,6 +104,6 @@ public class MassAiCodeModificationServiceImpl implements MassAiCodeModification
                 e.printStackTrace();
             }
         }
-        fileModificationManagementService.removeMultiFileModification(multiFileModificationId);
+        multiFileModificationTrackerService.removeMultiFileModification(multiFileModificationId);
     }
 }

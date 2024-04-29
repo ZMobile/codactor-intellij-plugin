@@ -2,6 +2,7 @@ package com.translator.service.codactor.ai.modification.api;
 
 import com.intellij.openapi.project.Project;
 import com.translator.dao.firebase.FirebaseTokenService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
@@ -16,7 +17,7 @@ public class LocalApiCodeModificationServiceImpl implements LocalApiCodeModifica
     private Project project;
     private FirebaseTokenService firebaseTokenService;
     private CodeSnippetExtractorService codeSnippetExtractorService;
-    private FileModificationManagementService fileModificationManagementService;
+    private FileModificationTrackerService fileModificationTrackerService;
     private DefaultConnectionService defaultConnectionService;
     private OpenAiModelService openAiModelService;
     private BackgroundTaskMapperService backgroundTaskMapperService;
@@ -28,7 +29,7 @@ public class LocalApiCodeModificationServiceImpl implements LocalApiCodeModifica
     public LocalApiCodeModificationServiceImpl(Project project,
                                    FirebaseTokenService firebaseTokenService,
                                    CodeSnippetExtractorService codeSnippetExtractorService,
-                                   FileModificationManagementService fileModificationManagementService,
+                                   FileModificationTrackerService fileModificationTrackerService,
                                    DefaultConnectionService defaultConnectionService,
                                    OpenAiModelService openAiModelService,
                                    BackgroundTaskMapperService backgroundTaskMapperService,
@@ -38,7 +39,7 @@ public class LocalApiCodeModificationServiceImpl implements LocalApiCodeModifica
         this.project = project;
         this.firebaseTokenService = firebaseTokenService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
         this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
         this.backgroundTaskMapperService = backgroundTaskMapperService;

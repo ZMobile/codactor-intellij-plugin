@@ -26,6 +26,10 @@ public interface FileModificationTrackerService {
 
         Map<String, FileModificationTracker> getActiveModificationFiles();
 
+        FileModificationTracker getModificationTracker(String filePath);
+
+        FileModificationTracker getTrackerWithModificationId(String modificationId);
+
         FileModification getModification(String modificationId);
 
         List<FileModification> getAllFileModifications();

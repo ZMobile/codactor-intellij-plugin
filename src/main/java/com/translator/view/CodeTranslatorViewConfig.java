@@ -80,11 +80,11 @@ public class CodeTranslatorViewConfig extends AbstractModule {
     @Singleton
     @Provides
     public ProvisionalModificationViewer codeSnippetListViewer(CodactorToolWindowService codactorToolWindowService,
-                                                               FileModificationManagementService fileModificationManagementService,
+                                                               FileModificationTrackerService fileModificationTrackerService,
                                                                FileOpenerService fileOpenerService,
                                                                AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService,
                                                                ProvisionalModificationCustomizerDialogFactory provisionalModificationCustomizerDialogFactory) {
-        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationManagementService, fileOpenerService, aiFileModificationSuggestionDiffViewerService, provisionalModificationCustomizerDialogFactory);
+        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationTrackerService, fileOpenerService, aiFileModificationSuggestionDiffViewerService, provisionalModificationCustomizerDialogFactory);
     }
 
     @Singleton
@@ -126,11 +126,11 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                                            CodactorToolWindowService codactorToolWindowService,
                                                            FileReaderService fileReaderService,
                                                            FileOpenerService fileOpenerService,
-                                                           FileModificationManagementService fileModificationManagementService,
+                                                           FileModificationTrackerService fileModificationTrackerService,
                                                            AiFileModificationRestarterService aiFileModificationRestarterService,
                                                            FileModificationErrorDialogFactory fileModificationErrorDialogFactory,
                                                            BackgroundTaskMapperService backgroundTaskMapperService) {
-        return new ModificationQueueViewer(project, provisionalModificationViewer, codactorToolWindowService, fileReaderService, fileOpenerService, fileModificationManagementService, aiFileModificationRestarterService, fileModificationErrorDialogFactory, backgroundTaskMapperService);
+        return new ModificationQueueViewer(project, provisionalModificationViewer, codactorToolWindowService, fileReaderService, fileOpenerService, fileModificationTrackerService, aiFileModificationRestarterService, fileModificationErrorDialogFactory, backgroundTaskMapperService);
     }
 
     @Singleton

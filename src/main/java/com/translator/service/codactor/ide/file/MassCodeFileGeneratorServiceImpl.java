@@ -16,6 +16,8 @@ import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.codactor.ai.chat.InquiryChat;
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.model.codactor.ai.modification.RecordType;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.multi.MultiFileModificationTrackerService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ai.chat.inquiry.InquirySystemMessageGeneratorService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
@@ -36,7 +38,8 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
     private final Project project;
     private final InquiryDao inquiryDao;
     private final CodeModificationDao codeModificationDao;
-    private final FileModificationManagementService fileModificationManagementService;
+    private final MultiFileModificationTrackerService multiFileModificationTrackerService;
+    private final FileModificationTrackerService fileModificationTrackerService;
     private final DefaultConnectionService defaultConnectionService;
     private final OpenAiModelService openAiModelService;
     private final FileCreatorService fileCreatorService;
@@ -47,7 +50,8 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
     public MassCodeFileGeneratorServiceImpl(Project project,
                                             InquiryDao inquiryDao,
                                             CodeModificationDao codeModificationDao,
-                                            FileModificationManagementService fileModificationManagementService,
+                                            MultiFileModificationTrackerService multiFileModificationTrackerService,
+                                            FileModificationTrackerService fileModificationTrackerService,
                                             DefaultConnectionService defaultConnectionService,
                                             OpenAiModelService openAiModelService,
                                             FileCreatorService fileCreatorService,
@@ -56,7 +60,8 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
         this.project = project;
         this.inquiryDao = inquiryDao;
         this.codeModificationDao = codeModificationDao;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.multiFileModificationTrackerService = multiFileModificationTrackerService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
         this.defaultConnectionService = defaultConnectionService;
         this.openAiModelService = openAiModelService;
         this.fileCreatorService = fileCreatorService;
@@ -79,13 +84,13 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
             } else {
                 openAiApiKey = defaultConnectionService.getOpenAiApiKey();
             }
-        String multiFileModificationId = fileModificationManagementService.addMultiFileModification(inquiry.getId(), language, fileExtension, filePath);
+        String multiFileModificationId = multiFileModificationTrackerService.addMultiFileModification(inquiry.getId(), language, fileExtension, filePath);
         Task.Backgroundable outerTask = new Task.Backgroundable(project, "Outer Task", true) {
             @Override
             public void run(@NotNull ProgressIndicator outerIndicator) {
                 Inquiry newInquiry;
                 String question = "What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
-                fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
+                multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
                 if (inquiryChat != null) {
                     newInquiry = inquiryDao.continueInquiry(inquiryChat.getId(), question, openAiApiKey, model,  azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                 } else {
@@ -98,7 +103,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         return;
                     }
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
-                    fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
+                    multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
                     String question2 = "Can you provide the terminal commands for creating these " + language + " files in " + filePath + "?";
                     newInquiry = inquiryDao.continueInquiry(mostRecentInquiryChat1.getId(), question2, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                     if (newInquiry != null) {
@@ -117,7 +122,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                             }
                             mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         }
-                        fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
+                        multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
 
                         List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat2.getMessage());
                         for (int i = 0; i < newFiles.size(); i++) {
@@ -130,17 +135,17 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                     @Override
                                     public void run(@NotNull ProgressIndicator indicator) {
                                         int fileNumber = finalI + 1;
-                                        fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
+                                        multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
                                         List<HistoricalContextObjectHolder> priorContext = new ArrayList<>();
                                         HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(finalNewInquiry.getId(), mostRecentInquiryChat1.getId(), null, false, null);
                                         HistoricalContextObjectHolder priorContextObject = new HistoricalContextObjectHolder(inquiryContext);
                                         priorContext.add(priorContextObject);
-                                        String modificationId = fileModificationManagementService.addModification(file.getAbsolutePath(), finalMostRecentInquiryChat.getMessage(), 0, 0, ModificationType.CREATE, priorContext);
+                                        String modificationId = fileModificationTrackerService.addModification(file.getAbsolutePath(), finalMostRecentInquiryChat.getMessage(), 0, 0, ModificationType.CREATE, priorContext);
                                         String description = "The complete and comprehensive " + language + " code for " + file.getName();
                                         DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
                                         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                            fileModificationManagementService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
+                                            fileModificationTrackerService.implementModification(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                             //write the contents to the file with printWriter:
                                            // try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                                                 //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode());
@@ -155,7 +160,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                                 JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                         JOptionPane.ERROR_MESSAGE);
                                             }
-                                            fileModificationManagementService.removeModification(modificationId);
+                                            fileModificationTrackerService.removeModification(modificationId);
                                         }
                                     }
                                 };
@@ -170,7 +175,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         }
                     }
                 }
-                fileModificationManagementService.removeMultiFileModification(multiFileModificationId);
+                multiFileModificationTrackerService.removeMultiFileModification(multiFileModificationId);
             }
         };
 
@@ -192,13 +197,13 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
             } else {
                 openAiApiKey = defaultConnectionService.getOpenAiApiKey();
             }
-        String multiFileModificationId = fileModificationManagementService.addMultiFileModification(inquiry.getId(), language, fileExtension, filePath);
+        String multiFileModificationId = multiFileModificationTrackerService.addMultiFileModification(inquiry.getId(), language, fileExtension, filePath);
         Task.Backgroundable backgroundTask = new Task.Backgroundable(project, "Task", true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 Inquiry newInquiry;
                 String question = "What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
-                fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
+                multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
                 if (inquiryChat != null) {
                     newInquiry = inquiryDao.continueInquiry(inquiryChat.getId(), question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model));
                 } else {
@@ -211,7 +216,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         return;
                     }
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
-                    fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(1.5/3) Ordering File Names");
+                    multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1.5/3) Ordering File Names");
                     String question2 = "What would be the ideal order to create these files such that I make the simplest ones first, and then the more complex ones that depend on the previous ones later?";
                     try {
                         Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
@@ -227,7 +232,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                             return;
                         }
                         InquiryChat mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
-                        fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
+                        multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
                         String question3 = "Can you provide the terminal commands for creating those " + language + " files in " + filePath + "? Can you provide them in the order you specified above?";
                         try {
                             Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
@@ -243,7 +248,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                 return;
                             }
                             InquiryChat mostRecentInquiryChat3 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
-                            fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
+                            multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
                             List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat3.getMessage());
                             List<String> completedSuggestionIds = new ArrayList<>();
                             for (int i = 0; i < newFiles.size(); i++) {
@@ -262,14 +267,14 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         HistoricalContextObjectHolder priorContextObject2 = new HistoricalContextObjectHolder(modificationContext);
                                         priorContext.add(priorContextObject2);
                                     }
-                                    String modificationId = fileModificationManagementService.addModification(filePath, mostRecentInquiryChat3.getMessage(), 0, 0, ModificationType.CREATE, priorContext);
+                                    String modificationId = fileModificationTrackerService.addModification(filePath, mostRecentInquiryChat3.getMessage(), 0, 0, ModificationType.CREATE, priorContext);
                                     int fileNumber = i + 1;
-                                    fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
+                                    multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
                                     String description = "The complete and comprehensive " + language + " code for " + file.getName();
                                     DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext);
                                     DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                        fileModificationManagementService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
+                                        fileModificationTrackerService.implementModification(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                         //write the contents to the file with printWriter:
                                         //try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                                             //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode());
@@ -285,7 +290,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                             JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                     JOptionPane.ERROR_MESSAGE);
                                         }
-                                        fileModificationManagementService.removeModification(modificationId);
+                                        fileModificationTrackerService.removeModification(modificationId);
                                     }
                                     try {
                                         Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
@@ -298,7 +303,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         }
                     }
                 }
-                fileModificationManagementService.removeMultiFileModification(multiFileModificationId);
+                multiFileModificationTrackerService.removeMultiFileModification(multiFileModificationId);
             }
         };
 
@@ -323,13 +328,13 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
             } else {
                 openAiApiKey = defaultConnectionService.getOpenAiApiKey();
             }
-        String multiFileModificationId = fileModificationManagementService.addMultiFileModification(description, language, fileExtension, filePath);
+        String multiFileModificationId = multiFileModificationTrackerService.addMultiFileModification(description, language, fileExtension, filePath);
         List<HistoricalContextObjectHolder> finalPriorContext = priorContext;
         LimitedSwingWorker worker = new LimitedSwingWorker(new LimitedSwingWorkerExecutor()) {
             @Override
             protected Void doInBackground() {
                 String question = "I need to create a potentially multi-file " + language + " program with the following description: \"" + description + "\".  What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
-                fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
+                multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
                 Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), finalPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 if (newInquiry != null) {
                     if (newInquiry.getError() != null) {
@@ -337,7 +342,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                 JOptionPane.ERROR_MESSAGE);
                     }
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
-                    fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
+                    multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
                     String question2 = "Can you provide the terminal commands for creating those " + language + " files in " + filePath + "?";
                     try {
                         Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
@@ -360,7 +365,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                             }
                             mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
                         }
-                        fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
+                        multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
 
                         List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat2.getMessage());
                         for (int i = 0; i < newFiles.size(); i++) {
@@ -373,17 +378,17 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                     @Override
                                     protected Void doInBackground() {
                                         int fileNumber = finalI + 1;
-                                        fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
+                                        multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
                                         List<HistoricalContextObjectHolder> newPriorContext = new ArrayList<>();
                                         HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(finalNewInquiry.getId(), mostRecentInquiryChat1.getId(), null, false, null);
                                         HistoricalContextObjectHolder priorContextObject = new HistoricalContextObjectHolder(inquiryContext);
                                         newPriorContext.add(priorContextObject);
-                                        String modificationId = fileModificationManagementService.addModification(newFilePath, description, 0, 0, ModificationType.CREATE, newPriorContext);
+                                        String modificationId = fileModificationTrackerService.addModification(newFilePath, description, 0, 0, ModificationType.CREATE, newPriorContext);
                                         String newDescription = "The complete and comprehensive " + language + " code for " + file.getName();
                                         DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), newDescription, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), newPriorContext);
                                         DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
                                         if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                            fileModificationManagementService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
+                                            fileModificationTrackerService.implementModification(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                             //write the contents to the file with printWriter:
                                             //try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                                                 //out.println(desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode());
@@ -398,7 +403,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                                 JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                         JOptionPane.ERROR_MESSAGE);
                                             }
-                                            fileModificationManagementService.removeModification(modificationId);
+                                            fileModificationTrackerService.removeModification(modificationId);
                                         }
                                         return null;
                                     }
@@ -416,7 +421,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         }
                     }
                 }
-                fileModificationManagementService.removeMultiFileModification(multiFileModificationId);
+                multiFileModificationTrackerService.removeMultiFileModification(multiFileModificationId);
                 return null;
             }
         };
@@ -441,13 +446,13 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
             } else {
                 openAiApiKey = defaultConnectionService.getOpenAiApiKey();
             }
-        String multiFileModificationId = fileModificationManagementService.addMultiFileModification(description, language, fileExtension, filePath);
+        String multiFileModificationId = multiFileModificationTrackerService.addMultiFileModification(description, language, fileExtension, filePath);
         List<HistoricalContextObjectHolder> finalPriorContext = priorContext;
         LimitedSwingWorker worker = new LimitedSwingWorker(new LimitedSwingWorkerExecutor()) {
             @Override
             protected Void doInBackground() {
                 String question = "I need to create a potentially multi-file " + language + " program with the following description: \"" + description + "\".  What exactly are the names of the ." + newFileExtension + " files that need to be ideally made for this program to work in " + language + "?";
-                fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
+                multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1/3) Obtaining File Names");
                 Inquiry newInquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), finalPriorContext, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
                 if (newInquiry != null) {
                     if (newInquiry.getError() != null) {
@@ -455,7 +460,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                 JOptionPane.ERROR_MESSAGE);
                     }
                     InquiryChat mostRecentInquiryChat1 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
-                    fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(1.5/3) Ordering File Names");
+                    multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(1.5/3) Ordering File Names");
                     String question2 = "What would be the ideal order to create these files such that I make the simplest ones first, and then the more complex ones that depend on the previous ones later?";
                     try {
                         Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
@@ -470,7 +475,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                     JOptionPane.ERROR_MESSAGE);
                         }
                         InquiryChat mostRecentInquiryChat2 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
-                        fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
+                        multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(2/3) Obtaining Terminal Commands");
                         String question3 = "Can you provide the terminal commands for creating those " + language + " files in " + filePath + "? Can you provide them in the order you specified above?";
                         try {
                             Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
@@ -485,7 +490,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         JOptionPane.ERROR_MESSAGE);
                             }
                             InquiryChat mostRecentInquiryChat3 = newInquiry.getChats().get(newInquiry.getChats().size() - 1);
-                            fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
+                            multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files...");
                             List<File> newFiles = fileCreatorService.createFilesFromInput(filePath, mostRecentInquiryChat3.getMessage());
                             List<String> completedSuggestionIds = new ArrayList<>();
                             for (int i = 0; i < newFiles.size(); i++) {
@@ -493,7 +498,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                 if (file != null) {
                                     String newFilePath = file.getAbsolutePath();
                                     int fileNumber = i + 1;
-                                    fileModificationManagementService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
+                                    multiFileModificationTrackerService.setMultiFileModificationStage(multiFileModificationId, "(3/3) Creating Files... (" + fileNumber + "/" + newFiles.size() + ")");
                                     List<HistoricalContextObjectHolder> priorContext2 = new ArrayList<>();
                                     HistoricalContextInquiryHolder inquiryContext = new HistoricalContextInquiryHolder(newInquiry.getId(), mostRecentInquiryChat1.getId(), null, true, null);
                                     HistoricalContextObjectHolder priorContextObject = new HistoricalContextObjectHolder(inquiryContext);
@@ -503,12 +508,12 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                         HistoricalContextObjectHolder priorContextObject2 = new HistoricalContextObjectHolder(modificationContext);
                                         priorContext2.add(priorContextObject2);
                                     }
-                                    String modificationId = fileModificationManagementService.addModification(newFilePath, description, 0, 0, ModificationType.CREATE, finalPriorContext);
+                                    String modificationId = fileModificationTrackerService.addModification(newFilePath, description, 0, 0, ModificationType.CREATE, finalPriorContext);
                                     String description2 = "The complete and comprehensive " + language + " code for " + file.getName();
                                     DesktopCodeCreationRequestResource desktopCodeCreationRequestResource = new DesktopCodeCreationRequestResource(file.getAbsolutePath(), description2, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), priorContext2);
                                     DesktopCodeCreationResponseResource desktopCodeCreationResponseResource = codeModificationDao.getCreatedCode(desktopCodeCreationRequestResource);
                                     if (desktopCodeCreationResponseResource.getModificationSuggestions() != null) {
-                                        fileModificationManagementService.implementModificationUpdate(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
+                                        fileModificationTrackerService.implementModification(modificationId, desktopCodeCreationResponseResource.getModificationSuggestions().get(0).getSuggestedCode(), true);
                                         //write the contents to the file with printWriter:
                                         //Check if the file contents are empty first:
                                         /////
@@ -527,7 +532,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                                             JOptionPane.showMessageDialog(null, desktopCodeCreationResponseResource.getError(), "Error",
                                                     JOptionPane.ERROR_MESSAGE);
                                         }
-                                        fileModificationManagementService.removeModification(modificationId);
+                                        fileModificationTrackerService.removeModification(modificationId);
                                     }
                                     try {
                                         Thread.sleep(1000); // Wait for 1 second (1000 milliseconds)
@@ -540,7 +545,7 @@ public class MassCodeFileGeneratorServiceImpl implements MassCodeFileGeneratorSe
                         }
                     }
                 }
-                fileModificationManagementService.removeMultiFileModification(multiFileModificationId);
+                multiFileModificationTrackerService.removeMultiFileModification(multiFileModificationId);
                 return null;
             }
         };

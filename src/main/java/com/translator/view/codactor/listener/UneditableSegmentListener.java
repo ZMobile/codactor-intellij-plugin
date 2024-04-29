@@ -2,6 +2,8 @@ package com.translator.view.codactor.listener;
 
 import com.translator.model.codactor.ai.modification.FileModification;
 import com.translator.model.codactor.ai.modification.FileModificationSuggestionModification;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.ai.modification.tracking.suggestion.modification.FileModificationSuggestionModificationTrackerService;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -13,19 +15,21 @@ public class UneditableSegmentListener implements UndoableEditListener {
     private String fileModificationId;
     private int previousStartIndex;
     private int previousEndIndex;
-    private FileModificationManagementService fileModificationManagementService;
+    private FileModificationTrackerService fileModificationTrackerService;
+    private FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService;
     private boolean modificationSuggestionModification;
 
-    public UneditableSegmentListener(String fileModificationId, FileModificationManagementService fileModificationManagementService, boolean modificationSuggestionModification) {
+    public UneditableSegmentListener(String fileModificationId, FileModificationTrackerService fileModificationTrackerService, FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService, boolean modificationSuggestionModification) {
         this.fileModificationId = fileModificationId;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
+        this.fileModificationSuggestionModificationTrackerService = fileModificationSuggestionModificationTrackerService;
         this.modificationSuggestionModification = modificationSuggestionModification;
         if (modificationSuggestionModification) {
-            FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationManagementService.getModificationSuggestionModification(fileModificationId);
+            FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationSuggestionModificationTrackerService.getModificationSuggestionModification(fileModificationId);
             previousStartIndex = fileModificationSuggestionModification.getRangeMarker().getStartOffset();
             previousEndIndex = fileModificationSuggestionModification.getRangeMarker().getEndOffset();
         } else {
-            FileModification fileModification = fileModificationManagementService.getModification(fileModificationId);
+            FileModification fileModification = fileModificationTrackerService.getModification(fileModificationId);
             previousStartIndex = fileModification.getRangeMarker().getStartOffset();
             previousEndIndex = fileModification.getRangeMarker().getEndOffset();
         }
@@ -41,11 +45,11 @@ public class UneditableSegmentListener implements UndoableEditListener {
         int startIndex;
         int endIndex;
         if (modificationSuggestionModification) {
-            FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationManagementService.getModificationSuggestionModification(fileModificationId);
+            FileModificationSuggestionModification fileModificationSuggestionModification = fileModificationSuggestionModificationTrackerService.getModificationSuggestionModification(fileModificationId);
             startIndex = fileModificationSuggestionModification.getRangeMarker().getStartOffset();
             endIndex = fileModificationSuggestionModification.getRangeMarker().getEndOffset();
             } else {
-            FileModification fileModification = fileModificationManagementService.getModification(fileModificationId);
+            FileModification fileModification = fileModificationTrackerService.getModification(fileModificationId);
             startIndex = fileModification.getRangeMarker().getStartOffset();
             endIndex = fileModification.getRangeMarker().getEndOffset();
         }

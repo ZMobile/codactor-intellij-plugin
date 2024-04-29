@@ -72,7 +72,6 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                                                    CodactorToolWindowService codactorToolWindowService,
                                                    InquiryService inquiryService,
                                                    AiCodeModificationService aiCodeModificationService,
-                                                   FileModificationManagementService fileModificationManagementService,
                                                    FileModificationTrackerService fileModificationTrackerService,
                                                    OpenAiModelService openAiModelService,
                                                    ModificationTypeComboBoxService modificationTypeComboBoxService,
@@ -320,7 +319,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                     String code = codeSnippetExtractorService.getAllText(selectedEditor);
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        aiCodeModificationService.getModifiedCodeModification(suggestedSolution, fileModificationSuggestion.getId(), code, 0, code.length(), textArea.getText(), ModificationType.MODIFY, promptContextService.getPromptContext());
+                        aiCodeModificationService.getModifiedCodeModification(suggestedSolution, fileModificationSuggestion, code, 0, code.length(), textArea.getText(), ModificationType.MODIFY, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Modify Selected")) {
@@ -331,14 +330,14 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                     }
                     if (code != null && !code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        aiCodeModificationService.getModifiedCodeModification(suggestedSolution, fileModificationSuggestion.getId(), code, selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.MODIFY, promptContextService.getPromptContext());
+                        aiCodeModificationService.getModifiedCodeModification(suggestedSolution, fileModificationSuggestion, code, selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.MODIFY, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Fix")) {
                     String code = codeSnippetExtractorService.getAllText(selectedEditor);
                     if (!code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        aiCodeModificationService.getModifiedCodeFix(suggestedSolution, fileModificationSuggestion.getId(), code, 0, code.length(), textArea.getText(), ModificationType.FIX, promptContextService.getPromptContext());
+                        aiCodeModificationService.getModifiedCodeFix(suggestedSolution, fileModificationSuggestion, code, 0, code.length(), textArea.getText(), ModificationType.FIX, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Fix Selected")) {
@@ -350,13 +349,13 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
                     }
                     if (code != null && !code.isEmpty() && !textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        aiCodeModificationService.getModifiedCodeFix(suggestedSolution, fileModificationSuggestion.getId(), code, selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.FIX, promptContextService.getPromptContext());
+                        aiCodeModificationService.getModifiedCodeFix(suggestedSolution, fileModificationSuggestion, code, selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), textArea.getText(), ModificationType.FIX, promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create")) {
                     if (!textArea.getText().isEmpty()) {
                         codactorToolWindowService.openModificationQueueViewerToolWindow();
-                        aiCodeModificationService.getModifiedCodeCreation(suggestedSolution, fileModificationSuggestion.getFilePath(), 0, 0, textArea.getText(), promptContextService.getPromptContext());
+                        aiCodeModificationService.getModifiedCodeCreation(suggestedSolution, fileModificationSuggestion, 0, 0, textArea.getText(), promptContextService.getPromptContext());
                         promptContextService.clearPromptContext();
                     }
                 } else if (modificationTypeComboBox.getSelectedItem().toString().equals("Create Files")) {

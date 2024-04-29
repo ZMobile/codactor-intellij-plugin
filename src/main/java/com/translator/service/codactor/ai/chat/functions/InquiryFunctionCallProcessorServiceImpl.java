@@ -19,6 +19,8 @@ import com.translator.model.codactor.ai.modification.data.FileModificationDataHo
 import com.translator.model.codactor.ai.modification.data.FileModificationDataReferenceHolder;
 import com.translator.model.codactor.ai.modification.data.FileModificationRangeData;
 import com.translator.service.codactor.ai.modification.AiCodeModificationService;
+import com.translator.service.codactor.ai.modification.queued.QueuedFileModificationObjectHolderQueryService;
+import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ide.directory.FileDirectoryStructureQueryService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ide.editor.CodeSnippetIndexGetterService;
@@ -51,7 +53,8 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     private final InquiryDao inquiryDao;
     private final CodeSnippetExtractorService codeSnippetExtractorService;
     private final CodeSnippetIndexGetterService codeSnippetIndexGetterService;
-    private final FileModificationManagementService fileModificationManagementService;
+    private final FileModificationTrackerService fileModificationTrackerService;
+    private final QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService;
     private final FileModificationHistoryService fileModificationHistoryService;
     private final AiFileModificationRestarterService aiFileModificationRestarterService;
     private final AiCodeModificationRecorderService aiCodeModificationRecorderService;
@@ -74,7 +77,8 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                                    InquiryDao inquiryDao,
                                                    CodeSnippetExtractorService codeSnippetExtractorService,
                                                    CodeSnippetIndexGetterService codeSnippetIndexGetterService,
-                                                   FileModificationManagementService fileModificationManagementService,
+                                                   FileModificationTrackerService fileModificationTrackerService,
+                                                    QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService,
                                                    FileModificationHistoryService fileModificationHistoryService,
                                                    AiFileModificationRestarterService aiFileModificationRestarterService,
                                                    AiCodeModificationRecorderService aiCodeModificationRecorderService,
@@ -95,7 +99,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         this.inquiryDao = inquiryDao;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.codeSnippetIndexGetterService = codeSnippetIndexGetterService;
-        this.fileModificationManagementService = fileModificationManagementService;
+        this.fileModificationTrackerService = fileModificationTrackerService;
         this.fileModificationHistoryService = fileModificationHistoryService;
         this.aiFileModificationRestarterService = aiFileModificationRestarterService;
         this.aiCodeModificationRecorderService = aiCodeModificationRecorderService;
@@ -131,7 +135,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 Map<String, Object> contentMap = new HashMap<>();
                 contentMap.put("filePath", filePath);
                 contentMap.put("content", content);
-                FileModificationTracker fileModificationTracker = fileModificationManagementService.getModificationTracker(filePath);
+                FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(filePath);
                 if (fileModificationTracker != null) {
                     List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
                     contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
@@ -165,7 +169,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                     }
                     contentMap.put("filePath", virtualFile.getPath());
                     contentMap.put("filePackage", packageName);
-                    FileModificationTracker fileModificationTracker = fileModificationManagementService.getModificationTracker(virtualFile.getPath());
+                    FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(virtualFile.getPath());
                     if (fileModificationTracker != null) {
                         List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
                         contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
@@ -190,7 +194,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                         contentMap.put("content", fileDirectoryStructureQueryService.getDirectoryStructureAsJson(filePath, 1));
                     } else {
                         contentMap.put("content", content);
-                        FileModificationTracker fileModificationTracker = fileModificationManagementService.getModificationTracker(filePath);
+                        FileModificationTracker fileModificationTracker = fileModificationTrackerService.getModificationTracker(filePath);
                         if (fileModificationTracker != null) {
                             List<FileModificationRangeData> fileModificationRangeData = fileModificationTrackerToFileModificationRangeDataTransformerService.convert(fileModificationTracker);
                             contentMap.put("currentActiveModificationsInThisFile", fileModificationRangeData);
@@ -224,12 +228,12 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 FileModificationDataHolder newFileModificationDataHolder = fileModificationDataHolderJsonCompatibilityService.makeFileModificationDataHolderCompatibleWithJson(fileModificationDataHolder);
                 return gson.toJson(newFileModificationDataHolder);
             } else if (gptFunctionCall.getName().equals("get_queued_modifications")) {
-                List<FileModificationDataHolder> fileModificationDataHolderList = fileModificationManagementService.getQueuedFileModificationObjectHolders();
+                List<FileModificationDataHolder> fileModificationDataHolderList = queuedFileModificationObjectHolderQueryService.getQueuedFileModificationObjectHolders();
                 List<FileModificationDataReferenceHolder> fileModificationDataReferenceHolderList = fileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService.convert(fileModificationDataHolderList);
                 return gson.toJson(fileModificationDataReferenceHolderList);
             } else if (gptFunctionCall.getName().equals("read_modification_in_queue_at_position")) {
                 String position = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "position");
-                List<FileModificationDataHolder> fileModificationDataHolderList = fileModificationManagementService.getQueuedFileModificationObjectHolders();
+                List<FileModificationDataHolder> fileModificationDataHolderList = queuedFileModificationObjectHolderQueryService.getQueuedFileModificationObjectHolders();
                 assert position != null;
                 if (fileModificationDataHolderList.size() <= Integer.parseInt(position)) {
                     return "Error: Invalid position";
@@ -251,13 +255,13 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 return gson.toJson(inquiry);
             } else if (gptFunctionCall.getName().equals("retry_modification_in_queue")) {
                 String id = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "id");
-                FileModification fileModification = fileModificationManagementService.getModification(id);
+                FileModification fileModification = fileModificationTrackerService.getModification(id);
                 aiFileModificationRestarterService.restartFileModification(fileModification);
                 return "Modification restarted.";
             } else if (gptFunctionCall.getName().equals("remove_modification_in_queue")) {
                 String id = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "id");
-                FileModification fileModification = fileModificationManagementService.getModification(id);
-                fileModificationManagementService.removeModification(fileModification.getId());
+                FileModification fileModification = fileModificationTrackerService.getModification(id);
+                fileModificationTrackerService.removeModification(fileModification.getId());
                 return "Modification removed.";
             } else if (gptFunctionCall.getName().equals("request_file_modification")) {
                 String path = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "path");
