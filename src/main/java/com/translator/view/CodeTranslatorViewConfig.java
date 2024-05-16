@@ -1,5 +1,6 @@
 package com.translator.view;
 
+import com.github.javaparser.quality.Nullable;
 import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -15,6 +16,7 @@ import com.translator.service.codactor.ai.modification.tracking.multi.MultiFileM
 import com.translator.service.codactor.ai.modification.tracking.suggestion.modification.FileModificationSuggestionModificationTrackerService;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.ide.editor.diff.DiffEditorGeneratorService;
 import com.translator.service.codactor.ide.editor.psi.FindImplementationsService;
 import com.translator.service.codactor.ide.editor.psi.FindUsagesService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
@@ -83,11 +85,12 @@ public class CodeTranslatorViewConfig extends AbstractModule {
     @Singleton
     @Provides
     public ProvisionalModificationViewer provisionalModificationViewer(CodactorToolWindowService codactorToolWindowService,
-                                                               FileModificationTrackerService fileModificationTrackerService,
-                                                               ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager,
-                                                               FileOpenerService fileOpenerService,
-                                                               AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService) {
-        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationTrackerService, provisionalModificationCustomizerDialogManager, fileOpenerService, aiFileModificationSuggestionDiffViewerService);
+                                                                           FileModificationTrackerService fileModificationTrackerService,
+                                                                           ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager,
+                                                                           FileOpenerService fileOpenerService,
+                                                                           AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService,
+                                                                           DiffEditorGeneratorService diffEditorGeneratorService) {
+        return new ProvisionalModificationViewer(codactorToolWindowService, fileModificationTrackerService, provisionalModificationCustomizerDialogManager, fileOpenerService, aiFileModificationSuggestionDiffViewerService, diffEditorGeneratorService);
     }
 
     @Singleton
@@ -154,12 +157,13 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            FindImplementationsService findImplementationsService,
                                            FindUsagesService findUsagesService,
                                            CodeHighlighterService codeHighlighterService,
-                                           CodactorUmlBuilderApplication codactorUmlBuilderApplication,
+                                           //CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                                            InquiryViewerFactory inquiryViewerFactory,
-                                           InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService) {
-        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, modificationTypeComboBoxService, aiCodeModificationService, gson, findImplementationsService, findUsagesService, codeHighlighterService, codactorUmlBuilderApplication, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory, inquiryFunctionCallProcessorService);
+                                           InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService,
+                                           DiffEditorGeneratorService diffEditorGeneratorService) {
+        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, modificationTypeComboBoxService, aiCodeModificationService, gson, findImplementationsService, findUsagesService, codeHighlighterService, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory, inquiryFunctionCallProcessorService, diffEditorGeneratorService);
     }
 
     @Singleton
@@ -172,7 +176,7 @@ public class CodeTranslatorViewConfig extends AbstractModule {
     @Singleton
     @Provides
     public CodactorUmlBuilderApplication codactorUmlBuilderApplication(CodactorUmlBuilderApplicationModelFactory codactorUmlBuilderApplicationModelFactory, CodactorUmlBuilderViewFactory codactorUmlBuilderViewFactory) {
-        CodactorUmlBuilderApplication app;
+        /*CodactorUmlBuilderApplication app;
         String os = System.getProperty("os.name").toLowerCase();
         if (os.startsWith("mac")) {
             app = new CodactorUmlBuilderOSXApplication();
@@ -187,12 +191,12 @@ public class CodeTranslatorViewConfig extends AbstractModule {
         /*model.setName("JHotDraw Draw");
         model.setVersion(getClass().getPackage().getImplementationVersion());
         model.setCopyright("Copyright 2006-2009 (c) by the authors of JHotDraw and all its contributors.\n" +
-                "This software is licensed under LGPL or Creative Commons 3.0 Attribution.");*/
+                "This software is licensed under LGPL or Creative Commons 3.0 Attribution.");*
         model.setViewFactory(codactorUmlBuilderViewFactory::create);
         app.setModel(model);
         String[] args = new String[0];
-        app.launch(args);
-        return app;
+        app.launch(args);*/
+        return null;
     }
 
     @Provides

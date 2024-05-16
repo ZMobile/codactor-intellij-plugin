@@ -12,7 +12,7 @@ public class FileModificationSuggestionRecordToFileModificationTransformerServic
         fileModification.setModificationRecordId(fileModificationSuggestionRecord.getModificationId());
         fileModification.setDone(true);
         fileModification.setError(false);
-        FileModificationSuggestion fileModificationSuggestion = new FileModificationSuggestion(fileModificationSuggestionRecord.getId(), fileModificationSuggestionRecord.getFilePath(), fileModificationSuggestionRecord.getModificationId(), fileModificationSuggestionRecord.getSuggestedCode());
+        FileModificationSuggestion fileModificationSuggestion = new FileModificationSuggestion(fileModificationSuggestionRecord.getId(), fileModificationSuggestionRecord.getFilePath(), fileModificationSuggestionRecord.getModificationId(), fileModificationSuggestionRecord.getSuggestedCodeBeforeRestoration(), fileModificationSuggestionRecord.getSuggestedCode());
         fileModification.getModificationOptions().add(fileModificationSuggestion);
         return fileModification;
     }

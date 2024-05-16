@@ -541,7 +541,7 @@ public class AiCodeModificationServiceImpl implements AiCodeModificationService 
         FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
         fileModification.setFileDeletionAtFilePathOnAcceptance(true);
         List<FileModificationSuggestionRecord> fileModificationSuggestionRecords = new ArrayList<>();
-        FileModificationSuggestionRecord fileModificationSuggestionRecord = new FileModificationSuggestionRecord(firebaseTokenService.getFirebaseToken().getUserId(), fileModification.getId(), ModificationType.DELETE, filePath, "Delete this code file", fileModification.getBeforeText(), "Delete this code file", "");
+        FileModificationSuggestionRecord fileModificationSuggestionRecord = new FileModificationSuggestionRecord(firebaseTokenService.getFirebaseToken().getUserId(), fileModification.getId(), ModificationType.DELETE, filePath, "Delete this code file", fileModification.getBeforeText(), "Delete this code file", "", "");
         fileModificationSuggestionRecords.add(fileModificationSuggestionRecord);
         fileModificationTrackerService.readyFileModificationUpdate(modificationId, "Delete this code file", fileModificationSuggestionRecords);
     }

@@ -41,6 +41,7 @@ public class CodeModificationHistoryDaoImpl implements CodeModificationHistoryDa
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                System.out.println("Response: " + response);
                 return gson.fromJson(response, DesktopCodeModificationHistoryResponseResource.class);
             }
         } catch (IOException ex) {
@@ -68,6 +69,7 @@ public class CodeModificationHistoryDaoImpl implements CodeModificationHistoryDa
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                System.out.println("Response: " + response);
                 return gson.fromJson(response, HistoricalFileModificationDataHolder.class);
             }
         } catch (IOException ex) {

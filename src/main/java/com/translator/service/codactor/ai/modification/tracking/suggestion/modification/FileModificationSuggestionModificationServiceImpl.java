@@ -34,7 +34,7 @@ public class FileModificationSuggestionModificationServiceImpl implements FileMo
         Document document = fileModificationSuggestion.getSuggestedCodeEditor().getDocument();
         RangeMarker rangeMarker = document.createRangeMarker(startIndex, endIndex);
         FileModificationSuggestionModification fileModificationSuggestionModification = new FileModificationSuggestionModification(editor, fileModificationSuggestion.getFilePath(), fileModificationSuggestion.getModificationId(), fileModificationSuggestion.getId(), rangeMarker, fileModificationSuggestion.getBeforeCode(), modificationType);
-        guardedBlockService.addFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModification.getId(), startIndex, endIndex);
+        guardedBlockService.addFileModificationSuggestionModificationGuardedBlock(fileModificationSuggestionModification, startIndex, endIndex);
         codeHighlighterService.highlightTextArea(fileModificationSuggestionModification);
         return fileModificationSuggestionModification;
     }

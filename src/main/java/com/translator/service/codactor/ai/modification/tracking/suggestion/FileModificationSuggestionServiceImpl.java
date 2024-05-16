@@ -57,7 +57,7 @@ public class FileModificationSuggestionServiceImpl implements FileModificationSu
                     Editor diffEditor = diffEditorGeneratorService.createDiffEditor(fileModification.getBeforeText(), modificationOption.getSuggestedCode());
                     EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
                     ((EditorEx) diffEditor).setHighlighter(editorHighlighter);
-                    FileModificationSuggestion fileModificationSuggestion = new FileModificationSuggestion(fileModification.getFilePath(), fileModification.getId(), modificationOption.getId(), fileModification.getBeforeText(), modificationOption.getSuggestedCode(), diffEditor, suggestedCodeEditor);
+                    FileModificationSuggestion fileModificationSuggestion = new FileModificationSuggestion(fileModification.getFilePath(), fileModification.getId(), modificationOption.getId(), fileModification.getBeforeText(), modificationOption.getSuggestedCodeBeforeRestoration(), modificationOption.getSuggestedCode(), diffEditor, suggestedCodeEditor);
                     suggestions.add(fileModificationSuggestion);
                 } catch (Exception e) {
                     e.printStackTrace();

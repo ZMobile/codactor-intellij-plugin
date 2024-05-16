@@ -17,6 +17,7 @@ public class FileModificationSuggestionRecord {
     private final String subjectLine;
     private final String beforeCode;
     private final String modification;
+    private final String suggestedCodeBeforeRestoration;
     private final String suggestedCode;
     private final String language;
     private final List<String> modificationSuggestionModificationIds;
@@ -28,6 +29,7 @@ public class FileModificationSuggestionRecord {
                                             String subjectLine,
                                             String beforeCode,
                                             String modification,
+                                            String suggestedCodeBeforeRestoration,
                                             String suggestedCode) {
         this.myId = UUID.randomUUID().toString();
         this.creationTimestamp = LocalDateTime.now(ZoneOffset.UTC);
@@ -39,6 +41,7 @@ public class FileModificationSuggestionRecord {
         this.subjectLine = subjectLine;
         this.beforeCode = beforeCode;
         this.modification = modification;
+        this.suggestedCodeBeforeRestoration = suggestedCodeBeforeRestoration;
         this.suggestedCode = suggestedCode;
         this.language = null;
         this.modificationSuggestionModificationIds = new ArrayList<>();
@@ -74,6 +77,10 @@ public class FileModificationSuggestionRecord {
 
     public String getModification() {
         return modification;
+    }
+
+    public String getSuggestedCodeBeforeRestoration() {
+        return suggestedCodeBeforeRestoration;
     }
 
     public String getSuggestedCode() {

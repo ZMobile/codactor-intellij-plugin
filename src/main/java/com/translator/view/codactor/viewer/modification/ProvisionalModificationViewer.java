@@ -7,10 +7,12 @@ package com.translator.view.codactor.viewer.modification;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
+import com.intellij.util.ui.CheckBox;
 import com.translator.model.codactor.ai.modification.FileModification;
 import com.translator.model.codactor.ai.modification.FileModificationSuggestion;
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
+import com.translator.service.codactor.ide.editor.diff.DiffEditorGeneratorService;
 import com.translator.service.codactor.ide.file.FileOpenerService;
 import com.translator.service.codactor.ai.modification.diff.AiFileModificationSuggestionDiffViewerService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
@@ -36,6 +38,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
     private FileModification fileModification;
     private JList<CodeSnippetViewer> codeSnippetList;
     private JToolBar toolbar;
+    private JButton backButton;
     private JButton acceptButton;
     private JButton rejectAllButton;
     private JButton customizeButton;
@@ -47,18 +50,21 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
     private ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager;
     private FileOpenerService fileOpenerService;
     private AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService;
+    private DiffEditorGeneratorService diffEditorGeneratorService;
 
     @Inject
     public ProvisionalModificationViewer(CodactorToolWindowService codactorToolWindowService,
                                          FileModificationTrackerService fileModificationTrackerService,
                                          ProvisionalModificationCustomizerDialogManager provisionalModificationCustomizerDialogManager,
                                          FileOpenerService fileOpenerService,
-                                         AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService) {
+                                         AiFileModificationSuggestionDiffViewerService aiFileModificationSuggestionDiffViewerService,
+                                         DiffEditorGeneratorService diffEditorGeneratorService) {
         this.codactorToolWindowService = codactorToolWindowService;
         this.fileModificationTrackerService = fileModificationTrackerService;
         this.provisionalModificationCustomizerDialogManager = provisionalModificationCustomizerDialogManager;
         this.fileOpenerService = fileOpenerService;
         this.aiFileModificationSuggestionDiffViewerService = aiFileModificationSuggestionDiffViewerService;
+        this.diffEditorGeneratorService = diffEditorGeneratorService;
         initComponents();
     }
 
@@ -84,6 +90,15 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         toolbar.setFloatable(false);
         toolbar.setBorderPainted(false);
 
+        backButton = new JButton("\u2190"); // "\u2190" is a unicode character for a left arrow
+        backButton.setFocusable(false);
+        backButton.setHorizontalTextPosition(SwingConstants.LEADING);
+        backButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        backButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        toolbar.add(backButton);
+
+        toolbar.addSeparator();
+
         acceptButton = new JButton("Accept Solution");
         acceptButton.setFocusable(false);
         acceptButton.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -97,6 +112,8 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         rejectAllButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         rejectAllButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         toolbar.add(rejectAllButton);
+
+        toolbar.addSeparator();
 
         customizeButton = new JButton("Customize");
         customizeButton.setFocusable(false);
@@ -114,13 +131,11 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
 
         toolbar.addSeparator();
 
-        queueButton = new JButton("Queue");
-        queueButton.setFocusable(false);
-        queueButton.setHorizontalTextPosition(SwingConstants.CENTER);
-        queueButton.setVerticalTextPosition(SwingConstants.BOTTOM);
-        queueButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        toolbar.add(queueButton);
+        // Add a check box to the right of the diff viewer button
+        JCheckBox restoredCheckBox = new JCheckBox("Code Restored");
+        restoredCheckBox.setFocusable(false);
+        restoredCheckBox.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        toolbar.add(restoredCheckBox);
 
         acceptButton.addActionListener(new ActionListener() {
             @Override
@@ -192,10 +207,18 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             }
         });
 
-        queueButton.addActionListener(new ActionListener() {
+        backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 codactorToolWindowService.openModificationQueueViewerToolWindow();
+            }
+        });
+
+        restoredCheckBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //Differentiate between whether it was checked or unchecked:
+                updateCodeRestoration(restoredCheckBox.isSelected());
             }
         });
 
@@ -255,5 +278,14 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
             model.addElement(viewer);
         }
         codeSnippetList.setModel(model);
+    }
+
+    public void updateCodeRestoration(boolean codeRestored) {
+        FileModificationSuggestion fileModificationSuggestion = fileModification.getModificationOptions().get(0);
+        if (codeRestored) {
+            diffEditorGeneratorService.updateDiffEditor(fileModificationSuggestion.getDiffEditor(), fileModificationSuggestion.getBeforeCode(), fileModificationSuggestion.getSuggestedCode());
+        } else {
+            diffEditorGeneratorService.updateDiffEditor(fileModificationSuggestion.getDiffEditor(), fileModificationSuggestion.getBeforeCode(), fileModificationSuggestion.getSuggestedCodeBeforeRestoration());
+        }
     }
 }

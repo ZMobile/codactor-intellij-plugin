@@ -139,7 +139,7 @@
     </actions>
     <extensions defaultExtensionNs="com.intellij">
         <applicationConfigurable instance="com.translator.view.codactor.settings.CodactorConfigurable"/>
-        <fileEditorProvider
-                implementation="com.translator.view.uml.editor.CodactorUmlBuilderSVGEditorProvider"/>
+        <!--<fileEditorProvider
+                implementation="com.translator.view.uml.editor.CodactorUmlBuilderSVGEditorProvider"/> -->
     </extensions>
 </idea-plugin>

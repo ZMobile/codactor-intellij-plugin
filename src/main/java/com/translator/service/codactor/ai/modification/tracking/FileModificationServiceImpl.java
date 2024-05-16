@@ -60,7 +60,7 @@ public class FileModificationServiceImpl implements FileModificationService {
         RangeMarker rangeMarker = codeRangeTrackerService.createRangeMarker(filePath, startIndex, endIndex);
         FileModification fileModification = new FileModification(filePath, modification, rangeMarker, beforeText, modificationType, priorContext);
         if (modificationType != ModificationType.CREATE) {
-            guardedBlockService.addFileModificationGuardedBlock(fileModification.getId(), startIndex, endIndex);
+            guardedBlockService.addFileModificationGuardedBlock(fileModification, startIndex, endIndex);
             codeHighlighterService.highlightTextArea(fileModification);
         }
         return fileModification;

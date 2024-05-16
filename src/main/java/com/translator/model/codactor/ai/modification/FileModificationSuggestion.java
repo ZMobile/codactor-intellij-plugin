@@ -23,76 +23,27 @@ public class FileModificationSuggestion implements Disposable {
     private final String modificationId;
     private final String myId;
     private String beforeCode;
+    private String suggestedCodeBeforeRestoration;
     private String suggestedCode;
     private Editor diffEditor;
     private Editor suggestedCodeEditor;
 
-    public FileModificationSuggestion(String filePath, String modificationId, String myId, String beforeCode, String suggestedCode, Editor diffEditor, Editor suggestedCodeEditor) {
+    public FileModificationSuggestion(String filePath, String modificationId, String myId, String beforeCode, String suggestedCodeBeforeRestoration, String suggestedCode, Editor diffEditor, Editor suggestedCodeEditor) {
         this.filePath = filePath;
         this.modificationId = modificationId;
         this.myId = myId;
         this.beforeCode = beforeCode;
+        this.suggestedCodeBeforeRestoration = suggestedCodeBeforeRestoration;
         this.suggestedCode = suggestedCode;
         this.diffEditor = diffEditor;
         this.suggestedCodeEditor = suggestedCodeEditor;
     }
 
-    public FileModificationSuggestion(DiffEditorGeneratorService diffEditorGeneratorService, Project project, String id, String filePath, String modificationId, String beforeCode, String suggestedCode) {
+    public FileModificationSuggestion(String id, String filePath, String modificationId, String suggestedCodeBeforeRestoration, String suggestedCode) {
         this.myId = id;
         this.filePath = filePath;
         this.modificationId = modificationId;
-        this.beforeCode = beforeCode;
-        this.suggestedCode = suggestedCode;
-        ApplicationManager.getApplication().invokeLater(() -> {
-            try {
-                GptToLanguageTransformerService gptToLanguageTransformerService = new GptToLanguageTransformerServiceImpl();
-                String language = gptToLanguageTransformerService.getFromFilePath(filePath);
-                String extension = gptToLanguageTransformerService.getExtensionFromLanguage(language);
-                if (extension == null) {
-                    extension = "txt";
-                }
-                EditorFactory editorFactory = EditorFactory.getInstance();
-                FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(extension);
-                Document document = editorFactory.createDocument(suggestedCode);
-                this.suggestedCodeEditor = editorFactory.createEditor(document, project, fileType, true);
-                this.diffEditor = diffEditorGeneratorService.createDiffEditor(beforeCode, suggestedCode);
-                EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
-                ((EditorEx) this.diffEditor).setHighlighter(editorHighlighter);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    public FileModificationSuggestion(DiffEditorGeneratorService diffEditorGeneratorService, Project project, String id, String filePath, String modificationId, String beforeCode, String suggestedCode, String extension) {
-        this.myId = id;
-        this.filePath = filePath;
-        this.modificationId = modificationId;
-        this.beforeCode = beforeCode;
-        this.suggestedCode = suggestedCode;
-        ApplicationManager.getApplication().invokeLater(() -> {
-            try {
-                String newExtension = Objects.requireNonNullElse(extension, "txt");
-                if (newExtension.startsWith(".")) {
-                    newExtension = newExtension.substring(1);
-                }
-                EditorFactory editorFactory = EditorFactory.getInstance();
-                FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(newExtension);
-                Document document = editorFactory.createDocument(suggestedCode);
-                this.suggestedCodeEditor = editorFactory.createEditor(document, project, fileType, true);
-                this.diffEditor = diffEditorGeneratorService.createDiffEditor(beforeCode, suggestedCode);
-                EditorHighlighter editorHighlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(fileType, EditorColorsManager.getInstance().getGlobalScheme(), null);
-                ((EditorEx) this.diffEditor).setHighlighter(editorHighlighter);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    public FileModificationSuggestion(String id, String filePath, String modificationId, String suggestedCode) {
-        this.myId = id;
-        this.filePath = filePath;
-        this.modificationId = modificationId;
+this.suggestedCodeBeforeRestoration = suggestedCodeBeforeRestoration;
         this.suggestedCode = suggestedCode;
     }
 
@@ -101,6 +52,7 @@ public class FileModificationSuggestion implements Disposable {
         this.filePath = fileModificationSuggestion.getFilePath();
         this.modificationId = fileModificationSuggestion.getModificationId();
         this.beforeCode = fileModificationSuggestion.getBeforeCode();
+        this.suggestedCodeBeforeRestoration = fileModificationSuggestion.suggestedCodeBeforeRestoration;
         this.suggestedCode = fileModificationSuggestion.getSuggestedCode();
         this.diffEditor = fileModificationSuggestion.getDiffEditor();
         this.suggestedCodeEditor = fileModificationSuggestion.getSuggestedCodeEditor();
@@ -124,6 +76,10 @@ public class FileModificationSuggestion implements Disposable {
 
     public String getBeforeCode() {
         return beforeCode;
+    }
+
+    public String getSuggestedCodeBeforeRestoration() {
+        return suggestedCodeBeforeRestoration;
     }
 
     public String getSuggestedCode() {

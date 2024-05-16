@@ -103,7 +103,7 @@ public class AiFileModificationRestarterServiceImpl implements AiFileModificatio
             } else if (fileModification.getModificationType() == ModificationType.DELETE) {
                 fileModification.setFileDeletionAtFilePathOnAcceptance(true);
                 fileModificationSuggestionRecords = new ArrayList<>();
-                FileModificationSuggestionRecord fileModificationSuggestionRecord = new FileModificationSuggestionRecord(firebaseTokenService.getFirebaseToken().getUserId(), fileModification.getId(), ModificationType.DELETE, fileModification.getFilePath(), "Delete this code file", fileModification.getBeforeText(), "Delete this code file", "");
+                FileModificationSuggestionRecord fileModificationSuggestionRecord = new FileModificationSuggestionRecord(firebaseTokenService.getFirebaseToken().getUserId(), fileModification.getId(), ModificationType.DELETE, fileModification.getFilePath(), "Delete this code file", fileModification.getBeforeText(), "Delete this code file", "", "");
                 fileModificationSuggestionRecords.add(fileModificationSuggestionRecord);
                 fileModificationTrackerService.readyFileModificationUpdate(fileModification.getId(), "Delete this code file", fileModificationSuggestionRecords);
             }

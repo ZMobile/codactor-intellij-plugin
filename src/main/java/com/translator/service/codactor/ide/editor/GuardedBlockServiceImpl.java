@@ -34,6 +34,26 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
         this.guardedBlocks = new HashMap<>();
     }
 
+    public void addFileModificationGuardedBlock(FileModification fileModification, int startOffset, int endOffset) {
+        String filePath = fileModification.getFilePath();
+        ApplicationManager.getApplication().invokeLater(() -> {
+            VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl("file://" + filePath);
+            if (virtualFile == null) {
+                return;
+            }
+
+            Document document = codeSnippetExtractorService.getDocument(filePath);
+            if (document == null) {
+                throw new IllegalStateException("Could not get document for file: " + filePath);
+            }
+            int newEndOffset = Math.min(endOffset, document.getText().length());
+            RangeMarker guardedBlock = document.createGuardedBlock(startOffset, newEndOffset);
+            guardedBlocks.put(fileModification.getId(), guardedBlock);
+        });
+        //uneditableSegmentListenerService.addUneditableFileModificationSegmentListener(fileModificationId);
+    }
+
+
     public void addFileModificationGuardedBlock(String fileModificationId, int startOffset, int endOffset) {
         FileModification fileModification = fileModificationTrackerService.getModification(fileModificationId);
         String filePath = fileModification.getFilePath();
@@ -64,6 +84,15 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
             });
             //uneditableSegmentListenerService.removeUneditableFileModificationSegmentListener(fileModificationId);
         }
+    }
+
+    public void addFileModificationSuggestionModificationGuardedBlock(FileModificationSuggestionModification fileModificationSuggestionModification, int startOffset, int endOffset) {
+        ApplicationManager.getApplication().invokeLater(() -> {
+            Document document = fileModificationSuggestionModification.getEditor().getDocument();
+            RangeMarker guardedBlock = document.createGuardedBlock(startOffset, endOffset);
+            guardedBlocks.put(fileModificationSuggestionModification.getId(), guardedBlock);
+        });
+        //uneditableSegmentListenerService.addUneditableFileModificationSuggestionModificationSegmentListener(fileModificationSuggestionModificationId);
     }
 
     public void addFileModificationSuggestionModificationGuardedBlock(String fileModificationSuggestionModificationId, int startOffset, int endOffset) {

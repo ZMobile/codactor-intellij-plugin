@@ -194,7 +194,7 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                     case "create":
                         modificationId = codeRecorderService.getCreatedCode(path, description, new ArrayList<>(), replacementCodeSnippetString);
                         break;
-                }
+                }*/
                 if (modificationId != null) {
                     if (modificationId.startsWith("Error")) {
                         return "{" +
@@ -209,7 +209,7 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                     return "{" +
                             "\"message\": \"Error: Unspecified.\"" +
                             "}";
-                }*/
+                }
             } else if (gptFunctionCall.getName().equalsIgnoreCase("modify_unit_test")) {
                 String path = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "path");
                 if (path == null) {

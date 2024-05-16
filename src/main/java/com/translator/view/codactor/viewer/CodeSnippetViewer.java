@@ -51,7 +51,6 @@ public class CodeSnippetViewer extends JBPanel<CodeSnippetViewer> {
         fixedHeightPanel.add(editor.getComponent());
         add(fixedHeightPanel, BorderLayout.CENTER);
 
-
     }
 
     public void setEditor(Editor editor) {

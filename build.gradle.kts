@@ -49,8 +49,13 @@ tasks {
         implementation("com.norconex.language:langdetect:1.3.0")
         implementation(fileTree("libs") { include("*.jar") })
         implementation("org.openjfx:javafx-swing:21-ea+5")
-        implementation("io.github.java-diff-utils:java-diff-utils:4.12")
+        implementation(files("/Users/zantehays/IdeaProjects/java-diff-utils/java-diff-utils/target/java-diff-utils-4.13-SNAPSHOT.jar"))
+        implementation("com.github.javaparser:javaparser-core:3.25.10")
         implementation(files("/Users/zantehays/IdeaProjects/jhotdraw/jhotdraw7/target/jhotdraw-7.7.0.jar"))
+        implementation("com.github.gumtreediff:gumtree:2.0.0")
+        implementation("com.github.gumtreediff:core:3.0.0")
+        implementation("com.github.gumtreediff:client:3.0.0")
+        implementation("com.github.gumtreediff:gen.srcml:3.0.0")
     }
 
     publishPlugin {

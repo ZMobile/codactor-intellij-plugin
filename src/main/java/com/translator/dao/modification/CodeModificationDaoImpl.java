@@ -47,6 +47,7 @@ public class CodeModificationDaoImpl implements CodeModificationDao {
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = con.getInputStream();
                 String response = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                System.out.println("Response: " + response);
                 DesktopCodeModificationResponseResource desktopCodeModificationResponseResource = gson.fromJson(response, DesktopCodeModificationResponseResource.class);
                 desktopCodeModificationResponseResource.setResponseCode(responseCode);
                 return desktopCodeModificationResponseResource;
