@@ -141,6 +141,24 @@ public class AzureConnectionServiceImpl implements AzureConnectionService {
     }
 
     @Override
+    public void setGpt4oDeployment(String deployment) {
+        CredentialAttributes credentialAttributes = new CredentialAttributes("gpt_4o_deployment", firebaseTokenService.getLoggedInUser());
+        Credentials credentials = new Credentials("user", deployment);
+        PasswordSafe.getInstance().set(credentialAttributes, credentials);
+    }
+
+    @Override
+    public String getGpt4oDeployment() {
+        CredentialAttributes credentialAttributes = new CredentialAttributes("gpt_4o_deployment", firebaseTokenService.getLoggedInUser());
+        Credentials credentials = PasswordSafe.getInstance().get(credentialAttributes);
+        String gpt4oDeployment = credentials != null ? String.valueOf(credentials.getPassword()) : null;
+        if (gpt4oDeployment == null || gpt4oDeployment.isEmpty()) {
+            return null;
+        }
+        return gpt4oDeployment;
+    }
+
+    @Override
     public String getDeploymentForModel(String model) {
         if (isAzureConnected()) {
             if (model.equalsIgnoreCase("gpt-3.5-turbo")) {
@@ -151,6 +169,8 @@ public class AzureConnectionServiceImpl implements AzureConnectionService {
                 return getGpt4Deployment();
             } else if (model.equalsIgnoreCase("gpt-4-32k")) {
                 return getGpt432kDeployment();
+            } else if (model.equalsIgnoreCase("gpt-4o")) {
+                return getGpt4oDeployment();
             }
         }
         return null;
@@ -171,10 +191,13 @@ public class AzureConnectionServiceImpl implements AzureConnectionService {
         if (getGpt432kDeployment() != null && !getGpt432kDeployment().isEmpty()) {
             activeModels.add("gpt-4-32k");
         }
+        if (getGpt4oDeployment() != null && !getGpt4oDeployment().isEmpty()) {
+            activeModels.add("gpt-4o");
+        }
         return activeModels;
     }
 
     public String[] getModels() {
-        return new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k"};
+        return new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4o"};
     }
 }

@@ -126,7 +126,7 @@ public class FileTranslateDialog extends JDialog {
         northPanel.add(new JBScrollPane(fileList), BorderLayout.CENTER);
         northPanel.add(leftPanel, BorderLayout.WEST);
 
-        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k"});
+        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4o"});
         modelComboBox.addActionListener(e -> {
             ComboBox<String> cb = (ComboBox<String>) e.getSource();
             String model = (String) cb.getSelectedItem();

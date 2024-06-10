@@ -12,5 +12,5 @@ public interface StringTokenizerService {
 
     String reconstructModifiedCode(String originalCode, String modifiedCode);
 
-    String reconstructModifiedCodeWithRestoration(String originalCode, String modifiedCode);
+    String reconstructModifiedCodeWithRestoration(List<Range> topStopBeforeRanges, List<Range> topStopModifiedRanges, List<Range> bottomStopBeforeRanges, List<Range> bottomStopModifiedRanges, String originalCode, String modifiedCode);
 }

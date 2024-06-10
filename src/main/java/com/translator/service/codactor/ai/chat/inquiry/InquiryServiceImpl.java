@@ -92,7 +92,7 @@ public class InquiryServiceImpl implements InquiryService {
             }
                 List<GptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
-                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
+                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k") || model.equals("gpt-4o")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
@@ -130,7 +130,7 @@ public class InquiryServiceImpl implements InquiryService {
             }
                 List<GptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
-                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
+                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k") || model.equals("gpt-4o")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
@@ -179,7 +179,7 @@ public class InquiryServiceImpl implements InquiryService {
                 }
                 List<GptFunction> functions = null;
                 String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
-                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
+                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k") || model.equals("gpt-4o")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                     systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
                 }
@@ -228,7 +228,7 @@ public class InquiryServiceImpl implements InquiryService {
                 openAiApiKey = defaultConnectionService.getOpenAiApiKey();
             }
                 List<GptFunction> functions = null;
-                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k")) {
+                if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k") || model.equals("gpt-4o")) {
                     functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                 }
                 Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), functions);

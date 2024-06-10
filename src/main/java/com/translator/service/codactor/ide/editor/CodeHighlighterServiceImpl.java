@@ -62,6 +62,7 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
 
     @Override
     public void highlightTextArea(FileModification fileModification, Editor editor) {
+        System.out.println("The area is highlighted");
         ApplicationManager.getApplication().invokeLater(() -> {
             removeAllHighlights(editor);
             int startIndex = fileModification.getRangeMarker().getStartOffset();
@@ -97,10 +98,13 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
                     try {
                         Color highlightColor;
                         if (modification.isError()) {
+                            // Red
                             highlightColor = Color.decode("#FF0000");
                         } else if (modification.isDone()) {
+                            // Green
                             highlightColor = Color.decode("#228B22");
                         } else {
+                            // Blue
                             highlightColor = Color.decode("#009688");
                         }
                         addHighlight(editor, startIndex, endIndex, highlightColor);

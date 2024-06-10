@@ -244,7 +244,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
 
         JLabel hiddenLabel = new JLabel();
         hiddenLabel.setVisible(false);
-        JComboBox<String> modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k"});
+        JComboBox<String> modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4o"});
         modelComboBox.addActionListener(e -> {
             JComboBox<String> cb = (JComboBox<String>) e.getSource();
             String model = (String) cb.getSelectedItem();

@@ -35,6 +35,7 @@ public class CodactorSettingsPage {
     private JTextField textField4;
     private JTextField textField5;
     private JTextField textField6;
+    private JTextField textField7;
     private JPasswordField keyField;
     private JPanel urlPanel;
     private JLabel httpLabel;
@@ -62,6 +63,7 @@ public class CodactorSettingsPage {
     private JTextField textField2;
     private JButton enableButton;
     private JLabel localApiServerStatusLabel;
+    private JPanel gpt4oDeploymentNamePanel;
 
 
     DocumentListener textChangedListener = new DocumentListener() {
@@ -93,6 +95,7 @@ public class CodactorSettingsPage {
         textField4.getDocument().addDocumentListener(textChangedListener);
         textField5.getDocument().addDocumentListener(textChangedListener);
         textField6.getDocument().addDocumentListener(textChangedListener);
+        textField7.getDocument().addDocumentListener(textChangedListener);
 
         logOutButton.addActionListener(buttonChangedListener);
         loginButton.addActionListener(buttonChangedListener);
@@ -179,6 +182,7 @@ public class CodactorSettingsPage {
                             textField4.setText(azureConnectionService.getGpt35Turbo16kDeployment());
                             textField5.setText(azureConnectionService.getGpt4Deployment());
                             textField6.setText(azureConnectionService.getGpt432kDeployment());
+                            textField7.setText(azureConnectionService.getGpt4oDeployment());
                         } else {
                             keyPanel.setVisible(false);
                             defaultConnectionButton.setSelected(false);
@@ -234,6 +238,7 @@ public class CodactorSettingsPage {
                 textField4.setText(azureConnectionService.getGpt35Turbo16kDeployment());
                 textField5.setText(azureConnectionService.getGpt4Deployment());
                 textField6.setText(azureConnectionService.getGpt432kDeployment());
+                textField7.setText(azureConnectionService.getGpt4oDeployment());
             }
         });
 
@@ -284,6 +289,7 @@ public class CodactorSettingsPage {
             textField4.setText(azureConnectionService.getGpt35Turbo16kDeployment());
             textField5.setText(azureConnectionService.getGpt4Deployment());
             textField6.setText(azureConnectionService.getGpt432kDeployment());
+            textField7.setText(azureConnectionService.getGpt4oDeployment());
         } else {
             keyPanel.setVisible(false);
             defaultConnectionButton.setSelected(false);
@@ -342,6 +348,7 @@ public class CodactorSettingsPage {
                 textField4.setText(azureConnectionService.getGpt35Turbo16kDeployment());
                 textField5.setText(azureConnectionService.getGpt4Deployment());
                 textField6.setText(azureConnectionService.getGpt432kDeployment());
+                textField7.setText(azureConnectionService.getGpt4oDeployment());
             } else {
                 keyPanel.setVisible(false);
                 defaultConnectionButton.setSelected(false);
@@ -383,6 +390,7 @@ public class CodactorSettingsPage {
             azureConnectionService.setGpt35Turbo16kDeployment(textField4.getText());
             azureConnectionService.setGpt4Deployment(textField5.getText());
             azureConnectionService.setGpt432kDeployment(textField6.getText());
+            azureConnectionService.setGpt4oDeployment(textField7.getText());
         } else {
             codactorConnectionService.setConnectionType(CodactorConnectionType.ENTERPRISE);
             //enterpriseConnectionService.setBackendUrl(textField1.getText());
@@ -411,6 +419,7 @@ public class CodactorSettingsPage {
             textField4.setText(azureConnectionService.getGpt35Turbo16kDeployment());
             textField5.setText(azureConnectionService.getGpt4Deployment());
             textField6.setText(azureConnectionService.getGpt432kDeployment());
+            textField7.setText(azureConnectionService.getGpt4oDeployment());
         }
 
 

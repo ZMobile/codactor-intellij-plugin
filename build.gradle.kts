@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.codactor"
-version = "4.1-BETA"
+version = "4.3-BETA"
 
 repositories {
     mavenCentral()
@@ -12,6 +12,10 @@ repositories {
 }
 dependencies {
     implementation("io.github.kju2.languagedetector:language-detector:1.0.5")
+}
+java {
+    sourceCompatibility = JavaVersion.VERSION_15
+    targetCompatibility = JavaVersion.VERSION_15
 }
 
 // Configure Gradle IntelliJ Plugin
@@ -56,6 +60,7 @@ tasks {
         implementation("com.github.gumtreediff:core:3.0.0")
         implementation("com.github.gumtreediff:client:3.0.0")
         implementation("com.github.gumtreediff:gen.srcml:3.0.0")
+        implementation("org.bitbucket.cowwoc:diff-match-patch:1.2")
     }
 
     publishPlugin {

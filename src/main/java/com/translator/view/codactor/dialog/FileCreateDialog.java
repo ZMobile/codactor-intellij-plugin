@@ -64,7 +64,7 @@ public class FileCreateDialog extends JDialog {
         fileDescription.setLineWrap(true);
         functionsToggleSwitch = new JCheckBox("Enable Functions");
         functionsToggleSwitch.setSelected(true);
-        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k"});
+        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4o"});
 // Get the index of the selected element
         okActionListener = new ActionListener() {
             @Override

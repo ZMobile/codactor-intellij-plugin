@@ -1,17 +1,18 @@
 package com.translator.service.codactor.test;
 
 import com.github.difflib.DiffUtils;
-import com.github.difflib.patch.*;
+import com.github.difflib.patch.AbstractDelta;
+import com.github.difflib.patch.DeltaType;
+import com.github.difflib.patch.Patch;
+import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class StringTokenizerServiceImpl implements StringTokenizerService {
-    // Improved tokenization that captures whitespace and line breaks
+import static org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch.Operation.*;
 
+public class GoogleDiffMatchPatchServiceImpl implements GoogleDiffMatchPatchService {
     private List<Token> tokenize(String code) {
         List<Token> tokens = new ArrayList<>();
         int position = 0;
@@ -27,116 +28,203 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
         }
         return tokens;
     }
-    /*private List<Token> tokenize(String code) {
-        List<Token> tokens = new ArrayList<>();
-        int position = 0;
-        Matcher m = Pattern.compile("(\\w+|[\\p{Punct}]|\\s+?|\\R)").matcher(code);
-        while (m.find()) {
-            String tokenValue = m.group();
-            tokens.add(new Token(tokenValue, position));
-            position += tokenValue.length();  // Update position to the next character after the current token
-        }
-        return tokens;
-    }*/
-    /*private List<Token> tokenize(String code) {
-        List<Token> tokens = new ArrayList<>();
-        int position = 0;
-        int currentIndent = 0;
-        int lastNewlinePosition = -1; // Track the position of the last newline character
 
-        Matcher m = Pattern.compile("(\\w+|\\s+|[\\p{Punct}])|(\\R)").matcher(code);
-        while (m.find()) {
-            String tokenValue = m.group(0);
-            if (m.group(2) != null) { // If it's a newline
-                tokens.add(new Token(tokenValue, position, 0)); // Newlines have no indent
-                lastNewlinePosition = position;
-                currentIndent = 0; // Reset indentation at the start of a new line
-            } else if (m.group(1) != null) {
-                if (lastNewlinePosition == -1) {
-                    currentIndent = position; // If no newline has been found yet
-                } else {
-                    currentIndent = position - lastNewlinePosition - 1; // Characters before the token on the same line
-                }
-                tokens.add(new Token(tokenValue, position, currentIndent));
-            }
-            position += tokenValue.length();
-        }
-        return tokens;
-    }*/
+    public String reconstructCodeWithGoogle(String originalCode, String modifiedCode) {
+        DiffMatchPatch dmp = new DiffMatchPatch();
 
+        // Compute the difference.
+        LinkedList<DiffMatchPatch.Diff> diffs = dmp.diffMain(originalCode, modifiedCode);
 
-    private String getWithIndentation(Token token) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(" ".repeat(Math.max(0, token.getIntentLevel()))); // Apply indentation
-        sb.append(token.value);
-        return sb.toString();
+        adjustDiffs(originalCode, findOmissionMarkers(modifiedCode, diffs), diffs);
+
+        return restoreCodeBasedOnDeltas(diffs);
     }
 
-    public String generateDiffString(String originalCode, String modifiedCode) {
-        List<Token> originalTokens = tokenize(originalCode);
-        List<Token> modifiedTokens = tokenize(modifiedCode);
+    private String restoreCodeBasedOnDeltas(LinkedList<DiffMatchPatch.Diff> diffs) {
+        StringBuilder restoredCode = new StringBuilder();
+        int lastPos = 0;
 
-        return generateDiffString(originalTokens, modifiedTokens);
+        for (DiffMatchPatch.Diff diff : diffs) {
+            if (diff.operation == EQUAL) {
+                restoredCode.append(diff.text);
+                lastPos += diff.text.length();
+            } else if (diff.operation == DELETE) {
+                // Check for omissions and decide if this should be restored
+                /*if (shouldRestore(currentToken)) {
+                    restoredCode.append(diff.text);
+                }*/
+                lastPos += diff.text.length();
+            } else if (diff.operation == INSERT) {
+                restoredCode.append(diff.text);
+                lastPos += diff.text.length();
+            }
+        }
+
+        return restoredCode.toString();
     }
 
-    // Generate a diff string with marked changes (for reference or other use cases)
-    public String generateDiffString(List<Token> originalTokens, List<Token> modifiedTokens) {
-        List<String> originalTokensValues = new ArrayList<>();
-        for (Token token : originalTokens) {
-            originalTokensValues.add(token.value);
-        }
-        List<String> modifiedTokensValues = new ArrayList<>();
-        for (Token token : modifiedTokens) {
-            modifiedTokensValues.add(token.value);
-        }
-        Patch<String> patch = DiffUtils.diff(originalTokensValues, modifiedTokensValues);
-        StringBuilder diffString = new StringBuilder();
+    public List<OmissionMarker> findOmissionMarkers(String modifiedCode, LinkedList<DiffMatchPatch.Diff> diffs) {
+        List<OmissionMarker> omissionMarkers = new ArrayList<>();
+        int modifiedTextPos = 0;
 
-        int indexOrig = 0;
-        List<AbstractDelta<String>> deltas = patch.getDeltas();
-        for (var delta : deltas) {
-            // Append unchanged tokens
-            while (indexOrig < delta.getSource().getPosition()) {
-                diffString.append(originalTokens.get(indexOrig++));
-            }
-
-            switch (delta.getType()) {
-                case DELETE:
-                    // Append deleted tokens
-                    for (String line : delta.getSource().getLines()) {
-                        diffString.append("-[-]-").append(line);
-                    }
-                    break;
-                case INSERT:
-                    // Append inserted tokens
-                    for (String line : delta.getTarget().getLines()) {
-                        diffString.append("-[+]-").append(line);
-                    }
-                    break;
-                case CHANGE:
-                    // Append changed tokens
-                    for (String line : delta.getSource().getLines()) {
-                        diffString.append("-[~]-").append(line);
-                    }
-                    break;
+        // First pass: build the complete modified text to easily check lines
+        for (int i = 0; i < diffs.size(); i++) {
+            DiffMatchPatch.Diff diff = diffs.get(i);
+            switch (diff.operation) {
                 case EQUAL:
-                    // Append unchanged tokens
-                    for (String line : delta.getSource().getLines()) {
-                        diffString.append("-[=]-").append(line);
+                case INSERT:
+                    modifiedTextPos += diff.text.length();
+                    if (isOmissionMarker(modifiedCode, modifiedTextPos)) {
+                        boolean containedInList = false;
+                        int lineNumber = getLineNumberOfText(modifiedCode, modifiedTextPos);
+                        for (OmissionMarker marker : omissionMarkers) {
+                            if (marker.getLineNumber() == lineNumber) {
+                                containedInList = true;
+                                break;
+                            }
+                        }
+                        if (!containedInList) {
+                            omissionMarkers.add(new OmissionMarker(lineNumber, modifiedTextPos, i));
+                        }
                     }
                     break;
-                default:
-                    throw new IllegalStateException("Unexpected delta type: " + delta.getType());
+                case DELETE:
+                    // DELETE does not contribute to the modified text length
+                    break;
             }
         }
 
-        // Append remaining unchanged tokens
-        while (indexOrig < originalTokens.size()) {
-            diffString.append(originalTokens.get(indexOrig++));
+        return omissionMarkers;
+    }
+
+    public List<DiffMatchPatch.Diff> adjustDiffs(String modifiedCode, List<OmissionMarker> omissionMarkers, LinkedList<DiffMatchPatch.Diff> diffs) {
+        // First pass: build the complete modified text to easily check lines
+        int modifiedTextPos = 0;
+        List<DiffMatchPatch.Diff> toReplace = new ArrayList<>();
+
+        for (int i = 0; i < diffs.size(); i++) {
+            DiffMatchPatch.Diff diff = diffs.get(i);
+            switch (diff.operation) {
+                case EQUAL:
+                case INSERT:
+                    modifiedTextPos += diff.text.length();
+                    if (isOmissionMarker(i, omissionMarkers)) {
+                        OmissionMarker omissionMarker = getOmissionMarker(i, omissionMarkers);
+                        adjustPrecedingDeltas(modifiedCode, diffs, omissionMarker, i, modifiedTextPos, toReplace);
+                        adjustFollowingDeltas(modifiedCode, diffs, omissionMarker, i, modifiedTextPos, toReplace);
+                        toReplace.add(diff);
+                    }
+                    break;
+                case DELETE:
+                    // DELETE does not contribute to the modified text length
+                    break;
+            }
         }
 
-        return diffString.toString();
+        for (DiffMatchPatch.Diff diff : toReplace) {
+            // Convert it from DELETE to EQUAL
+            diff.operation = EQUAL;
+        }
+
+        return diffs;
     }
+
+    private void adjustPrecedingDeltas(/*List<Range> topStopBeforeRanges, List<Range> topStopModifiedRanges, String beforeCode, */String modifiedCode, List<DiffMatchPatch.Diff> diffs, OmissionMarker omissionMarker, int deltaIndex, int stringIndex, List<DiffMatchPatch.Diff> toReplace) {
+        int j = deltaIndex - 1;
+        while (j >= 0) {
+            DiffMatchPatch.Diff currentDelta = diffs.get(j);
+            if (currentDelta.operation == INSERT || currentDelta.operation == EQUAL) {
+                if (getLineNumberOfText(modifiedCode, stringIndex) != getLineNumberOfText(modifiedCode, omissionMarker.getStringIndex())) {
+                    System.out.println("Going back stopped by delta: " + currentDelta.text);
+                    System.out.println("Following delta type: " + currentDelta.operation);
+                    //System.out.println("Line at delta: " + getLineOfCodeAtDelta(modifiedCode, currentDelta.));
+                    //int modifiedStartIndex = getStartIndexOfLineAtIndex(modifiedCode, modifiedToken.position);
+                    //int modifiedEndIndex = getEndIndexOfLineAtIndex(modifiedCode, modifiedToken.position);
+                    //Range modifiedRange = new Range(modifiedToken.position, modifiedToken.position + modifiedToken.value.length());
+                    //topStopModifiedRanges.add(modifiedRange);
+                    //int beforeStartIndex = getStartIndexOfLineAtIndex(beforeCode, beforeToken.position);
+                    //int beforeEndIndex = getEndIndexOfLineAtIndex(beforeCode, beforeToken.position);
+                    //Range beforeRange = new Range(beforeToken.position, beforeToken.position + beforeToken.value.length());
+                    //topStopBeforeRanges.add(beforeRange);
+                    break;
+                } else {
+                    if (getLineNumberOfText(modifiedCode, stringIndex) == getLineNumberOfText(modifiedCode, omissionMarker.getStringIndex())) {
+                        toReplace.add(currentDelta);
+                    }
+                    //System.out.println("Both deltas did not cancel because they are on line: " + getLineNumberOfText(modifiedCode, modifiedToken.position));
+                }
+            }
+            if (currentDelta.operation == DELETE) {
+                toReplace.add(currentDelta);
+            }
+            j--;
+        }
+    }
+
+    private void adjustFollowingDeltas(/*String beforeCode, */String modifiedCode, List<DiffMatchPatch.Diff> diffs, OmissionMarker omissionMarker, int deltaIndex, int stringIndex, List<DiffMatchPatch.Diff> toReplace) {
+        int j = deltaIndex + 1;
+        while (j < diffs.size()) {
+            DiffMatchPatch.Diff currentDelta = diffs.get(j);
+            if (currentDelta.operation == INSERT || currentDelta.operation == EQUAL) {
+                if (getLineNumberOfText(modifiedCode, stringIndex) != getLineNumberOfText(modifiedCode, omissionMarker.getStringIndex())) {
+                    System.out.println("Going forward stopped by delta: " + currentDelta.text);
+                    System.out.println("Following delta type: " + currentDelta.operation);
+                    //System.out.println("Line at delta: " + getLineOfCodeAtDelta(modifiedCode, modifiedTokens, currentDelta));
+                    /*int modifiedStartIndex = getStartIndexOfLineAtIndex(modifiedCode, modifiedToken.position);
+                    int modifiedEndIndex = getEndIndexOfLineAtIndex(modifiedCode, modifiedToken.position);
+                    Range modifiedRange = new Range(modifiedToken.position, modifiedToken.position + modifiedToken.value.length());
+                    bottomStopModifiedRanges.add(modifiedRange);
+                    int beforeStartIndex = getStartIndexOfLineAtIndex(beforeCode, beforeToken.position);
+                    int beforeEndIndex = getEndIndexOfLineAtIndex(beforeCode, beforeToken.position);
+                    Range beforeRange = new Range(beforeToken.position, beforeToken.position + beforeToken.value.length());
+                    bottomStopBeforeRanges.add(beforeRange);*/
+                    break;
+                } else {
+                    if (getLineNumberOfText(modifiedCode, stringIndex) == getLineNumberOfText(modifiedCode, omissionMarker.getStringIndex())) {
+                        toReplace.add(currentDelta);
+                    }
+                    //System.out.println("Both deltas did not cancel because they are on line: " + getLineNumberOfText(modifiedCode, modifiedToken.position));
+                }
+            }
+            if (currentDelta.operation == DELETE) {
+                toReplace.add(currentDelta);
+            }
+            j++;
+        }
+    }
+
+    public boolean isOmissionMarker(int index, List<OmissionMarker> omissionMarkers) {
+        for (OmissionMarker marker : omissionMarkers) {
+            if (marker.getDiffIndex() == index) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public OmissionMarker getOmissionMarker(int index, List<OmissionMarker> omissionMarkers) {
+        for (OmissionMarker marker : omissionMarkers) {
+            if (marker.getDiffIndex() == index) {
+                return marker;
+            }
+        }
+        return null;
+    }
+
+    private boolean shouldRestore(Token token) {
+        return token.value.contains("OMITTED"); // Change this condition based on how omission flags are defined in your code
+    }
+
+    private Token findTokenAtPosition(List<Token> tokens, int position) {
+        for (Token token : tokens) {
+            if (token.position == position) {
+                return token;
+            }
+        }
+        return null;
+    }
+
+
 
     public String reconstructModifiedCode(String originalCode, String modifiedCode) {
         List<Token> originalTokens = tokenize(originalCode);
@@ -150,11 +238,16 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
             modifiedTokensValues.add(token.value);
         }
         Patch<String> patch = DiffUtils.diff(originalTokensValues, modifiedTokensValues);
-        return reconstructModifiedCodeWithDeltas(originalTokens, modifiedTokens, patch.getDeltas());
+        return reconstructModifiedCodeWithDeltas(originalTokens, patch.getDeltas());
+    }
+
+    private void appendWithIndentation(StringBuilder sb, Token token) {
+        sb.append(" ".repeat(Math.max(0, token.getIntentLevel()))); // Apply indentation
+        sb.append(token.value);
     }
 
     // Directly reconstruct the modified code from tokens, handling insertions and deletions
-    public String reconstructModifiedCodeWithDeltas(List<Token> originalTokens, List<Token> modifiedTokens, List<AbstractDelta<String>> deltas) {
+    public String reconstructModifiedCodeWithDeltas(List<Token> originalTokens, List<AbstractDelta<String>> deltas) {
         StringBuilder modifiedCode = new StringBuilder();
         int indexOrig = 0;
 
@@ -163,7 +256,7 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
             while (indexOrig < delta.getSource().getPosition()) {
                 modifiedCode.append(originalTokens.get(indexOrig++));
             }
-            //Token modifiedToken = modifiedTokens.get(delta.getTarget().getPosition());
+
             // Handle different types of deltas
             switch (delta.getType()) {
                 case DELETE:
@@ -199,34 +292,6 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
 
         return modifiedCode.toString();
     }
-    /*public String reconstructModifiedCodeWithDeltas(List<Token> originalTokens, List<Token> modifiedTokens, List<AbstractDelta<String>> deltas) {
-        StringBuilder modifiedCode = new StringBuilder();
-        int indexOrig = 0;
-        int indexMod = 0;  // Ensure to track position in modified tokens as well
-
-        for (var delta : deltas) {
-            while (indexOrig < delta.getSource().getPosition()) {
-                Token token = originalTokens.get(indexOrig++);
-                modifiedCode.append(token.value); // Append value only, ignoring indentation
-            }
-
-            for (int i = 0; i < delta.getTarget().getLines().size(); i++) {
-                if (indexMod < modifiedTokens.size()) {
-                    Token modToken = modifiedTokens.get(indexMod++);
-                    modifiedCode.append(modToken.value); // Append modified tokens ignoring indentation
-                }
-            }
-
-            indexOrig += delta.getSource().getLines().size();  // Skip source lines that were deleted or changed
-        }
-
-        while (indexOrig < originalTokens.size()) {
-            modifiedCode.append(originalTokens.get(indexOrig++).value); // Append remaining tokens ignoring indentation
-        }
-
-        return modifiedCode.toString();
-    }*/
-
 
 
     public String reconstructModifiedCodeWithRestoration(List<Range> topStopBeforeRanges, List<Range> topStopModifiedRanges, List<Range> bottomStopBeforeRanges, List<Range> bottomStopModifiedRanges, String originalCode, String modifiedCode) {
@@ -250,7 +315,7 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
 
         adjustDeltasForOmissions(topBeforeStopRanges, topModifiedStopRanges, bottomBeforeStopRanges, bottomModifiedStopRanges, beforeCode, modifiedCode, originalTokens, modifiedTokens, deltas);
 
-        return reconstructModifiedCodeWithDeltas(originalTokens, modifiedTokens, deltas);
+        return reconstructModifiedCodeWithDeltas(originalTokens, deltas);
     }
 
 
@@ -277,7 +342,7 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
         int j = index - 1;
         while (j >= 0) {
             AbstractDelta<String> currentDelta = deltas.get(j);
-            if (currentDelta.getType() == DeltaType.INSERT || currentDelta.getType() == DeltaType.EQUAL || currentDelta.getType() == DeltaType.CHANGE) {
+            if (currentDelta.getType() == DeltaType.INSERT || currentDelta.getType() == DeltaType.EQUAL) {
                 Token beforeToken = beforeTokens.get(currentDelta.getSource().getPosition());
                 Token modifiedToken = modifiedTokens.get(currentDelta.getTarget().getPosition());
                 if (getLineNumberOfText(modifiedCode, modifiedToken.position) != getLineNumberOfText(modifiedCode, omissionDeltaToken.position)) {
@@ -300,7 +365,7 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
                     System.out.println("Both deltas did not cancel because they are on line: " + getLineNumberOfText(modifiedCode, modifiedToken.position));
                 }
             }
-            if (currentDelta.getType() == DeltaType.DELETE/* || currentDelta.getType() == DeltaType.CHANGE*/) {
+            if (currentDelta.getType() == DeltaType.DELETE || currentDelta.getType() == DeltaType.CHANGE) {
                 toRemove.add(currentDelta);
             }
             j--;
@@ -312,7 +377,7 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
         int j = index + 1;
         while (j < deltas.size()) {
             AbstractDelta<String> currentDelta = deltas.get(j);
-            if (currentDelta.getType() == DeltaType.INSERT || currentDelta.getType() == DeltaType.EQUAL || currentDelta.getType() == DeltaType.CHANGE) {
+            if (currentDelta.getType() == DeltaType.INSERT || currentDelta.getType() == DeltaType.EQUAL) {
                 Token beforeToken = beforeTokens.get(currentDelta.getSource().getPosition());
                 Token modifiedToken = modifiedTokens.get(currentDelta.getTarget().getPosition());
                 if (getLineNumberOfText(modifiedCode, modifiedToken.position) != getLineNumberOfText(modifiedCode, omissionDeltaToken.position)) {
@@ -335,7 +400,7 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
                     System.out.println("Both deltas did not cancel because they are on line: " + getLineNumberOfText(modifiedCode, modifiedToken.position));
                 }
             }
-            if (currentDelta.getType() == DeltaType.DELETE/* || currentDelta.getType() == DeltaType.CHANGE*/) {
+            if (currentDelta.getType() == DeltaType.DELETE || currentDelta.getType() == DeltaType.CHANGE) {
                 toRemove.add(currentDelta);
             }
             j++;
@@ -365,6 +430,17 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
         return false;
     }
 
+    private boolean isOmissionMarker(String modifiedCode, int modifiedTextPos) {
+        String line = getLineOfCodeAtIndex(modifiedCode, modifiedTextPos);
+        return ((line.toLowerCase().contains("omitted")
+                || line.toLowerCase().contains("not shown"))
+                && line.toLowerCase().contains("brevity"))
+                || (line.toLowerCase().contains("// other")
+                || line.toLowerCase().contains("# other")
+                || line.toLowerCase().contains("// ..."));
+    }
+
+
     public int getLineNumberOfText(String code, int index) {
         int line = 1;
         for (int i = 0; i < index; i++) {
@@ -376,15 +452,26 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
     }
 
     public String getLineOfCodeAtIndex(String code, int index) {
+        // Ensure the index is within the valid range of the code string.
+        if (index >= code.length()) {
+            return "";  // Return an empty string or handle this case as needed.
+        }
+
         int start = index;
         int end = index;
-        while (start > 0 && code.charAt(start) != '\n') {
+
+        // Adjust the start index to find the beginning of the line.
+        while (start > 0 && code.charAt(start - 1) != '\n') {
             start--;
         }
-        while (end < code.length() && code.charAt(end) != '\n') {
+
+        // Adjust the end index to find the end of the line.
+        while (end < code.length() - 1 && code.charAt(end + 1) != '\n') {
             end++;
         }
-        return code.substring(start, end);
+
+        // Return the substring from start to end (inclusive of end).
+        return code.substring(start, end + 1);
     }
 
     public int getStartIndexOfLineAtIndex(String code, int index) {
@@ -403,33 +490,4 @@ public class StringTokenizerServiceImpl implements StringTokenizerService {
         return end;
     }
 
-    private void restoreContextAroundOmission(int deltaIndex, List<Token> tokens, List<AbstractDelta<String>> deltas) {
-        AbstractDelta<String> delta = deltas.get(deltaIndex);
-        int startPos = delta.getSource().getPosition();
-        int endPos = startPos + delta.getSource().getLines().size();
-
-        // Restore preceding context
-        int prev = startPos - 1;
-        while (prev >= 0 && !tokens.get(prev).value.equals("-[=]-") && !tokens.get(prev).value.startsWith("-[+]-")) {
-            if (tokens.get(prev).value.startsWith("-[-]-")) {
-
-                tokens.get(prev).setValue(tokens.get(prev).getValue().replace("-[-]-", ""));
-            }
-            prev--;
-        }
-
-        // Restore following context
-        int next = endPos;
-        while (next < tokens.size() && !tokens.get(next).value.equals("-[=]-") && !tokens.get(next).value.startsWith("-[+]-")) {
-            if (tokens.get(next).value.startsWith("-[-]-")) {
-                tokens.get(next).setValue(tokens.get(next).getValue().replace("-[-]-", ""));
-            }
-            next++;
-        }
-
-        // Clear the omitted tokens
-        for (int i = startPos; i < endPos; i++) {
-            tokens.get(i).setValue("");  // Remove the actual omission marker and surrounding context
-        }
-    }
 }

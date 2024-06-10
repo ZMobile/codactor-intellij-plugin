@@ -104,7 +104,7 @@ public class InquiryChatBoxViewer extends JPanel {
         toolBar.setBorderPainted(false);
 
         OpenAiModelService openAiModelService = inquiryViewer.getInquiryChatListViewer().getOpenAiModelService();
-        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k"});
+        modelComboBox = new ComboBox<>(new String[]{"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4o"});
         modelComboBox.setMaximumSize(new Dimension(200, modelComboBox.getPreferredSize().height));
         String selectedElement = openAiModelService.getSelectedOpenAiModel();
         int selectedIndex = -1;
@@ -138,7 +138,7 @@ public class InquiryChatBoxViewer extends JPanel {
             JComboBox<String> cb = (JComboBox<String>) e.getSource();
             String model = (String) cb.getSelectedItem();
             if (model != null) {
-                whatCanYourFunctionsDoButton.setVisible(model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k"));
+                whatCanYourFunctionsDoButton.setVisible(model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k") || model.equals("gpt-4o"));
                 openAiModelService.setSelectedOpenAiModel(model);
             }
         });

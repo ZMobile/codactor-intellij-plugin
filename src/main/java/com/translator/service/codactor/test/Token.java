@@ -2,11 +2,18 @@ package com.translator.service.codactor.test;
 
 public class Token {
     String value;
-    int position;  // Position in the entire string (character index)
+    int position;  // Position in the plain text string (character index)
+    int intentLevel;  // Indentation level
 
     Token(String value, int position) {
         this.value = value;
         this.position = position;
+    }
+
+    Token(String value, int position, int intentLevel) {
+        this.value = value;
+        this.position = position;
+        this.intentLevel = intentLevel;
     }
 
     @Override
@@ -28,5 +35,13 @@ public class Token {
 
     public void setPosition(int position) {
         this.position = position;
+    }
+
+    public int getIntentLevel() {
+        return intentLevel;
+    }
+
+    public void setIntentLevel(int intentLevel) {
+        this.intentLevel = intentLevel;
     }
 }

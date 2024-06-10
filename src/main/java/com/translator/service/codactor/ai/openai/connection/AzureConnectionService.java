@@ -27,6 +27,10 @@ public interface AzureConnectionService {
 
     String getGpt432kDeployment();
 
+    void setGpt4oDeployment(String deployment);
+
+    String getGpt4oDeployment();
+
     List<String> getActiveModels();
 
     String getDeploymentForModel(String model);
