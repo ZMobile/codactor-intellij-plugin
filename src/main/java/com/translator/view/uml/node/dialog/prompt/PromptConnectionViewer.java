@@ -151,6 +151,7 @@ public class PromptConnectionViewer extends JPanel {
         label1.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JToolBar jToolBar1 = new JToolBar();
+        jToolBar1.setBackground(Color.darkGray);
         jToolBar1.setFloatable(false);
         jToolBar1.setBorderPainted(false);
 
@@ -158,6 +159,7 @@ public class PromptConnectionViewer extends JPanel {
 
 
         JToolBar jToolBar2 = new JToolBar();
+        jToolBar2.setBackground(Color.darkGray);
         jToolBar2.setFloatable(false);
         jToolBar2.setBorderPainted(false);
 

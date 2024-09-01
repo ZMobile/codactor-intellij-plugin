@@ -4,6 +4,7 @@ import com.translator.dao.firebase.FirebaseTokenService;
 import com.translator.dao.firebase.FirebaseTokenService;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
@@ -87,6 +88,8 @@ public class LoginDialog extends JDialog {
         panel.add(passwordField, c);
 
         JButton loginButton = new JButton("Login");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        loginButton.setBorder(emptyBorder);
         c.gridx = 0;
         c.gridy = 4;
         c.anchor = GridBagConstraints.CENTER;

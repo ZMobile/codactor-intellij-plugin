@@ -4,6 +4,7 @@ import com.intellij.ui.components.JBTextArea;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
@@ -48,8 +49,9 @@ public class OpenAiApiKeyDialog extends JDialog {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(20, 10, 10, 10);
         panel.add(subtitleLabel, c);
-
+        Border emptyBorder = BorderFactory.createEmptyBorder();
         JButton okButton = new JButton("OK");
+        okButton.setBorder(emptyBorder);
         c.gridx = 0;
         c.gridy = 3;
         c.anchor = GridBagConstraints.CENTER;

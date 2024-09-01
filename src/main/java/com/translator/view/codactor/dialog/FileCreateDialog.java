@@ -15,6 +15,7 @@ import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -125,6 +126,8 @@ public class FileCreateDialog extends JDialog {
             }
         });
         advancedButton = new JButton("(Advanced) Add Context");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        advancedButton.setBorder(emptyBorder);
         hiddenLabel = new JLabel();
         hiddenLabel.setVisible(false);
 
@@ -145,6 +148,7 @@ public class FileCreateDialog extends JDialog {
         contentPane.add(createTopPanel(), BorderLayout.NORTH);
         contentPane.add(createMainPanel(), BorderLayout.CENTER);
         okButton = new JButton("Create File");
+        okButton.setBorder(emptyBorder);
         okButton.addActionListener(okActionListener);
 
 

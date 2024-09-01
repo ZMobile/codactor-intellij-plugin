@@ -26,6 +26,7 @@ import com.translator.view.codactor.renderer.InquiryChatRenderer;
 import com.translator.view.codactor.viewer.inquiry.InquiryChatViewer;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
@@ -177,6 +178,7 @@ public class PromptViewer extends JPanel {
         jBScrollPane1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         jToolBar2 = new JToolBar();
+        jToolBar2.setBackground(Color.darkGray);
         jToolBar2.setFloatable(false);
         jToolBar2.setBorderPainted(false);
 
@@ -187,10 +189,13 @@ public class PromptViewer extends JPanel {
         jToolBar2.add(viewerLabel);
 
         jToolBar3 = new JToolBar();
+        jToolBar3.setBackground(Color.darkGray);
         jToolBar3.setFloatable(false);
         jToolBar3.setBorderPainted(false);
 
         removeButton = new JButton("-");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        removeButton.setBorder(emptyBorder);
         removeButton.setPreferredSize(new Dimension(50, 32));
         removeButton.setFocusable(false);
         removeButton.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -210,6 +215,7 @@ public class PromptViewer extends JPanel {
         });
         jToolBar3.add(removeButton);
         addButton = new JButton("+");
+        addButton.setBorder(emptyBorder );
         addButton.setPreferredSize(new Dimension(50, 32));
         addButton.setFocusable(false);
         addButton.setHorizontalTextPosition(SwingConstants.CENTER);

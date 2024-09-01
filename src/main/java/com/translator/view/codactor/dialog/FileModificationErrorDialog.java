@@ -16,6 +16,7 @@ import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.view.codactor.settings.CodactorConfigurable;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -57,6 +58,8 @@ public class FileModificationErrorDialog extends JDialog {
         buttonPanel.setLayout(new FlowLayout());
 
         JButton removeButton = new JButton("Remove Modification");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        removeButton.setBorder(emptyBorder);
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -66,6 +69,7 @@ public class FileModificationErrorDialog extends JDialog {
         });
 
         JButton leaveButton = new JButton("Leave Modification in Queue");
+        leaveButton.setBorder(emptyBorder);
         leaveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -74,6 +78,7 @@ public class FileModificationErrorDialog extends JDialog {
         });
 
         JButton retryButton = new JButton("Retry Modification");
+        retryButton.setBorder(emptyBorder);
         retryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -129,6 +134,7 @@ public class FileModificationErrorDialog extends JDialog {
         });
 
         JButton reenterButton = new JButton("Re-enter openAi Api Key");
+        reenterButton.setBorder(emptyBorder);
         reenterButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

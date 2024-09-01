@@ -23,6 +23,7 @@ import com.translator.view.codactor.viewer.CodeSnippetViewer;
 
 import javax.inject.Inject;
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
@@ -87,10 +88,13 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         JBScrollPane jBScrollPane1 = new JBScrollPane(codeSnippetList);
 
         toolbar = new JToolBar();
+        toolbar.setBackground(Color.darkGray);
         toolbar.setFloatable(false);
         toolbar.setBorderPainted(false);
 
         backButton = new JButton("\u2190"); // "\u2190" is a unicode character for a left arrow
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        backButton.setBorder(emptyBorder);
         backButton.setFocusable(false);
         backButton.setHorizontalTextPosition(SwingConstants.LEADING);
         backButton.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -100,6 +104,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         toolbar.addSeparator();
 
         acceptButton = new JButton("Accept Solution");
+        acceptButton.setBorder(emptyBorder);
         acceptButton.setFocusable(false);
         acceptButton.setHorizontalTextPosition(SwingConstants.CENTER);
         acceptButton.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -107,6 +112,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         toolbar.add(acceptButton);
 
         rejectAllButton = new JButton("Reject All Changes");
+        rejectAllButton.setBorder(emptyBorder);
         rejectAllButton.setFocusable(false);
         rejectAllButton.setHorizontalTextPosition(SwingConstants.CENTER);
         rejectAllButton.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -116,6 +122,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         toolbar.addSeparator();
 
         customizeButton = new JButton("Customize");
+        customizeButton.setBorder(emptyBorder);
         customizeButton.setFocusable(false);
         customizeButton.setHorizontalTextPosition(SwingConstants.CENTER);
         customizeButton.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -123,6 +130,7 @@ public class ProvisionalModificationViewer extends JBPanel<ProvisionalModificati
         toolbar.add(customizeButton);
 
         diffViewerButton = new JButton("Diff Viewer");
+        diffViewerButton.setBorder(emptyBorder);
         diffViewerButton.setFocusable(false);
         diffViewerButton.setHorizontalTextPosition(SwingConstants.CENTER);
         diffViewerButton.setVerticalTextPosition(SwingConstants.BOTTOM);

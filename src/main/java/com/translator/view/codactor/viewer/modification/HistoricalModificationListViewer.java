@@ -20,6 +20,7 @@ import com.translator.view.codactor.viewer.inquiry.InquiryListViewer;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,10 +49,13 @@ public class HistoricalModificationListViewer extends JPanel {
 
     private void initComponents() {
         jToolBar2 = new JToolBar();
+        jToolBar2.setBackground(Color.darkGray);
         jToolBar2.setFloatable(false);
         jToolBar2.setBorderPainted(false);
 
         otherInquiriesButton = new JButton("Previous Inquiries");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        otherInquiriesButton.setBorder(emptyBorder);
         otherInquiriesButton.setFocusable(false);
         otherInquiriesButton.setHorizontalTextPosition(SwingConstants.CENTER);
         otherInquiriesButton.setVerticalTextPosition(SwingConstants.BOTTOM);

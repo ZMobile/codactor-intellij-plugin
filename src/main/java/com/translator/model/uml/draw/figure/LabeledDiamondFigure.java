@@ -1,6 +1,6 @@
 package com.translator.model.uml.draw.figure;
 
-import org.jhotdraw.draw.DiamondFigure;
+ import org.jhotdraw.draw.DiamondFigure;
 import org.jhotdraw.draw.TextFigure;
 import org.jhotdraw.draw.handle.BoundsOutlineHandle;
 import org.jhotdraw.draw.handle.Handle;

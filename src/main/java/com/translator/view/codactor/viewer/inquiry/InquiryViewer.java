@@ -18,6 +18,8 @@ import com.translator.view.codactor.factory.dialog.MultiFileCreateDialogFactory;
 import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -63,10 +65,20 @@ public class InquiryViewer extends JPanel {
 
     private void initComponents() {
         toolbar = new JToolBar();
+        toolbar.setBackground(Color.darkGray);
         toolbar.setFloatable(false);
         toolbar.setBorderPainted(false);
 
         otherInquiriesButton = new JButton("Previous Inquiries");
+        toolbar.setBackground(Color.darkGray);
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        otherInquiriesButton.setBorder(emptyBorder);
+        otherInquiriesButton.setBackground(Color.darkGray);
+        //otherInquiriesButton.setFocusPainted(false); // Remove focus outline
+        //otherInquiriesButton.setContentAreaFilled(false); // Makes the button transparent
+        //otherInquiriesButton.setOpaque(true); // Ensures background color is applied
+        //otherInquiriesButton.setBorder(new EmptyBorder(5, 15, 5, 15)); // Adjust padding as needed
+        otherInquiriesButton.setBorder(emptyBorder);
         otherInquiriesButton.setFocusable(false);
         otherInquiriesButton.setHorizontalTextPosition(SwingConstants.CENTER);
         otherInquiriesButton.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -82,6 +94,8 @@ public class InquiryViewer extends JPanel {
         toolbar.add(otherInquiriesButton);
 
         newInquiryButton = new JButton("New Inquiry");
+        newInquiryButton.setBorder(emptyBorder);
+        newInquiryButton.setBorder(emptyBorder);
         newInquiryButton.setFocusable(false);
         newInquiryButton.setHorizontalTextPosition(SwingConstants.CENTER);
         newInquiryButton.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -131,6 +145,7 @@ public class InquiryViewer extends JPanel {
         //CodeSnippetListViewer codeSnippetListViewer = this;
         // Add inquiryChatListViewer and inquiryChatBoxViewer to the main panel
         setLayout(new BorderLayout());
+        setBackground(Color.darkGray);
         add(toolbar, BorderLayout.NORTH);
         add(inquiryChatListViewer, BorderLayout.CENTER);
         add(inquiryChatBoxViewer, BorderLayout.SOUTH);

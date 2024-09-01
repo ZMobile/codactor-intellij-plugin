@@ -33,6 +33,7 @@ public class CodeSnippetViewer extends JBPanel<CodeSnippetViewer> {
 
     private void initComponents(String header) {
         jToolBar1 = new JToolBar();
+        jToolBar1.setBackground(Color.darkGray);
         jToolBar1.setFloatable(false);
         jToolBar1.setBorderPainted(false);
         jLabel1 = new JLabel();

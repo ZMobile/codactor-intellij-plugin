@@ -44,6 +44,7 @@ import org.jhotdraw.gui.filechooser.ExtensionFileFilter;
 import org.jhotdraw.util.ResourceBundleUtil;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -122,14 +123,17 @@ public class CodactorUmlBuilderApplicationModel extends DefaultApplicationModel 
 
         JToolBar tb;
         tb = new JToolBar();
+        tb.setBackground(Color.darkGray);
         addCreationButtonsTo(tb, editor);
         tb.setName(labels.getString("window.drawToolBar.title"));
         list.add(tb);
         tb = new JToolBar();
+        tb.setBackground(Color.darkGray);
         ButtonFactory.addAttributesButtonsTo(tb, editor);
         tb.setName(labels.getString("window.attributesToolBar.title"));
         list.add(tb);
         tb = new JToolBar();
+        tb.setBackground(Color.darkGray);
         ButtonFactory.addAlignmentButtonsTo(tb, editor);
         tb.setName(labels.getString("window.alignmentToolBar.title"));
         list.add(tb);

@@ -19,6 +19,7 @@ import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -92,6 +93,8 @@ public class FileTranslateDialog extends JDialog {
         centerPanel.add(textFieldsPanel, BorderLayout.CENTER);
 
         addButton = new JButton("Add");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        addButton.setBorder(emptyBorder);
         addButton.addActionListener(e -> {
             FileChooserDescriptor descriptor = new FileChooserDescriptor(true, false, false, false, false, true);
             VirtualFile[] filesToAdd = FileChooser.chooseFiles(descriptor, project, null);
@@ -100,6 +103,7 @@ public class FileTranslateDialog extends JDialog {
 
         // Add the Remove button to the removePanel
         removeButton = new JButton("Remove");
+        removeButton.setBorder(emptyBorder);
         removeButton.addActionListener(e -> removeSelectedFiles());
         JPanel northPanel = new JPanel(new BorderLayout());
 
@@ -136,6 +140,7 @@ public class FileTranslateDialog extends JDialog {
         });
 
         advancedButton = new JButton("(Advanced) Add Context");
+        advancedButton.setBorder(emptyBorder);
         advancedButton.addActionListener(e -> {
             promptContextService.setStatusLabel(hiddenLabel);
             PromptContextBuilderDialog promptContextBuilderDialog = promptContextBuilderDialogFactory.create(promptContextService);
@@ -143,6 +148,7 @@ public class FileTranslateDialog extends JDialog {
         });
 
         okButton = new JButton("Modify");
+        okButton.setBorder(emptyBorder);
         okButton.addActionListener(e -> translateFiles());
 
 

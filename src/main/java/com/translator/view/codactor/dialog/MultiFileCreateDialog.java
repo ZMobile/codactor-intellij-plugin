@@ -21,6 +21,7 @@ import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.factory.dialog.PromptContextBuilderDialogFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -289,6 +290,8 @@ public class MultiFileCreateDialog extends JDialog {
             }
         });
         advancedButton = new JButton("(Advanced) Add Context");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        advancedButton.setBorder(emptyBorder);
         hiddenLabel = new JLabel();
         hiddenLabel.setVisible(false);
         promptContextService.setStatusLabel(hiddenLabel);
@@ -334,6 +337,7 @@ public class MultiFileCreateDialog extends JDialog {
         gbc.insets = new Insets(10, 10, 0, 10);
         mainPanel.add(advancedButton, gbc);
         okButton = new JButton("Create Files");
+        okButton.setBorder(emptyBorder);
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

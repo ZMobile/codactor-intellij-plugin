@@ -7,6 +7,7 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -53,6 +54,8 @@ public class TextAreaWindow {
 
             JPanel buttonPanel = new JPanel();
             JButton okButton = new JButton("OK");
+            Border emptyBorder = BorderFactory.createEmptyBorder();
+            okButton.setBorder(emptyBorder);
             okButton.addActionListener(e -> {
                 listener.onOk(textArea.getText());
                 text = textArea.getText();
@@ -99,11 +102,14 @@ public class TextAreaWindow {
 
             JPanel buttonPanel = new JPanel();
             JButton okButton = new JButton(okButtonText);
+            Border emptyBorder = BorderFactory.createEmptyBorder();
+            okButton.setBorder(emptyBorder);
             okButton.addActionListener(e -> {
                 listener.onOk(textArea.getText());
                 dialog.dispose();
             });
             JButton cancelButton = new JButton(cancelButtonText);
+            cancelButton.setBorder(emptyBorder);
             cancelButton.addActionListener(e -> dialog.dispose());
             buttonPanel.add(okButton);
             buttonPanel.add(cancelButton);

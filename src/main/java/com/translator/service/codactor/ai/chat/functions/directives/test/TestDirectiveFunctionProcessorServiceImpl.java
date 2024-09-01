@@ -2,9 +2,10 @@ package com.translator.service.codactor.ai.chat.functions.directives.test;
 
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.model.codactor.ai.chat.function.GptFunctionCall;
-import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirective;
+import com.translator.model.codactor.ai.chat.function.directive.                                                        CreateAndRunUnitTestDirective;
 import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirectiveSession;
 import com.translator.model.codactor.ai.modification.ModificationType;
+import com.translator.service.codactor.ai.modification.AiUnitTestCodeModificationService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ide.editor.CodeSnippetIndexGetterService;
 import com.translator.service.codactor.ide.file.FileCreatorService;
@@ -19,21 +20,27 @@ import java.util.Arrays;
 
 public class TestDirectiveFunctionProcessorServiceImpl {
     private final CreateAndRunUnitTestDirective createAndRunUnitTestDirective;
+    private final AiUnitTestCodeModificationService aiUnitTestCodeModificationService;
     private final MavenAndGradleDependencyCollectorService mavenAndGradleDependencyCollectorService;
     private final CodeSnippetExtractorService codeSnippetExtractorService;
     private final CodeSnippetIndexGetterService codeSnippetIndexGetterService;
     private final FileCreatorService fileCreatorService;
+    private final RunTestAndGetOutputService runTestAndGetOutputService;
 
     @Inject
-    public TestDirectiveFunctionProcessorServiceImpl(MavenAndGradleDependencyCollectorService mavenAndGradleDependencyCollectorService,
+    public TestDirectiveFunctionProcessorServiceImpl(AiUnitTestCodeModificationService aiUnitTestCodeModificationService,
+                                                     MavenAndGradleDependencyCollectorService mavenAndGradleDependencyCollectorService,
                                                      CodeSnippetExtractorService codeSnippetExtractorService,
                                                      CodeSnippetIndexGetterService codeSnippetIndexGetterService,
-                                                     FileCreatorService fileCreatorService) {
+                                                     FileCreatorService fileCreatorService,
+                                                     RunTestAndGetOutputService runTestAndGetOutputService) {
         this.createAndRunUnitTestDirective = new CreateAndRunUnitTestDirective();
+        this.aiUnitTestCodeModificationService = aiUnitTestCodeModificationService;
         this.mavenAndGradleDependencyCollectorService = mavenAndGradleDependencyCollectorService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.codeSnippetIndexGetterService = codeSnippetIndexGetterService;
         this.fileCreatorService = fileCreatorService;
+        this.runTestAndGetOutputService = runTestAndGetOutputService;
     }
 
     public String processFunctionCall(GptFunctionCall gptFunctionCall, CreateAndRunUnitTestDirectiveSession createAndRunUnitTestDirectiveSession) {
@@ -51,9 +58,9 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                 response.append("\n");
                 response.append("In order to run this test, you will need to use the provided functions to create a unit test to run, but you may also temporarily place logs in the subject code file which will be triggered by the unit tests.");
                 createAndRunUnitTestDirectiveSession.setFilePath(filePath);
+                return response.toString();
             } else if (gptFunctionCall.getName().equalsIgnoreCase("create_unit_test_code_file")) {
                 String testFilePath = createAndRunUnitTestDirectiveSession.getFilePath()
-                        .replace("src/main/java", "src/test/java")
                         .replace(".java", "TemporaryAITest.java");
 
                 File testFile = new File(testFilePath);
@@ -69,14 +76,15 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                         i++;
                     }
                 }
-                createAndRunUnitTestDirectiveSession.setFilePath(testFilePath);
+                createAndRunUnitTestDirectiveSession.setTestFilePath(testFilePath);
                 createAndRunUnitTestDirectiveSession.setUnitTestCreated(true);
 
                 String testCode = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "code");
                 fileCreatorService.createFile(testFileDirectory.getAbsolutePath(), testCode);
+                return "Unit test code file created at: " + testFilePath;
             } else if (gptFunctionCall.getName().equalsIgnoreCase("read_subject_code_file")) {
                 return codeSnippetExtractorService.getAllText(createAndRunUnitTestDirectiveSession.getFilePath());
-            } else if (gptFunctionCall.getName().equalsIgnoreCase("place_logs_in_subject_code_file")) {
+            } else if (gptFunctionCall.getName().equalsIgnoreCase("temp_log_inject")) {
                 String path = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "path");
                 if (path == null) {
                     String packageName = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "package");
@@ -171,30 +179,30 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                 assert modificationTypeString != null;
                 ModificationType modificationType;
                 String modificationId = "Error: no modification type specified.";
-                /*switch (modificationTypeString) {
+                switch (modificationTypeString) {
                     case "modify":
                         if (startSnippetString == null && endSnippetString == null) {
                             modificationType = ModificationType.MODIFY;
-                            modificationId = codeRecorderService.getModifiedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = aiUnitTestCodeModificationService.getModifiedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         } else {
                             System.out.println("Start snippet string: " + startSnippetString + " +\n End snippet string: " + endSnippetString);
                             modificationType = ModificationType.MODIFY_SELECTION;
-                            modificationId = codeRecorderService.getModifiedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = aiUnitTestCodeModificationService.getModifiedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         }
                         break;
                     case "fix":
                         if (startSnippetString == null && endSnippetString == null) {
                             modificationType = ModificationType.FIX;
-                            modificationId = codeRecorderService.getFixedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = aiUnitTestCodeModificationService.getFixedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         } else {
                             modificationType = ModificationType.FIX_SELECTION;
-                            modificationId = codeRecorderService.getFixedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = aiUnitTestCodeModificationService.getFixedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         }
                         break;
                     case "create":
-                        modificationId = codeRecorderService.getCreatedCode(path, description, new ArrayList<>(), replacementCodeSnippetString);
+                        modificationId = aiUnitTestCodeModificationService.getCreatedCode(path, description, new ArrayList<>(), replacementCodeSnippetString);
                         break;
-                }*/
+                }
                 if (modificationId != null) {
                     if (modificationId.startsWith("Error")) {
                         return "{" +
@@ -305,28 +313,28 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                 assert modificationTypeString != null;
                 ModificationType modificationType;
                 String modificationId = "Error: no modification type specified.";
-                /*switch (modificationTypeString) {
+                switch (modificationTypeString) {
                     case "modify":
                         if (startSnippetString == null && endSnippetString == null) {
                             modificationType = ModificationType.MODIFY;
-                            modificationId = codeRecorderService.getModifiedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = aiUnitTestCodeModificationService.getModifiedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         } else {
                             System.out.println("Start snippet string: " + startSnippetString + " +\n End snippet string: " + endSnippetString);
                             modificationType = ModificationType.MODIFY_SELECTION;
-                            modificationId = codeRecorderService.getModifiedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = aiUnitTestCodeModificationService.getModifiedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         }
                         break;
                     case "fix":
                         if (startSnippetString == null && endSnippetString == null) {
                             modificationType = ModificationType.FIX;
-                            modificationId = codeRecorderService.getFixedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = aiUnitTestCodeModificationService.getFixedCode(path, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         } else {
                             modificationType = ModificationType.FIX_SELECTION;
-                            modificationId = codeRecorderService.getFixedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
+                            modificationId = aiUnitTestCodeModificationService.getFixedCode(path, startIndex, endIndex, description, modificationType, new ArrayList<>(), replacementCodeSnippetString);
                         }
                         break;
                     case "create":
-                        modificationId = codeRecorderService.getCreatedCode(path, description, new ArrayList<>(), replacementCodeSnippetString);
+                        modificationId = aiUnitTestCodeModificationService.getCreatedCode(path, description, new ArrayList<>(), replacementCodeSnippetString);
                         break;
                 }
                 if (modificationId != null) {
@@ -343,13 +351,13 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                     return "{" +
                             "\"message\": \"Error: Unspecified.\"" +
                             "}";
-                }*/
+                }
             } else if (gptFunctionCall.getName().equalsIgnoreCase("run_unit_test")) {
-
-            } else if (gptFunctionCall.getName().equalsIgnoreCase("run_unit_test_with_coverage")) {
-
-            } else if (gptFunctionCall.getName().equalsIgnoreCase("terminate_test_loop")) {
-
+                String result = runTestAndGetOutputService.runTestAndGetOutput(createAndRunUnitTestDirectiveSession.getTestFilePath());
+                createAndRunUnitTestDirectiveSession.setTestResult(result);
+            /*} else if (gptFunctionCall.getName().equalsIgnoreCase("run_unit_test_with_coverage")) {*/
+            } else if (gptFunctionCall.getName().equalsIgnoreCase("terminate_test_and_report")) {
+                return "Report submitted.";
             }
             return null;
         } catch (Exception e) {

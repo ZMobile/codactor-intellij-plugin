@@ -11,6 +11,7 @@ import com.translator.view.codactor.renderer.HistoricalObjectDataHolderRenderer;
 import com.translator.view.codactor.renderer.SeparatorListCellRenderer;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -43,6 +44,7 @@ public class HistoricalContextModificationListViewer extends JPanel {
 
     private void initComponents() {
         jToolBar2 = new JToolBar();
+        jToolBar2.setBackground(Color.darkGray);
         jToolBar2.setFloatable(false);
         jToolBar2.setBorderPainted(false);
 
@@ -53,10 +55,13 @@ public class HistoricalContextModificationListViewer extends JPanel {
         jToolBar2.add(previousModificationsLabel);
 
         jToolBar3 = new JToolBar();
+        jToolBar3.setBackground(Color.darkGray);
         jToolBar3.setFloatable(false);
         jToolBar3.setBorderPainted(false);
 
         addButton = new JButton("+");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        addButton.setBorder(emptyBorder);
         addButton.setPreferredSize(new Dimension(50, 32));
         addButton.setFocusable(false);
         addButton.setHorizontalTextPosition(SwingConstants.CENTER);

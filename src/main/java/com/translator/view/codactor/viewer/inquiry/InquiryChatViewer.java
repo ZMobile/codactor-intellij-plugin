@@ -131,6 +131,7 @@ public class InquiryChatViewer extends JPanel {
             inquiryChat.setMessage("```" + inquiryChat.getMessage().trim() + "```");
         }
         jToolBar1 = new JToolBar();
+        jToolBar1.setBackground(Color.darkGray);
         jToolBar1.setFloatable(false);
         jToolBar1.setBorderPainted(false);
         jLabel1 = new JLabel();

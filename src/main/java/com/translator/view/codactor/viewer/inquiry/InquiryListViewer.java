@@ -14,6 +14,7 @@ import com.translator.view.codactor.renderer.SeparatorListCellRenderer;
 import com.translator.view.codactor.viewer.modification.HistoricalModificationListViewer;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -46,10 +47,13 @@ public class InquiryListViewer extends JPanel {
 
     private void initComponents() {
         jToolBar2 = new JToolBar();
+        jToolBar2.setBackground(Color.darkGray);
         jToolBar2.setFloatable(false);
         jToolBar2.setBorderPainted(false);
 
         newInquiryButton = new JButton("New Inquiry");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        newInquiryButton.setBorder(emptyBorder);
         newInquiryButton.setFocusable(false);
         newInquiryButton.setHorizontalTextPosition(SwingConstants.CENTER);
         newInquiryButton.setVerticalTextPosition(SwingConstants.BOTTOM);

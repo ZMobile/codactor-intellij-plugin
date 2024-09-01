@@ -34,6 +34,7 @@ import org.jhotdraw.util.ResourceBundleUtil;
 import org.jhotdraw.util.prefs.PreferencesUtil;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
@@ -73,9 +74,12 @@ public class CodactorUmlBuilderSVGEditor extends UserDataHolderBase implements F
 
         // Create a toolbar for the detach button
         JToolBar toolbar = new JToolBar();
+        toolbar.setBackground(Color.darkGray);
         toolbar.setFloatable(false);
         toolbar.setBorderPainted(false);
         JButton detachButton = new JButton("Detach View");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        detachButton.setBorder(emptyBorder);
         detachButton.addActionListener(e -> detachView());
         toolbar.add(detachButton);
 

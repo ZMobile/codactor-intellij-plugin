@@ -38,6 +38,7 @@ import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
 
 import javax.inject.Inject;
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -160,6 +161,8 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
 
         JPanel toolbarPanel = new JPanel(new HorizontalLayout(5));
         JButton acceptSolutionButton = new JButton("Accept Solution");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        acceptSolutionButton.setBorder(emptyBorder);
         acceptSolutionButton.addActionListener(e -> {
             if (selectedEditor == suggestedSolution) {
                 fileModificationTrackerService.implementModification(fileModificationSuggestion.getModificationId(), suggestedSolution.getDocument().getText(), false);
@@ -170,6 +173,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
             dispose();
         });
         JButton rejectAllChangesButton = new JButton("Reject All Changes");
+        rejectAllChangesButton.setBorder(emptyBorder);
         rejectAllChangesButton.addActionListener(e -> {
             fileModificationTrackerService.removeModification(fileModificationSuggestion.getModificationId());
             codactorToolWindowService.closeModificationQueueViewerToolWindow();
@@ -239,7 +243,9 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
         JBScrollPane scrollPane2 = new JBScrollPane(textArea);
 
         JButton button1 = new JButton("Button 1");
+        button1.setBorder(emptyBorder);
         JButton button2 = new JButton();
+        button2.setBorder(emptyBorder);
         button2.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/microphone_icon.png"))));
 
         JLabel hiddenLabel = new JLabel();
@@ -255,6 +261,7 @@ public class ProvisionalModificationCustomizerDialog extends JDialog implements 
         JComboBox<String> modificationTypeComboBox = modificationTypeComboBoxService.getModificationTypeComboBox();
         JLabel jLabel1 = new JLabel();
         JButton advancedButton = new JButton("(Advanced) Add Context");
+        advancedButton.setBorder(emptyBorder);
         advancedButton.addActionListener(e -> {
             //ApplicationManager.getApplication().invokeLater(() -> {
             promptContextService.setStatusLabel(hiddenLabel);

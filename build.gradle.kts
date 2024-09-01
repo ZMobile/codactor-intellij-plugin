@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("org.jetbrains.intellij") version "1.13.3"
+    id("org.jetbrains.intellij") version "1.16.0"
 }
 
 group = "com.codactor"
@@ -55,12 +55,15 @@ tasks {
         implementation("org.openjfx:javafx-swing:21-ea+5")
         implementation(files("/Users/zantehays/IdeaProjects/java-diff-utils/java-diff-utils/target/java-diff-utils-4.13-SNAPSHOT.jar"))
         implementation("com.github.javaparser:javaparser-core:3.25.10")
-        implementation(files("/Users/zantehays/IdeaProjects/jhotdraw/jhotdraw7/target/jhotdraw-7.7.0.jar"))
+        implementation(files("C:/Users/hzant/IdeaProjects/jhotdraw/jhotdraw7/target/jhotdraw7-1.0-SNAPSHOT.jar"))
         implementation("com.github.gumtreediff:gumtree:2.0.0")
         implementation("com.github.gumtreediff:core:3.0.0")
         implementation("com.github.gumtreediff:client:3.0.0")
         implementation("com.github.gumtreediff:gen.srcml:3.0.0")
         implementation("org.bitbucket.cowwoc:diff-match-patch:1.2")
+
+        implementation(files("C:/Users/hzant/IdeaProjects/java-diff-utils/java-diff-utils/target/java-diff-utils-4.13-SNAPSHOT.jar"))
+        implementation(files("C:/Users/hzant/IdeaProjects/jhotdraw/jhotdraw7/target/jhotdraw7-1.0-SNAPSHOT.jar"))
     }
 
     publishPlugin {

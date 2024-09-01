@@ -14,6 +14,7 @@ import com.translator.service.uml.node.runner.NodeRunnerManagerService;
 import org.jhotdraw.draw.Drawing;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 
 public class PromptNodeDialog extends JDialog {
@@ -61,6 +62,7 @@ public class PromptNodeDialog extends JDialog {
         panel.setLayout(new BorderLayout());
 
         JToolBar toolBar = new JToolBar();
+        toolBar.setBackground(Color.darkGray);
         toolBar.setFloatable(false);
         toolBar.setBorderPainted(false);
 
@@ -107,6 +109,8 @@ public class PromptNodeDialog extends JDialog {
         });
 
         cancelButton = new JButton("Cancel");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        cancelButton.setBorder(emptyBorder);
         cancelButton.addActionListener(e -> {
             PromptNode promptNode = getPromptNode();
             backgroundTaskMapperService.cancelTask(promptNode.getStartedByNodeId());
@@ -118,6 +122,7 @@ public class PromptNodeDialog extends JDialog {
             runButton.setText("Re-Run");
         });
         resetButton = new JButton("Reset");
+        resetButton.setBorder(emptyBorder);
         resetButton.addActionListener(e -> {
             PromptNode promptNode = getPromptNode();
             promptViewer.updatePromptChatContents(promptNode.getPromptList());
@@ -134,6 +139,7 @@ public class PromptNodeDialog extends JDialog {
         toolBar.add(cancelButton);
         toolBar.add(resetButton);
         runButton = new JButton("Run");
+        runButton.setBorder(emptyBorder);
         runButton.setEnabled(!promptNode.isRunning());
         if (promptNode.isProcessed()) {
             runButton.setText("Re-run");

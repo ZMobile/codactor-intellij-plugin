@@ -31,6 +31,7 @@ import com.translator.view.codactor.renderer.InquiryChatRenderer;
 import com.translator.view.codactor.viewer.inquiry.InquiryChatViewer;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
@@ -197,6 +198,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         jBScrollPane1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         jToolBar2 = new JToolBar();
+        jToolBar2.setBackground(Color.darkGray);
         jToolBar2.setFloatable(false);
         jToolBar2.setBorderPainted(false);
 
@@ -207,10 +209,13 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         jToolBar2.add(contextChatViewerLabel);
 
         jToolBar3 = new JToolBar();
+        jToolBar3.setBackground(Color.darkGray);
         jToolBar3.setFloatable(false);
         jToolBar3.setBorderPainted(false);
 
         cancelButton = new JButton("Cancel");
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        cancelButton.setBorder(emptyBorder);
         //cancelButton.setPreferredSize(new Dimension(cancelButton.getWidth(), 32));
         cancelButton.setEnabled(true);
         cancelButton.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -219,6 +224,7 @@ public class HistoricalContextObjectListChatViewer extends JPanel {
         jToolBar3.add(cancelButton);
 
         saveChangesButton = new JButton("Apply Changes");
+        saveChangesButton.setBorder(emptyBorder);
         //saveChangesButton.setPreferredSize(new Dimension(saveChangesButton.getWidth(), 32));
         saveChangesButton.setEnabled(true);
         saveChangesButton.setHorizontalTextPosition(SwingConstants.CENTER);

@@ -80,8 +80,11 @@ public class CreateAndRunUnitTestDirective {
         this.phaseThreeFunctions.add(runUnitTest);
         this.phaseFourFunctions = new ArrayList<>();
         Parameters terminateTestLoopParams = new Parameters("object");
-        GptFunction terminateTestLoop = new GptFunction("terminate_test_loop", "Terminate the test loop", terminateTestLoopParams);
-        this.phaseFourFunctions.add(terminateTestLoop);
+        GptFunction endTestAndReport = new GptFunction("end_test_and_report", "Terminate the test loop", terminateTestLoopParams);
+        Property reportProperty = new Property("string", "A report detailing your findings, or if applicable, explaining the obstacles that prevented you from reaching a conclusion.", null, null);
+        terminateTestLoopParams.getProperties().put("report", reportProperty);
+        terminateTestLoopParams.getRequired().add("report");
+        this.phaseFourFunctions.add(endTestAndReport);
     }
 
     public List<GptFunction> getPhaseOneFunctions() {

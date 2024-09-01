@@ -8,6 +8,7 @@ import com.translator.model.codactor.ai.chat.InquiryChat;
 import com.translator.service.codactor.ai.openai.OpenAiModelService;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -47,6 +48,8 @@ public class InquiryChatBoxViewer extends JPanel {
         });
 
         microphoneButton = new JButton();
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        microphoneButton.setBorder(emptyBorder);
         microphoneButton.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/microphone_icon.png"))));
         microphoneButton.setMaximumSize(new Dimension(80, 23));
         microphoneButton.setMinimumSize(new Dimension(80, 23));
@@ -72,6 +75,7 @@ public class InquiryChatBoxViewer extends JPanel {
         });
 
         askButton = new JButton();
+        askButton.setBorder(emptyBorder);
         askButton.setText("Ask");
         askButton.setToolTipText("");
         askButton.setMaximumSize(new Dimension(80, 23));
@@ -100,6 +104,7 @@ public class InquiryChatBoxViewer extends JPanel {
             }
         });
         toolBar = new JToolBar();
+        toolBar.setBackground(Color.darkGray);
         toolBar.setFloatable(false);
         toolBar.setBorderPainted(false);
 
@@ -146,6 +151,7 @@ public class InquiryChatBoxViewer extends JPanel {
         //toolBar.addSeparator();
 
         whatWasChangedButton = new JButton("\"What was changed?\"");
+        whatWasChangedButton.setBorder(emptyBorder);
         whatWasChangedButton.setFocusable(false);
         whatWasChangedButton.setHorizontalTextPosition(SwingConstants.CENTER);
         whatWasChangedButton.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -161,6 +167,7 @@ public class InquiryChatBoxViewer extends JPanel {
         //toolBar.addSeparator();
 
         whatDoesThisDoButton = new JButton("\"What does this do?\"");
+        whatDoesThisDoButton.setBorder(emptyBorder);
         whatDoesThisDoButton.setFocusable(false);
         whatDoesThisDoButton.setHorizontalTextPosition(SwingConstants.CENTER);
         whatDoesThisDoButton.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -178,6 +185,7 @@ public class InquiryChatBoxViewer extends JPanel {
         //toolBar.addSeparator();
 
         whatCanYourFunctionsDoButton = new JButton("\"What can your functions do?\"");
+        whatCanYourFunctionsDoButton.setBorder(emptyBorder);
         whatCanYourFunctionsDoButton.setFocusable(false);
         whatCanYourFunctionsDoButton.setHorizontalTextPosition(SwingConstants.CENTER);
         whatCanYourFunctionsDoButton.setVerticalTextPosition(SwingConstants.BOTTOM);
