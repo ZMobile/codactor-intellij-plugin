@@ -1,5 +1,7 @@
 package com.translator.model.codactor.ai.chat;
 
+import com.translator.model.codactor.ai.chat.function.directive.Directive;
+import com.translator.model.codactor.ai.chat.function.directive.DirectiveSession;
 import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.model.codactor.ai.modification.RecordType;
@@ -114,6 +116,8 @@ public class Inquiry {
     private List<InquiryChat> chats;
     private List<HistoricalContextObjectHolder> priorContext;
     private String error;
+    private Directive activeDirective;
+    private DirectiveSession activeDirectiveSession;
 
     private Inquiry(String userId,
                    String modificationId,
@@ -261,5 +265,13 @@ public class Inquiry {
 
     public String getError() {
         return error;
+    }
+
+    public Directive getActiveDirective() {
+        return activeDirective;
+    }
+
+    public void setActiveDirective(Directive activeDirective) {
+        this.activeDirective = activeDirective;
     }
 }

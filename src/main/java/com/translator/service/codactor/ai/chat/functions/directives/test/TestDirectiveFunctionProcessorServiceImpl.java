@@ -1,6 +1,8 @@
 package com.translator.service.codactor.ai.chat.functions.directives.test;
 
+import com.google.gson.Gson;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.codactor.ai.chat.function.GptFunctionCall;
 import com.translator.model.codactor.ai.chat.function.directive.                                                        CreateAndRunUnitTestDirective;
 import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirectiveSession;
@@ -19,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class TestDirectiveFunctionProcessorServiceImpl {
-    private final CreateAndRunUnitTestDirective createAndRunUnitTestDirective;
+    private final Gson gson;
     private final AiUnitTestCodeModificationService aiUnitTestCodeModificationService;
     private final MavenAndGradleDependencyCollectorService mavenAndGradleDependencyCollectorService;
     private final CodeSnippetExtractorService codeSnippetExtractorService;
@@ -28,13 +30,14 @@ public class TestDirectiveFunctionProcessorServiceImpl {
     private final RunTestAndGetOutputService runTestAndGetOutputService;
 
     @Inject
-    public TestDirectiveFunctionProcessorServiceImpl(AiUnitTestCodeModificationService aiUnitTestCodeModificationService,
+    public TestDirectiveFunctionProcessorServiceImpl(Gson gson,
+                                                     AiUnitTestCodeModificationService aiUnitTestCodeModificationService,
                                                      MavenAndGradleDependencyCollectorService mavenAndGradleDependencyCollectorService,
                                                      CodeSnippetExtractorService codeSnippetExtractorService,
                                                      CodeSnippetIndexGetterService codeSnippetIndexGetterService,
                                                      FileCreatorService fileCreatorService,
                                                      RunTestAndGetOutputService runTestAndGetOutputService) {
-        this.createAndRunUnitTestDirective = new CreateAndRunUnitTestDirective();
+        this.gson = gson;
         this.aiUnitTestCodeModificationService = aiUnitTestCodeModificationService;
         this.mavenAndGradleDependencyCollectorService = mavenAndGradleDependencyCollectorService;
         this.codeSnippetExtractorService = codeSnippetExtractorService;
@@ -43,9 +46,12 @@ public class TestDirectiveFunctionProcessorServiceImpl {
         this.runTestAndGetOutputService = runTestAndGetOutputService;
     }
 
-    public String processFunctionCall(GptFunctionCall gptFunctionCall, CreateAndRunUnitTestDirectiveSession createAndRunUnitTestDirectiveSession) {
+    public String processFunctionCall(Inquiry inquiry, GptFunctionCall gptFunctionCall) {
+        CreateAndRunUnitTestDirective createAndRunUnitTestDirective = (CreateAndRunUnitTestDirective) inquiry.getActiveDirective();
+        CreateAndRunUnitTestDirectiveSession createAndRunUnitTestDirectiveSession = createAndRunUnitTestDirective.getSession();
         try {
-            if (gptFunctionCall.getName().equalsIgnoreCase("create_and_run_unit_test")) {
+            //Moved to default function calls
+            /*if (gptFunctionCall.getName().equalsIgnoreCase("create_and_run_unit_test")) {
                 String filePath = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "path");
                 String content = codeSnippetExtractorService.getAllText(filePath);
                 //Collects test dependency info from maven and gradle files
@@ -59,7 +65,8 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                 response.append("In order to run this test, you will need to use the provided functions to create a unit test to run, but you may also temporarily place logs in the subject code file which will be triggered by the unit tests.");
                 createAndRunUnitTestDirectiveSession.setFilePath(filePath);
                 return response.toString();
-            } else if (gptFunctionCall.getName().equalsIgnoreCase("create_unit_test_code_file")) {
+            } else */
+            if (gptFunctionCall.getName().equalsIgnoreCase("create_unit_test_code_file")) {
                 String testFilePath = createAndRunUnitTestDirectiveSession.getFilePath()
                         .replace(".java", "TemporaryAITest.java");
 
@@ -357,7 +364,8 @@ public class TestDirectiveFunctionProcessorServiceImpl {
                 createAndRunUnitTestDirectiveSession.setTestResult(result);
             /*} else if (gptFunctionCall.getName().equalsIgnoreCase("run_unit_test_with_coverage")) {*/
             } else if (gptFunctionCall.getName().equalsIgnoreCase("terminate_test_and_report")) {
-                return "Report submitted.";
+                inquiry.setActiveDirective(null);
+                return "Please provide a report detailing your findings, or if applicable, explaining the obstacles that prevented you from reaching a conclusion. Here is a collection of data acquired by this test: " + gson.toJson(createAndRunUnitTestDirectiveSession);
             }
             return null;
         } catch (Exception e) {

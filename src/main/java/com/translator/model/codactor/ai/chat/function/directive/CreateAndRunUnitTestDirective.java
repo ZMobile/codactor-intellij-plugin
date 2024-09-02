@@ -7,36 +7,38 @@ import com.translator.model.codactor.ai.chat.function.Property;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CreateAndRunUnitTestDirective {
-    private List<GptFunction> phaseOneFunctions; //Activate unit test
-    private List<GptFunction> phaseTwoFunctions; //build unit test
-    private List<GptFunction> phaseTwoAndThreeFunctions; //Place logs
+public class CreateAndRunUnitTestDirective extends Directive {
+    private List<GptFunction> phaseOneFunctions; //build unit test
+    private List<GptFunction> phaseOneAndTwoFunctions; //Place logs
     // Once unit test is built, we give phase three options
-    private List<GptFunction> phaseThreeFunctions; //Run unit test, modify unit test
+    private List<GptFunction> phaseTwoFunctions; //Run unit test, modify unit test
     // Then we give phase two and phase four options
-    private List<GptFunction> phaseFourFunctions; //Terminate test loop and summarize results
+    private List<GptFunction> phaseThreeFunctions; //Terminate test loop and summarize results
+    private CreateAndRunUnitTestDirectiveSession session;
 
     public CreateAndRunUnitTestDirective() {
+        this.session = new CreateAndRunUnitTestDirectiveSession();
         this.phaseOneFunctions = new ArrayList<>();
         Parameters createAndRunUnitTestParams = new Parameters("object");
         Property pathProperty = new Property("string", "The file path of the subject code file", null, null);
         createAndRunUnitTestParams.getProperties().put("path", pathProperty);
         createAndRunUnitTestParams.getRequired().add("path");
-        Property testDescriptionProperty = new Property("string", "The description of the test being created and what is being tested", null, null);
+        Property testDescriptionProperty = new Property("string", "The description of the test being created and what is being tested and/or the goal of the test", null, null);
         createAndRunUnitTestParams.getProperties().put("description", testDescriptionProperty);
+        createAndRunUnitTestParams.getRequired().add("description");
         GptFunction createAndRunUnitTest = new GptFunction("create_and_run_unit_test", "Begin the process of creating and running a unit for a code file. It will be deleted at the conclusion of this process", createAndRunUnitTestParams);
         this.phaseOneFunctions.add(createAndRunUnitTest);
-        this.phaseTwoFunctions = new ArrayList<>();
+        this.phaseOneFunctions = new ArrayList<>();
         Parameters createUnitTestCodeFileParams = new Parameters("object");
         Property testCodeProperty = new Property("string", "The unit test code", null, null);
         createUnitTestCodeFileParams.getProperties().put("code", testCodeProperty);
         createUnitTestCodeFileParams.getRequired().add("code");
         GptFunction createUnitTestCodeFile = new GptFunction("create_unit_test_code_file", "Create the unit test code file", createUnitTestCodeFileParams);
-        this.phaseTwoFunctions.add(createUnitTestCodeFile);
-        this.phaseTwoAndThreeFunctions = new ArrayList<>();
+        this.phaseOneFunctions.add(createUnitTestCodeFile);
+        this.phaseOneAndTwoFunctions = new ArrayList<>();
         Parameters readSubjectCodeFileParams = new Parameters("object");
         GptFunction readSubjectCodeFile = new GptFunction("read_subject_code_file", "Read the code file that the unit test will be based on", readSubjectCodeFileParams);
-        this.phaseTwoAndThreeFunctions.add(readSubjectCodeFile);
+        this.phaseOneAndTwoFunctions.add(readSubjectCodeFile);
         Parameters placeLogsInSubjectCodeFileParams = new Parameters("object");
         List<String> modificationTypes = new ArrayList<>();
         modificationTypes.add("modify");
@@ -58,11 +60,11 @@ public class CreateAndRunUnitTestDirective {
         placeLogsInSubjectCodeFileParams.getRequired().add("description");
         placeLogsInSubjectCodeFileParams.getRequired().add("replacementCodeSnippet");
         GptFunction placeLogsInSubjectCodeFile = new GptFunction("place_logs_in_subject_code_file", "Modify the subject code file to place logs", placeLogsInSubjectCodeFileParams);
-        this.phaseTwoAndThreeFunctions.add(placeLogsInSubjectCodeFile);
-        this.phaseThreeFunctions = new ArrayList<>();
+        this.phaseOneAndTwoFunctions.add(placeLogsInSubjectCodeFile);
+        this.phaseTwoFunctions = new ArrayList<>();
         Parameters readUnitTestParams = new Parameters("object");
         GptFunction readUnitTest = new GptFunction("read_unit_test", "Read the unit test file", readUnitTestParams);
-        this.phaseThreeFunctions.add(readUnitTest);
+        this.phaseTwoFunctions.add(readUnitTest);
         Parameters modifyUnitTestParams = new Parameters("object");
         modifyUnitTestParams.getProperties().put("modificationType", modificationTypeProperty);
         modifyUnitTestParams.getProperties().put("description", descriptionProperty);
@@ -74,56 +76,53 @@ public class CreateAndRunUnitTestDirective {
         modifyUnitTestParams.getRequired().add("description");
         modifyUnitTestParams.getRequired().add("replacementCodeSnippet");
         GptFunction modifyUnitTest = new GptFunction("modify_unit_test", "Modify the content of the unit test", modifyUnitTestParams);
-        this.phaseThreeFunctions.add(modifyUnitTest);
+        this.phaseTwoFunctions.add(modifyUnitTest);
         Parameters runUnitTestParams = new Parameters("object");
         GptFunction runUnitTest = new GptFunction("run_unit_test", "Run the unit test and get logs", runUnitTestParams);
-        this.phaseThreeFunctions.add(runUnitTest);
-        this.phaseFourFunctions = new ArrayList<>();
+        this.phaseTwoFunctions.add(runUnitTest);
+        this.phaseThreeFunctions = new ArrayList<>();
         Parameters terminateTestLoopParams = new Parameters("object");
         GptFunction endTestAndReport = new GptFunction("end_test_and_report", "Terminate the test loop", terminateTestLoopParams);
-        Property reportProperty = new Property("string", "A report detailing your findings, or if applicable, explaining the obstacles that prevented you from reaching a conclusion.", null, null);
-        terminateTestLoopParams.getProperties().put("report", reportProperty);
-        terminateTestLoopParams.getRequired().add("report");
-        this.phaseFourFunctions.add(endTestAndReport);
+        this.phaseThreeFunctions.add(endTestAndReport);
     }
 
     public List<GptFunction> getPhaseOneFunctions() {
         return phaseOneFunctions;
     }
 
-    public List<GptFunction> getPhaseTwoFunctions() {
-        return phaseTwoFunctions;
+    public List<GptFunction> getPhaseOneAndTwoFunctions() {
+        return phaseOneAndTwoFunctions;
     }
 
-    public List<GptFunction> getPhaseTwoAndThreeFunctions() {
-        return phaseTwoAndThreeFunctions;
+    public List<GptFunction> getPhaseTwoFunctions() {
+        return phaseTwoFunctions;
     }
 
     public List<GptFunction> getPhaseThreeFunctions() {
         return phaseThreeFunctions;
     }
 
-    public List<GptFunction> getPhaseFourFunctions() {
-        return phaseFourFunctions;
-    }
-
     public void setPhaseOneFunctions(List<GptFunction> phaseOneFunctions) {
         this.phaseOneFunctions = phaseOneFunctions;
+    }
+
+    public void setPhaseOneAndTwoFunctions(List<GptFunction> phaseOneAndTwoFunctions) {
+        this.phaseOneAndTwoFunctions = phaseOneAndTwoFunctions;
     }
 
     public void setPhaseTwoFunctions(List<GptFunction> phaseTwoFunctions) {
         this.phaseTwoFunctions = phaseTwoFunctions;
     }
 
-    public void setPhaseTwoAndThreeFunctions(List<GptFunction> phaseTwoAndThreeFunctions) {
-        this.phaseTwoAndThreeFunctions = phaseTwoAndThreeFunctions;
-    }
-
     public void setPhaseThreeFunctions(List<GptFunction> phaseThreeFunctions) {
         this.phaseThreeFunctions = phaseThreeFunctions;
     }
 
-    public void setPhaseFourFunctions(List<GptFunction> phaseFourFunctions) {
-        this.phaseFourFunctions = phaseFourFunctions;
+    public CreateAndRunUnitTestDirectiveSession getSession() {
+        return session;
+    }
+
+    public void setSession(CreateAndRunUnitTestDirectiveSession session) {
+        this.session = session;
     }
 }

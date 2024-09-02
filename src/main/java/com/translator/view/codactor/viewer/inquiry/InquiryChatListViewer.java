@@ -519,8 +519,11 @@ public class InquiryChatListViewer extends JPanel {
                 InquiryChatListViewer.this.componentResized(model, bigger);
             }
         };
+        //this.revalidate();
+        int width = this.getWidth();
         this.addComponentListener(componentListener);
-        this.componentResized(model, null);
+        this.setSize(new Dimension(1, 1));
+
         jBScrollPane.getVerticalScrollBar().setValue(jBScrollPane.getVerticalScrollBar().getMaximum());
     }
 
@@ -646,6 +649,8 @@ public class InquiryChatListViewer extends JPanel {
             jBScrollPane.setPreferredSize(new Dimension(getWidth(), getHeight()));
             inquiryChatList.setPreferredSize(new Dimension(jBScrollPane.getWidth(), newTotalHeight));
             inquiryChatList.setModel(newModel);
+            InquiryChatListViewer.this.revalidate();
+            InquiryChatListViewer.this.repaint();
             jBScrollPane.setViewportView(inquiryChatList);
 
             // Set the scroll bar to the previous spot

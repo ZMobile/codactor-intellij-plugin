@@ -243,6 +243,16 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         GptFunction runProgram = new GptFunction("run_program", "Run a program file and read its command line output", runProgramParams);
         codactorFunctions.add(runProgram);
 
+        Parameters createAndRunUnitTestParams = new Parameters("object");
+        createAndRunUnitTestParams.getProperties().put("path", pathProperty);
+        createAndRunUnitTestParams.getRequired().add("path");
+        Property testDescriptionProperty = new Property("string", "The description of the test being created and what is being tested and/or the goal of the test", null, null);
+        createAndRunUnitTestParams.getProperties().put("description", testDescriptionProperty);
+        createAndRunUnitTestParams.getRequired().add("description");
+
+        GptFunction createAndRunUnitTest = new GptFunction("create_and_run_unit_test", "Begin the process of creating and running a unit for a code file. It will be deleted at the conclusion of this process", createAndRunUnitTestParams);
+        codactorFunctions.add(createAndRunUnitTest);
+
         return codactorFunctions;
     }
 }

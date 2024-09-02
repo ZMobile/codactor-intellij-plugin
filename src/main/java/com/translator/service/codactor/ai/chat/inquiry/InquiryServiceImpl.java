@@ -6,6 +6,7 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.translator.dao.inquiry.InquiryDao;
+import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirective;
 import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.codactor.ai.chat.InquiryChat;
@@ -229,7 +230,14 @@ public class InquiryServiceImpl implements InquiryService {
             }
                 List<GptFunction> functions = null;
                 if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k") || model.equals("gpt-4o")) {
-                    functions = codactorFunctionGeneratorService.generateCodactorFunctions();
+                    if (inquiry.getActiveDirective() == null) {
+                        functions = codactorFunctionGeneratorService.generateCodactorFunctions();
+                    } else {
+                        if (inquiry.getActiveDirective() instanceof CreateAndRunUnitTestDirective) {
+                            functions = new ArrayList<>();
+//functions.add
+                        }
+                    }
                 }
                 Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), functions);
                 if (response.getError() != null) {
@@ -272,7 +280,7 @@ public class InquiryServiceImpl implements InquiryService {
         InquiryChat latestInquiryChat = getLatestInquiryChat(inquiry.getChats());
         if (latestInquiryChat.getFunctionCall() != null) {
             while (latestInquiryChat.getFunctionCall() != null) {
-                String functionCallResponse = inquiryFunctionCallProcessorService.processFunctionCall(latestInquiryChat.getFunctionCall());
+                String functionCallResponse = inquiryFunctionCallProcessorService.processFunctionCall(inquiry, latestInquiryChat.getFunctionCall());
                 Inquiry inquiry1 = inquiryDao.respondToFunctionCall(latestInquiryChat.getId(), latestInquiryChat.getFunctionCall().getName(), functionCallResponse, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), functions);
                 if (inquiry1 == null) {
                     break;

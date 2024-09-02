@@ -1,6 +1,6 @@
 package com.translator.model.codactor.ai.chat.function.directive;
 
-public class CreateAndRunUnitTestDirectiveSession {
+public class CreateAndRunUnitTestDirectiveSession extends DirectiveSession {
     private String filePath;
     private String testFilePath;
     private String testDescription;

@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.dao.inquiry.InquiryDao;
+import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirective;
 import com.translator.model.codactor.ide.psi.error.ErrorResult;
 import com.translator.model.codactor.ide.psi.implementation.ImplementationResultsResource;
 import com.translator.model.codactor.ide.psi.usage.UsageResultsResource;
@@ -119,7 +120,7 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     }
 
     @Override
-    public String processFunctionCall(GptFunctionCall gptFunctionCall) {
+    public String processFunctionCall(Inquiry inquiry, GptFunctionCall gptFunctionCall) {
         try {
             if (gptFunctionCall.getName().equals("get_project_base_path")) {
                 return project.getBasePath();
@@ -245,15 +246,15 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
             } else if (gptFunctionCall.getName().equals("get_recent_historical_inquiries")) {
                 List<Inquiry> historicalInquiryList = inquiryDao.getRecentInquiries();
                 List<InquiryDataReferenceHolder> inquiryDataReferenceHolders = new ArrayList<>();
-                for (Inquiry inquiry : historicalInquiryList) {
-                    InquiryDataReferenceHolder inquiryDataReferenceHolder = new InquiryDataReferenceHolder(inquiry);
+                for (Inquiry recentInquiry : historicalInquiryList) {
+                    InquiryDataReferenceHolder inquiryDataReferenceHolder = new InquiryDataReferenceHolder(recentInquiry);
                     inquiryDataReferenceHolders.add(inquiryDataReferenceHolder);
                 }
                 return gson.toJson(inquiryDataReferenceHolders);
             } else if (gptFunctionCall.getName().equals("read_inquiry")) {
                 String id = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "id");
-                Inquiry inquiry = inquiryDao.getInquiry(id);
-                return gson.toJson(inquiry);
+                Inquiry queriedInquiry = inquiryDao.getInquiry(id);
+                return gson.toJson(queriedInquiry);
             } else if (gptFunctionCall.getName().equals("retry_modification_in_queue")) {
                 String id = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "id");
                 FileModification fileModification = fileModificationTrackerService.getModification(id);
@@ -459,12 +460,62 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 }
                 List<ErrorResult> errorResults = findErrorService.getErrorsWithinRange(filePath, codeSnippet, includeWarnings);
                 return gson.toJson(errorResults);
+            } else if (gptFunctionCall.getName().equalsIgnoreCase("create_and_run_unit_test")) {
+                String filePath = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "path");
+                String testDescription = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "description");
+                String content = codeSnippetExtractorService.getAllText(filePath);
+                //Collects test dependency info from maven and gradle files
+                StringBuilder response = new StringBuilder();
+                response.append("You have chosen to create and run a unit test for the following Java code file: \n");
+                response.append("path: " + filePath + "\n");
+                response.append("content: {" + content + "}\n");
+                response.append("The following is the description of the test being conducted: " + testDescription + "\n");
+                //response.append("The following are the unit test dependencies for this Java project: ");
+                //response.append(mavenAndGradleDependencyCollectorService.collectProjectTestDependencies());
+                response.append("\n");
+                response.append("In order to run this test, you will need to use the provided functions to create a unit test to run, but you may also temporarily place logs in the subject code file which will be triggered by the unit tests.");
+                CreateAndRunUnitTestDirective createAndRunUnitTestDirective = new CreateAndRunUnitTestDirective();
+                createAndRunUnitTestDirective.getSession().setFilePath(filePath);
+                createAndRunUnitTestDirective.getSession().setTestDescription(testDescription);
+                inquiry.setActiveDirective(createAndRunUnitTestDirective);
+                return response.toString();
             }
             return null;
         } catch (Exception e) {
             return "Error: The function call threw the following error and may be non functional: " + Arrays.toString(e.getStackTrace());
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public String testMethod() {
         TestObject testObject = new TestObject("/Users/zantehays/IdeaProjects/code-translator-dev/code-translator-service/src/main/java/com/translator/service/user/UserServiceImpl.java",
