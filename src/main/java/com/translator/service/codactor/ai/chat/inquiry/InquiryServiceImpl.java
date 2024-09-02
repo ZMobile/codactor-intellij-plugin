@@ -234,8 +234,16 @@ public class InquiryServiceImpl implements InquiryService {
                         functions = codactorFunctionGeneratorService.generateCodactorFunctions();
                     } else {
                         if (inquiry.getActiveDirective() instanceof CreateAndRunUnitTestDirective) {
+                            CreateAndRunUnitTestDirective createAndRunUnitTestDirective = (CreateAndRunUnitTestDirective) inquiry.getActiveDirective();
                             functions = new ArrayList<>();
-//functions.add
+                            if (!createAndRunUnitTestDirective.getSession().isUnitTestCreated()) {
+                                functions.addAll(createAndRunUnitTestDirective.getPhaseOneFunctions());
+                                functions.addAll(createAndRunUnitTestDirective.getPhaseOneAndTwoFunctions());
+                            } else {
+                                functions.addAll(createAndRunUnitTestDirective.getPhaseOneAndTwoFunctions());
+                                functions.addAll(createAndRunUnitTestDirective.getPhaseTwoFunctions());
+                            }
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseThreeFunctions());
                         }
                     }
                 }
