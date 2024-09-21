@@ -55,6 +55,7 @@ import com.translator.service.codactor.ai.chat.functions.*;
 import com.translator.service.codactor.ai.chat.functions.search.ProjectSearchService;
 import com.translator.service.codactor.ai.chat.functions.search.ProjectSearchServiceImpl;
 import com.translator.service.codactor.ai.chat.inquiry.*;
+import com.translator.service.codactor.io.*;
 import com.translator.service.codactor.line.LineCounterService;
 import com.translator.service.codactor.line.LineCounterServiceImpl;
 import com.translator.service.codactor.ai.modification.*;
@@ -66,16 +67,12 @@ import com.translator.service.codactor.ai.modification.multi.MultiFileAiCodeModi
 import com.translator.service.codactor.ai.modification.multi.MultiFileAiCodeModificationServiceImpl;
 import com.translator.service.codactor.ide.handler.EditorClickHandlerService;
 import com.translator.service.codactor.ide.handler.EditorClickHandlerServiceImpl;
-import com.translator.service.codactor.io.TabKeyListenerService;
-import com.translator.service.codactor.io.TabKeyListenerServiceImpl;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionService;
 import com.translator.service.codactor.ai.openai.connection.DefaultConnectionServiceImpl;
 import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.service.codactor.ai.openai.OpenAiModelServiceImpl;
 import com.translator.service.codactor.ai.runner.CodeRunnerService;
 import com.translator.service.codactor.ai.runner.CodeRunnerServiceImpl;
-import com.translator.service.codactor.io.BackgroundTaskMapperService;
-import com.translator.service.codactor.io.BackgroundTaskMapperServiceImpl;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerServiceImpl;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
@@ -190,6 +187,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(FindImplementationsService.class).to(FindImplementationsServiceImpl.class);
         bind(EditorService.class).to(EditorServiceImpl.class);
         bind(ModificationTypeComboBoxService.class).to(ModificationTypeComboBoxServiceImpl.class).asEagerSingleton();
+        bind(CodactorRelevantBuildOutputLocatorService.class).to(CodactorRelevantBuildOutputLocatorServiceImpl.class);
     }
 
     @Singleton
