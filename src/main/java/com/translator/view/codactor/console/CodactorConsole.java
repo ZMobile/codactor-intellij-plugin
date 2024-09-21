@@ -1,20 +1,13 @@
 package com.translator.view.codactor.console;
 
 import com.google.gson.Gson;
-import com.intellij.ide.plugins.cl.PluginClassLoader;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.SelectionModel;
-import com.intellij.openapi.editor.markup.HighlighterLayer;
-import com.intellij.openapi.editor.markup.HighlighterTargetArea;
-import com.intellij.openapi.editor.markup.RangeHighlighter;
-import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.CompilerModuleExtension;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.*;
@@ -38,9 +31,10 @@ import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.ide.file.SelectedFileFetcherService;
 import com.translator.service.codactor.ai.chat.inquiry.InquiryService;
 import com.translator.service.codactor.ai.openai.OpenAiModelService;
-import com.translator.service.codactor.io.CodactorRelevantBuildOutputLocatorService;
-import com.translator.service.codactor.io.CodactorRelevantBuildOutputLocatorServiceImpl;
-import com.translator.service.codactor.test.*;
+import com.translator.service.codactor.io.DynamicClassLoaderService;
+import com.translator.service.codactor.io.DynamicClassLoaderServiceImpl;
+import com.translator.service.codactor.io.RelevantBuildOutputLocatorService;
+import com.translator.service.codactor.io.RelevantBuildOutputLocatorServiceImpl;
 import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.MultiFileCreateDialog;
@@ -60,10 +54,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class CodactorConsole extends JBPanel<CodactorConsole> {
@@ -268,13 +258,14 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             @Override
             public void actionPerformed(ActionEvent e) {
                 VerifyIsTestFileService verifyIsTestFileService = new VerifyIsTestFileServiceImpl();
-                CodactorRelevantBuildOutputLocatorService codactorRelevantBuildOutputLocatorService = new CodactorRelevantBuildOutputLocatorServiceImpl(project);
-                RunTestAndGetOutputService runTestAndGetOutputService = new RunTestAndGetOutputServiceImpl(project, verifyIsTestFileService, codactorRelevantBuildOutputLocatorService);
+                RelevantBuildOutputLocatorService relevantBuildOutputLocatorService = new RelevantBuildOutputLocatorServiceImpl(project);
+                DynamicClassLoaderService dynamicClassLoaderService = new DynamicClassLoaderServiceImpl(relevantBuildOutputLocatorService);
+                RunTestAndGetOutputService runTestAndGetOutputService = new RunTestAndGetOutputServiceImpl(project, verifyIsTestFileService, relevantBuildOutputLocatorService, dynamicClassLoaderService);
                 try {
                     System.out.println("Running test...");
                     Module[] modules = ModuleManager.getInstance(project).getModules();
 
-                    System.out.println("Identified build path: " + codactorRelevantBuildOutputLocatorService.locateRelevantBuildOutput("\\Users\\zantehays\\IdeaProjects\\codactor-intellij-plugin\\src\\main\\java\\com\\translator\\service\\codactor\\line\\LineCounterServiceImplTest.java"));
+                    System.out.println("Identified build path: " + relevantBuildOutputLocatorService.locateRelevantBuildOutput("\\Users\\zantehays\\IdeaProjects\\codactor-intellij-plugin\\src\\main\\java\\com\\translator\\service\\codactor\\line\\LineCounterServiceImplTest.java"));
                     System.out.println("output: " + runTestAndGetOutputService.runTestAndGetOutput("\\Users\\zantehays\\IdeaProjects\\codactor-intellij-plugin\\src\\main\\java\\com\\translator\\service\\codactor\\line\\LineCounterServiceImplTest.java"));
                     System.out.println("Test completed.");
                 } catch (Exception exception) {

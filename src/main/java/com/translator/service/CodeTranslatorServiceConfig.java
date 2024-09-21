@@ -187,7 +187,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(FindImplementationsService.class).to(FindImplementationsServiceImpl.class);
         bind(EditorService.class).to(EditorServiceImpl.class);
         bind(ModificationTypeComboBoxService.class).to(ModificationTypeComboBoxServiceImpl.class).asEagerSingleton();
-        bind(CodactorRelevantBuildOutputLocatorService.class).to(CodactorRelevantBuildOutputLocatorServiceImpl.class);
+        bind(RelevantBuildOutputLocatorService.class).to(RelevantBuildOutputLocatorServiceImpl.class);
+        bind(DynamicClassCompilerService.class).to(DynamicClassCompilerServiceImpl.class);
+        bind(DynamicClassLoaderService.class).to(DynamicClassLoaderServiceImpl.class);
     }
 
     @Singleton

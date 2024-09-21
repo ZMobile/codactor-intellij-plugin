@@ -1,5 +1,5 @@
 package com.translator.service.codactor.io;
 
-public interface CodactorRelevantBuildOutputLocatorService {
+public interface RelevantBuildOutputLocatorService {
     String locateRelevantBuildOutput(String filePath);
 }

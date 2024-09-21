@@ -1,23 +1,10 @@
 package com.translator.service.codactor.ai.chat.functions.directives.test;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ReadAction;
-import com.intellij.openapi.compiler.CompileContext;
-import com.intellij.openapi.compiler.CompileScope;
-import com.intellij.openapi.compiler.CompileStatusNotification;
-import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiJavaFile;
-import com.intellij.psi.PsiManager;
 import com.translator.service.codactor.ai.modification.authorization.VerifyIsTestFileService;
-import com.translator.service.codactor.ide.file.FileCreatorService;
-import com.translator.service.codactor.io.CodactorRelevantBuildOutputLocatorService;
-import com.translator.service.codactor.io.CodactorRelevantBuildOutputLocatorServiceImpl;
-import org.jetbrains.annotations.Nullable;
+import com.translator.service.codactor.io.DynamicClassLoaderService;
+import com.translator.service.codactor.io.DynamicClassLoaderServiceImpl;
+import com.translator.service.codactor.io.RelevantBuildOutputLocatorService;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
@@ -32,15 +19,18 @@ import java.net.URLClassLoader;
 public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputService {
     private final Project project;
     private final VerifyIsTestFileService verifyIsTestFileService;
-    private final CodactorRelevantBuildOutputLocatorService codactorRelevantBuildOutputLocatorService;
+    private final RelevantBuildOutputLocatorService relevantBuildOutputLocatorService;
+    private final DynamicClassLoaderService dynamicClassLoaderService;
 
     @Inject
     public RunTestAndGetOutputServiceImpl(Project project,
                                           VerifyIsTestFileService verifyIsTestFileService,
-                                          CodactorRelevantBuildOutputLocatorService codactorRelevantBuildOutputLocatorService) {
+                                          RelevantBuildOutputLocatorService relevantBuildOutputLocatorService,
+                                          DynamicClassLoaderService dynamicClassLoaderService) {
         this.project = project;
         this.verifyIsTestFileService = verifyIsTestFileService;
-        this.codactorRelevantBuildOutputLocatorService = codactorRelevantBuildOutputLocatorService;
+        this.relevantBuildOutputLocatorService = relevantBuildOutputLocatorService;
+        this.dynamicClassLoaderService = dynamicClassLoaderService;
     }
 
     public String runTestAndGetOutput(String filePath) throws Exception {
@@ -54,13 +44,12 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
         // Assume the package can be inferred from the file path structure, e.g., src/main/java/com/example/MyClass.java
 
 
-        System.out.println("Class not found in classpath, attempting to load from build output");
-        String buildOutputParentDirectoryPath = codactorRelevantBuildOutputLocatorService.locateRelevantBuildOutput(filePath);
+        String buildOutputParentDirectoryPath = relevantBuildOutputLocatorService.locateRelevantBuildOutput(filePath);
         String buildOutputPath = buildOutputParentDirectoryPath + "/" + isolatedClassName + ".class";
         File buildOutputFile = new File(buildOutputPath);
         System.out.println("Build output file exists: " + buildOutputFile.exists());
         if (!buildOutputFile.exists()) {
-            throw new Exception("Build output file does not exist: " + buildOutputPath);
+            throw new Exception("Build output file does not exist: " + buildOutputPath + ". Please try again in a few moments after the compilation has completed.");
         }
 
         String packagePath = filePath.substring(filePath.indexOf("java/") + 5, filePath.lastIndexOf("/")).replace("/", ".");
@@ -80,23 +69,7 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
             try {
                 testClass[0] = Class.forName(className);
             } catch (ClassNotFoundException e) {
-
-                System.out.println("Build output file exists: " + buildOutputFile.exists());
-                String buildOutputRootDirPath;
-                if (buildOutputFile.getAbsolutePath().contains("/main/")) {
-                    buildOutputRootDirPath = buildOutputFile.getAbsolutePath().substring(0,
-                            buildOutputFile.getAbsolutePath().indexOf("build/classes/java/main/") + "build/classes/java/main/".length());
-                } else if (buildOutputFile.getAbsolutePath().contains("/test/")) {
-                    buildOutputRootDirPath = buildOutputFile.getAbsolutePath().substring(0,
-                            buildOutputFile.getAbsolutePath().indexOf("build/classes/java/test/") + "build/classes/java/test/".length());
-                } else {
-                    throw new Exception("Could not determine build output root directory");
-                }
-                File buildOutputRootDir = new File(buildOutputRootDirPath);
-                System.out.println("Build output root dir path: " + buildOutputRootDirPath);
-                URL[] urls = { buildOutputRootDir.toURI().toURL() };
-                URLClassLoader urlClassLoader = new URLClassLoader(urls, getClass().getClassLoader());
-                testClass[0] = urlClassLoader.loadClass(className);
+                testClass[0] = dynamicClassLoaderService.dynamicallyLoadClass(filePath);
             }
             Result result = JUnitCore.runClasses(testClass[0]);
             for (Failure failure : result.getFailures()) {

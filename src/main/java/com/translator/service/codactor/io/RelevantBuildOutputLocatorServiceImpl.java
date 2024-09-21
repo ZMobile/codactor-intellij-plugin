@@ -9,11 +9,11 @@ import com.intellij.openapi.vfs.VirtualFile;
 import javax.inject.Inject;
 import java.io.File;
 
-public class CodactorRelevantBuildOutputLocatorServiceImpl implements CodactorRelevantBuildOutputLocatorService {
+public class RelevantBuildOutputLocatorServiceImpl implements RelevantBuildOutputLocatorService {
     private final Project project;
 
     @Inject
-    public CodactorRelevantBuildOutputLocatorServiceImpl(Project project) {
+    public RelevantBuildOutputLocatorServiceImpl(Project project) {
         this.project = project;
     }
 
