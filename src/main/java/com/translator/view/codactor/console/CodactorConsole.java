@@ -263,7 +263,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                 VerifyIsTestFileService verifyIsTestFileService = new VerifyIsTestFileServiceImpl();
                 RunTestAndGetOutputService runTestAndGetOutputService = new RunTestAndGetOutputServiceImpl(project, verifyIsTestFileService);
                 try {
-                    runTestAndGetOutputService.runTestAndGetOutput("C:\\Users\\hzant\\IdeaProjects\\codactor-intellij-plugin\\src\\main\\java\\com\\translator\\service\\codactor\\ai\\chat\\functions\\directives\\test\\TestTest.java");
+                    System.out.println("Running test...");
+                    System.out.println("output: " + runTestAndGetOutputService.runTestAndGetOutput("C:\\Users\\hzant\\IdeaProjects\\codactor-intellij-plugin\\src\\main\\java\\com\\translator\\service\\codactor\\line\\LineCounterServiceImplTest.java"));
+                    System.out.println("Test completed.");
                 } catch (Exception exception) {
                     exception.printStackTrace();
                 }

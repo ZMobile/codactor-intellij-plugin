@@ -8,6 +8,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -75,9 +76,12 @@ public class FileCreatorServiceImpl implements FileCreatorService {
     }
 
     public File createFile(String directoryPath, String fileName) throws IOException {
+        directoryPath = directoryPath.replace("\\", "/");
         Files.createDirectories(Paths.get(directoryPath));
         File file = new File(directoryPath, fileName);
         //Create the directory if it doesn't exist
+        System.out.println("Directory path: " + directoryPath);
+        System.out.println("File name: " + fileName);
         System.out.println("Creating file: " + file.getAbsolutePath());
         if (file.getParentFile().mkdirs()) {
             System.out.println("Directory created: " + file.getParentFile().getAbsolutePath());
@@ -89,6 +93,46 @@ public class FileCreatorServiceImpl implements FileCreatorService {
         } else {
             System.out.println("File already exists: " + file.getAbsolutePath());
         }
+        return file;
+    }
+
+    public File createFile(String directoryPath, String fileName, String content) throws IOException {
+        // Normalize the directory path
+        directoryPath = directoryPath.replace("\\", "/");
+
+        // Ensure the directories exist
+        Files.createDirectories(Paths.get(directoryPath));
+        File file = new File(directoryPath, fileName);
+
+        System.out.println("Directory path: " + directoryPath);
+        System.out.println("File name: " + fileName);
+        System.out.println("Creating file: " + file.getAbsolutePath());
+
+        // Create the directory if it doesn't exist
+        if (file.getParentFile().mkdirs()) {
+            System.out.println("Directory created: " + file.getParentFile().getAbsolutePath());
+        } else {
+            System.out.println("Directory already exists: " + file.getParentFile().getAbsolutePath());
+        }
+
+        // Create the file if it doesn't exist
+        if (file.createNewFile()) {
+            System.out.println("File created: " + file.getAbsolutePath());
+        } else {
+            System.out.println("File already exists: " + file.getAbsolutePath());
+        }
+
+        // Write the content to the file
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(content);
+            System.out.println("Content written to file: " + file.getAbsolutePath());
+        }
+
+        File directory = new File(directoryPath);
+        VirtualFile virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(directory);
+        assert virtualFile != null;
+        virtualFile.refresh(false, false);
+
         return file;
     }
 

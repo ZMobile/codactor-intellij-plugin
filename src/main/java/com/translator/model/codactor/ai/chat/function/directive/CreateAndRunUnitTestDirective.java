@@ -33,7 +33,7 @@ public class CreateAndRunUnitTestDirective extends Directive {
         Property testCodeProperty = new Property("string", "The unit test code", null, null);
         createUnitTestCodeFileParams.getProperties().put("code", testCodeProperty);
         createUnitTestCodeFileParams.getRequired().add("code");
-        GptFunction createUnitTestCodeFile = new GptFunction("create_unit_test_code_file", "Create the unit test code file", createUnitTestCodeFileParams);
+        GptFunction createUnitTestCodeFile = new GptFunction("create_unit_test_code_file", "Create the unit test code file. NOTE: Use packages org.junit for instance org.junit.Test or org.junit.Asset.asserEquals or it wont work. DO NOT USE JUPITER.", createUnitTestCodeFileParams);
         this.phaseOneFunctions.add(createUnitTestCodeFile);
         this.phaseOneAndTwoFunctions = new ArrayList<>();
         Parameters readSubjectCodeFileParams = new Parameters("object");
@@ -78,7 +78,7 @@ public class CreateAndRunUnitTestDirective extends Directive {
         GptFunction modifyUnitTest = new GptFunction("modify_unit_test", "Modify the content of the unit test", modifyUnitTestParams);
         this.phaseTwoFunctions.add(modifyUnitTest);
         Parameters runUnitTestParams = new Parameters("object");
-        GptFunction runUnitTest = new GptFunction("run_unit_test", "Run the unit test and get logs", runUnitTestParams);
+        GptFunction runUnitTest = new GptFunction("run_test", "Run the unit test and get logs", runUnitTestParams);
         this.phaseTwoFunctions.add(runUnitTest);
         this.phaseThreeFunctions = new ArrayList<>();
         Parameters terminateTestLoopParams = new Parameters("object");

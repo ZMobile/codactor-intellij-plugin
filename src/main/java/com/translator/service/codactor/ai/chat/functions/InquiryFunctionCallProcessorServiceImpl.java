@@ -466,16 +466,18 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 String content = codeSnippetExtractorService.getAllText(filePath);
                 //Collects test dependency info from maven and gradle files
                 StringBuilder response = new StringBuilder();
-                response.append("You have chosen to create and run a unit test for the following Java code file: \n");
+                response.append("Test directive initiated.");
                 response.append("path: " + filePath + "\n");
-                response.append("content: {" + content + "}\n");
+                response.append("content: {").append(content).append("}\n");
                 response.append("The following is the description of the test being conducted: " + testDescription + "\n");
+                response.append("In order to run this test, you will need to use the provided follow-up functions to create a unit test to run (use create_unit_code_file only for creating these unit tests), but you may also temporarily place logs in the subject code file which will be triggered by the unit tests.");
                 //response.append("The following are the unit test dependencies for this Java project: ");
                 //response.append(mavenAndGradleDependencyCollectorService.collectProjectTestDependencies());
                 response.append("\n");
-                response.append("In order to run this test, you will need to use the provided functions to create a unit test to run, but you may also temporarily place logs in the subject code file which will be triggered by the unit tests.");
                 CreateAndRunUnitTestDirective createAndRunUnitTestDirective = new CreateAndRunUnitTestDirective();
+                System.out.println("setting test subject file path: " + filePath);
                 createAndRunUnitTestDirective.getSession().setFilePath(filePath);
+                System.out.println("setting test description: " + testDescription);
                 createAndRunUnitTestDirective.getSession().setTestDescription(testDescription);
                 inquiry.setActiveDirective(createAndRunUnitTestDirective);
                 return response.toString();

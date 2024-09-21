@@ -12,6 +12,7 @@ import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.codactor.ai.chat.InquiryChat;
 import com.translator.model.codactor.ai.chat.function.GptFunction;
 import com.translator.model.codactor.ai.modification.RecordType;
+import com.translator.service.codactor.ai.chat.functions.directives.test.TestDirectiveFunctionProcessorService;
 import com.translator.service.codactor.ai.openai.connection.AzureConnectionService;
 import com.translator.service.codactor.ai.chat.context.PromptContextService;
 import com.translator.service.codactor.ide.editor.GptToLanguageTransformerService;
@@ -40,6 +41,7 @@ public class InquiryServiceImpl implements InquiryService {
     private GptToLanguageTransformerService gptToLanguageTransformerService;
     private CodactorFunctionGeneratorService codactorFunctionGeneratorService;
     private InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService;
+    private TestDirectiveFunctionProcessorService testDirectiveFunctionProcessorService;
     private InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService;
     private AzureConnectionService azureConnectionService;
     private InquiryViewerFactory inquiryViewerFactory;
@@ -54,6 +56,7 @@ public class InquiryServiceImpl implements InquiryService {
                               GptToLanguageTransformerService gptToLanguageTransformerService,
                               CodactorFunctionGeneratorService codactorFunctionGeneratorService,
                               InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService,
+                              TestDirectiveFunctionProcessorService testDirectiveFunctionProcessorService,
                               InquirySystemMessageGeneratorService inquirySystemMessageGeneratorService,
                               AzureConnectionService azureConnectionService) {
         this.gson = gson;
@@ -65,6 +68,7 @@ public class InquiryServiceImpl implements InquiryService {
         this.gptToLanguageTransformerService = gptToLanguageTransformerService;
         this.codactorFunctionGeneratorService = codactorFunctionGeneratorService;
         this.inquiryFunctionCallProcessorService = inquiryFunctionCallProcessorService;
+        this.testDirectiveFunctionProcessorService = testDirectiveFunctionProcessorService;
         this.inquirySystemMessageGeneratorService = inquirySystemMessageGeneratorService;
         this.azureConnectionService = azureConnectionService;
     }
@@ -288,7 +292,25 @@ public class InquiryServiceImpl implements InquiryService {
         InquiryChat latestInquiryChat = getLatestInquiryChat(inquiry.getChats());
         if (latestInquiryChat.getFunctionCall() != null) {
             while (latestInquiryChat.getFunctionCall() != null) {
-                String functionCallResponse = inquiryFunctionCallProcessorService.processFunctionCall(inquiry, latestInquiryChat.getFunctionCall());
+                String functionCallResponse;
+                if (inquiry.getActiveDirective() == null) {
+                    functions = codactorFunctionGeneratorService.generateCodactorFunctions();
+                    functionCallResponse = inquiryFunctionCallProcessorService.processFunctionCall(inquiry, latestInquiryChat.getFunctionCall());
+                } else {
+                    if (inquiry.getActiveDirective() instanceof CreateAndRunUnitTestDirective) {
+                        CreateAndRunUnitTestDirective createAndRunUnitTestDirective = (CreateAndRunUnitTestDirective) inquiry.getActiveDirective();
+                        functions = new ArrayList<>();
+                        if (!createAndRunUnitTestDirective.getSession().isUnitTestCreated()) {
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseOneFunctions());
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseOneAndTwoFunctions());
+                        } else {
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseOneAndTwoFunctions());
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseTwoFunctions());
+                        }
+                        functions.addAll(createAndRunUnitTestDirective.getPhaseThreeFunctions());
+                    }
+                    functionCallResponse = testDirectiveFunctionProcessorService.processFunctionCall(inquiry, latestInquiryChat.getFunctionCall());
+                }
                 Inquiry inquiry1 = inquiryDao.respondToFunctionCall(latestInquiryChat.getId(), latestInquiryChat.getFunctionCall().getName(), functionCallResponse, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), functions);
                 if (inquiry1 == null) {
                     break;

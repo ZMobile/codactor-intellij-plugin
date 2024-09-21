@@ -11,5 +11,7 @@ public interface FileCreatorService {
 
     File createFile(String directoryPath, String fileName) throws IOException;
 
+    File createFile(String directoryPath, String fileName, String content) throws IOException;
+
     PsiFile createAndReturnPsiFile(String filePath);
 }

@@ -213,8 +213,6 @@ public class InquiryChatViewer extends JPanel {
         textPane.setEditable(false);
         textPane.setText("<html><body style='font-family: sans-serif;'>" + escapeHtml(text) + "</body></html>");
         textPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-        System.out.println("Text size:" + text.length());
-        System.out.println("TextPane size:" + textPane.getHeight());
         return textPane;
     }
 

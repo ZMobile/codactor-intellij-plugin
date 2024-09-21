@@ -250,7 +250,7 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         createAndRunUnitTestParams.getProperties().put("description", testDescriptionProperty);
         createAndRunUnitTestParams.getRequired().add("description");
 
-        GptFunction createAndRunUnitTest = new GptFunction("create_and_run_unit_test", "Begin the process of creating and running a unit for a code file. It will be deleted at the conclusion of this process", createAndRunUnitTestParams);
+        GptFunction createAndRunUnitTest = new GptFunction("create_and_run_unit_test", "Begin the process of creating and running a unit for a code file. It will be deleted at the conclusion of this process. Note: this function does not create the test file itself, it merely unlocks the functions you'll need to do so.", createAndRunUnitTestParams);
         codactorFunctions.add(createAndRunUnitTest);
 
         return codactorFunctions;

@@ -26,7 +26,6 @@ public class CodeSnippetViewer extends JBPanel<CodeSnippetViewer> {
         initComponents();
     }
 
-
     private void initComponents() {
         initComponents("Solution");
     }

@@ -1,6 +1,8 @@
 package com.translator.service.codactor.ide.file;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -23,5 +25,10 @@ public class FileRemoverServiceImpl implements FileRemoverService {
         if (!file.delete()) {
             throw new RuntimeException("Failed to delete the file: " + filePath);
         }
+
+        VirtualFile virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file.getParentFile());
+        assert virtualFile != null;
+        virtualFile.refresh(false, false);
+
     }
 }
