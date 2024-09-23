@@ -82,7 +82,7 @@ public class CreateAndRunUnitTestDirective extends Directive {
         this.phaseTwoFunctions.add(runUnitTest);
         this.phaseThreeFunctions = new ArrayList<>();
         Parameters terminateTestLoopParams = new Parameters("object");
-        GptFunction endTestAndReport = new GptFunction("end_test_and_report", "Terminate the test loop. Note: this will delete the unit test file. Not to be done before running the test unless you are cancelling the experiment.", terminateTestLoopParams);
+        GptFunction endTestAndReport = new GptFunction("end_test_and_report", "Clean up/delete the unit test and end the test loop. Not to be done before running the test unless you are cancelling the experiment.", terminateTestLoopParams);
         this.phaseThreeFunctions.add(endTestAndReport);
     }
 

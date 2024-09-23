@@ -2,9 +2,17 @@ package com.translator.service.codactor.ai.chat.functions.directives.test;
 
 import com.google.gson.Gson;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.compiler.CompileStatusNotification;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileEditor;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
 import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.codactor.ai.chat.function.GptFunctionCall;
 import com.translator.model.codactor.ai.chat.function.directive.                                                        CreateAndRunUnitTestDirective;
@@ -13,9 +21,11 @@ import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.service.codactor.ai.modification.AiUnitTestCodeModificationService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ide.editor.CodeSnippetIndexGetterService;
+import com.translator.service.codactor.ide.editor.EditorService;
 import com.translator.service.codactor.ide.file.FileCreatorService;
 import com.translator.service.codactor.ide.file.FileRemoverService;
 import com.translator.service.codactor.io.DynamicClassCompilerService;
+import com.translator.service.codactor.io.DynamicClassLoaderService;
 import com.translator.service.codactor.io.RelevantBuildOutputLocatorService;
 import com.translator.service.codactor.json.JsonExtractorService;
 
@@ -23,6 +33,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -38,6 +49,8 @@ public class TestDirectiveFunctionProcessorServiceImpl implements TestDirectiveF
     private final RunTestAndGetOutputService runTestAndGetOutputService;
     private final RelevantBuildOutputLocatorService relevantBuildOutputLocatorService;
     private final DynamicClassCompilerService dynamicClassCompilerService;
+    private final DynamicClassLoaderService dynamicClassLoaderService;
+    private final EditorService editorService;
 
     @Inject
     public TestDirectiveFunctionProcessorServiceImpl(Gson gson,
@@ -49,7 +62,9 @@ public class TestDirectiveFunctionProcessorServiceImpl implements TestDirectiveF
                                                      FileRemoverService fileRemoverService,
                                                      RunTestAndGetOutputService runTestAndGetOutputService,
                                                      RelevantBuildOutputLocatorService relevantBuildOutputLocatorService,
-                                                     DynamicClassCompilerService dynamicClassCompilerService) {
+                                                     DynamicClassCompilerService dynamicClassCompilerService,
+                                                     DynamicClassLoaderService dynamicClassLoaderService,
+                                                     EditorService editorService) {
         this.gson = gson;
         this.project = project;
         this.aiUnitTestCodeModificationService = aiUnitTestCodeModificationService;
@@ -60,6 +75,8 @@ public class TestDirectiveFunctionProcessorServiceImpl implements TestDirectiveF
         this.runTestAndGetOutputService = runTestAndGetOutputService;
         this.relevantBuildOutputLocatorService = relevantBuildOutputLocatorService;
         this.dynamicClassCompilerService = dynamicClassCompilerService;
+        this.dynamicClassLoaderService = dynamicClassLoaderService;
+        this.editorService = editorService;
     }
 
     public String processFunctionCall(Inquiry inquiry, GptFunctionCall gptFunctionCall) {
@@ -381,17 +398,11 @@ public class TestDirectiveFunctionProcessorServiceImpl implements TestDirectiveF
                             "\"message\": \"Error: Unspecified.\"" +
                             "}";
                 }
-            } else if (gptFunctionCall.getName().startsWith("run_test")) {
-                // Ensure this method is not called on the EDT
-                if (ApplicationManager.getApplication().isDispatchThread()) {
-                    throw new IllegalStateException("compileAndGetResult should not be called on the EDT");
-                }
-
-                CountDownLatch latch = new CountDownLatch(1);
+            } else if (gptFunctionCall.getName().startsWith("run")) {
+                CountDownLatch latch = new CountDownLatch(2);
                 AtomicReference<String> resultRef = new AtomicReference<>();
-
-                // Define the main compilation callback
                 CompileStatusNotification mainCompileCallback = (aborted, errors, warnings, compileContext) -> {
+                    System.out.println("Main compilation called 2");
                     try {
                         if (aborted) {
                             System.out.println("Compilation aborted.");
@@ -403,12 +414,12 @@ public class TestDirectiveFunctionProcessorServiceImpl implements TestDirectiveF
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
+                        System.out.println("Main compilation completed.");
                         latch.countDown(); // Signal that the compilation is complete
                     }
                 };
-
-                // Define the test compilation callback
                 CompileStatusNotification testCompileCallback = (aborted, errors, warnings, compileContext) -> {
+                    System.out.println("Test compilation called 1");
                     try {
                         if (aborted) {
                             System.out.println("Test compilation aborted.");
@@ -416,33 +427,36 @@ public class TestDirectiveFunctionProcessorServiceImpl implements TestDirectiveF
                             System.out.println("Test compilation finished with errors.");
                         } else {
                             // Start main compilation
-                            dynamicClassCompilerService.dynamicallyCompileClass(
-                                    createAndRunUnitTestDirectiveSession.getFilePath(), mainCompileCallback);
                             System.out.println("Test compilation completed successfully with " + warnings + " warnings.");
                         }
                     } finally {
+                        System.out.println("Test compilation completed.");
                         // If the test compilation fails, ensure the latch is counted down
-                        if (aborted || errors > 0) {
-                            latch.countDown();
-                        }
+                        latch.countDown();
                     }
                 };
 
-                // Schedule the test compilation on the EDT
-                ApplicationManager.getApplication().invokeLater(() -> {
-                    dynamicClassCompilerService.dynamicallyCompileClass(createAndRunUnitTestDirectiveSession.getTestFilePath(), testCompileCallback);
-                });
-
+                ApplicationManager.getApplication().invokeAndWait(() -> {
+                    FileDocumentManager.getInstance().saveAllDocuments();
+                }, ModalityState.defaultModalityState());
+                dynamicClassCompilerService.dynamicallyCompileClass(
+                        createAndRunUnitTestDirectiveSession.getFilePath(), mainCompileCallback);
+                dynamicClassCompilerService.dynamicallyCompileClass(
+                        createAndRunUnitTestDirectiveSession.getTestFilePath(), testCompileCallback);
                 // Wait for the compilation to complete
                 latch.await();
-                String result = runTestAndGetOutputService.runTestAndGetOutput(
-                        createAndRunUnitTestDirectiveSession.getTestFilePath());
-                createAndRunUnitTestDirectiveSession.setTestResult(result);
+                System.out.println("Compilation complete, running test now.");
+                resultRef.set(runTestAndGetOutputService.runTestAndGetOutput(
+                        createAndRunUnitTestDirectiveSession));
+                createAndRunUnitTestDirectiveSession.setTestResult(resultRef.get());
                 // Return the compilation result
-
+                createAndRunUnitTestDirectiveSession.setUnitTestRun(true);
                 return resultRef.get();
-            /*} else if (gptFunctionCall.getName().equalsIgnoreCase("run_unit_test_with_coverage")) {*/
+            //} else if (gptFunctionCall.getName().equalsIgnoreCase("run_unit_test_with_coverage")) {
             } else if (gptFunctionCall.getName().equalsIgnoreCase("end_test_and_report")) {
+                if (!createAndRunUnitTestDirectiveSession.isUnitTestRun()) {
+                    return "Denied. You have not run the unit test yet. Please run the unit test before ending the test session.";
+                }
                 inquiry.setActiveDirective(null);
                 fileRemoverService.deleteCodeFile(createAndRunUnitTestDirectiveSession.getTestFilePath());
                 return "Note: this will delete the unit test file. Not to be done before running the test. Please provide a report detailing your findings, or if applicable, explaining the obstacles that prevented you from reaching a conclusion. Here is a collection of data acquired by this test: " + gson.toJson(createAndRunUnitTestDirectiveSession);

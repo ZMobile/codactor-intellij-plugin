@@ -1,6 +1,9 @@
 package com.translator.view.codactor.console;
 
 import com.google.gson.Gson;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.compiler.CompileStatusNotification;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
@@ -31,10 +34,7 @@ import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.ide.file.SelectedFileFetcherService;
 import com.translator.service.codactor.ai.chat.inquiry.InquiryService;
 import com.translator.service.codactor.ai.openai.OpenAiModelService;
-import com.translator.service.codactor.io.DynamicClassLoaderService;
-import com.translator.service.codactor.io.DynamicClassLoaderServiceImpl;
-import com.translator.service.codactor.io.RelevantBuildOutputLocatorService;
-import com.translator.service.codactor.io.RelevantBuildOutputLocatorServiceImpl;
+import com.translator.service.codactor.io.*;
 import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.MultiFileCreateDialog;
@@ -55,6 +55,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class CodactorConsole extends JBPanel<CodactorConsole> {
     private Project project;
@@ -257,17 +259,66 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         testButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                VerifyIsTestFileService verifyIsTestFileService = new VerifyIsTestFileServiceImpl();
-                RelevantBuildOutputLocatorService relevantBuildOutputLocatorService = new RelevantBuildOutputLocatorServiceImpl(project);
-                DynamicClassLoaderService dynamicClassLoaderService = new DynamicClassLoaderServiceImpl(relevantBuildOutputLocatorService);
-                RunTestAndGetOutputService runTestAndGetOutputService = new RunTestAndGetOutputServiceImpl(project, verifyIsTestFileService, relevantBuildOutputLocatorService, dynamicClassLoaderService);
                 try {
-                    System.out.println("Running test...");
-                    Module[] modules = ModuleManager.getInstance(project).getModules();
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        try {
+                            VerifyIsTestFileService verifyIsTestFileService = new VerifyIsTestFileServiceImpl();
+                            RelevantBuildOutputLocatorService relevantBuildOutputLocatorService = new RelevantBuildOutputLocatorServiceImpl(project);
+                            DynamicClassLoaderService dynamicClassLoaderService = new DynamicClassLoaderServiceImpl(relevantBuildOutputLocatorService);
+                            DynamicClassCompilerService dynamicClassCompilerService = new DynamicClassCompilerServiceImpl(project, relevantBuildOutputLocatorService);
+                            RunTestAndGetOutputService runTestAndGetOutputService = new RunTestAndGetOutputServiceImpl(project, verifyIsTestFileService, relevantBuildOutputLocatorService, dynamicClassLoaderService);
+                            CountDownLatch latch = new CountDownLatch(2);
+                            CompileStatusNotification mainCompileCallback = (aborted, errors, warnings, compileContext) -> {
+                                System.out.println("Main compilation called 2");
+                                try {
+                                    if (aborted) {
+                                        System.out.println("Compilation aborted.");
+                                    } else if (errors > 0) {
+                                        System.out.println("Compilation finished with errors.");
+                                    } else {
+                                        System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                                    }
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                } finally {
+                                    System.out.println("Main compilation completed.");
+                                    latch.countDown(); // Signal that the compilation is complete
+                                }
+                            };
+                            CompileStatusNotification testCompileCallback = (aborted, errors, warnings, compileContext) -> {
+                                System.out.println("Test compilation called 1");
+                                try {
+                                    if (aborted) {
+                                        System.out.println("Test compilation aborted.");
+                                    } else if (errors > 0) {
+                                        System.out.println("Test compilation finished with errors.");
+                                    } else {
+                                        // Start main compilation
+                                        System.out.println("Test compilation completed successfully with " + warnings + " warnings.");
+                                    }
+                                } finally {
+                                    System.out.println("Test compilation completed.");
+                                    // If the test compilation fails, ensure the latch is counted down
+                                    latch.countDown();
+                                }
+                            };
 
-                    System.out.println("Identified build path: " + relevantBuildOutputLocatorService.locateRelevantBuildOutput("\\Users\\zantehays\\IdeaProjects\\codactor-intellij-plugin\\src\\main\\java\\com\\translator\\service\\codactor\\line\\LineCounterServiceImplTest.java"));
-                    System.out.println("output: " + runTestAndGetOutputService.runTestAndGetOutput("\\Users\\zantehays\\IdeaProjects\\codactor-intellij-plugin\\src\\main\\java\\com\\translator\\service\\codactor\\line\\LineCounterServiceImplTest.java"));
-                    System.out.println("Test completed.");
+                            dynamicClassCompilerService.dynamicallyCompileClass(
+                                    "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/line/LineCounterServiceImpl.java", mainCompileCallback);
+                            dynamicClassCompilerService.dynamicallyCompileClass(
+                                    "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/line/LineCounterServiceImplTest.java", testCompileCallback);
+                            // Wait for the compilation to complete
+                            System.out.println("Awaiting Latch");
+                            latch.await();
+                            System.out.println("Compilation complete, running test now.");
+                            /*String result = runTestAndGetOutputService.runTestAndGetOutput(
+                                    "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/line/LineCounterServiceImplTest.java");
+                            System.out.println(result);*/
+
+                        } catch (Exception exception2) {
+
+                        }
+                    });
                 } catch (Exception exception) {
                     exception.printStackTrace();
                 }

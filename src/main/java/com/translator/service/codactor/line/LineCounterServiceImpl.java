@@ -7,7 +7,6 @@ public class LineCounterServiceImpl implements LineCounterService {
         for (int i = 0; i < index && i < code.length(); i++) {
             if (code.charAt(i) == '\n') {
                 lineCounter++;
-                lineCounter++;
             }
         }
         return lineCounter;

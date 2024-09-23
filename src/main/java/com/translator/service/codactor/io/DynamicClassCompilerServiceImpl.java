@@ -50,11 +50,10 @@ public class DynamicClassCompilerServiceImpl implements DynamicClassCompilerServ
             System.out.println("Error: File not found: " + filePath);
             return;
         }
-
+        System.out.println("Compiling class...");
         // Use the CompilerManager to compile the specific file
         CompilerManager compilerManager = CompilerManager.getInstance(project);
-        //ApplicationManager.getApplication().invokeLater(() -> {
-            compilerManager.compile(new VirtualFile[]{virtualFile}, compileStatusNotification);
-        //});
+        ApplicationManager.getApplication().invokeAndWait(() -> compilerManager.compile(new VirtualFile[]{virtualFile}, compileStatusNotification));
+        System.out.println("Compilation request sent.");
     }
 }
