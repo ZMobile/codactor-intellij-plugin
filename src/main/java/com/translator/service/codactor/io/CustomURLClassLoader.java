@@ -6,21 +6,24 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 public class CustomURLClassLoader extends URLClassLoader {
 
-    private final String targetClassName;
+    private final List<String> targetClassNames;
 
-    public CustomURLClassLoader(URL[] urls, ClassLoader parent, String targetClassName) {
+    public CustomURLClassLoader(URL[] urls, ClassLoader parent, List<String> targetClassNames) {
         super(urls, parent);
-        this.targetClassName = targetClassName;
+        this.targetClassNames = targetClassNames;
     }
 
     @Override
     public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         // If it's the class we want to reload, force reloading from file
-        if (name.equals(targetClassName)) {
-            return loadTestedClassFromFile(name);
+        for (String targetClassName : targetClassNames) {
+            if (name.equals(targetClassName)) {
+                return loadTestedClassFromFile(name);
+            }
         }
         // Delegate to parent for other classes
         return super.loadClass(name, resolve);

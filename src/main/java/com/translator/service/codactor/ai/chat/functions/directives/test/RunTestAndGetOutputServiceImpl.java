@@ -3,6 +3,7 @@ package com.translator.service.codactor.ai.chat.functions.directives.test;
 import com.intellij.openapi.project.Project;
 import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirectiveSession;
 import com.translator.service.codactor.ai.modification.authorization.VerifyIsTestFileService;
+import com.translator.service.codactor.io.CustomURLClassLoader;
 import com.translator.service.codactor.io.DynamicClassLoaderService;
 import com.translator.service.codactor.io.DynamicClassLoaderServiceImpl;
 import com.translator.service.codactor.io.RelevantBuildOutputLocatorService;
@@ -16,6 +17,8 @@ import java.io.File;
 import java.io.PrintStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputService {
     private final Project project;
@@ -64,7 +67,10 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
 
         StringBuilder resultString = new StringBuilder();
         try {
-            URLClassLoader classLoader = dynamicClassLoaderService.dynamicallyLoadClass(testedFilePath);
+            List<String> targetFilePaths = new ArrayList<>();
+            targetFilePaths.add(testFilePath);
+            targetFilePaths.add(testedFilePath);
+            CustomURLClassLoader classLoader = dynamicClassLoaderService.dynamicallyLoadClass(targetFilePaths);
             Result result = (Result) classLoader.loadClass(JUnitCore.class.getName())
                     .getMethod("runClasses", Class[].class)
                     .invoke(null, (Object) new Class[]{classLoader.loadClass(testFileClassName)});

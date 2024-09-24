@@ -1,11 +1,16 @@
 package com.translator.service.codactor.io;
 
+import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirective;
+import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirectiveSession;
+
 import javax.inject.Inject;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DynamicClassLoaderServiceImpl implements DynamicClassLoaderService {
     private final RelevantBuildOutputLocatorService relevantBuildOutputLocatorService;
@@ -15,13 +20,20 @@ public class DynamicClassLoaderServiceImpl implements DynamicClassLoaderService 
         this.relevantBuildOutputLocatorService = relevantBuildOutputLocatorService;
     }
 
-    public CustomURLClassLoader dynamicallyLoadClass(String filePath) throws MalformedURLException, FileNotFoundException, ClassNotFoundException {
-        String isolatedClassName = filePath.substring(filePath.lastIndexOf("/") + 1, filePath.lastIndexOf("."));
-        String packagePath = filePath.substring(filePath.indexOf("java/") + 5, filePath.lastIndexOf("/")).replace("/", ".");
-        String className = packagePath + "." + isolatedClassName;
+    public CustomURLClassLoader dynamicallyLoadClass(List<String> targetFilePaths) throws MalformedURLException, FileNotFoundException, ClassNotFoundException {
+        List<String> targetClassNames = new ArrayList<>();
+        for (String filePath : targetFilePaths) {
+            String isolatedClassName = filePath.substring(filePath.lastIndexOf("/") + 1, filePath.lastIndexOf("."));
+            String packagePath = filePath.substring(filePath.indexOf("java/") + 5, filePath.lastIndexOf("/")).replace("/", ".");
+            String className = packagePath + "." + isolatedClassName;
 
-        String buildOutputParentDirectoryPath = relevantBuildOutputLocatorService.locateRelevantBuildOutput(filePath);
-        String buildOutputPath = buildOutputParentDirectoryPath + "/" + isolatedClassName + ".class";
+            targetClassNames.add(className);
+        }
+        String filePath = targetFilePaths.get(0);
+        String buildOutputParentDirectoryPath = relevantBuildOutputLocatorService.locateRelevantBuildOutput(targetFilePaths.get(0));
+        String isolatedSampleClassName = filePath.substring(filePath.lastIndexOf("/") + 1, filePath.lastIndexOf("."));
+        String buildOutputPath = buildOutputParentDirectoryPath + "/" + isolatedSampleClassName + ".class";
+
         File buildOutputFile = new File(buildOutputPath);
         if (!buildOutputFile.exists()) {
             throw new FileNotFoundException("Error: build output file not found at: " + buildOutputPath);
@@ -41,6 +53,6 @@ public class DynamicClassLoaderServiceImpl implements DynamicClassLoaderService 
         File buildOutputRootDir = new File(buildOutputRootDirPath);
         System.out.println("Build output root dir path: " + buildOutputRootDirPath);
         URL[] urls = { buildOutputRootDir.toURI().toURL() };
-        return new CustomURLClassLoader(urls, getClass().getClassLoader(), className);
+        return new CustomURLClassLoader(urls, getClass().getClassLoader(), targetClassNames);
     }
 }
