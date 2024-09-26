@@ -324,7 +324,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                 }
             }
         });
-        rightToolbar.add(testButton);
+        //rightToolbar.add(testButton);
 
         topToolbar.add(leftToolbar);
         topToolbar.add(rightToolbar, BorderLayout.EAST);

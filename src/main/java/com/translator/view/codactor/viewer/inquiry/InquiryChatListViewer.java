@@ -44,11 +44,12 @@ public class InquiryChatListViewer extends JPanel {
     private Gson gson;
     private Inquiry inquiry;
     private InquiryViewer inquiryViewer;
-    private JList<InquiryChatViewer> inquiryChatList;
+    private JPanel inquiryChatPanel;
+    private List<InquiryChatViewer> inquiryChatViewers;
+    private InquiryChatViewer selectedChatViewer;
     private JBScrollPane jBScrollPane;
+    private JBPopupMenu jBPopupMenu;
     private ListSelectionListener listSelectionListener;
-    private int selectedChat = -1;
-    private int lastSelectedChat = -1;
     private JBMenuItem editItem;
     private JBMenuItem regenerateItem;
     private JBMenuItem previousChat;
@@ -84,121 +85,19 @@ public class InquiryChatListViewer extends JPanel {
     }
 
     private void initComponents() {
-        inquiryChatList = new JList<>();
-        inquiryChatList.setModel(new DefaultListModel<>());
-        inquiryChatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        inquiryChatList.setCellRenderer(new InquiryChatRenderer());
+        //inquiryChatList = new JList<>();
+        inquiryChatPanel = new JPanel();
+        inquiryChatPanel.setLayout(new GridBagLayout());
+        inquiryChatPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+        inquiryChatPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        jBScrollPane = new JBScrollPane(inquiryChatPanel);
+        jBScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        initContextMenu();
+        add(jBScrollPane, BorderLayout.CENTER);
+    }
 
-        listSelectionListener = e -> {
-            if (!e.getValueIsAdjusting()) {
-                int selectedIndex = inquiryChatList.getSelectedIndex();
-                if (selectedIndex == -1) {
-                    return;
-                }
-                selectedChat = selectedIndex;
-                updateSelectionHighlighting();
-            }
-        };
-
-        inquiryChatList.addListSelectionListener(listSelectionListener);
-
-        inquiryChatList.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_C && (e.isControlDown() || e.isMetaDown())) {
-                    if (selectedChat != -1) {
-                        InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-                        StringBuilder text = new StringBuilder();
-                        boolean firstComponentCopied = false;
-                        for (int i = 0; i < inquiryChatViewer.getComponents().length; i++) {
-                            Component component1 = inquiryChatViewer.getComponents()[i];
-                            if (firstComponentCopied) {
-                                text.append("\n");
-                                text.append("\n");
-                            }
-                            if (component1 instanceof JTextPane) {
-                                JTextPane jTextPane = (JTextPane) component1;
-                                HTMLDocument doc = (HTMLDocument)jTextPane.getDocument();
-                                int length = doc.getLength();
-                                try {
-                                    text.append(doc.getText(0, length));
-                                } catch (BadLocationException ex) {
-                                    throw new RuntimeException(ex);
-                                }
-                                firstComponentCopied = true;
-                            } else if (component1 instanceof FixedHeightPanel) {
-                                FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component1;
-                                Editor editor = fixedHeightPanel.getEditor();
-                                if (editor != null) {
-                                    text.append(editor.getDocument().getText());
-                                    firstComponentCopied = true;
-                                }
-                            } else if (component1 instanceof JLabel) {
-                                JLabel jLabel = (JLabel) component1;
-                                text.append(jLabel.getText());
-                                text.append("\n");
-                            }
-                        }
-                        StringSelection selection = new StringSelection(text.toString());
-                        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                        clipboard.setContents(selection, null);
-                    }
-                }
-            }
-        });
-        JBPopupMenu jBPopupMenu = new JBPopupMenu();
-        inquiryChatList.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                InquiryChatViewer inquiryChatViewer = null;
-                if (e.getButton() == MouseEvent.BUTTON3 || e.isControlDown() || e.isMetaDown()) {
-                    inquiryChatViewer = inquiryChatList.getModel().getElementAt(inquiryChatList.locationToIndex(e.getPoint()));
-                    int selectedIndex = inquiryChatList.locationToIndex(e.getPoint());
-                    inquiryChatList.setSelectedIndex(selectedIndex);
-                    InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
-                    System.out.println("The thing gets right clicked 1");
-                    if (inquiryChat == null || inquiryChat.getFrom().equalsIgnoreCase("assistant") || inquiryChatList.locationToIndex(e.getPoint()) == 0) {
-                        System.out.println("Though its not a clickable chat");
-                        editItem.setEnabled(false);
-                        regenerateItem.setEnabled(false);
-                        previousChat.setEnabled(false);
-                        nextChat.setEnabled(false);
-                    } else {
-                        if (inquiryChat.getFrom().equalsIgnoreCase("user")) {
-                            editItem.setEnabled(true);
-                            regenerateItem.setEnabled(true);
-                        } else {
-                            editItem.setEnabled(false);
-                            regenerateItem.setEnabled(false);
-                        }
-                        if (inquiryChat.getAlternateInquiryChatIds().isEmpty()) {
-                            previousChat.setEnabled(false);
-                            nextChat.setEnabled(false);
-                        } else {
-                            previousChat.setEnabled(!Objects.equals(inquiryChat.getId(), inquiryChat.getAlternateInquiryChatIds().get(0)));
-                            nextChat.setEnabled(inquiryChat.getId() != null && !Objects.equals(inquiryChat.getId(), inquiryChat.getAlternateInquiryChatIds().get(inquiryChat.getAlternateInquiryChatIds().size() - 1)));
-                        }
-                    }
-                    jBPopupMenu.show(inquiryChatList, e.getX(), e.getY());
-                }
-                if (selectedChat == -1) {
-                    return;
-                }
-                if (inquiryChatViewer == null) {
-                    inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-                }
-                if (e.getClickCount() == 2) {
-                    //Component component = inquiryChatViewer.getComponentAt(e.getPoint());
-                    String text = convertInquiryChatViewerToText(inquiryChatViewer);
-                    new TextAreaWindow(text);
-                } else if (selectedChat == lastSelectedChat) {
-                    inquiryChatList.clearSelection();
-                    inquiryChatList.setSelectedIndex(-1);
-                    selectedChat = -1;
-                    updateSelectionHighlighting();
-                }
-                lastSelectedChat = selectedChat;
-            }
-        });
+    private void initContextMenu() {
+        jBPopupMenu = new JBPopupMenu();
 
         editItem = new JBMenuItem("Edit");
         regenerateItem = new JBMenuItem("Regenerate");
@@ -206,13 +105,12 @@ public class InquiryChatListViewer extends JPanel {
         nextChat = new JBMenuItem("Show Next Chat");
         autoGenerate = new JBMenuItem("(Experimental) Auto-Generate");
 
+        // Add action listeners as before...
         editItem.addActionListener(e -> {
-            int newSelectedChat = selectedChat;
-            if (selectedChat == -1 && inquiryChatList.getModel().getSize() > 0) {
-                newSelectedChat = 0;
+            if (selectedChatViewer == null && !inquiryChatViewers.isEmpty()) {
+                selectedChatViewer = inquiryChatViewers.get(0);
             }
-            InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(newSelectedChat);
-            InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
+            InquiryChat inquiryChat = selectedChatViewer.getInquiryChat();
             TextAreaWindow.TextAreaWindowActionListener textAreaWindowActionListener = new TextAreaWindow.TextAreaWindowActionListener() {
                 @Override
                 public void onOk(String text) {
@@ -222,15 +120,13 @@ public class InquiryChatListViewer extends JPanel {
             new TextAreaWindow("Edit Message", inquiryChat.getMessage(), true, "Cancel", "Ok", textAreaWindowActionListener);
         });
         regenerateItem.addActionListener(e -> {
-            InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-            InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
+            InquiryChat inquiryChat = selectedChatViewer.getInquiryChat();
             editQuestion(inquiryChat.getId(), inquiryChat.getMessage());
         });
 
         previousChat.addActionListener(e -> {
-            if (selectedChat > 0){
-                InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-                InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
+            if (inquiryChatViewers.indexOf(selectedChatViewer) > 0){
+                InquiryChat inquiryChat = selectedChatViewer.getInquiryChat();
                 int indexOfInquiryChat = inquiryChat.getAlternateInquiryChatIds().indexOf(inquiryChat.getId());
                 if (indexOfInquiryChat == -1) {
                     indexOfInquiryChat = inquiryChat.getAlternateInquiryChatIds().size();
@@ -251,9 +147,9 @@ public class InquiryChatListViewer extends JPanel {
             }
         });
         nextChat.addActionListener(e -> {
-            if (selectedChat < inquiryChatList.getModel().getSize() - 1){
-                InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-                InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
+            int indexOfSelectedChat = inquiryChatViewers.indexOf(selectedChatViewer);
+            if (indexOfSelectedChat != -1 && indexOfSelectedChat < inquiryChatViewers.size() - 1){
+                InquiryChat inquiryChat = selectedChatViewer.getInquiryChat();
                 int indexOfInquiryChat = inquiryChat.getAlternateInquiryChatIds().indexOf(inquiryChat.getId());
                 String nextChatId = inquiryChat.getAlternateInquiryChatIds().get(indexOfInquiryChat + 1);
                 InquiryChat nextInquiryChat = inquiry.getChats().stream()
@@ -271,15 +167,13 @@ public class InquiryChatListViewer extends JPanel {
             }
         });
         autoGenerate.addActionListener(e -> {
-            if (selectedChat > 0){
-                InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(selectedChat);
-                InquiryChat inquiryChat = inquiryChatViewer.getInquiryChat();
+            if (inquiryChatViewers.indexOf(selectedChatViewer) > 0){
+                InquiryChat inquiryChat = selectedChatViewer.getInquiryChat();
                 PromptContextService promptContextService = promptContextServiceFactory.create();
                 MultiFileCreateDialog multiFileCreateDialog = multiFileCreateDialogFactory.create(null, inquiryChat.getMessage(), promptContextService, openAiModelService);
                 multiFileCreateDialog.setVisible(true);
             }
         });
-
         jBPopupMenu.add(editItem);
         jBPopupMenu.add(regenerateItem);
         jBPopupMenu.addSeparator();
@@ -288,11 +182,46 @@ public class InquiryChatListViewer extends JPanel {
         jBPopupMenu.addSeparator();
         jBPopupMenu.add(autoGenerate);
 
+    }
 
-        jBScrollPane = new JBScrollPane(inquiryChatList);
-        jBScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+    private void handleSelection(InquiryChatViewer chatViewer, MouseEvent e) {
+        if (SwingUtilities.isRightMouseButton(e)) {
+            // Handle right-click for context menu
+            showContextMenu(chatViewer, e);
+        } else {
+            // Handle selection
+            selectChatViewer(chatViewer);
+            if (e.getClickCount() == 2) {
+                // Handle double-click action
+                String text = convertInquiryChatViewerToText(chatViewer);
+                new TextAreaWindow(text);
+            }
+        }
+    }
 
-        add(jBScrollPane, BorderLayout.CENTER);
+    private void showContextMenu(InquiryChatViewer chatViewer, MouseEvent e) {
+        selectChatViewer(chatViewer);
+
+        InquiryChat inquiryChat = chatViewer.getInquiryChat();
+        // Update menu items' enabled state based on inquiryChat...
+
+        jBPopupMenu.show(chatViewer, e.getX(), e.getY());
+    }
+
+    private void selectChatViewer(InquiryChatViewer chatViewer) {
+        if (selectedChatViewer != null) {
+            selectedChatViewer = null;
+        }
+        //chatViewer.setSelected(true);
+        chatViewer.requestFocusInWindow();
+        selectedChatViewer = chatViewer;
+    }
+
+    private void deselectChatViewer() {
+        if (selectedChatViewer != null) {
+            //selectedChatViewer.setSelected(false);
+            selectedChatViewer = null;
+        }
     }
 
     private String convertInquiryChatViewerToText(InquiryChatViewer inquiryChatViewer) {
@@ -344,9 +273,9 @@ public class InquiryChatListViewer extends JPanel {
 
     private void updateSelectionHighlighting() {
         Color highlightColor = Color.decode("#009688");
-        for (int i = 0; i < inquiryChatList.getModel().getSize(); i++) {
-            InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(i);
-            if (i == selectedChat) {
+        for (InquiryChatViewer inquiryChatViewer : inquiryChatViewers) {
+            //InquiryChatViewer inquiryChatViewer = inquiryChatList.getModel().getElementAt(i);
+            if (inquiryChatViewer.equals(selectedChatViewer)) {
                 for (Component component : inquiryChatViewer.getComponents()) {
                     if (component instanceof JTextPane) {
                         JTextPane selectedJTextPane = (JTextPane) component;
@@ -383,7 +312,10 @@ public class InquiryChatListViewer extends JPanel {
 
     public void updateInquiryContents(Inquiry inquiry) {
         if (inquiry == null) {
-            inquiryChatList.setModel(new DefaultListModel<>());
+            // Clear the panel
+            inquiryChatPanel.removeAll();
+            inquiryChatPanel.revalidate();
+            inquiryChatPanel.repaint();
             return;
         }
         InquiryChat previousInquiryChat = null;
@@ -402,13 +334,30 @@ public class InquiryChatListViewer extends JPanel {
             this.inquiryViewer.getInquiryChatBoxViewer().setInquiry(inquiry);
         }
         if (inquiry == null) {
-            inquiryChatList.setModel(new DefaultListModel<>());
+            inquiryChatPanel.removeAll();
+            inquiryChatPanel.revalidate();
+            inquiryChatPanel.repaint();
             return;
         }
-        DefaultListModel<InquiryChatViewer> model = new DefaultListModel<>();
+
+        inquiryChatPanel.removeAll();
+
+        // Create GridBagConstraints instance
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0; // Start at the top
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.0; // Components should not grow vertically
+        // Initialize the list to hold InquiryChatViewer instances
+        inquiryChatViewers = new ArrayList<>();
+
+        // Build your InquiryChatViewer instances and add them to the list
         if (inquiry.getBeforeCode() == null && inquiry.getSubjectRecordId() != null) {
             inquiry.setBeforeCode("");
         }
+
         if (inquiry.getDescription() != null) {
             String text = inquiry.getModificationType() + ": " + inquiry.getDescription().trim();
             InquiryChatViewer descriptionViewer = new InquiryChatViewer.Builder()
@@ -417,7 +366,8 @@ public class InquiryChatListViewer extends JPanel {
                     .withHeaderString("User")
                     .withInquiryChatType(InquiryChatType.INSTIGATOR_PROMPT)
                     .build();
-            model.addElement(descriptionViewer);
+            inquiryChatViewers.add(descriptionViewer);
+
             if (inquiry.getBeforeCode() != null) {
                 String beforeCodeText = "```" + inquiry.getBeforeCode() + "```";
                 InquiryChatViewer beforeViewer = new InquiryChatViewer.Builder()
@@ -426,8 +376,9 @@ public class InquiryChatListViewer extends JPanel {
                         .withHeaderString("Before")
                         .withInquiryChatType(InquiryChatType.CODE_SNIPPET)
                         .build();
-                model.addElement(beforeViewer);
+                inquiryChatViewers.add(beforeViewer);
             }
+
             if (inquiry.getAfterCode() != null) {
                 String afterCodeText = "```" + inquiry.getAfterCode() + "```";
                 InquiryChatViewer afterViewer = new InquiryChatViewer.Builder()
@@ -436,7 +387,7 @@ public class InquiryChatListViewer extends JPanel {
                         .withHeaderString("After")
                         .withInquiryChatType(InquiryChatType.CODE_SNIPPET)
                         .build();
-                model.addElement(afterViewer);
+                inquiryChatViewers.add(afterViewer);
             }
         } else if (inquiry.getSubjectCode() != null) {
             String subjectCodeText = "```" + inquiry.getSubjectCode() + "```";
@@ -446,7 +397,8 @@ public class InquiryChatListViewer extends JPanel {
                     .withHeaderString("Code")
                     .withInquiryChatType(InquiryChatType.CODE_SNIPPET)
                     .build();
-            model.addElement(subjectCodeViewer);
+            inquiryChatViewers.add(subjectCodeViewer);
+
             String text = inquiry.getInitialQuestion().trim();
             InquiryChatViewer descriptionViewer = new InquiryChatViewer.Builder()
                     .withFilePath(inquiry.getFilePath())
@@ -454,77 +406,79 @@ public class InquiryChatListViewer extends JPanel {
                     .withHeaderString("User")
                     .withInquiryChatType(InquiryChatType.INSTIGATOR_PROMPT)
                     .build();
-            model.addElement(descriptionViewer);
+            inquiryChatViewers.add(descriptionViewer);
         }
+
+        // Process the finalized chat list
         List<InquiryChat> finalizedChatList = new ArrayList<>();
-        //Find the most recent chat by filtering by creationTimestamp
         List<InquiryChat> chatList = inquiry.getChats();
         if (!chatList.isEmpty()) {
-            //inquiryViewer.getInquiryChatBoxViewer().getToolBar().setVisible(false);
             finalizedChatList.add(previousInquiryChat);
             String previousInquiryChatId = previousInquiryChat.getPreviousInquiryChatId();
-            if (previousInquiryChatId != null) {
-                while (previousInquiryChat != null) {
-                    previousInquiryChat = findPreviousInquiryChat(chatList, previousInquiryChat);
-                    if (previousInquiryChat != null) {
-                        findAlternatesForInquiryChat(chatList, previousInquiryChat);
-                        finalizedChatList.add(previousInquiryChat);
-                    }
+            while (previousInquiryChatId != null) {
+                previousInquiryChat = findPreviousInquiryChat(chatList, previousInquiryChat);
+                if (previousInquiryChat != null) {
+                    findAlternatesForInquiryChat(chatList, previousInquiryChat);
+                    finalizedChatList.add(previousInquiryChat);
+                    previousInquiryChatId = previousInquiryChat.getPreviousInquiryChatId();
+                } else {
+                    break;
                 }
             }
         } else if (inquiry.getDescription() != null) {
-            //inquiryViewer.getInquiryChatBoxViewer().getToolBar().setVisible(true);
             inquiryViewer.getInquiryChatBoxViewer().getWhatWasChangedButton().setVisible(true);
             inquiryViewer.getInquiryChatBoxViewer().getWhatDoesThisDoButton().setEnabled(true);
         } else {
-            //inquiryViewer.getInquiryChatBoxViewer().getToolBar().setVisible(true);
             inquiryViewer.getInquiryChatBoxViewer().getWhatWasChangedButton().setVisible(false);
             inquiryViewer.getInquiryChatBoxViewer().getWhatDoesThisDoButton().setEnabled(false);
         }
+
         Collections.reverse(finalizedChatList);
-        List<InquiryChatViewer> inquiryChatViewers;
+
+        // Compress the chat list if necessary
+        List<InquiryChatViewer> compressedInquiryChatViewers;
         if (!debugView) {
-            inquiryChatViewers = inquiryChatListFunctionCallCompressorService.compress(finalizedChatList);
+            compressedInquiryChatViewers = inquiryChatListFunctionCallCompressorService.compress(finalizedChatList);
         } else {
-            inquiryChatViewers = new ArrayList<>();
+            compressedInquiryChatViewers = new ArrayList<>();
             for (InquiryChat inquiryChat : finalizedChatList) {
                 InquiryChatViewer inquiryChatViewer = new InquiryChatViewer.Builder()
                         .withInquiryChat(inquiryChat)
                         .build();
-                inquiryChatViewers.add(inquiryChatViewer);
+                compressedInquiryChatViewers.add(inquiryChatViewer);
             }
         }
-        for (InquiryChatViewer inquiryChatListViewer : inquiryChatViewers) {
-            model.addElement(inquiryChatListViewer);
-        }
-        ComponentListener componentListener = new ComponentAdapter() {
-            // Keep the initial size
-            Dimension oldSize = InquiryChatListViewer.this.getSize();
 
-            @Override
-            public void componentResized(ComponentEvent e) {
-                Component component = e.getComponent();
-                Dimension newSize = component.getSize();
-                Boolean bigger = null;
+        // Add the compressed viewers to your list
+        inquiryChatViewers.addAll(compressedInquiryChatViewers);
 
-                if (newSize.height > oldSize.height || newSize.width > oldSize.width) {
-                    bigger = true;
-                } else if (newSize.height < oldSize.height || newSize.width < oldSize.width) {
-                    bigger = false;
+        // Clear the panel and add the viewers
+        inquiryChatPanel.removeAll();
+
+        for (InquiryChatViewer inquiryChatViewer : inquiryChatViewers) {
+            // Add mouse listener for selection
+            inquiryChatViewer.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    handleSelection(inquiryChatViewer, e);
                 }
+            });
+            inquiryChatPanel.add(inquiryChatViewer, gbc);
+            gbc.gridy++;
+        }
+        // Add a filler component to push everything up
+        gbc.gridy++;
+        gbc.weighty = 1.0; // This component will absorb extra vertical space
+        gbc.fill = GridBagConstraints.BOTH;
+        JPanel filler = new JPanel();
+        filler.setOpaque(false); // Make sure it's transparent
+        inquiryChatPanel.add(filler, gbc);
+        // Revalidate and repaint
+        inquiryChatPanel.revalidate();
+        inquiryChatPanel.repaint();
 
-                // After calculating, make current size as oldSize for the next detection
-                oldSize = newSize;
-
-                InquiryChatListViewer.this.componentResized(model, bigger);
-            }
-        };
-        //this.revalidate();
-        int width = this.getWidth();
-        this.addComponentListener(componentListener);
-        this.setSize(new Dimension(1, 1));
-
-        jBScrollPane.getVerticalScrollBar().setValue(jBScrollPane.getVerticalScrollBar().getMaximum());
+        // Scroll to the bottom
+        SwingUtilities.invokeLater(() -> jBScrollPane.getVerticalScrollBar().setValue(jBScrollPane.getVerticalScrollBar().getMaximum()));
     }
 
     private void editQuestion(String inquiryChatId, String newQuestion) {
@@ -563,44 +517,8 @@ public class InquiryChatListViewer extends JPanel {
         inquiryChat.setAlternateInquiryChatIds(alternateInquiryChatIds);
     }
 
-    /*public void componentResized(DefaultListModel<InquiryChatViewer> previousModel) {
-        if (previousModel == null || previousModel.isEmpty()) {
-            return;
-        }
-        ApplicationManager.getApplication().invokeLater(() -> {
-            DefaultListModel<InquiryChatViewer> newModel = new DefaultListModel<>();
-            int newTotalHeight = 0;
-            for (int i = 0; i < previousModel.size(); i++) {
-                InquiryChatViewer chatViewer = previousModel.getElementAt(i);
-                for (Component component : chatViewer.getComponents()) {
-                    if (component instanceof JTextPane) {
-                        JTextPane chatDisplay = (JTextPane) component;
-                        newTotalHeight += chatDisplay.getHeight();
-                    } else if (component instanceof FixedHeightPanel) {
-                        FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                        newTotalHeight += fixedHeightPanel.getHeight();
-                    } else if (component instanceof JToolBar) {
-                        JToolBar jToolBar = (JToolBar) component;
-                        newTotalHeight += jToolBar.getHeight();
-                    }
-                    //newTotalHeight += component.getHeight();
-                }
-                newModel.addElement(chatViewer);
-            }
-            System.out.println("Estimated total chat height: " + newTotalHeight);
-            Dimension preferredSize = new Dimension(jBScrollPane.getWidth(), newTotalHeight);
-            jBScrollPane.setPreferredSize(preferredSize);
-            inquiryChatList.setPreferredSize(preferredSize);
-            inquiryChatList.setModel(newModel);
-            jBScrollPane.setViewportView(inquiryChatList);
-        });
-    }*/
-
-    public void componentResized(DefaultListModel<InquiryChatViewer> previousModel, Boolean bigger) {
+    public void componentResized(Boolean bigger) {
         boolean canScrollFurther = canScrollFurther(jBScrollPane);
-        if (previousModel == null || previousModel.isEmpty()) {
-            return;
-        }
         ApplicationManager.getApplication().invokeLater(() -> {
             // Get the current scroll percentage
             double scrollPercentage = 1.0;
@@ -611,47 +529,47 @@ public class InquiryChatListViewer extends JPanel {
                 scrollPercentage = scrollPercentage / 100;*/
             }
 
-            DefaultListModel<InquiryChatViewer> newModel = new DefaultListModel<>();
-            int newTotalHeight = 0;
-            for (int i = 0; i < previousModel.size(); i++) {
-                InquiryChatViewer chatViewer = previousModel.getElementAt(i);
-                for (Component component : chatViewer.getComponents()) {
-                    if (component instanceof JBTextArea) {
-                        JBTextArea chatDisplay = (JBTextArea) component;
-                        int newHeight = 0;
-                        int newWidth = inquiryViewer.getWidth();
-                        if (chatViewer.getInquiryChat().getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
-                            newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
-                        } else {
-                            newHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+             int newTotalHeight = 0;
+            if (inquiryChatViewers != null) {
+                for (int i = 0; i < inquiryChatViewers.size(); i++) {
+                    InquiryChatViewer chatViewer = inquiryChatViewers.get(i);
+                    int chatViewerHeight = 0;
+                    for (Component component : chatViewer.getComponents()) {
+                        if (component instanceof JBTextArea) {
+                            JBTextArea chatDisplay = (JBTextArea) component;
+                            int newHeight = 0;
+                            int newWidth = inquiryViewer.getWidth();
+                            if (chatViewer.getInquiryChat().getInquiryChatType() == InquiryChatType.CODE_SNIPPET) {
+                                chatViewerHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, false);
+                            } else {
+                                chatViewerHeight += textAreaHeightCalculatorService.calculateDesiredHeight(chatDisplay, newWidth, true);
+                            }
+                            Dimension preferredSize = new Dimension(newWidth, newHeight);
+                            chatDisplay.setPreferredSize(preferredSize);
+                            chatDisplay.setMaximumSize(preferredSize);
+                            chatDisplay.setSize(preferredSize);
+                            chatViewerHeight += newHeight;
+                        } else if (component instanceof FixedHeightPanel) {
+                            FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
+                            chatViewerHeight += fixedHeightPanel.getPreferredSize().height;
+                        } else if (component instanceof JToolBar) {
+                            JToolBar jToolBar = (JToolBar) component;
+                            chatViewerHeight += jToolBar.getPreferredSize().height;
+                        } else if (component instanceof JTextPane) {
+                            JTextPane chatDisplay = (JTextPane) component;
+                            chatViewerHeight += chatDisplay.getPreferredSize().height;
                         }
-                        Dimension preferredSize = new Dimension(newWidth, newHeight);
-                        chatDisplay.setPreferredSize(preferredSize);
-                        chatDisplay.setMaximumSize(preferredSize);
-                        chatDisplay.setSize(preferredSize);
-                        newTotalHeight += newHeight;
-                    } else if (component instanceof FixedHeightPanel) {
-                        FixedHeightPanel fixedHeightPanel = (FixedHeightPanel) component;
-                        newTotalHeight += fixedHeightPanel.getPreferredSize().height;
-                    } else if (component instanceof JToolBar) {
-                        JToolBar jToolBar = (JToolBar) component;
-                        newTotalHeight += jToolBar.getPreferredSize().height;
-                    } else if (component instanceof JTextPane) {
-                        JTextPane chatDisplay = (JTextPane) component;
-                        newTotalHeight += chatDisplay.getPreferredSize().height;
+                        System.out.println("Chat viewer height for i: " + i + " is " + chatViewerHeight);
+                        newTotalHeight += chatViewerHeight;
                     }
-
                 }
-                newModel.addElement(chatViewer);
             }
 
             newTotalHeight += 10;
             jBScrollPane.setPreferredSize(new Dimension(getWidth(), getHeight()));
-            inquiryChatList.setPreferredSize(new Dimension(jBScrollPane.getWidth(), newTotalHeight));
-            inquiryChatList.setModel(newModel);
-            InquiryChatListViewer.this.revalidate();
-            InquiryChatListViewer.this.repaint();
-            jBScrollPane.setViewportView(inquiryChatList);
+            inquiryChatPanel.setPreferredSize(new Dimension(jBScrollPane.getWidth(), newTotalHeight));
+            inquiryChatPanel.revalidate();
+            inquiryChatPanel.repaint();
 
             // Set the scroll bar to the previous spot
             if (bigger != null && !bigger && !canScrollFurther) {
@@ -673,7 +591,7 @@ public class InquiryChatListViewer extends JPanel {
     }
 
     public void componentResized() {
-        componentResized((DefaultListModel<InquiryChatViewer>) inquiryChatList.getModel(), null);
+        componentResized(null);
     }
 
     public JBMenuItem getEditItem() {
