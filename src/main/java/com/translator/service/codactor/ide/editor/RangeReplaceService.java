@@ -6,4 +6,6 @@ public interface RangeReplaceService {
     void replaceRange(String filePath, int startOffset, int endOffset, String replacementString, boolean silent);
 
     void replaceRange(Editor editor, int startOffset, int endOffset, String replacementString);
+
+    String replaceRange(String code, int startOffset, int endOffset, String replacementString);
 }

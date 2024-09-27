@@ -12,11 +12,9 @@ import javax.inject.Inject;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class CodeRangeTrackerServiceImpl implements CodeRangeTrackerService {
-    private final Project project;
 
     @Inject
-    public CodeRangeTrackerServiceImpl(Project project) {
-        this.project = project;
+    public CodeRangeTrackerServiceImpl() {
     }
 
     public RangeMarker createRangeMarker(String filePath, int startIndex, int endIndex) {

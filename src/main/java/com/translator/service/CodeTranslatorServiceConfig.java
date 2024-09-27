@@ -21,6 +21,8 @@ import com.translator.service.codactor.ai.modification.multi.MassAiCodeModificat
 import com.translator.service.codactor.ai.modification.multi.MassAiCodeModificationServiceImpl;
 import com.translator.service.codactor.ai.modification.queued.QueuedFileModificationObjectHolderQueryService;
 import com.translator.service.codactor.ai.modification.queued.QueuedFileModificationObjectHolderQueryServiceImpl;
+import com.translator.service.codactor.ai.modification.simulation.FileModificationSimulationService;
+import com.translator.service.codactor.ai.modification.simulation.FileModificationSimulationServiceImpl;
 import com.translator.service.codactor.ai.modification.tracking.*;
 import com.translator.service.codactor.ai.modification.tracking.multi.MultiFileModificationTrackerService;
 import com.translator.service.codactor.ai.modification.tracking.multi.MultiFileModificationTrackerServiceImpl;
@@ -154,6 +156,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(NodeRunnerManagerService.class).to(NodeRunnerManagerServiceImpl.class);
         bind(PromptNodeRunnerService.class).to(PromptNodeRunnerServiceImpl.class);
         bind(AiFileModificationRestarterService.class).to(AiFileModificationRestarterServiceImpl.class);
+        bind(AiFileModificationRangeModificationService.class).to(AiFileModificationRangeModificationServiceImpl.class);
         bind(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer.class).to(HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformerImpl.class);
         bind(DiffEditorGeneratorService.class).to(DiffEditorGeneratorServiceImpl.class);
         bind(AiFileModificationSuggestionDiffViewerService.class).to(AiFileModificationSuggestionDiffViewerServiceImpl.class);
@@ -190,6 +193,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(RelevantBuildOutputLocatorService.class).to(RelevantBuildOutputLocatorServiceImpl.class);
         bind(DynamicClassCompilerService.class).to(DynamicClassCompilerServiceImpl.class);
         bind(DynamicClassLoaderService.class).to(DynamicClassLoaderServiceImpl.class);
+        bind(FileModificationSimulationService.class).to(FileModificationSimulationServiceImpl.class);
     }
 
     @Singleton

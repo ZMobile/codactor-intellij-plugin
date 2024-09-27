@@ -126,8 +126,11 @@ After: {
             return "Requesting file modification for " + location + "...";
         /*} else if (functionCall.getName().equals("request_file_modification_and_wait_for_response")) {
             String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
-            return "Requesting file modification for " + path + " and waiting for response...";
-        */} else if (functionCall.getName().equals("request_file_creation")) {
+            return "Requesting file modification for " + path + " and waiting for response...";*/
+        } else if (functionCall.getName().equals("redo_file_modification")) {
+            String id = JsonExtractorService.extractField(functionCall.getArguments(), "id");
+            return "Redoing modification id " + id + "...";
+        } else if (functionCall.getName().equals("request_file_creation")) {
             String path = JsonExtractorService.extractField(functionCall.getArguments(), "path");
             return "Requesting file creation for " + path + "...";
         } else if (functionCall.getName().equals("request_file_creation_and_wait_for_response")) {

@@ -20,7 +20,9 @@ import com.translator.model.codactor.ai.modification.data.FileModificationDataHo
 import com.translator.model.codactor.ai.modification.data.FileModificationDataReferenceHolder;
 import com.translator.model.codactor.ai.modification.data.FileModificationRangeData;
 import com.translator.service.codactor.ai.modification.AiCodeModificationService;
+import com.translator.service.codactor.ai.modification.AiFileModificationRangeModificationService;
 import com.translator.service.codactor.ai.modification.queued.QueuedFileModificationObjectHolderQueryService;
+import com.translator.service.codactor.ai.modification.simulation.FileModificationSimulationService;
 import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ide.directory.FileDirectoryStructureQueryService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
@@ -55,9 +57,11 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     private final CodeSnippetExtractorService codeSnippetExtractorService;
     private final CodeSnippetIndexGetterService codeSnippetIndexGetterService;
     private final FileModificationTrackerService fileModificationTrackerService;
+    private final FileModificationSimulationService fileModificationSimulationService;
     private final QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService;
     private final FileModificationHistoryService fileModificationHistoryService;
     private final AiFileModificationRestarterService aiFileModificationRestarterService;
+    private final AiFileModificationRangeModificationService aiFileModificationRangeModificationService;
     private final AiCodeModificationRecorderService aiCodeModificationRecorderService;
     private final AiCodeModificationService aiCodeModificationService;
     private final FileDirectoryStructureQueryService fileDirectoryStructureQueryService;
@@ -79,9 +83,11 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                                    CodeSnippetExtractorService codeSnippetExtractorService,
                                                    CodeSnippetIndexGetterService codeSnippetIndexGetterService,
                                                    FileModificationTrackerService fileModificationTrackerService,
+                                                   FileModificationSimulationService fileModificationSimulationService,
                                                    QueuedFileModificationObjectHolderQueryService queuedFileModificationObjectHolderQueryService,
                                                    FileModificationHistoryService fileModificationHistoryService,
                                                    AiFileModificationRestarterService aiFileModificationRestarterService,
+                                                   AiFileModificationRangeModificationService aiFileModificationRangeModificationService,
                                                    AiCodeModificationRecorderService aiCodeModificationRecorderService,
                                                    AiCodeModificationService aiCodeModificationService,
                                                    FileDirectoryStructureQueryService fileDirectoryStructureQueryService,
@@ -101,10 +107,12 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         this.codeSnippetExtractorService = codeSnippetExtractorService;
         this.codeSnippetIndexGetterService = codeSnippetIndexGetterService;
         this.fileModificationTrackerService = fileModificationTrackerService;
+        this.fileModificationSimulationService = fileModificationSimulationService;
         this.queuedFileModificationObjectHolderQueryService = queuedFileModificationObjectHolderQueryService;
         this.fileModificationHistoryService = fileModificationHistoryService;
         this.aiFileModificationRestarterService = aiFileModificationRestarterService;
         this.aiCodeModificationRecorderService = aiCodeModificationRecorderService;
+        this.aiFileModificationRangeModificationService = aiFileModificationRangeModificationService;
         this.aiCodeModificationService = aiCodeModificationService;
         this.fileDirectoryStructureQueryService = fileDirectoryStructureQueryService;
         this.codeRunnerService = codeRunnerService;
@@ -390,8 +398,112 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                 "\"message\": \"" + modificationId + "\"" +
                                 "}";
                     } else {
+                        String simulatedCode = fileModificationSimulationService.simulateFileModification(modificationId);
                         return "{" +
-                                "\"message\": \"Modification requested. Modification id: " + modificationId + " \"" +
+                                "\"message\": \"Modification requested. Modification id: " + modificationId + " \nHere's what the modified code will look like:\n" + simulatedCode + "\n" + "If This is not what you expected, please retry the modification.\"" +
+                                "}";
+                    }
+                } else {
+                    return "{" +
+                            "\"message\": \"Error: Unspecified.\"" +
+                            "}";
+                }
+            } else if (gptFunctionCall.getName().equals("redo_file_modification")) {
+                String modificationId = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "id");
+                FileModification fileModification = fileModificationTrackerService.getModification(modificationId);
+                String path = fileModification.getFilePath();
+                if (path == null) {
+                    return "Error: File not found.";
+                }
+                String description = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "description");
+                if (description != null) {
+                    fileModification.setModification(description);
+                }
+                String replacementCodeSnippetString = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "replacementCodeSnippet");
+                if (replacementCodeSnippetString != null) {
+                    fileModification.getModificationOptions().get(0).setSuggestedCode(replacementCodeSnippetString);
+                }
+                String codeSnippetString = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "codeSnippet");
+                String startSnippetString = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "startBoundary");
+                String endSnippetString = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "endBoundary");
+                if (codeSnippetString != null || startSnippetString != null || endSnippetString != null) {
+                    int startIndex;
+                    int endIndex;
+                    String code = codeSnippetExtractorService.getAllText(path);
+                    if (code == null) {
+                        String packageName = path.replaceAll("/", ".");
+                        VirtualFile virtualFile = codeSnippetExtractorService.getVirtualFileFromPackage(packageName);
+                        if (virtualFile != null) {
+                            path = virtualFile.getPath();
+                        }
+                        code = codeSnippetExtractorService.getAllText(path);
+                    }
+                    if (code == null) {
+                        return "Error: File not found";
+                    }
+                    if (codeSnippetString != null) {
+                        startIndex = codeSnippetIndexGetterService.getStartIndex(code, codeSnippetString);
+                        endIndex = codeSnippetIndexGetterService.getEndIndexAfterStartIndex(code, startIndex, codeSnippetString);
+                    } else {
+                        if (startSnippetString != null) {
+                            try {
+                                startIndex = codeSnippetIndexGetterService.getStartIndex(code, startSnippetString);
+                            } catch (NumberFormatException e) {
+                                startIndex = 0;
+                            }
+                        } else {
+                            startIndex = 0;
+                        }
+                        if (endSnippetString != null) {
+                            try {
+                                endIndex = codeSnippetIndexGetterService.getEndIndex(code, startSnippetString, endSnippetString);
+                            } catch (NumberFormatException e) {
+                                endIndex = code.length();
+                            }
+                        } else {
+                            endIndex = code.length();
+                        }
+                        // Check if startSnippetString is after endSnippetString, and swap if necessary
+                        if (startSnippetString != null && endSnippetString != null && startIndex > endIndex) {
+                            String temp = startSnippetString;
+                            startSnippetString = endSnippetString;
+                            endSnippetString = temp;
+                            try {
+                                startIndex = codeSnippetIndexGetterService.getStartIndex(code, startSnippetString);
+                                if (startIndex == -1) {
+                                    return "Error: Start boundary not found in code snippet.\n"
+                                            + " Code: " + code
+                                            + " Start boundary searched: " + startSnippetString;
+                                }
+                            } catch (NumberFormatException e) {
+                                startIndex = 0;
+                            }
+                            try {
+                                endIndex = codeSnippetIndexGetterService.getEndIndexAfterStartIndex(code, startIndex, endSnippetString);
+                                if (endIndex == -1) {
+                                    return "Error: End boundary not found in targeted code snippet.\n"
+                                            + " Code: " + code
+                                            + " End boundary searched: " + endSnippetString;
+                                }
+                            } catch (NumberFormatException e) {
+                                endIndex = code.length();
+                            }
+                        }
+                    }
+                    if (startIndex < 0) {
+                        startIndex = 0;
+                    }
+                    aiFileModificationRangeModificationService.modifyFileModificationRange(fileModification, startIndex, endIndex);
+                }
+                if (modificationId != null) {
+                    if (modificationId.startsWith("Error")) {
+                        return "{" +
+                                "\"message\": \"" + modificationId + "\"" +
+                                "}";
+                    } else {
+                        String simulatedCode = fileModificationSimulationService.simulateFileModification(modificationId);
+                        return "{" +
+                                "\"message\": \"Modification redone. Modification id: " + modificationId + " \nHere's what the modified code will look like:\n" + simulatedCode + "\n" + "If This is not what you expected, please retry the modification.\"" +
                                 "}";
                     }
                 } else {

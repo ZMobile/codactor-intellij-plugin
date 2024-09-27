@@ -196,6 +196,18 @@ public class CodactorFunctionGeneratorServiceImpl implements CodactorFunctionGen
         GptFunction requestFileModification = new GptFunction("request_file_modification", "Request a new file modification at a specified file and optionally a specified range within the file. Warning: File modifications with overlapping ranges can not exist in the queue. File modifications can only exist in the same file if they don't overlap. A request for a modification with a range overlapping another existing modification currently in the queue will be automatically denied and return null.", requestFileModificationParams);
         codactorFunctions.add(requestFileModification);
 
+        // Create ChatGptFunction for "redo_file_modification"
+        Parameters redoFileModificationParams = new Parameters("object");
+        redoFileModificationParams.getProperties().put("id", fileModificationIdProperty);
+        redoFileModificationParams.getProperties().put("description", descriptionProperty);
+        redoFileModificationParams.getProperties().put("startBoundary", startSnippetProperty);
+        redoFileModificationParams.getProperties().put("endBoundary", endSnippetProperty);
+        redoFileModificationParams.getProperties().put("codeSnippet", requestFileModificationCodeSnippetProperty);
+        redoFileModificationParams.getProperties().put("replacementCodeSnippet", replacementCodeProperty);
+        redoFileModificationParams.getRequired().add("id");
+
+        GptFunction redoFileModification = new GptFunction("redo_file_modification", "Redo a file modification that was previously requested and processed", redoFileModificationParams);
+        codactorFunctions.add(redoFileModification);
 
         /*ChatGptFunction requestFileModificationAndWait = new ChatGptFunction("request_file_modification_and_wait_for_response", "Request a new file modification to be processed and wait for response", requestFileModificationParams);
         codactorFunctions.add(requestFileModificationAndWait);*/

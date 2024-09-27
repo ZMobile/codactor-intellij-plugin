@@ -95,4 +95,25 @@ public class RangeReplaceServiceImpl implements RangeReplaceService {
         // Replace the text range with the replacement string
         WriteCommandAction.runWriteCommandAction(project, () -> document.replaceString(startOffset, endOffset, replacementString));
     }
+
+    public String replaceRange(String code, int startOffset, int endOffset, String replacementString) {
+        // Ensure offsets are within the code's bounds
+        int codeLength = code.length();
+        startOffset = Math.max(0, Math.min(startOffset, codeLength));
+        endOffset = Math.max(0, Math.min(endOffset, codeLength));
+
+        // Extract the original text in the specified range
+        String originalText = code.substring(startOffset, endOffset);
+
+        // Do nothing if the trimmed texts are the same
+        if (originalText.trim().equals(replacementString.trim())) {
+            return code;
+        }
+
+        // Perform the replacement
+
+        return code.substring(0, startOffset) +
+                replacementString +
+                code.substring(endOffset);
+    }
 }

@@ -65,6 +65,9 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
         System.out.println("The area is highlighted");
         ApplicationManager.getApplication().invokeLater(() -> {
             removeAllHighlights(editor);
+            if (fileModification.getRangeMarker() == null) {
+                return;
+            }
             int startIndex = fileModification.getRangeMarker().getStartOffset();
             int endIndex = fileModification.getRangeMarker().getEndOffset();
 

@@ -24,6 +24,8 @@ public interface FileModificationTrackerService {
 
         void undoReadyFileModification(String modificationId);
 
+        void updateFileModificationListeners(FileModification fileModification);
+
         Map<String, FileModificationTracker> getActiveModificationFiles();
 
         FileModificationTracker getModificationTracker(String filePath);
@@ -45,6 +47,7 @@ public interface FileModificationTrackerService {
         void addModificationErrorListener(FileModificationListener listener);
 
         void addModificationAddedListener(FileModificationListener listener);
+
         void addModificationRemovedListener(FileModificationListener listener);
 
         void addModificationReadyListener(FileModificationListener listener);

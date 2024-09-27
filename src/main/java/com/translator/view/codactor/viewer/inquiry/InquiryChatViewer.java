@@ -211,7 +211,10 @@ public class InquiryChatViewer extends JPanel {
         JTextPane textPane = new JTextPane();
         textPane.setContentType("text/html");
         textPane.setEditable(false);
-        textPane.setText("<html><body style='font-family: sans-serif;'>" + escapeHtml(text) + "</body></html>");
+        String htmlText = "<html><body style='font-family: sans-serif;'>"
+                + escapeHtml(text).replace("\n", "<br>")
+                + "</body></html>";
+        textPane.setText(htmlText);
         textPane.setAlignmentX(Component.LEFT_ALIGNMENT);
         return textPane;
     }
@@ -230,7 +233,7 @@ public class InquiryChatViewer extends JPanel {
         for (JLabel functionCallLabel : functionCallLabels) {
             functionCallsPanel.add(functionCallLabel);
         }
-        functionCallsPanel.setLayout(new BoxLayout(functionCallsPanel, BoxLayout.Y_AXIS));
+        functionCallsPanel.setLayout(new GridBagLayout());
         //functionCallsPanel.setBackground(JBColor.WHITE);
         return functionCallsPanel;
     }

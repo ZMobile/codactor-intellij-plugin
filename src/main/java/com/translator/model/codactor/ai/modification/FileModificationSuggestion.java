@@ -86,6 +86,10 @@ this.suggestedCodeBeforeRestoration = suggestedCodeBeforeRestoration;
         return suggestedCode;
     }
 
+    public void setSuggestedCode(String suggestedCode) {
+        this.suggestedCode = suggestedCode;
+    }
+
     public Editor getDiffEditor() {
         return diffEditor;
     }

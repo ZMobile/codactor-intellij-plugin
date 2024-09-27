@@ -123,7 +123,6 @@ public class ModificationQueueViewer extends JBPanel<ModificationQueueViewer> {
                         fileModificationErrorDialog.setVisible(true);
                     }
                     if (fileModification.isDone()) {
-                        System.out.println("This gets called 2");
                         provisionalModificationViewer.updateModificationList(fileModification);
 
                         // Replace the content of the tool window with an instance of CodeSnippetListViewer

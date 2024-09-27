@@ -140,6 +140,11 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     public void undoReadyFileModification(String modificationId) {
         FileModification fileModification = getModification(modificationId);
         fileModificationService.undoReadyFileModification(fileModification);
+        updateFileModificationListeners(fileModification);
+    }
+
+    @Override
+    public void updateFileModificationListeners(FileModification fileModification) {
         for (FileModificationListener listener : modificationUpdateListeners) {
             listener.onModificationUpdate(fileModification);
         }
