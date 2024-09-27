@@ -6,4 +6,8 @@ public interface DynamicClassCompilerService {
     void dynamicallyCompileClass(String filePath);
 
     void dynamicallyCompileClass(String filePath, CompileStatusNotification compileStatusNotification);
+
+    void dynamicallyRebuildAllClasses();
+
+    void dynamicallyRebuildAllClasses(CompileStatusNotification compileStatusNotification);
 }

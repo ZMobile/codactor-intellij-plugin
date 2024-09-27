@@ -98,22 +98,25 @@ public class RangeReplaceServiceImpl implements RangeReplaceService {
 
     public String replaceRange(String code, int startOffset, int endOffset, String replacementString) {
         // Ensure offsets are within the code's bounds
+        System.out.println("Replacing range...");
         int codeLength = code.length();
         startOffset = Math.max(0, Math.min(startOffset, codeLength));
         endOffset = Math.max(0, Math.min(endOffset, codeLength));
-
+        System.out.println("Start offset: " + startOffset);
+        System.out.println("End offset: " + endOffset);
         // Extract the original text in the specified range
         String originalText = code.substring(startOffset, endOffset);
-
+        System.out.println("Original text: " + originalText);
         // Do nothing if the trimmed texts are the same
         if (originalText.trim().equals(replacementString.trim())) {
             return code;
         }
 
         // Perform the replacement
-
-        return code.substring(0, startOffset) +
+        String replacement = code.substring(0, startOffset) +
                 replacementString +
                 code.substring(endOffset);
+        System.out.println("Replacement: " + replacement);
+        return replacement;
     }
 }

@@ -27,6 +27,7 @@ import com.translator.service.codactor.ai.modification.authorization.VerifyIsTes
 import com.translator.service.codactor.ai.modification.authorization.VerifyIsTestFileServiceImpl;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.ide.editor.RangeReplaceService;
 import com.translator.service.codactor.ide.editor.diff.DiffEditorGeneratorService;
 import com.translator.service.codactor.ide.editor.psi.FindImplementationsService;
 import com.translator.service.codactor.ide.editor.psi.FindUsagesService;
@@ -35,6 +36,8 @@ import com.translator.service.codactor.ide.file.SelectedFileFetcherService;
 import com.translator.service.codactor.ai.chat.inquiry.InquiryService;
 import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.service.codactor.io.*;
+import com.translator.service.codactor.test.SyntaxCheckerService;
+import com.translator.service.codactor.test.SyntaxCheckerServiceImpl;
 import com.translator.service.codactor.ui.ModificationTypeComboBoxService;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
 import com.translator.view.codactor.dialog.MultiFileCreateDialog;
@@ -85,6 +88,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private FindImplementationsService findImplementationsService;
     private FindUsagesService findUsagesService;
     private CodeHighlighterService codeHighlighterService;
+    private RangeReplaceService rangeReplaceService;
     // For testing purposes
     private CodactorUmlBuilderApplication codactorUmlBuilderApplication;
     private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
@@ -107,6 +111,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            FindImplementationsService findImplementationsService,
                            FindUsagesService findUsagesService,
                            CodeHighlighterService codeHighlighterService,
+                           RangeReplaceService rangeReplaceService,
                            //CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
@@ -127,6 +132,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.findImplementationsService = findImplementationsService;
         this.findUsagesService = findUsagesService;
         this.codeHighlighterService = codeHighlighterService;
+        this.rangeReplaceService = rangeReplaceService;
         //this.codactorUmlBuilderApplication = codactorUmlBuilderApplication;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
@@ -253,7 +259,9 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         JPanel rightToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5)); // Set horizontal gap to 0
         rightToolbar.add(hiddenLabel);
         rightToolbar.add(advancedButton);
-
+        RelevantBuildOutputLocatorService relevantBuildOutputLocatorService = new RelevantBuildOutputLocatorServiceImpl(project);
+        DynamicClassCompilerService dynamicClassCompilerService = new DynamicClassCompilerServiceImpl(project, relevantBuildOutputLocatorService);
+        SyntaxCheckerService syntaxCheckerService = new SyntaxCheckerServiceImpl(project);
         JButton testButton = new JButton("Test");
         testButton.setBorder(emptyBorder);
         testButton.addActionListener(new ActionListener() {
@@ -261,70 +269,16 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             public void actionPerformed(ActionEvent e) {
                 try {
                     ApplicationManager.getApplication().invokeLater(() -> {
-                        try {
-                            VerifyIsTestFileService verifyIsTestFileService = new VerifyIsTestFileServiceImpl();
-                            RelevantBuildOutputLocatorService relevantBuildOutputLocatorService = new RelevantBuildOutputLocatorServiceImpl(project);
-                            DynamicClassLoaderService dynamicClassLoaderService = new DynamicClassLoaderServiceImpl(relevantBuildOutputLocatorService);
-                            DynamicClassCompilerService dynamicClassCompilerService = new DynamicClassCompilerServiceImpl(project, relevantBuildOutputLocatorService);
-                            RunTestAndGetOutputService runTestAndGetOutputService = new RunTestAndGetOutputServiceImpl(project, verifyIsTestFileService, relevantBuildOutputLocatorService, dynamicClassLoaderService);
-                            CountDownLatch latch = new CountDownLatch(2);
-                            CompileStatusNotification mainCompileCallback = (aborted, errors, warnings, compileContext) -> {
-                                System.out.println("Main compilation called 2");
-                                try {
-                                    if (aborted) {
-                                        System.out.println("Compilation aborted.");
-                                    } else if (errors > 0) {
-                                        System.out.println("Compilation finished with errors.");
-                                    } else {
-                                        System.out.println("Compilation completed successfully with " + warnings + " warnings.");
-                                    }
-                                } catch (Exception ex) {
-                                    ex.printStackTrace();
-                                } finally {
-                                    System.out.println("Main compilation completed.");
-                                    latch.countDown(); // Signal that the compilation is complete
-                                }
-                            };
-                            CompileStatusNotification testCompileCallback = (aborted, errors, warnings, compileContext) -> {
-                                System.out.println("Test compilation called 1");
-                                try {
-                                    if (aborted) {
-                                        System.out.println("Test compilation aborted.");
-                                    } else if (errors > 0) {
-                                        System.out.println("Test compilation finished with errors.");
-                                    } else {
-                                        // Start main compilation
-                                        System.out.println("Test compilation completed successfully with " + warnings + " warnings.");
-                                    }
-                                } finally {
-                                    System.out.println("Test compilation completed.");
-                                    // If the test compilation fails, ensure the latch is counted down
-                                    latch.countDown();
-                                }
-                            };
-
-                            dynamicClassCompilerService.dynamicallyCompileClass(
-                                    "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/line/LineCounterServiceImpl.java", mainCompileCallback);
-                            dynamicClassCompilerService.dynamicallyCompileClass(
-                                    "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/line/LineCounterServiceImplTest.java", testCompileCallback);
-                            // Wait for the compilation to complete
-                            System.out.println("Awaiting Latch");
-                            latch.await();
-                            System.out.println("Compilation complete, running test now.");
-                            /*String result = runTestAndGetOutputService.runTestAndGetOutput(
-                                    "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/line/LineCounterServiceImplTest.java");
-                            System.out.println(result);*/
-
-                        } catch (Exception exception2) {
-
-                        }
+                        String code = codeSnippetExtractorService.getAllText("/Users/zantehays/IdeaProjects/code-translator-dev/code-translator-service/src/main/java/com/translator/service/string/line/LineCounterServiceImpl.java");
+                        System.out.println("Syntax good: " + syntaxCheckerService.checkSyntax(code));
+                        //dynamicClassCompilerService.dynamicallyCompileClass("/Users/zantehays/IdeaProjects/code-translator-dev/code-translator-service/src/main/java/com/translator/service/string/line/LineCounterServiceImpl.java");
                     });
                 } catch (Exception exception) {
                     exception.printStackTrace();
                 }
             }
         });
-        //rightToolbar.add(testButton);
+        rightToolbar.add(testButton);
 
         topToolbar.add(leftToolbar);
         topToolbar.add(rightToolbar, BorderLayout.EAST);

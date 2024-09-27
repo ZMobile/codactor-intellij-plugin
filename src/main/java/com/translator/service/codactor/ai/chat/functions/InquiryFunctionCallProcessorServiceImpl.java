@@ -2,6 +2,7 @@ package com.translator.service.codactor.ai.chat.functions;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.intellij.openapi.compiler.CompileStatusNotification;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.translator.dao.inquiry.InquiryDao;
@@ -33,12 +34,14 @@ import com.translator.service.codactor.ide.editor.psi.FindUsagesService;
 import com.translator.service.codactor.ide.file.FileOpenerService;
 import com.translator.service.codactor.ide.file.SelectedFileFetcherService;
 import com.translator.service.codactor.ai.chat.functions.search.ProjectSearchService;
+import com.translator.service.codactor.io.DynamicClassCompilerService;
 import com.translator.service.codactor.json.JsonExtractorService;
 import com.translator.service.codactor.ai.modification.AiCodeModificationRecorderService;
 import com.translator.service.codactor.ai.modification.AiFileModificationRestarterService;
 import com.translator.service.codactor.ai.modification.history.FileModificationHistoryService;
 import com.translator.service.codactor.ai.modification.json.FileModificationDataHolderJsonCompatibilityService;
 import com.translator.service.codactor.ai.runner.CodeRunnerService;
+import com.translator.service.codactor.test.SyntaxCheckerService;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 import com.translator.service.codactor.transformer.modification.FileModificationTrackerToFileModificationRangeDataTransformerService;
 
@@ -49,6 +52,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionCallProcessorService {
     private final Gson gson;
@@ -75,6 +80,8 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
     private final FindUsagesService findUsagesService;
     private final FindImplementationsService findImplementationsService;
     private final FindErrorService findErrorService;
+    private final DynamicClassCompilerService dynamicClassCompilerService;
+    private final SyntaxCheckerService syntaxCheckerService;
 
     @Inject
     public InquiryFunctionCallProcessorServiceImpl(Gson gson,
@@ -100,7 +107,9 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                                    ProjectSearchService projectSearchService,
                                                    FindUsagesService findUsagesService,
                                                    FindImplementationsService findImplementationsService,
-                                                   FindErrorService findErrorService) {
+                                                   FindErrorService findErrorService,
+                                                   DynamicClassCompilerService dynamicClassCompilerService,
+                                                   SyntaxCheckerService syntaxCheckerService) {
         this.gson = gson;
         this.project = project;
         this.inquiryDao = inquiryDao;
@@ -125,6 +134,8 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
         this.findUsagesService = findUsagesService;
         this.findImplementationsService = findImplementationsService;
         this.findErrorService = findErrorService;
+        this.dynamicClassCompilerService = dynamicClassCompilerService;
+        this.syntaxCheckerService = syntaxCheckerService;
     }
 
     @Override
@@ -398,10 +409,19 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                 "\"message\": \"" + modificationId + "\"" +
                                 "}";
                     } else {
-                        String simulatedCode = fileModificationSimulationService.simulateFileModification(modificationId);
-                        return "{" +
-                                "\"message\": \"Modification requested. Modification id: " + modificationId + " \nHere's what the modified code will look like:\n" + simulatedCode + "\n" + "If This is not what you expected, please retry the modification.\"" +
-                                "}";
+                        String currentCode = codeSnippetExtractorService.getAllText(path);
+                        String simulatedCode = fileModificationSimulationService.simulateFileModification(modificationId, replacementCodeSnippetString);
+                        boolean beforeCodeIsErrorFree = syntaxCheckerService.checkSyntax(currentCode);
+                        boolean afterCodeIsErrorFree = syntaxCheckerService.checkSyntax(simulatedCode);
+                        if (beforeCodeIsErrorFree && !afterCodeIsErrorFree) {
+                            return "{" +
+                                    "\"message\": \"Error: The modification was requested, Modification id: " + modificationId + ", however the syntax of the code after the modification is incorrect, meanwhile the syntax before the modification is correct. Here's what the code would look like if modified: \n" + simulatedCode + "\n vs. the current code: " + currentCode + "\nPlease consider redoing the modification using the function redo_file_modification with this modifications id.\"" +
+                                    "}";
+                        } else {
+                            return "{" +
+                                    "\"message\": \"Modification requested. Modification id: " + modificationId + " \"\n" +
+                                    "}";
+                        }
                     }
                 } else {
                     return "{" +
@@ -501,10 +521,19 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                                 "\"message\": \"" + modificationId + "\"" +
                                 "}";
                     } else {
-                        String simulatedCode = fileModificationSimulationService.simulateFileModification(modificationId);
-                        return "{" +
-                                "\"message\": \"Modification redone. Modification id: " + modificationId + " \nHere's what the modified code will look like:\n" + simulatedCode + "\n" + "If This is not what you expected, please retry the modification.\"" +
-                                "}";
+                        String currentCode = codeSnippetExtractorService.getAllText(path);
+                        String simulatedCode = fileModificationSimulationService.simulateFileModification(modificationId, replacementCodeSnippetString);
+                        boolean beforeCodeIsErrorFree = syntaxCheckerService.checkSyntax(currentCode);
+                        boolean afterCodeIsErrorFree = syntaxCheckerService.checkSyntax(simulatedCode);
+                        if (beforeCodeIsErrorFree && !afterCodeIsErrorFree) {
+                            return "{" +
+                                    "\"message\": \"Error: The modification was redone, Modification id: " + modificationId + ", however the syntax of the code after the modification is still incorrect, meanwhile the syntax before the modification is correct. Here's what the code would look like if modified: \n" + simulatedCode + "\n vs. the current code: " + currentCode + "\nPlease consider redoing the modification using the function redo_file_modification with this modifications id.\"" +
+                                    "}";
+                        } else {
+                            return "{" +
+                                    "\"message\": \"Modification redone. Modification id: " + modificationId + " \nHere's what the code file will look like following this modification:\n" + simulatedCode + "\n" + "If this syntax looks wrong in any way, there may have been mis-selected boundaries. In which case, please retry the modification.\"" +
+                                    "}";
+                        }
                     }
                 } else {
                     return "{" +
@@ -573,6 +602,36 @@ public class InquiryFunctionCallProcessorServiceImpl implements InquiryFunctionC
                 List<ErrorResult> errorResults = findErrorService.getErrorsWithinRange(filePath, codeSnippet, includeWarnings);
                 return gson.toJson(errorResults);
             } else if (gptFunctionCall.getName().equalsIgnoreCase("create_and_run_unit_test")) {
+                CountDownLatch latch = new CountDownLatch(1);
+                AtomicBoolean error = new AtomicBoolean(false);
+                AtomicBoolean compilationAborted = new AtomicBoolean(false);
+                CompileStatusNotification mainCompileCallback = (aborted, errors, warnings, compileContext) -> {
+                    System.out.println("Main compilation called 2");
+                    try {
+                        if (aborted) {
+                            System.out.println("Compilation aborted.");
+                            compilationAborted.set(true);
+                        } else if (errors > 0) {
+                            error.set(true);
+                            System.out.println("Compilation finished with errors.");
+                        } else {
+                            System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        System.out.println("Main compilation completed.");
+                        latch.countDown(); // Signal that the compilation is complete
+                    }
+                };
+                dynamicClassCompilerService.dynamicallyRebuildAllClasses(mainCompileCallback);
+                latch.await();
+                if (error.get()) {
+                    return "Error: A compilation of the project failed. There needs to be a successful control compilation of the project before running a unit test. Please fix any errors that may be present in the project and try again.";
+                }
+                if (compilationAborted.get()) {
+                    return "Error: The compilation of the project was aborted. There needs to be a successful control compilation of the project before running a unit test. Please try again.";
+                }
                 String filePath = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "path");
                 String testDescription = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "description");
                 String content = codeSnippetExtractorService.getAllText(filePath);

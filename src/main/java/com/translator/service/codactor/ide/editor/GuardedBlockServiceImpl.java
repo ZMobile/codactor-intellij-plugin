@@ -77,8 +77,8 @@ public class GuardedBlockServiceImpl implements GuardedBlockService {
     public void removeFileModificationGuardedBlock(String fileModificationId) {
         RangeMarker guardedBlock = guardedBlocks.get(fileModificationId);
         if (guardedBlock != null) {
-            Document document = guardedBlock.getDocument();
             ApplicationManager.getApplication().invokeLater(() -> {
+            Document document = guardedBlock.getDocument();
                         document.removeGuardedBlock(guardedBlock);
                         guardedBlocks.remove(fileModificationId);
             });

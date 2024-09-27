@@ -149,6 +149,9 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
     }
 
     private void addHighlight(Editor editor, int startIndex, int endIndex, Color highlightColor) {
+        if (startIndex < 0 || endIndex < 0) {
+            return;
+        }
         TextAttributes textAttributes = new TextAttributes();
         textAttributes.setBackgroundColor(highlightColor);
         editor.getMarkupModel().addRangeHighlighter(

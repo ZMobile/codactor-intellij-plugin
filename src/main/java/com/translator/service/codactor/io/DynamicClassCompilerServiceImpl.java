@@ -56,4 +56,31 @@ public class DynamicClassCompilerServiceImpl implements DynamicClassCompilerServ
         ApplicationManager.getApplication().invokeAndWait(() -> compilerManager.compile(new VirtualFile[]{virtualFile}, compileStatusNotification));
         System.out.println("Compilation request sent.");
     }
+
+    // New method to rebuild all classes
+    @Override
+    public void dynamicallyRebuildAllClasses() {
+        // Set up a callback to handle the result of the rebuild
+        CompileStatusNotification callback = (aborted, errors, warnings, compileContext) -> {
+            if (aborted) {
+                System.out.println("Rebuild aborted.");
+            } else if (errors > 0) {
+                System.out.println("Rebuild finished with errors.");
+            } else {
+                System.out.println("Rebuild completed successfully with " + warnings + " warnings.");
+            }
+        };
+        dynamicallyRebuildAllClasses(callback);
+    }
+
+    @Override
+    public void dynamicallyRebuildAllClasses(CompileStatusNotification compileStatusNotification) {
+        System.out.println("Rebuilding all classes...");
+        // Use the CompilerManager to rebuild the entire project
+        CompilerManager compilerManager = CompilerManager.getInstance(project);
+        ApplicationManager.getApplication().invokeAndWait(() ->
+                compilerManager.rebuild(compileStatusNotification)
+        );
+        System.out.println("Rebuild request sent.");
+    }
 }

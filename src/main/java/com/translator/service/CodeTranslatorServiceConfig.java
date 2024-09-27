@@ -75,6 +75,8 @@ import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.service.codactor.ai.openai.OpenAiModelServiceImpl;
 import com.translator.service.codactor.ai.runner.CodeRunnerService;
 import com.translator.service.codactor.ai.runner.CodeRunnerServiceImpl;
+import com.translator.service.codactor.test.SyntaxCheckerService;
+import com.translator.service.codactor.test.SyntaxCheckerServiceImpl;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerServiceImpl;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
@@ -194,6 +196,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(DynamicClassCompilerService.class).to(DynamicClassCompilerServiceImpl.class);
         bind(DynamicClassLoaderService.class).to(DynamicClassLoaderServiceImpl.class);
         bind(FileModificationSimulationService.class).to(FileModificationSimulationServiceImpl.class);
+        bind(SyntaxCheckerService.class).to(SyntaxCheckerServiceImpl.class);
     }
 
     @Singleton

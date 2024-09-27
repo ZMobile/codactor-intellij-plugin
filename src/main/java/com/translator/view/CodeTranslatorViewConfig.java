@@ -16,6 +16,7 @@ import com.translator.service.codactor.ai.modification.tracking.multi.MultiFileM
 import com.translator.service.codactor.ai.modification.tracking.suggestion.modification.FileModificationSuggestionModificationTrackerService;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
+import com.translator.service.codactor.ide.editor.RangeReplaceService;
 import com.translator.service.codactor.ide.editor.diff.DiffEditorGeneratorService;
 import com.translator.service.codactor.ide.editor.psi.FindImplementationsService;
 import com.translator.service.codactor.ide.editor.psi.FindUsagesService;
@@ -157,13 +158,14 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            FindImplementationsService findImplementationsService,
                                            FindUsagesService findUsagesService,
                                            CodeHighlighterService codeHighlighterService,
+                                           RangeReplaceService rangeReplaceService,
                                            //CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                                            InquiryViewerFactory inquiryViewerFactory,
                                            InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService,
                                            DiffEditorGeneratorService diffEditorGeneratorService) {
-        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, modificationTypeComboBoxService, aiCodeModificationService, gson, findImplementationsService, findUsagesService, codeHighlighterService, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory, inquiryFunctionCallProcessorService, diffEditorGeneratorService);
+        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, modificationTypeComboBoxService, aiCodeModificationService, gson, findImplementationsService, findUsagesService, codeHighlighterService, rangeReplaceService, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory, inquiryFunctionCallProcessorService, diffEditorGeneratorService);
     }
 
     @Singleton
