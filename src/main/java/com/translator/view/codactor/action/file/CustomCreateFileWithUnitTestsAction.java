@@ -2,6 +2,8 @@ package com.translator.view.codactor.action.file;
 
 import com.google.inject.Injector;
 import com.intellij.ide.actions.CreateElementActionBase;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.vfs.LocalFileSystem;
@@ -14,27 +16,30 @@ import com.translator.service.codactor.ai.chat.context.PromptContextService;
 import com.translator.service.codactor.ai.modification.AiCodeModificationService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
+import com.translator.view.codactor.console.CodactorConsole;
 import com.translator.view.codactor.dialog.FileCreateDialog;
+import com.translator.view.codactor.dialog.FileCreateWithUnitTestsDialog;
 import com.translator.view.codactor.factory.dialog.FileCreateDialogFactory;
+import com.translator.view.codactor.factory.dialog.FileCreateWithUnitTestsDialogFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 
-public class CustomCreateFileAction extends CreateElementActionBase {
+public class CustomCreateFileWithUnitTestsAction extends CreateElementActionBase {
 
-    public CustomCreateFileAction() {
-        super("Create AI Generated File", "Describe a file to generate it with AI", null);
+    public CustomCreateFileWithUnitTestsAction() {
+        super("Create AI File With Unit Tests", "Describe a file to generate it with AI", null);
     }
 
     @Override
     protected PsiElement @NotNull [] invokeDialog(Project project, PsiDirectory directory) {
         // Show the custom dialog and create the file
         Injector injector = CodactorInjector.getInstance().getInjector(project);
-        FileCreateDialogFactory fileCreateDialogFactory = injector.getInstance(FileCreateDialogFactory.class);
-        PromptContextService promptContextService = injector.getInstance(PromptContextServiceFactory.class).create();
-        FileCreateDialog fileCreateDialog = fileCreateDialogFactory.create(directory, promptContextService);
-        fileCreateDialog.setVisible(true);
+        FileCreateWithUnitTestsDialogFactory fileCreateWithUnitTestsDialogFactory = injector.getInstance(FileCreateWithUnitTestsDialogFactory.class);
+        //PromptContextService promptContextService = injector.getInstance(PromptContex7tServiceFactory.class).create();
+        FileCreateWithUnitTestsDialog fileCreateWithUnitTestsDialog = fileCreateWithUnitTestsDialogFactory.create(directory/*, promptContextService*/);
+        fileCreateWithUnitTestsDialog.setVisible(true);
         return PsiElement.EMPTY_ARRAY;
     }
 

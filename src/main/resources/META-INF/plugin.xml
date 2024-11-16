@@ -59,7 +59,13 @@
                 class="com.translator.view.codactor.action.file.CustomCreateFileAction"
                 text="Create AI Generated File"
                 description="Describe a file to generate it with AI">
-            <add-to-group group-id="NewGroup" anchor="first" />
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="before" relative-to-action="FindUsages"/>
+        </action>
+        <action id="CustomCreateFileWithUnitTests"
+                class="com.translator.view.codactor.action.file.CustomCreateFileWithUnitTestsAction"
+                text="AI File With Unit Tests"
+                description="Describe a file to generate it and unit tests with AI">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="before" relative-to-action="FindUsages"/>
         </action>
         <action id="ModifyCodeAction"
                 class="com.translator.view.codactor.action.file.CustomModifyFileAction"

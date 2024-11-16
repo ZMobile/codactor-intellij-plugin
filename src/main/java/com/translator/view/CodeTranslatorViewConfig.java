@@ -76,6 +76,7 @@ public class CodeTranslatorViewConfig extends AbstractModule {
         install(new FactoryModuleBuilder().build(PromptNodeCreationToolFactory.class));
         install(new FactoryModuleBuilder().build(FileCreateDialogFactory.class));
         install(new FactoryModuleBuilder().build(MultiFileCreateDialogFactory.class));
+        install(new FactoryModuleBuilder().build(FileCreateWithUnitTestsDialogFactory.class));
         install(new FactoryModuleBuilder().build(FileFixDialogFactory.class));
         install(new FactoryModuleBuilder().build(FileModifyDialogFactory.class));
         install(new FactoryModuleBuilder().build(FileTranslateDialogFactory.class));
