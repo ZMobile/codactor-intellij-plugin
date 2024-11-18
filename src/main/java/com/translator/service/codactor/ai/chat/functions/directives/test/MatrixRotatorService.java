@@ -1,11 +1,20 @@
 package com.translator.service.codactor.ai.chat.functions.directives.test;
 
 public interface MatrixRotatorService {
+
     /**
-     * Rotates a 2D matrix of integers 90 degrees clockwise.
+     * Rotates the given 2D matrix by 90 degrees clockwise.
      *
-     * @param matrix the original 2D matrix to rotate
-     * @return a new 2D matrix rotated 90 degrees clockwise
+     * @param matrix the 2D matrix to be rotated
+     * @return the rotated 2D matrix
      */
-    int[][] rotateMatrix(int[][] matrix);
+    int[][] rotateClockwise(int[][] matrix);
+
+    /**
+     * Rotates the given 2D matrix by 90 degrees counterclockwise.
+     *
+     * @param matrix the 2D matrix to be rotated
+     * @return the rotated 2D matrix
+     */
+    int[][] rotateCounterClockwise(int[][] matrix);
 }
