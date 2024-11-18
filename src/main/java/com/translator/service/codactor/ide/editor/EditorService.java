@@ -7,5 +7,7 @@ import java.util.List;
 public interface EditorService {
     Editor getEditor(String filePath);
 
+    Editor getEditorHeadless(String filePath);
+
     List<Editor> getAllEditors();
 }

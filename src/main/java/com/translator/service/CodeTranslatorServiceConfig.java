@@ -77,6 +77,8 @@ import com.translator.service.codactor.ai.runner.CodeRunnerService;
 import com.translator.service.codactor.ai.runner.CodeRunnerServiceImpl;
 import com.translator.service.codactor.test.SyntaxCheckerService;
 import com.translator.service.codactor.test.SyntaxCheckerServiceImpl;
+import com.translator.service.codactor.test.junit.InterfaceTemplateGeneratorService;
+import com.translator.service.codactor.test.junit.InterfaceTemplateGeneratorServiceImpl;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerServiceImpl;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
@@ -197,6 +199,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(DynamicClassLoaderService.class).to(DynamicClassLoaderServiceImpl.class);
         bind(FileModificationSimulationService.class).to(FileModificationSimulationServiceImpl.class);
         bind(SyntaxCheckerService.class).to(SyntaxCheckerServiceImpl.class);
+        bind(InterfaceTemplateGeneratorService.class).to(InterfaceTemplateGeneratorServiceImpl.class);
     }
 
     @Singleton

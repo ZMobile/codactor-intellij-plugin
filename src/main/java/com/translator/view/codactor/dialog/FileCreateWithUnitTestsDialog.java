@@ -5,16 +5,26 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.EditorSettings;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.ui.JBSplitter;
+import com.translator.model.codactor.ai.chat.Inquiry;
+import com.translator.model.codactor.ai.chat.InquiryChat;
+import com.translator.service.codactor.ide.editor.EditorService;
+import com.translator.service.codactor.ide.file.FileCreatorService;
+import com.translator.service.codactor.test.junit.InterfaceTemplateGeneratorService;
 
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 
 public class FileCreateWithUnitTestsDialog extends JDialog {
+    private Inquiry inquiry;
+    private VirtualFile interfaceFile;
+
     private JBSplitter mainSplitPane;
     private String fileName;
     private PsiDirectory directory;
@@ -29,8 +39,18 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
     private JPanel leftContentPane;
     private JPanel rightContentPane;
 
+    private InterfaceTemplateGeneratorService interfaceTemplateGeneratorService;
+    private FileCreatorService fileCreatorService;
+    private EditorService editorService;
+
     @Inject
-    public FileCreateWithUnitTestsDialog(@Assisted PsiDirectory directory) {
+    public FileCreateWithUnitTestsDialog(@Assisted PsiDirectory directory,
+                                         InterfaceTemplateGeneratorService interfaceTemplateGeneratorService,
+                                         FileCreatorService fileCreatorService,
+                                         EditorService editorService) {
+        this.interfaceTemplateGeneratorService = interfaceTemplateGeneratorService;
+        this.fileCreatorService = fileCreatorService;
+        this.editorService = editorService;
         // Set up the main split pane
         mainSplitPane = new JBSplitter(false);
         /*mainSplitPane.setResizeWeight(0.5); // Distribute space evenly initially
@@ -130,11 +150,18 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         gbc.gridy++;
         gbc.gridwidth = 1;
         regenerateAllButton = new JButton("Regenerate All");
+        regenerateAllButton.addActionListener(e -> {
+            regenerateInterface();
+            //More will be added here
+        });
         leftContentPane.add(regenerateAllButton, gbc);
 
         // Regenerate interface button
         gbc.gridy++;
         regenerateInterfaceButton = new JButton("Regenerate Interface");
+        regenerateInterfaceButton.addActionListener(e -> {
+            regenerateInterface();
+        });
         leftContentPane.add(regenerateInterfaceButton, gbc);
 
         // Documented interface label and resizable editor
@@ -196,6 +223,37 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         populateUnitTestsPanel();
     }
 
+    private void regenerateInterface() {
+        String directoryPath = directory.getVirtualFile().getPath();
+        Inquiry inquiry = interfaceTemplateGeneratorService.generateInterfaceTemplate(
+                classNameTextField.getText(), directoryPath, codeDescription.getText());
+        InquiryChat latestInquiryChat = inquiry.getChats().get(inquiry.getChats().size() - 1);
+        //Code is surrounded by "```" to indicate a code block. Isolate this code:
+        String startOfCode = latestInquiryChat.getMessage().substring(latestInquiryChat.getMessage().indexOf("```") + 3);
+        String code = startOfCode.substring(0, startOfCode.indexOf("```"));
+        if (code.startsWith("java")) {
+            code = code.substring(4);
+        }
+        if (code.startsWith("\n")) {
+            code = code.substring(1);
+        }
+        String fileName = classNameTextField.getText();
+        if (!fileName.endsWith(".java")) {
+            fileName += ".java";
+        }
+        try {
+            fileCreatorService.createFile(directoryPath, fileName, code);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        if (interfaceFile == null) {
+            //Dispose of the documented interface editor and replace it with the editor from the above file
+            EditorFactory editorFactory = EditorFactory.getInstance();
+            editorFactory.releaseEditor(documentedInterfaceEditor);
+            documentedInterfaceEditor = editorService.getEditor(directoryPath + "/" + fileName);
+        }
+    }
+
     private void addUnitTest() {
         // Create a new unit test component
         JPanel unitTestComponent = createUnitTestComponent();
@@ -212,7 +270,6 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         rebuildUnitTestsPanel();
         refreshScrollPane();
     }
-
 
     private JPanel createUnitTestComponent() {
         JPanel unitTestComponent = new JPanel(new GridBagLayout());
@@ -402,6 +459,7 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         EditorSettings settings = editor.getSettings();
         settings.setLineNumbersShown(true);
         settings.setFoldingOutlineShown(true);
+        //Editor editor = editorService.getEditor("/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/test/junit/InterfaceTemplateGeneratorServiceImpl.java");
         return editor;
     }
 }
