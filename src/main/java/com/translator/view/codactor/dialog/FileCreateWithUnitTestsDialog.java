@@ -229,8 +229,6 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
 
     private void regenerateInterface() {
         String directoryPath = directory.getVirtualFile().getPath();
-        documentedInterfacePanel.removeAll();
-        documentedInterfaceEditor = null;
         if (fileName != null) {
             String oldFilePath = directoryPath + "/" + fileName;
             if (!fileName.endsWith(".java")) {
@@ -241,6 +239,8 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
             EditorFactory editorFactory = EditorFactory.getInstance();
             editorFactory.releaseEditor(documentedInterfaceEditor);
         }
+        documentedInterfacePanel.removeAll();
+        documentedInterfaceEditor = null;
         inquiry = interfaceTemplateGeneratorService.generateInterfaceTemplate(
                 classNameTextField.getText(), directoryPath, codeDescription.getText());
         InquiryChat latestInquiryChat = inquiry.getChats().get(inquiry.getChats().size() - 1);
