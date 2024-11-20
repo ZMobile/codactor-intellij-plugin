@@ -1,4 +1,4 @@
-package com.translator.view.codactor.panel;
+package com.translator.viewmodel;
 
 
 import com.intellij.openapi.editor.Editor;

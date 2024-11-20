@@ -1,11 +1,10 @@
-package com.translator.view.codactor.dialog;
+package com.translator.view.codactor.dialog.test;
 
 import com.google.inject.assistedinject.Assisted;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.EditorSettings;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.ui.JBSplitter;
 import com.translator.model.codactor.ai.chat.Inquiry;
@@ -14,10 +13,12 @@ import com.translator.service.codactor.ide.editor.EditorService;
 import com.translator.service.codactor.ide.file.FileCreatorService;
 import com.translator.service.codactor.ide.file.FileRemoverService;
 import com.translator.service.codactor.test.junit.InterfaceTemplateGeneratorService;
+import com.translator.viewmodel.UnitTestPanel;
 
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -274,7 +275,15 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
 
     private void addUnitTest() {
         // Create a new unit test component
-        JPanel unitTestComponent = createUnitTestComponent();
+        //Putting this in:
+        ActionListener removeButtonListener = e -> {
+            JButton removeButton = (JButton) e.getSource();
+            JPanel unitTestComponent = (JPanel) removeButton.getParent();
+            removeUnitTest(unitTestComponent);
+        };
+        UnitTestPanel unitTestPanel = new UnitTestPanel(leftContentPane, removeButtonListener);
+
+        //Instead of this:
 
         // Add the unit test component to the panel
         GridBagConstraints gbc = new GridBagConstraints();
@@ -282,14 +291,14 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1;
         gbc.gridy = unitTestsPanel.getComponentCount();
-        unitTestsPanel.add(unitTestComponent, gbc);
+        unitTestsPanel.add(unitTestPanel, gbc);
 
         // Rebuild layout and refresh scroll pane
         rebuildUnitTestsPanel();
         refreshScrollPane();
     }
 
-    private JPanel createUnitTestComponent() {
+    /*private JPanel createUnitTestComponent() {
         JPanel unitTestComponent = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -344,9 +353,7 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         unitTestComponent.add(separator, gbc);
 
         return unitTestComponent;
-    }
-
-
+    }*/
 
     private void removeUnitTest(JPanel unitTestRow) {
         // Find the index of the row

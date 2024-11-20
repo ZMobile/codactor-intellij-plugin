@@ -9,7 +9,7 @@ import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBTextArea;
 import com.translator.model.uml.draw.connection.Connection;
-import com.translator.view.codactor.panel.FixedHeightPanel;
+import com.translator.viewmodel.FixedHeightPanel;
 import com.translator.view.codactor.viewer.inquiry.InquiryChatViewer;
 import com.translator.view.uml.node.dialog.prompt.PromptConnectionViewer;
 import com.translator.view.uml.node.dialog.prompt.PromptNodeDialog;

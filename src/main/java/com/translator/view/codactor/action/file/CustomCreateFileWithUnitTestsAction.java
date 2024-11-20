@@ -2,8 +2,6 @@ package com.translator.view.codactor.action.file;
 
 import com.google.inject.Injector;
 import com.intellij.ide.actions.CreateElementActionBase;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.vfs.LocalFileSystem;
@@ -14,12 +12,8 @@ import com.intellij.psi.PsiManager;
 import com.translator.CodactorInjector;
 import com.translator.service.codactor.ai.chat.context.PromptContextService;
 import com.translator.service.codactor.ai.modification.AiCodeModificationService;
-import com.translator.service.codactor.factory.PromptContextServiceFactory;
 import com.translator.service.codactor.ui.tool.CodactorToolWindowService;
-import com.translator.view.codactor.console.CodactorConsole;
-import com.translator.view.codactor.dialog.FileCreateDialog;
-import com.translator.view.codactor.dialog.FileCreateWithUnitTestsDialog;
-import com.translator.view.codactor.factory.dialog.FileCreateDialogFactory;
+import com.translator.view.codactor.dialog.test.FileCreateWithUnitTestsDialog;
 import com.translator.view.codactor.factory.dialog.FileCreateWithUnitTestsDialogFactory;
 import org.jetbrains.annotations.NotNull;
 

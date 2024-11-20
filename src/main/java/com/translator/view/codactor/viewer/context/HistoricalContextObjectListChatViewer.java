@@ -26,7 +26,7 @@ import com.translator.service.codactor.ai.chat.functions.InquiryChatListFunction
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorService;
 import com.translator.service.codactor.ui.measure.TextAreaHeightCalculatorServiceImpl;
 import com.translator.view.codactor.menu.TextAreaWindow;
-import com.translator.view.codactor.panel.FixedHeightPanel;
+import com.translator.viewmodel.FixedHeightPanel;
 import com.translator.view.codactor.renderer.InquiryChatRenderer;
 import com.translator.view.codactor.viewer.inquiry.InquiryChatViewer;
 

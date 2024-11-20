@@ -17,7 +17,7 @@ import com.translator.service.codactor.ide.editor.GptToLanguageTransformerServic
 import com.translator.service.codactor.ide.editor.GptToLanguageTransformerServiceImpl;
 import com.translator.service.codactor.ai.chat.functions.CodactorFunctionToLabelMapperService;
 import com.translator.service.codactor.ai.chat.functions.CodactorFunctionToLabelMapperServiceImpl;
-import com.translator.view.codactor.panel.FixedHeightPanel;
+import com.translator.viewmodel.FixedHeightPanel;
 
 import javax.swing.*;
 import java.awt.*;

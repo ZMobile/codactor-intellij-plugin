@@ -11,7 +11,7 @@ package com.translator.view.codactor.viewer;
 
 import com.intellij.openapi.editor.Editor;
 import com.intellij.ui.components.JBPanel;
-import com.translator.view.codactor.panel.FixedHeightPanel;
+import com.translator.viewmodel.FixedHeightPanel;
 
 import javax.swing.*;
 import java.awt.*;
