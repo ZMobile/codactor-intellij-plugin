@@ -27,11 +27,10 @@ public class UnitTestPanel extends JPanel {
 
         // Initialize components
         JPanel headerPanel = createHeaderPanel(removeActionListener);
-        editorPanel = createEditorPanel();
 
         // Add components to the main panel
         add(headerPanel, BorderLayout.NORTH);
-        add(editorPanel, BorderLayout.CENTER);
+        //add(editorPanel, BorderLayout.CENTER);
     }
 
     private JPanel createHeaderPanel(ActionListener removeActionListener) {
@@ -63,7 +62,6 @@ public class UnitTestPanel extends JPanel {
 
         // Regenerate button (left)
         regenerateButton = new JButton("Regenerate Test");
-        regenerateButton.addActionListener(e -> regenerateTest());
         buttonPanel.add(regenerateButton, BorderLayout.WEST);
 
         // Remove button (right)
@@ -86,6 +84,16 @@ public class UnitTestPanel extends JPanel {
         editorPanel.add(makeResizable(editor), BorderLayout.CENTER);
 
         return editorPanel;
+    }
+
+    public void setEditor(Editor editor) {
+        this.editor = editor;
+        //editorPanel.removeAll();
+        editorPanel = new JPanel(new BorderLayout());
+        editorPanel.add(makeResizable(editor), BorderLayout.CENTER);
+        editorPanel.revalidate();
+        editorPanel.repaint();
+        add(editorPanel, BorderLayout.CENTER);
     }
 
     private JPanel makeResizable(Editor editor) {
@@ -153,9 +161,24 @@ public class UnitTestPanel extends JPanel {
         return editor;
     }
 
-    private void regenerateTest() {
-        // Logic to regenerate the test
-        editor.getDocument().setText("New unit test content...");
+    public String getTestName() {
+        return testNameField.getText();
+    }
+
+    public void setTestName(String testName) {
+        testNameField.setText(testName);
+    }
+
+    public String getTestDescription() {
+        return testDescriptionArea.getText();
+    }
+
+    public void setTestDescription(String testDescription) {
+        testDescriptionArea.setText(testDescription);
+    }
+
+    public JButton getRegenerateButton() {
+        return regenerateButton;
     }
 
     public void cleanUp() {

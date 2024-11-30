@@ -6,7 +6,7 @@ import com.translator.service.codactor.ai.chat.inquiry.InquiryService;
 import javax.inject.Inject;
 
 public class InterfaceTemplateGeneratorServiceImpl implements InterfaceTemplateGeneratorService {
-    private InquiryService inquiryService;
+    private final InquiryService inquiryService;
 
     @Inject
     public InterfaceTemplateGeneratorServiceImpl(InquiryService inquiryService) {
@@ -18,6 +18,6 @@ public class InterfaceTemplateGeneratorServiceImpl implements InterfaceTemplateG
         String packageName = filePath.substring(filePath.indexOf("java/") + 5/*, filePath.lastIndexOf("/")*/).replace("/", ".");
         String question = "Please complete this interface. The following is the description:"
                 + description + " interface: \"package " + packageName + "; public interface " + interfaceName + " { }\"";
-        return inquiryService.createHeadlessInquiry(question, "gpt-4o");
+        return inquiryService.createHeadlessInquiry(question, "gpt-4o", false);
     }
 }

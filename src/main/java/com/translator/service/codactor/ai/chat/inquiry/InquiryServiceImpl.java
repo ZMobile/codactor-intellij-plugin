@@ -73,14 +73,26 @@ public class InquiryServiceImpl implements InquiryService {
         this.azureConnectionService = azureConnectionService;
     }
 
-    public Inquiry createHeadlessInquiry(String question, String model) {
+    public Inquiry createHeadlessInquiry(String question, String model, boolean functionsEnabled) {
         String openAiApiKey;
         if (azureConnectionService.isAzureConnected()) {
             openAiApiKey = azureConnectionService.getKey();
         } else {
             openAiApiKey = defaultConnectionService.getOpenAiApiKey();
         }
-        return inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>(), null, inquirySystemMessageGeneratorService.generateDefaultSystemMessage());
+        List<GptFunction> functions = null;
+        String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
+        if (functionsEnabled) {
+            if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k") || model.equals("gpt-4o")) {
+                functions = codactorFunctionGeneratorService.generateCodactorFunctions();
+                systemMessage = inquirySystemMessageGeneratorService.generateFunctionsSystemMessage();
+            }
+        }
+        Inquiry inquiry = inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>(), functions, systemMessage);
+        if (functionsEnabled && inquiry != null && inquiry.getError() == null) {
+            processPossibleFunctionCallsHeadless(inquiry, openAiApiKey, model, functions);
+        }
+        return inquiry;
     }
 
     @Override
@@ -279,6 +291,59 @@ public class InquiryServiceImpl implements InquiryService {
         ProgressManager.getInstance().run(backgroundTask);
     }
 
+    public InquiryChat continueHeadlessInquiry(Inquiry inquiry, String previousInquiryChatId, String question, String model, boolean functionsEnabled) {
+        String likelyCodeLanguage = gptToLanguageTransformerService.convert(question);
+        InquiryChat inquiryChat = new InquiryChat.Builder()
+                .withInquiryId(inquiry.getId())
+                .withFilePath(inquiry.getFilePath())
+                .withPreviousInquiryChatId(previousInquiryChatId)
+                .withFrom("User")
+                .withMessage(question)
+                .withLikelyCodeLanguage(likelyCodeLanguage)
+                .build();
+        findAlternatesForInquiryChat(inquiry.getChats(), inquiryChat);
+inquiry.getChats().add(inquiryChat);
+        String openAiApiKey;
+        if (azureConnectionService.isAzureConnected()) {
+            openAiApiKey = azureConnectionService.getKey();
+        } else {
+            openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+        }
+        List<GptFunction> functions = null;
+        if (functionsEnabled) {
+            if (model.equals("gpt-3.5-turbo") || model.equals("gpt-3.5-turbo-16k") || model.equals("gpt-4") || model.equals("gpt-4-32k") || model.equals("gpt-4o")) {
+                if (inquiry.getActiveDirective() == null) {
+                    functions = codactorFunctionGeneratorService.generateCodactorFunctions();
+                } else {
+                    if (inquiry.getActiveDirective() instanceof CreateAndRunUnitTestDirective) {
+                        CreateAndRunUnitTestDirective createAndRunUnitTestDirective = (CreateAndRunUnitTestDirective) inquiry.getActiveDirective();
+                        functions = new ArrayList<>();
+                        if (!createAndRunUnitTestDirective.getSession().isUnitTestCreated()) {
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseOneFunctions());
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseOneAndTwoFunctions());
+                        } else {
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseOneAndTwoFunctions());
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseTwoFunctions());
+                        }
+                        functions.addAll(createAndRunUnitTestDirective.getPhaseThreeFunctions());
+                    }
+                }
+            }
+        }
+        Inquiry response = inquiryDao.continueInquiry(previousInquiryChatId, question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), functions);
+        if (response.getError() != null) {
+            JOptionPane.showMessageDialog(null, response.getError(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+        inquiry.getChats().remove(inquiryChat);
+        inquiry.getChats().addAll(response.getChats());
+        if (functionsEnabled) {
+            processPossibleFunctionCallsHeadless(inquiry, openAiApiKey, model, functions);
+        }
+        return getLatestInquiryChat(inquiry.getChats());
+    }
+
     private void findAlternatesForInquiryChat(List<InquiryChat> inquiryChats, InquiryChat inquiryChat) {
         List<InquiryChat> alternateInquiryChats = inquiryChats.stream()
                 .filter(inquiryChatQuery ->
@@ -332,6 +397,43 @@ public class InquiryServiceImpl implements InquiryService {
                 inquiry.getChats().addAll(inquiry1.getChats());
                 inquiryViewer.getInquiryChatListViewer().updateInquiryContents(inquiry);
                 inquiryViewer.getInquiryChatListViewer().componentResized();
+                latestInquiryChat = getLatestInquiryChat(inquiry1.getChats());
+            }
+        }
+    }
+
+    private void processPossibleFunctionCallsHeadless(Inquiry inquiry, String openAiApiKey, String model, List<GptFunction> functions) {
+        InquiryChat latestInquiryChat = getLatestInquiryChat(inquiry.getChats());
+        if (latestInquiryChat.getFunctionCall() != null) {
+            while (latestInquiryChat.getFunctionCall() != null) {
+                String functionCallResponse;
+                if (inquiry.getActiveDirective() == null) {
+                    functions = codactorFunctionGeneratorService.generateCodactorFunctions();
+                    functionCallResponse = inquiryFunctionCallProcessorService.processFunctionCall(inquiry, latestInquiryChat.getFunctionCall());
+                } else {
+                    if (inquiry.getActiveDirective() instanceof CreateAndRunUnitTestDirective) {
+                        CreateAndRunUnitTestDirective createAndRunUnitTestDirective = (CreateAndRunUnitTestDirective) inquiry.getActiveDirective();
+                        functions = new ArrayList<>();
+                        if (!createAndRunUnitTestDirective.getSession().isUnitTestCreated()) {
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseOneFunctions());
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseOneAndTwoFunctions());
+                        } else {
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseOneAndTwoFunctions());
+                            functions.addAll(createAndRunUnitTestDirective.getPhaseTwoFunctions());
+                        }
+                        functions.addAll(createAndRunUnitTestDirective.getPhaseThreeFunctions());
+                    }
+                    functionCallResponse = testDirectiveFunctionProcessorService.processFunctionCall(inquiry, latestInquiryChat.getFunctionCall());
+                }
+                Inquiry inquiry1 = inquiryDao.respondToFunctionCall(latestInquiryChat.getId(), latestInquiryChat.getFunctionCall().getName(), functionCallResponse, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), functions);
+                if (inquiry1 == null) {
+                    break;
+                } else if (inquiry1.getError() != null){
+                    JOptionPane.showMessageDialog(null, inquiry1.getError(), "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                }
+                inquiry.getChats().addAll(inquiry1.getChats());
                 latestInquiryChat = getLatestInquiryChat(inquiry1.getChats());
             }
         }

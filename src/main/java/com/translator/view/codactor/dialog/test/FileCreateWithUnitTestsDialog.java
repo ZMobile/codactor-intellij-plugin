@@ -9,10 +9,13 @@ import com.intellij.psi.PsiDirectory;
 import com.intellij.ui.JBSplitter;
 import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.codactor.ai.chat.InquiryChat;
+import com.translator.model.codactor.test.UnitTestData;
 import com.translator.service.codactor.ide.editor.EditorService;
 import com.translator.service.codactor.ide.file.FileCreatorService;
 import com.translator.service.codactor.ide.file.FileRemoverService;
 import com.translator.service.codactor.test.junit.InterfaceTemplateGeneratorService;
+import com.translator.service.codactor.test.junit.UnitTestGeneratorService;
+import com.translator.service.codactor.test.junit.UnitTestListGeneratorService;
 import com.translator.viewmodel.UnitTestPanel;
 
 import javax.inject.Inject;
@@ -23,8 +26,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 
+import java.util.List;
+
 public class FileCreateWithUnitTestsDialog extends JDialog {
     private Inquiry inquiry;
+    private InquiryChat interfaceInquiryChat;
     //private VirtualFile interfaceFile;
     private JBSplitter mainSplitPane;
     private String fileName;
@@ -42,6 +48,8 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
     private JPanel rightContentPane;
 
     private InterfaceTemplateGeneratorService interfaceTemplateGeneratorService;
+    private UnitTestListGeneratorService unitTestListGeneratorService;
+    private UnitTestGeneratorService unitTestGeneratorService;
     private FileCreatorService fileCreatorService;
     private FileRemoverService fileRemoverService;
     private EditorService editorService;
@@ -49,9 +57,13 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
     @Inject
     public FileCreateWithUnitTestsDialog(@Assisted PsiDirectory directory,
                                          InterfaceTemplateGeneratorService interfaceTemplateGeneratorService,
+                                         UnitTestListGeneratorService unitTestListGeneratorService,
+                                         UnitTestGeneratorService unitTestGeneratorService,
                                          FileCreatorService fileCreatorService,
                                          EditorService editorService) {
         this.interfaceTemplateGeneratorService = interfaceTemplateGeneratorService;
+        this.unitTestListGeneratorService = unitTestListGeneratorService;
+        this.unitTestGeneratorService = unitTestGeneratorService;
         this.fileCreatorService = fileCreatorService;
         this.editorService = editorService;
         // Set up the main split pane
@@ -155,6 +167,7 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         regenerateAllButton = new JButton("Regenerate All");
         regenerateAllButton.addActionListener(e -> {
             regenerateInterface();
+            regenerateUnitTestList(interfaceInquiryChat);
             //More will be added here
         });
         leftContentPane.add(regenerateAllButton, gbc);
@@ -191,22 +204,25 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         rightGbc.gridx = 1;
         rightGbc.anchor = GridBagConstraints.EAST;
 
-// Left panel for buttons
+        // Left panel for buttons
         JPanel leftSidePanel = new JPanel();
         leftSidePanel.setLayout(new BoxLayout(leftSidePanel, BoxLayout.X_AXIS));
         regenerateTestsButton = new JButton("Regenerate Tests");
+        regenerateTestsButton.addActionListener(e -> {
+            regenerateUnitTestList(interfaceInquiryChat);
+        });
         regenerateDescriptionsCheckBox = new JCheckBox("Regenerate Test Descriptions");
         leftSidePanel.add(regenerateTestsButton);
         leftSidePanel.add(Box.createHorizontalStrut(10));
         leftSidePanel.add(regenerateDescriptionsCheckBox);
 
-// Right panel for "+" button
+        // Right panel for "+" button
         JPanel rightSidePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         JButton addUnitTestButton = new JButton("+");
         addUnitTestButton.addActionListener(e -> addUnitTest());
         rightSidePanel.add(addUnitTestButton);
 
-// Add panels to regenerateTestsPanel
+        // Add panels to regenerateTestsPanel
         regenerateTestsPanel.add(leftSidePanel, leftGbc);
         regenerateTestsPanel.add(rightSidePanel, rightGbc);
 
@@ -225,7 +241,7 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         unitTestsPanel = new JPanel(new GridBagLayout());
         leftContentPane.add(unitTestsPanel, gbc);
 
-        populateUnitTestsPanel();
+        //populateUnitTestsPanel();
     }
 
     private void regenerateInterface() {
@@ -244,9 +260,9 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         documentedInterfaceEditor = null;
         inquiry = interfaceTemplateGeneratorService.generateInterfaceTemplate(
                 classNameTextField.getText(), directoryPath, codeDescription.getText());
-        InquiryChat latestInquiryChat = inquiry.getChats().get(inquiry.getChats().size() - 1);
+        interfaceInquiryChat = inquiry.getChats().get(inquiry.getChats().size() - 1);
         //Code is surrounded by "```" to indicate a code block. Isolate this code:
-        String startOfCode = latestInquiryChat.getMessage().substring(latestInquiryChat.getMessage().indexOf("```") + 3);
+        String startOfCode = interfaceInquiryChat.getMessage().substring(interfaceInquiryChat.getMessage().indexOf("```") + 3);
         String code = startOfCode.substring(0, startOfCode.indexOf("```"));
         if (code.startsWith("java")) {
             code = code.substring(4);
@@ -267,6 +283,43 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         documentedInterfaceEditor = editorService.getEditorHeadless(directoryPath + "/" + fileName);
         // Refresh the UI
         documentedInterfacePanel.add(makeResizable(documentedInterfaceEditor), BorderLayout.CENTER);
+
+        leftContentPane.revalidate();
+        leftContentPane.repaint();
+        System.out.println("Editor: " + documentedInterfaceEditor);
+    }
+
+    private void regenerateUnitTestList(InquiryChat interfaceInquiryChat) {
+        List<UnitTestData> unitTestDataList = unitTestListGeneratorService.generateUnitTestList(inquiry, interfaceInquiryChat);
+        for (UnitTestData unitTestData : unitTestDataList) {
+            addUnitTest(unitTestData.getName(), unitTestData.getDescription());
+        }
+    }
+
+    private void regenerateUnitTest(InquiryChat inquiryChat, UnitTestPanel unitTestPanel) {
+        String directoryPath = directory.getVirtualFile().getPath();
+        if (unitTestPanel.getEditor() != null) {
+            String oldFilePath = directoryPath + "/" + unitTestPanel.getTestName();
+            if (!oldFilePath.endsWith(".java")) {
+                oldFilePath += ".java";
+            }
+            fileRemoverService.deleteCodeFile(oldFilePath);
+        }
+
+        String code = unitTestGeneratorService.generateUnitTestCode(inquiry, inquiryChat, fileName, unitTestPanel.getTestName(), unitTestPanel.getTestDescription());
+        String unitTestFileName = unitTestPanel.getTestName();
+        if (!unitTestFileName.endsWith(".java")) {
+            unitTestFileName += ".java";
+        }
+        try {
+            fileCreatorService.createFile(directoryPath, unitTestFileName, code);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        Editor unitTestEditor = editorService.getEditorHeadless(directoryPath + "/" + unitTestFileName);
+        // Refresh the UI
+        unitTestPanel.setEditor(unitTestEditor);
 
         leftContentPane.revalidate();
         leftContentPane.repaint();
@@ -296,6 +349,39 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         // Rebuild layout and refresh scroll pane
         rebuildUnitTestsPanel();
         refreshScrollPane();
+    }
+
+    private void addUnitTest(String testName, String testDescription) {
+        // Create a new unit test panel component
+        ActionListener removeButtonListener = e -> {
+            JButton removeButton = (JButton) e.getSource();
+            JPanel unitTestComponent = (JPanel) removeButton.getParent();
+            removeUnitTest(unitTestComponent);
+        };
+
+        // Pass the testName and testDescription to the UnitTestPanel
+        UnitTestPanel unitTestPanel = new UnitTestPanel(leftContentPane, removeButtonListener);
+        unitTestPanel.setTestName(testName);
+        unitTestPanel.setTestDescription(testDescription);
+
+        unitTestPanel.getRegenerateButton().addActionListener(
+            e -> {
+                regenerateUnitTest(interfaceInquiryChat, unitTestPanel);
+            }
+        );
+
+        // Add the unit test panel to the unitTestsPanel
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        gbc.gridy = unitTestsPanel.getComponentCount();
+        unitTestsPanel.add(unitTestPanel, gbc);
+
+        // Rebuild layout and refresh scroll pane
+        rebuildUnitTestsPanel();
+        refreshScrollPane();
+        regenerateUnitTest(interfaceInquiryChat, unitTestPanel);
     }
 
     /*private JPanel createUnitTestComponent() {
