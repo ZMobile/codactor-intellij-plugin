@@ -41,7 +41,7 @@ import com.translator.service.codactor.ai.modification.AiFileModificationRestart
 import com.translator.service.codactor.ai.modification.history.FileModificationHistoryService;
 import com.translator.service.codactor.ai.modification.json.FileModificationDataHolderJsonCompatibilityService;
 import com.translator.service.codactor.ai.runner.CodeRunnerService;
-import com.translator.service.codactor.test.SyntaxCheckerService;
+import com.translator.service.codactor.ai.modification.test.SyntaxCheckerService;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 import com.translator.service.codactor.transformer.modification.FileModificationTrackerToFileModificationRangeDataTransformerService;
 

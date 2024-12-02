@@ -341,7 +341,7 @@ inquiry.getChats().add(inquiryChat);
         if (functionsEnabled) {
             processPossibleFunctionCallsHeadless(inquiry, openAiApiKey, model, functions);
         }
-        return getLatestInquiryChat(inquiry.getChats());
+        return getLatestInquiryChatWhereInquiryChatEquals(inquiry.getChats(), previousInquiryChatId);
     }
 
     private void findAlternatesForInquiryChat(List<InquiryChat> inquiryChats, InquiryChat inquiryChat) {
@@ -362,6 +362,15 @@ inquiry.getChats().add(inquiryChat);
         return inquiryChats.stream().max(Comparator.comparing(InquiryChat::getCreationTimestamp))
                 .orElse(null);
     }
+
+    private InquiryChat getLatestInquiryChatWhereInquiryChatEquals(List<InquiryChat> inquiryChats, String previousInquiryChatId) {
+        List<InquiryChat> inquiryChatsFiltered = inquiryChats.stream()
+                .filter(inquiryChat -> inquiryChat.getPreviousInquiryChatId() != null && inquiryChat.getPreviousInquiryChatId().equals(previousInquiryChatId))
+                .collect(Collectors.toList());
+        return inquiryChatsFiltered.stream().max(Comparator.comparing(InquiryChat::getCreationTimestamp))
+                .orElse(null);
+    }
+
 
     private void processPossibleFunctionCalls(InquiryViewer inquiryViewer, Inquiry inquiry, String openAiApiKey, String model, List<GptFunction> functions) {
         InquiryChat latestInquiryChat = getLatestInquiryChat(inquiry.getChats());

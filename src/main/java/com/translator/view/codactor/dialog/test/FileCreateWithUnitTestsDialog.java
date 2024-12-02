@@ -1,22 +1,28 @@
 package com.translator.view.codactor.dialog.test;
 
 import com.google.inject.assistedinject.Assisted;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.EditorSettings;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.ui.JBSplitter;
 import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.codactor.ai.chat.InquiryChat;
-import com.translator.model.codactor.test.UnitTestData;
+import com.translator.model.codactor.ai.modification.test.UnitTestData;
+import com.translator.service.codactor.ai.modification.test.junit.CodeImplementationGeneratorService;
 import com.translator.service.codactor.ide.editor.EditorService;
 import com.translator.service.codactor.ide.file.FileCreatorService;
 import com.translator.service.codactor.ide.file.FileRemoverService;
-import com.translator.service.codactor.test.junit.InterfaceTemplateGeneratorService;
-import com.translator.service.codactor.test.junit.UnitTestGeneratorService;
-import com.translator.service.codactor.test.junit.UnitTestListGeneratorService;
+import com.translator.service.codactor.ai.modification.test.junit.InterfaceTemplateGeneratorService;
+import com.translator.service.codactor.ai.modification.test.junit.UnitTestGeneratorService;
+import com.translator.service.codactor.ai.modification.test.junit.UnitTestListGeneratorService;
 import com.translator.viewmodel.UnitTestPanel;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -26,14 +32,17 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 public class FileCreateWithUnitTestsDialog extends JDialog {
     private Inquiry inquiry;
     private InquiryChat interfaceInquiryChat;
     //private VirtualFile interfaceFile;
     private JBSplitter mainSplitPane;
-    private String fileName;
+    private String interfaceFileName;
+    private String implementationFileName;
     private PsiDirectory directory;
     private JTextField classNameTextField;
     private JTextArea codeDescription;
@@ -41,6 +50,8 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
     private JButton regenerateInterfaceButton;
     private JPanel documentedInterfacePanel;
     private Editor documentedInterfaceEditor;
+    private JPanel implementationPanel;
+    private Editor implementationEditor;
     private JButton regenerateTestsButton;
     private JCheckBox regenerateDescriptionsCheckBox;
     private JPanel unitTestsPanel;
@@ -50,6 +61,7 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
     private InterfaceTemplateGeneratorService interfaceTemplateGeneratorService;
     private UnitTestListGeneratorService unitTestListGeneratorService;
     private UnitTestGeneratorService unitTestGeneratorService;
+    private CodeImplementationGeneratorService codeImplementationGeneratorService;
     private FileCreatorService fileCreatorService;
     private FileRemoverService fileRemoverService;
     private EditorService editorService;
@@ -59,11 +71,13 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
                                          InterfaceTemplateGeneratorService interfaceTemplateGeneratorService,
                                          UnitTestListGeneratorService unitTestListGeneratorService,
                                          UnitTestGeneratorService unitTestGeneratorService,
+                                         CodeImplementationGeneratorService codeImplementationGeneratorService,
                                          FileCreatorService fileCreatorService,
                                          EditorService editorService) {
         this.interfaceTemplateGeneratorService = interfaceTemplateGeneratorService;
         this.unitTestListGeneratorService = unitTestListGeneratorService;
         this.unitTestGeneratorService = unitTestGeneratorService;
+        this.codeImplementationGeneratorService = codeImplementationGeneratorService;
         this.fileCreatorService = fileCreatorService;
         this.editorService = editorService;
         // Set up the main split pane
@@ -101,12 +115,25 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         // Create the IntelliJ code editor (EditorFactory)
         EditorFactory editorFactory = EditorFactory.getInstance();
         Document editorDocument = editorFactory.createDocument("Editor content goes here...");
-        Editor editor = editorFactory.createEditor(editorDocument);
+        implementationEditor = editorFactory.createEditor(editorDocument);
 
         // Wrap the editor in a panel
-        JPanel editorPanel = new JPanel(new BorderLayout());
-        editorPanel.setBorder(BorderFactory.createTitledBorder("Editor"));
-        editorPanel.add(editor.getComponent(), BorderLayout.CENTER);
+        implementationPanel = new JPanel(new BorderLayout());
+        implementationEditor.setBorder(BorderFactory.createTitledBorder("Editor"));
+        implementationPanel.add(implementationEditor.getComponent(), BorderLayout.CENTER);
+
+        // Create a panel for the button and editor
+        JPanel topPanel = new JPanel(new BorderLayout());
+
+        // Create the "Regenerate Implementation" button
+        JButton regenerateButton = new JButton("Regenerate Implementation");
+        regenerateButton.addActionListener(e -> {
+            regenerateImplementation();
+        });
+
+        // Add the button to the top of the top panel
+        topPanel.add(regenerateButton, BorderLayout.NORTH);
+        topPanel.add(implementationPanel, BorderLayout.CENTER);
 
         // Create the bottom panel (unit test runner)
         JPanel unitTestPanel = new JPanel(new BorderLayout());
@@ -119,19 +146,13 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
 
         // Create a vertical split pane
         JBSplitter splitPane = new JBSplitter(true);
-        /*splitPane.setResizeWeight(0.7); // Allocate more space to the editor
-        splitPane.setDividerLocation(300); // Initial divider location
-        splitPane.setOneTouchExpandable(true); // Adds small arrows for quick resizing
-        splitPane.setDividerSize(8);*/
         splitPane.setBackground(new Color(60, 63, 65)); // Match IntelliJ theme
-        splitPane.setFirstComponent(editorPanel);
+        splitPane.setFirstComponent(topPanel);
         splitPane.setSecondComponent(unitTestPanel);
 
         // Add the vertical split pane to the right content pane
         rightContentPane.add(splitPane, BorderLayout.CENTER);
     }
-
-
 
     private void initLeftUIComponents() {
         leftContentPane = new JPanel(new GridBagLayout());
@@ -166,8 +187,32 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         gbc.gridwidth = 1;
         regenerateAllButton = new JButton("Regenerate All");
         regenerateAllButton.addActionListener(e -> {
-            regenerateInterface();
-            regenerateUnitTestList(interfaceInquiryChat);
+            /*CountDownLatch latch = new CountDownLatch(1);
+            ProgressManager.getInstance().run(new Task.Backgroundable(null, "Generating Interface") {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {*/
+                    regenerateInterface();
+                    regenerateUnitTestListAndImplementation(interfaceInquiryChat);
+            /*        latch.countDown();
+                }
+            });
+            try {
+                latch.await(); // Block until all tasks are complete
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interface test generation interrupted", ex);
+            }
+
+            new Thread(() -> {
+                try {
+                    latch.await(); // Block until all tasks are complete
+                } catch (InterruptedException e2) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Interface test generation interrupted", e2);
+                }
+*/
+                regenerateUnitTestList(interfaceInquiryChat);
+            //}).start();
             //More will be added here
         });
         leftContentPane.add(regenerateAllButton, gbc);
@@ -246,9 +291,9 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
 
     private void regenerateInterface() {
         String directoryPath = directory.getVirtualFile().getPath();
-        if (fileName != null) {
-            String oldFilePath = directoryPath + "/" + fileName;
-            if (!fileName.endsWith(".java")) {
+        if (interfaceFileName != null) {
+            String oldFilePath = directoryPath + "/" + interfaceFileName;
+            if (!interfaceFileName.endsWith(".java")) {
                 oldFilePath += ".java";
             }
             fileRemoverService.deleteCodeFile(oldFilePath);
@@ -270,17 +315,17 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         if (code.startsWith("\n")) {
             code = code.substring(1);
         }
-        fileName = classNameTextField.getText();
-        if (!fileName.endsWith(".java")) {
-            fileName += ".java";
+        interfaceFileName = classNameTextField.getText();
+        if (!interfaceFileName.endsWith(".java")) {
+            interfaceFileName += ".java";
         }
         try {
-            fileCreatorService.createFile(directoryPath, fileName, code);
+            fileCreatorService.createFile(directoryPath, interfaceFileName, code);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
 
-        documentedInterfaceEditor = editorService.getEditorHeadless(directoryPath + "/" + fileName);
+        documentedInterfaceEditor = editorService.getEditorHeadless(directoryPath + "/" + interfaceFileName);
         // Refresh the UI
         documentedInterfacePanel.add(makeResizable(documentedInterfaceEditor), BorderLayout.CENTER);
 
@@ -290,10 +335,79 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
     }
 
     private void regenerateUnitTestList(InquiryChat interfaceInquiryChat) {
-        List<UnitTestData> unitTestDataList = unitTestListGeneratorService.generateUnitTestList(inquiry, interfaceInquiryChat);
+        List<UnitTestData> unitTestDataList = new ArrayList<>();
+        ProgressManager.getInstance().run(new Task.Backgroundable(null, "Generating Unit Tests") {
+              @Override
+              public void run(@NotNull ProgressIndicator indicator) {
+                  List<UnitTestData> addList = unitTestListGeneratorService.generateUnitTestList(inquiry, interfaceInquiryChat);
+                  unitTestDataList.addAll(addList);
+                  ApplicationManager.getApplication().invokeLater(() -> {
+                      leftContentPane.revalidate();
+                      leftContentPane.repaint();
+                  });
+                  regenerateUnitTests(unitTestDataList);
+              }
+          });
+    }
+
+    private void regenerateUnitTestListAndImplementation(InquiryChat interfaceInquiryChat) {
+        ProgressManager.getInstance().run(new Task.Backgroundable(null, "Generating Unit Tests") {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                List<UnitTestData> unitTestDataList = unitTestListGeneratorService.generateUnitTestList(inquiry, interfaceInquiryChat);
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    leftContentPane.revalidate();
+                    leftContentPane.repaint();
+                });
+                regenerateUnitTestsThenImplementation(unitTestDataList);
+            }
+        });
+    }
+
+    private void regenerateUnitTests(List<UnitTestData> unitTestDataList) {
         for (UnitTestData unitTestData : unitTestDataList) {
-            addUnitTest(unitTestData.getName(), unitTestData.getDescription());
+            ProgressManager.getInstance().run(new Task.Backgroundable(null, "Generating Unit Tests") {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    addUnitTest(unitTestData.getName(), unitTestData.getDescription());
+                }
+            });
         }
+    }
+
+    private void regenerateUnitTestsThenImplementation(List<UnitTestData> unitTestDataList) {
+        CountDownLatch addUnitTestLatch = new CountDownLatch(unitTestDataList.size());
+        for (UnitTestData unitTestData : unitTestDataList) {
+            ProgressManager.getInstance().run(new Task.Backgroundable(null, "Generating Unit Tests") {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    try {
+                        System.out.println("Generating unit test for: " + unitTestData.getName());
+                        addUnitTest(unitTestData.getName(), unitTestData.getDescription());
+                        System.out.println("Finished generating unit test for: " + unitTestData.getName());
+                    } finally {
+                        addUnitTestLatch.countDown();
+                    }
+                }
+            });
+        }
+        new Thread(() -> {
+            try {
+                addUnitTestLatch.await(); // Wait until all unit tests are added
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Unit test generation interrupted", e);
+            }
+
+            // Update the UI on the Event Dispatch Thread
+            ApplicationManager.getApplication().invokeLater(() -> {
+                leftContentPane.revalidate();
+                leftContentPane.repaint();
+            });
+
+            // Regenerate the implementation
+            regenerateImplementation();
+        }).start();
     }
 
     private void regenerateUnitTest(InquiryChat inquiryChat, UnitTestPanel unitTestPanel) {
@@ -305,25 +419,102 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
             }
             fileRemoverService.deleteCodeFile(oldFilePath);
         }
+        String interfaceCode = documentedInterfaceEditor.getDocument().getText();
+        //Get the package: (package com.translator.view.codactor.dialog.test;)
+        String packageName = interfaceCode.trim().substring(interfaceCode.indexOf("package") + 8, interfaceCode.indexOf(";"));
+        String code = unitTestGeneratorService.generateUnitTestCode(inquiry, inquiryChat, interfaceFileName, packageName, unitTestPanel.getTestName(), unitTestPanel.getTestDescription());
+        if (!code.trim().startsWith("package")) {
+            code = "package " + packageName + ";\n\n" + code;
+        }
+        //Get the code from the interface:
+        // Extract the class name from the generated code
+        String className = extractClassNameFromCode(code);
 
-        String code = unitTestGeneratorService.generateUnitTestCode(inquiry, inquiryChat, fileName, unitTestPanel.getTestName(), unitTestPanel.getTestDescription());
-        String unitTestFileName = unitTestPanel.getTestName();
-        if (!unitTestFileName.endsWith(".java")) {
-            unitTestFileName += ".java";
+        // Use class name as the file name
+        String unitTestinterfaceFileName = className + ".java";
+
+        if (!unitTestinterfaceFileName.endsWith(".java")) {
+            unitTestinterfaceFileName += ".java";
         }
         try {
-            fileCreatorService.createFile(directoryPath, unitTestFileName, code);
+            fileCreatorService.createFile(directoryPath, unitTestinterfaceFileName, code);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
 
-        Editor unitTestEditor = editorService.getEditorHeadless(directoryPath + "/" + unitTestFileName);
-        // Refresh the UI
-        unitTestPanel.setEditor(unitTestEditor);
+        String finalUnitTestinterfaceFileName = unitTestinterfaceFileName;
+        ApplicationManager.getApplication().invokeLater(() -> {
+            Editor unitTestEditor = editorService.getEditorHeadless(directoryPath + "/" + finalUnitTestinterfaceFileName);
+            // Refresh the UI
+            unitTestPanel.setEditor(unitTestEditor);
 
-        leftContentPane.revalidate();
-        leftContentPane.repaint();
-        System.out.println("Editor: " + documentedInterfaceEditor);
+            leftContentPane.revalidate();
+            leftContentPane.repaint();
+            System.out.println("Editor: " + documentedInterfaceEditor);
+        });
+    }
+
+    private void regenerateImplementation() {
+        String directoryPath = directory.getVirtualFile().getPath();
+        if (implementationFileName != null) {
+            String oldFilePath = directoryPath + "/" + implementationFileName;
+            if (!implementationFileName.endsWith(".java")) {
+                oldFilePath += ".java";
+            }
+            fileRemoverService.deleteCodeFile(oldFilePath);
+        } else {
+            ApplicationManager.getApplication().invokeAndWait(() -> {
+                EditorFactory editorFactory = EditorFactory.getInstance();
+                editorFactory.releaseEditor(implementationEditor);
+            });
+        }
+        String code = codeImplementationGeneratorService.generateImplementationCode(inquiry, interfaceInquiryChat);
+        String interfaceCode = documentedInterfaceEditor.getDocument().getText();
+        //Get the package: (package com.translator.view.codactor.dialog.test;)
+        String packageName = interfaceCode.trim().substring(interfaceCode.indexOf("package") + 8, interfaceCode.indexOf(";"));
+        if (!code.trim().startsWith("package")) {
+            code = "package " + packageName + ";\n\n" + code;
+        }
+        //Get the code from the interface:
+        // Extract the class name from the generated code
+        String className = extractClassNameFromCode(code);
+
+        // Use class name as the file name
+        String unitTestinterfaceFileName = className + ".java";
+
+        if (!unitTestinterfaceFileName.endsWith(".java")) {
+            unitTestinterfaceFileName += ".java";
+        }
+        try {
+            fileCreatorService.createFile(directoryPath, unitTestinterfaceFileName, code);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        implementationEditor = editorService.getEditorHeadless(directoryPath + "/" + interfaceFileName);
+        // Refresh the UI
+        implementationPanel.add(makeResizable(implementationEditor), BorderLayout.CENTER);
+
+        implementationPanel.revalidate();
+        implementationPanel.repaint();
+    }
+
+    private void runUnitTestsOnTheImplementation() {
+
+    }
+
+    // Helper method to extract class name
+    private String extractClassNameFromCode(String code) {
+        String[] lines = code.split("\\n");
+        for (String line : lines) {
+            line = line.trim();
+            if (line.startsWith("class ") || line.startsWith("public class ")) {
+                line = line.substring(line.indexOf("class ") + 6);
+                // Extract the word after "class"
+                return line.split("\\s")[0];
+            }
+        }
+        System.out.println("Code: " + code);
+        throw new IllegalStateException("No class name found in code");
     }
 
     private void addUnitTest() {

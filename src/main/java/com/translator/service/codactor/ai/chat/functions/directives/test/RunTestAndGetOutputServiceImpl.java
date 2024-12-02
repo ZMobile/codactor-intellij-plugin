@@ -18,6 +18,7 @@ import java.io.PrintStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputService {
@@ -92,5 +93,71 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
         }
 
         return resultString.toString();
+    }
+
+    public List<String> runTestsAndGetOutputs(String implementationFilePath, List<String> unitTestFilePaths) throws Exception {
+        List<String> results = new ArrayList<>();
+
+        // Normalize file paths and validate the existence of build output files
+        HashMap<String, String> classToBuildOutputPath = new HashMap<>();
+        for (String testFilePath : unitTestFilePaths) {
+            String isolatedClassName = testFilePath.substring(testFilePath.lastIndexOf("/") + 1, testFilePath.lastIndexOf("."));
+            String testFilePackagePath = testFilePath.substring(testFilePath.indexOf("java/") + 5, testFilePath.lastIndexOf("/")).replace("/", ".");
+            String testFileClassName = testFilePackagePath + "." + isolatedClassName;
+            String buildOutputParentDirectoryPath = relevantBuildOutputLocatorService.locateRelevantBuildOutput(testFilePath);
+            String buildOutputPath = buildOutputParentDirectoryPath + "/" + isolatedClassName + ".class";
+
+            classToBuildOutputPath.put(testFileClassName, buildOutputPath);
+            File buildOutputFile = new File(buildOutputPath);
+            System.out.println("Build output file exists for " + testFileClassName + ": " + buildOutputFile.exists());
+            if (!buildOutputFile.exists()) {
+                throw new Exception("Build output file does not exist: " + buildOutputPath + ". Please try again in a few moments after the compilation has completed.");
+            }
+        }
+
+        // Redirect System.out to capture output
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+        PrintStream printStream = new PrintStream(outputStream);
+        System.setOut(printStream);
+
+        try {
+            // Prepare to dynamically load test classes
+            List<String> targetFilePaths = new ArrayList<>(unitTestFilePaths);
+            targetFilePaths.add(implementationFilePath);
+            CustomURLClassLoader classLoader = dynamicClassLoaderService.dynamicallyLoadClass(targetFilePaths);
+
+            // Run each test class
+            for (String testFileClassName : classToBuildOutputPath.keySet()) {
+                StringBuilder resultString = new StringBuilder();
+                try {
+                    // Dynamically load and run the test class
+                    Result result = (Result) classLoader.loadClass(JUnitCore.class.getName())
+                            .getMethod("runClasses", Class[].class)
+                            .invoke(null, (Object) new Class[]{classLoader.loadClass(testFileClassName)});
+
+                    for (Failure failure : result.getFailures()) {
+                        resultString.append("\n").append(failure.toString());
+                    }
+                    resultString.append("\nSuccess: ").append(result.wasSuccessful());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    resultString.append("\nError: ").append(e.getMessage());
+                } finally {
+                    // Capture System.out output for this test
+                    String systemOutOutput = outputStream.toString();
+                    if (!systemOutOutput.isEmpty()) {
+                        resultString.append("\nSystem.out output:\n").append(systemOutOutput);
+                    }
+                    results.add(resultString.toString());
+                    outputStream.reset(); // Clear the output stream for the next test
+                }
+            }
+        } finally {
+            // Restore the original System.out
+            System.setOut(originalOut);
+        }
+
+        return results;
     }
 }

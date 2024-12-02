@@ -9,10 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.translator.dao.CodeTranslatorDaoConfig;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.dao.modification.CodeModificationDao;
-import com.translator.service.codactor.ai.chat.functions.directives.test.RunTestAndGetOutputService;
-import com.translator.service.codactor.ai.chat.functions.directives.test.RunTestAndGetOutputServiceImpl;
-import com.translator.service.codactor.ai.chat.functions.directives.test.TestDirectiveFunctionProcessorService;
-import com.translator.service.codactor.ai.chat.functions.directives.test.TestDirectiveFunctionProcessorServiceImpl;
+import com.translator.service.codactor.ai.chat.functions.directives.test.*;
 import com.translator.service.codactor.ai.modification.authorization.VerifyIsTestFileService;
 import com.translator.service.codactor.ai.modification.authorization.VerifyIsTestFileServiceImpl;
 import com.translator.service.codactor.ai.modification.diff.AiFileModificationSuggestionDiffViewerService;
@@ -75,9 +72,9 @@ import com.translator.service.codactor.ai.openai.OpenAiModelService;
 import com.translator.service.codactor.ai.openai.OpenAiModelServiceImpl;
 import com.translator.service.codactor.ai.runner.CodeRunnerService;
 import com.translator.service.codactor.ai.runner.CodeRunnerServiceImpl;
-import com.translator.service.codactor.test.SyntaxCheckerService;
-import com.translator.service.codactor.test.SyntaxCheckerServiceImpl;
-import com.translator.service.codactor.test.junit.*;
+import com.translator.service.codactor.ai.modification.test.SyntaxCheckerService;
+import com.translator.service.codactor.ai.modification.test.SyntaxCheckerServiceImpl;
+import com.translator.service.codactor.ai.modification.test.junit.*;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerServiceImpl;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
@@ -201,6 +198,8 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(InterfaceTemplateGeneratorService.class).to(InterfaceTemplateGeneratorServiceImpl.class);
         bind(UnitTestGeneratorService.class).to(UnitTestGeneratorServiceImpl.class);
         bind(UnitTestListGeneratorService.class).to(UnitTestListGeneratorServiceImpl.class);
+        bind(CodeImplementationGeneratorService.class).to(CodeImplementationGeneratorServiceImpl.class);
+        bind(CompileAndRunTestsService.class).to(CompileAndRunTestsServiceImpl.class);
     }
 
     @Singleton
