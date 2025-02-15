@@ -5,5 +5,7 @@ import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnit
 import java.util.List;
 
 public interface CompileAndRunTestsService {
-    List<String> compileAndRunUnitTests(String implementationFilePath, List<String> unitTestFilePaths);
+    //List<String> compileAndRunUnitTests(String implementationFilePath, List<String> unitTestFilePaths);
+
+    List<String> compileAndRunUnitTests(String implementationFilePath, String directoryPath);
 }

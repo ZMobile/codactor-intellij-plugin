@@ -47,6 +47,9 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
         if (fileModification == null) {
             return;
         }
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+                    removeHighlight(fileModification);
+                });
         VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(fileModification.getFilePath());
         if (virtualFile == null) {
             return;
@@ -64,7 +67,8 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
     public void highlightTextArea(FileModification fileModification, Editor editor) {
         System.out.println("The area is highlighted");
         ApplicationManager.getApplication().invokeLater(() -> {
-            removeAllHighlights(editor);
+            //removeAllHighlights(editor);
+            removeHighlight(fileModification);
             if (fileModification.getRangeMarker() == null) {
                 return;
             }
@@ -175,6 +179,53 @@ public class CodeHighlighterServiceImpl implements CodeHighlighterService {
         }
 
         addHighlight(editor, startIndex, endIndex, highlightColor);
+    }
+
+    @Override
+    public void updateHighlights(FileModificationTracker fileModificationTracker) {
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(fileModificationTracker.getFilePath());
+        if (virtualFile == null) {
+            return;
+        }
+
+        Editor editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
+        if (editor == null) {
+            return;
+        }
+
+        highlightTextArea(fileModificationTracker, editor);
+    }
+
+    @Override
+    public void removeHighlight(FileModification fileModification) {
+        System.out.println("This gets called A");
+        // Find the highlighter which intersects the file modification range and remove it
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(fileModification.getFilePath());
+        if (virtualFile == null) {
+            return;
+        }
+
+        Editor editor = editorExtractorService.getEditorForVirtualFile(project, virtualFile);
+        if (editor == null) {
+            return;
+        }
+
+        int modificationStart = fileModification.getRangeMarker().getStartOffset();
+        int modificationEnd = fileModification.getRangeMarker().getEndOffset();
+
+        for (RangeHighlighter highlighter : editor.getMarkupModel().getAllHighlighters()) {
+            int highlightStart = highlighter.getStartOffset();
+            int highlightEnd = highlighter.getEndOffset();
+            System.out.println("Highlight start: " + highlightStart + " Highlight end: " + highlightEnd);
+            // Check for intersection between ranges
+            if ((highlightStart >= modificationStart && highlightEnd <= modificationEnd) ||
+                    (highlightStart <= modificationEnd && highlightEnd >= modificationEnd) ||
+                    (highlightStart <= modificationStart && highlightEnd >= modificationStart)
+            ) {
+                System.out.println("This gets called B");
+                editor.getMarkupModel().removeHighlighter(highlighter);
+            }
+        }
     }
 
     @Override

@@ -61,7 +61,7 @@ public class FileModificationServiceImpl implements FileModificationService {
         FileModification fileModification = new FileModification(filePath, modification, rangeMarker, beforeText, modificationType, priorContext);
         if (modificationType != ModificationType.CREATE) {
             guardedBlockService.addFileModificationGuardedBlock(fileModification, startIndex, endIndex);
-            codeHighlighterService.highlightTextArea(fileModification);
+            //codeHighlighterService.highlightTextArea(fileModification);
         }
         return fileModification;
     }
@@ -72,10 +72,10 @@ public class FileModificationServiceImpl implements FileModificationService {
                 fileModification.getRangeMarker().dispose();
             }
             guardedBlockService.removeFileModificationGuardedBlock(fileModification.getId());
-            codeHighlighterService.highlightTextArea(fileModification);
             if (backgroundTaskMapperService.hasTask(fileModification.getId())) {
                 backgroundTaskMapperService.cancelTask(fileModification.getId());
             }
+            //codeHighlighterService.removeHighlight(fileModification);
         }
     }
 
@@ -96,6 +96,11 @@ public class FileModificationServiceImpl implements FileModificationService {
         if (fileModification.getModificationType() == ModificationType.TRANSLATE) {
             fileTranslatorService.translateFile(fileModification.getFilePath(), fileModification.getNewFileType().trim().toLowerCase());
         }
+        /*if (fileModification.getModificationType() == ModificationType.MODIFY_SELECTION || fileModification.getModificationType() == ModificationType.FIX_SELECTION) {
+            codeHighlighterService.removeHighlight(fileModification);
+        } else if (fileModification.getModificationType() != ModificationType.CREATE) {
+            codeHighlighterService.removeAllHighlights(fileModification.getFilePath());
+        }*/
     }
 
     public void readyFileModificationUpdate(FileModification fileModification, String subjectLine, List<FileModificationSuggestionRecord> modificationOptions) {
@@ -115,7 +120,7 @@ public class FileModificationServiceImpl implements FileModificationService {
             fileModification.setDone(false);
             fileModification.getModificationOptions().clear();
         }
-        codeHighlighterService.highlightTextArea(fileModification);
+        //codeHighlighterService.highlightTextArea(fileModification);
     }
 
     @Override
@@ -124,7 +129,7 @@ public class FileModificationServiceImpl implements FileModificationService {
             backgroundTaskMapperService.cancelTask(fileModification.getId());
         }
         fileModification.setError(true);
-        codeHighlighterService.highlightTextArea(fileModification);
+        //codeHighlighterService.highlightTextArea(fileModification);
     }
 
     @Override

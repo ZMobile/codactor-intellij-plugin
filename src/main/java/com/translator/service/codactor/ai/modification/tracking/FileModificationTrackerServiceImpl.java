@@ -21,6 +21,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     private final FileModificationService fileModificationService;
     private final FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService;
     private final EditorClickHandlerService editorClickHandlerService;
+    private final CodeHighlighterService codeHighlighterService;
     private final List<FileModificationListener> modificationUpdateListeners;
     private final List<FileModificationListener> modificationAddedListeners;
     private final List<FileModificationListener> modificationRemovedListeners;
@@ -32,12 +33,14 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
     public FileModificationTrackerServiceImpl(Project project,
                                               FileModificationService fileModificationService,
                                               FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService,
-                                              EditorClickHandlerService editorClickHandlerService) {
+                                              EditorClickHandlerService editorClickHandlerService,
+                                              CodeHighlighterService codeHighlighterService) {
         this.project = project;
         this.activeModificationFiles = new HashMap<>();
         this.fileModificationService = fileModificationService;
         this.fileModificationSuggestionModificationTrackerService = fileModificationSuggestionModificationTrackerService;
         this.editorClickHandlerService = editorClickHandlerService;
+        this.codeHighlighterService = codeHighlighterService;
         this.modificationUpdateListeners = new ArrayList<>();
         this.modificationAddedListeners = new ArrayList<>();
         this.modificationRemovedListeners = new ArrayList<>();
@@ -74,6 +77,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         for (FileModificationListener listener : modificationAddedListeners) {
             listener.onModificationUpdate(fileModification);
         }
+        codeHighlighterService.updateHighlights(fileModificationTracker);
         return fileModification.getId();
     }
 
@@ -92,6 +96,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
             listener.onModificationUpdate(fileModification);
         }
         removeModification(modificationId);
+        codeHighlighterService.updateHighlights(fileModificationTracker);
     }
 
     public void removeModification(String modificationId) {
@@ -122,6 +127,7 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         for (FileModificationListener listener : modificationRemovedListeners) {
             listener.onModificationUpdate(fileModification);
         }
+        codeHighlighterService.updateHighlights(fileModificationTracker);
     }
 
     @Override
@@ -134,6 +140,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         for (FileModificationListener listener : modificationReadyListeners) {
             listener.onModificationUpdate(fileModification);
         }
+        FileModificationTracker fileModificationTracker = activeModificationFiles.get(fileModification.getFilePath());
+        codeHighlighterService.updateHighlights(fileModificationTracker);
     }
 
     @Override
@@ -141,6 +149,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         FileModification fileModification = getModification(modificationId);
         fileModificationService.undoReadyFileModification(fileModification);
         updateFileModificationListeners(fileModification);
+        FileModificationTracker fileModificationTracker = activeModificationFiles.get(fileModification.getFilePath());
+        codeHighlighterService.updateHighlights(fileModificationTracker);
     }
 
     @Override
@@ -217,6 +227,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         for (FileModificationListener listener : modificationErrorListeners) {
             listener.onModificationUpdate(fileModification);
         }
+        FileModificationTracker fileModificationTracker = activeModificationFiles.get(fileModification.getFilePath());
+        codeHighlighterService.updateHighlights(fileModificationTracker);
     }
 
     @Override
@@ -229,6 +241,8 @@ public class FileModificationTrackerServiceImpl implements FileModificationTrack
         for (FileModificationListener listener : modificationUpdateListeners) {
             listener.onModificationUpdate(fileModification);
         }
+        FileModificationTracker fileModificationTracker = activeModificationFiles.get(fileModification.getFilePath());
+        codeHighlighterService.updateHighlights(fileModificationTracker);
     }
 
         @Override

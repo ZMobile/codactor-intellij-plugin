@@ -1,32 +1,63 @@
 package com.translator.service.codactor.ai.chat.functions.directives.test;
 
+import com.intellij.execution.Executor;
+import com.intellij.execution.executors.DefaultRunExecutor;
+import com.intellij.execution.junit.JUnitConfiguration;
+import com.intellij.execution.junit.JUnitConfigurationType;
+import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
+import com.intellij.execution.runners.ProgramRunner;
+import com.intellij.execution.testframework.TestSearchScope;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.compiler.CompileStatusNotification;
+import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirectiveSession;
 import com.translator.service.codactor.io.DynamicClassCompilerService;
 import com.translator.service.codactor.io.DynamicClassLoaderService;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService {
+    private final Project project;
     private final DynamicClassCompilerService dynamicClassCompilerService;
     private final RunTestAndGetOutputService runTestAndGetOutputService;
+    private final FindTestsInDirectoryService findTestsInDirectoryService;
+    private final PackageFromFilePathRetrievalService packageFromFilePathRetrievalService;
 
     @Inject
-    public CompileAndRunTestsServiceImpl(DynamicClassCompilerService dynamicClassCompilerService,
-                                         RunTestAndGetOutputService runTestAndGetOutputService) {
+    public CompileAndRunTestsServiceImpl(Project project,
+                                         DynamicClassCompilerService dynamicClassCompilerService,
+                                         RunTestAndGetOutputService runTestAndGetOutputService,
+                                         FindTestsInDirectoryService findTestsInDirectoryService,
+                                         PackageFromFilePathRetrievalService packageFromFilePathRetrievalService) {
+        this.project = project;
         this.dynamicClassCompilerService = dynamicClassCompilerService;
         this.runTestAndGetOutputService = runTestAndGetOutputService;
+        this.findTestsInDirectoryService = findTestsInDirectoryService;
+        this.packageFromFilePathRetrievalService = packageFromFilePathRetrievalService;
     }
 
-    @Override
+    /*@Override
+    public List<String> compileAndRunUnitTests(String implementationFilePath, String directoryPath) {
+        List<String> testFilePaths = findTestsInDirectoryService.findTestsInDirectory(directoryPath);
+        for (String testFilePath : testFilePaths) {
+            System.out.println("Found test file: " + testFilePath);
+        }
+        return compileAndRunUnitTests(implementationFilePath, testFilePaths);
+    }*/
+
+    /*@Override
     public List<String> compileAndRunUnitTests(String implementationFilePath, List<String> unitTestFilePaths) {
-        CountDownLatch latch = new CountDownLatch(unitTestFilePaths.size() + 1); // +1 for the implementation file
+        //CountDownLatch latch = new CountDownLatch(unitTestFilePaths.size() + 1); // +1 for the implementation file
+        CountDownLatch latch = new CountDownLatch(1); // +1 for the implementation file
         AtomicReference<List<String>> resultsRef = new AtomicReference<>();
         AtomicReference<Exception> compilationException = new AtomicReference<>();
 
@@ -44,6 +75,7 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
             } catch (Exception e) {
                 compilationException.set(e);
             } finally {
+                System.out.println("Compilation completed.");
                 latch.countDown(); // Signal that this compilation is complete
             }
         };
@@ -54,6 +86,7 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
         }, ModalityState.defaultModalityState());
 
         // Compile the implementation file
+        System.out.println("Implementation file path: " + implementationFilePath);
         dynamicClassCompilerService.dynamicallyCompileClass(implementationFilePath, compileCallback);
 
         // Compile all unit test files
@@ -61,6 +94,7 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
             dynamicClassCompilerService.dynamicallyCompileClass(testFilePath, compileCallback);
         }
 
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
         try {
             // Wait for all compilations to complete
             latch.await();
@@ -73,13 +107,99 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
 
             // Run all compiled tests
             resultsRef.set(runTestAndGetOutputService.runTestsAndGetOutputs(implementationFilePath, unitTestFilePaths));
+            for (String result : resultsRef.get()) {
+                System.out.println(result);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to compile and run unit tests: " + e.getMessage(), e);
         }
+        });
 
         // Return the results of the test runs
         return resultsRef.get();
+        //return new ArrayList<>();
+    }*/
+
+    @Override
+    public List<String> compileAndRunUnitTests(String implementationFilePath, String directoryPath) {
+        List<String> testFilePaths = findTestsInDirectoryService.findTestsInDirectory(directoryPath);
+        System.out.println("This gets called 1");
+        CompilerManager compilerManager = CompilerManager.getInstance(project);
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<List<String>> resultsRef = new AtomicReference<>();
+        AtomicReference<Exception> compilationException = new AtomicReference<>();
+
+        /* Save documents before compilation
+        ApplicationManager.getApplication().invokeAndWait(
+                () -> FileDocumentManager.getInstance().saveAllDocuments(),
+                ModalityState.defaultModalityState()
+        );*/
+
+        CompileStatusNotification compileCallback = (aborted, errors, warnings, compileContext) -> {
+            try {
+                if (aborted) {
+                    System.err.println("Compilation aborted.");
+                    compilationException.set(new Exception("Compilation aborted."));
+                } else if (errors > 0) {
+                    System.err.println("Compilation finished with errors.");
+                    compilationException.set(new Exception("Compilation finished with errors."));
+                } else {
+                    System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                }
+            } finally {
+                try {
+                    resultsRef.set(runTestAndGetOutputService.runTestsAndGetOutputs(
+                            implementationFilePath, testFilePaths
+                    ));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                /*for (String result : resultsRef.get()) {
+                    System.out.println(result);
+                }*/
+                System.out.println("Full project rebuild completed successfully.");
+                latch.countDown();
+            }
+        };
+        System.out.println("This gets called 2");
+        // Call rebuild on the EDT (required by IntelliJ)
+        ApplicationManager.getApplication().invokeLater(() -> {
+            System.out.println("Starting incremental project compile on EDT...");
+            compilerManager.compile(compilerManager.createProjectCompileScope(project), compileCallback);
+        });
+
+        try {
+            // Wait for all compilations to complete
+            latch.await();
+
+            return resultsRef.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to compile and run unit tests: " + e.getMessage(), e);
+        }
+        // Wait for compilation completion on a background thread
+        /*try {
+            //latch.await();
+            if (compilationException.get() != null) {
+                throw compilationException.get();
+            }
+            // Run tests after compilation completes
+            resultsRef.set(runTestAndGetOutputService.runTestsAndGetOutputs(
+                    implementationFilePath, unitTestFilePaths
+            ));
+            for (String result : resultsRef.get()) {
+                System.out.println(result);
+            }
+            System.out.println("Full project rebuild completed successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to rebuild the entire project: " + e.getMessage(), e);
+        }*
+
+        return resultsRef.get();*
+    }*/
+        //return new ArrayList<>();
     }
 
 }

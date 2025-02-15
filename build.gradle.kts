@@ -1,15 +1,16 @@
 plugins {
     id("java")
-    id("org.jetbrains.intellij") version "1.13.3"
+    id("org.jetbrains.intellij") version "1.17.4"
 }
 
 group = "com.codactor"
-version = "4.6-BETA"
+version = "4.7-BETA"
 
 repositories {
     mavenCentral()
     mavenLocal()
 }
+
 dependencies {
     implementation("io.github.kju2.languagedetector:language-detector:1.0.5")
 }
@@ -23,7 +24,7 @@ java {
 intellij {
     version.set("2022.1.4")
     type.set("IC") // Target IDE Platform
-    plugins.set(listOf("java"))
+    plugins.set(listOf("java", "junit"))
 }
 
 tasks {
@@ -61,6 +62,13 @@ tasks {
         implementation("com.github.gumtreediff:client:3.0.0")
         implementation("com.github.gumtreediff:gen.srcml:3.0.0")
         implementation("org.bitbucket.cowwoc:diff-match-patch:1.2")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
+        //testImplementation("org.junit.platform:junit-platform-engine:1.9.3")
+        testImplementation("org.junit.platform:junit-platform-launcher:1.12.0-M1")
+        testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+        testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+        testImplementation("org.junit.vintage:junit-vintage-engine:5.8.2") // For JUnit 4 compatibility
+        //testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
     }
 
     publishPlugin {

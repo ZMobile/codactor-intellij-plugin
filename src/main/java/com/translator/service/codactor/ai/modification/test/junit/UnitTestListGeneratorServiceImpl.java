@@ -20,10 +20,12 @@ public class UnitTestListGeneratorServiceImpl implements UnitTestListGeneratorSe
     }
 
     public List<UnitTestData> generateUnitTestList(Inquiry inquiry, InquiryChat interfaceInquiryChat) {
+        System.out.println("Generating unit test list...");
         String question = "Under the principle of Test Driven Development, what unit tests should be developed to make sure this code works? Please list their names and describe them";
         InquiryChat inquiryChat = inquiryService.continueHeadlessInquiry(inquiry, interfaceInquiryChat.getId(), question, "gpt-4o", false);
         //Break down the response into a list of UnitTestData.
         String fullMessage = inquiryChat.getMessage();
+        System.out.println("Full message: " + fullMessage);
         return parseUnitTestData(fullMessage);
     }
 

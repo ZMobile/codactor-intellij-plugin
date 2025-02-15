@@ -19,7 +19,11 @@ public interface CodeHighlighterService {
 
     void highlightTextArea(FileModificationTracker fileModificationTracker, Editor editor);
 
+    void updateHighlights(FileModificationTracker fileModificationTracker);
+
     void addHighlight(String filePath, int startIndex, int endIndex, Color highlightColor);
+
+    void removeHighlight(FileModification fileModification);
 
     void removeAllHighlights(String filePath);
 

@@ -341,7 +341,8 @@ inquiry.getChats().add(inquiryChat);
         if (functionsEnabled) {
             processPossibleFunctionCallsHeadless(inquiry, openAiApiKey, model, functions);
         }
-        return getLatestInquiryChatWhereInquiryChatEquals(inquiry.getChats(), previousInquiryChatId);
+        InquiryChat questionInquiryChat = getLatestInquiryChatWhereInquiryChatEquals(inquiry.getChats(), previousInquiryChatId);
+        return getLatestInquiryChatWhereInquiryChatEquals(inquiry.getChats(), questionInquiryChat.getId());
     }
 
     private void findAlternatesForInquiryChat(List<InquiryChat> inquiryChats, InquiryChat inquiryChat) {

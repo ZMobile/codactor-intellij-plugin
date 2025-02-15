@@ -33,7 +33,7 @@ public class CreateAndRunUnitTestDirective extends Directive {
         Property testCodeProperty = new Property("string", "The unit test code", null, null);
         createUnitTestCodeFileParams.getProperties().put("code", testCodeProperty);
         createUnitTestCodeFileParams.getRequired().add("code");
-        GptFunction createUnitTestCodeFile = new GptFunction("create_unit_test_code_file", "Create the unit test code file. NOTE: Use packages org.junit for instance org.junit.Test or org.junit.Asset.asserEquals or it wont work. DO NOT USE JUPITER.", createUnitTestCodeFileParams);
+        GptFunction createUnitTestCodeFile = new GptFunction("create_unit_test_code_file", "Create the unit test code file. NOTE: Use packages org.junit for instance org.junit.Test or org.junit.Asset.asserEquals or it wont work. DO NOT USE JUNIT 5 DO NOT USE JUPITER or it wont work. Only use JUNIT 4 (org.junit.test for example)", createUnitTestCodeFileParams);
         this.phaseOneFunctions.add(createUnitTestCodeFile);
         this.phaseOneAndTwoFunctions = new ArrayList<>();
         Parameters readSubjectCodeFileParams = new Parameters("object");

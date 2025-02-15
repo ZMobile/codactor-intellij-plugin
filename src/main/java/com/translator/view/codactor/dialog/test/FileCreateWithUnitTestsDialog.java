@@ -340,6 +340,9 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
               @Override
               public void run(@NotNull ProgressIndicator indicator) {
                   List<UnitTestData> addList = unitTestListGeneratorService.generateUnitTestList(inquiry, interfaceInquiryChat);
+                  for (UnitTestData unitTestData : addList) {
+                      System.out.println("Unit Test: " + unitTestData.getName());
+                  }
                   unitTestDataList.addAll(addList);
                   ApplicationManager.getApplication().invokeLater(() -> {
                       leftContentPane.revalidate();
@@ -480,22 +483,23 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         String className = extractClassNameFromCode(code);
 
         // Use class name as the file name
-        String unitTestinterfaceFileName = className + ".java";
+        String implementationFileName = className + ".java";
 
-        if (!unitTestinterfaceFileName.endsWith(".java")) {
-            unitTestinterfaceFileName += ".java";
+        if (!implementationFileName.endsWith(".java")) {
+            implementationFileName += ".java";
         }
         try {
-            fileCreatorService.createFile(directoryPath, unitTestinterfaceFileName, code);
+            fileCreatorService.createFile(directoryPath, implementationFileName, code);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
-        implementationEditor = editorService.getEditorHeadless(directoryPath + "/" + interfaceFileName);
+        implementationEditor = editorService.getEditorHeadless(directoryPath + "/" + implementationFileName);
         // Refresh the UI
-        implementationPanel.add(makeResizable(implementationEditor), BorderLayout.CENTER);
-
-        implementationPanel.revalidate();
-        implementationPanel.repaint();
+        ApplicationManager.getApplication().invokeLater(() -> {
+                    implementationPanel.add(makeResizable(implementationEditor), BorderLayout.CENTER);
+            implementationPanel.revalidate();
+            implementationPanel.repaint();
+                });
     }
 
     private void runUnitTestsOnTheImplementation() {
@@ -704,8 +708,10 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
 
     private JPanel makeResizable(Editor editor) {
         JPanel resizablePanel = new JPanel(new BorderLayout());
-        JScrollPane editorScrollPane = new JScrollPane(editor.getComponent());
-        resizablePanel.add(editorScrollPane, BorderLayout.CENTER);
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            JScrollPane editorScrollPane = new JScrollPane(editor.getComponent());
+            resizablePanel.add(editorScrollPane, BorderLayout.CENTER);
+        });
 
         JPanel resizeHandle = createResizeHandle(resizablePanel);
         resizablePanel.add(resizeHandle, BorderLayout.SOUTH);

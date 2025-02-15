@@ -22,8 +22,9 @@ public class UnitTestGeneratorServiceImpl implements UnitTestGeneratorService {
         if (fileNameStripped.endsWith(".java")) {
             fileNameStripped = fileNameStripped.substring(0, fileNameStripped.length() - 5);
         }
-        String question = "Can you please provide the unit test code for this test: file name: " + unitTestName + " description: " + unitTestDescription + ". The implementation subject of these tests (" + packageName + "." + fileNameStripped + "Impl) has not been generated yet as we are adhering to TDD principles and making the unit test first, therefore please just act like its there, and make sure to import the class properly.";
+        String question = "Can you please provide the unit test code for this test: file name: " + unitTestName + " description: " + unitTestDescription + ". The implementation subject of these tests (" + packageName + "." + fileNameStripped + "Impl) has not been generated yet as we are adhering to TDD principles and making the unit test first, therefore please just act like its there, and make sure to import the class properly. DO NOT USE JUNIT 5 DO NOT USE JUPITER or it wont work. Only use JUNIT 4 (org.junit.test for example)";
         InquiryChat inquiryChat = inquiryService.continueHeadlessInquiry(inquiry, testDescriptionsInquiryChat.getId(), question, "gpt-4o", false);
+        System.out.println("Full message: " + inquiryChat.getMessage());
         String startOfCode = inquiryChat.getMessage().substring(inquiryChat.getMessage().indexOf("```") + 3);
         String code = startOfCode.substring(0, startOfCode.indexOf("```"));
         if (code.startsWith("java")) {

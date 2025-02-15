@@ -56,7 +56,6 @@ import com.translator.service.codactor.ai.chat.functions.search.ProjectSearchSer
 import com.translator.service.codactor.ai.chat.inquiry.*;
 import com.translator.service.codactor.io.*;
 import com.translator.service.codactor.line.LineCounterService;
-import com.translator.service.codactor.line.LineCounterServiceImpl;
 import com.translator.service.codactor.ai.modification.*;
 import com.translator.service.codactor.ai.modification.history.FileModificationHistoryService;
 import com.translator.service.codactor.ai.modification.history.FileModificationHistoryServiceImpl;
@@ -75,6 +74,7 @@ import com.translator.service.codactor.ai.runner.CodeRunnerServiceImpl;
 import com.translator.service.codactor.ai.modification.test.SyntaxCheckerService;
 import com.translator.service.codactor.ai.modification.test.SyntaxCheckerServiceImpl;
 import com.translator.service.codactor.ai.modification.test.junit.*;
+import com.translator.service.codactor.line.LineCounterServiceImpl;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerService;
 import com.translator.service.codactor.transformer.FileModificationObjectHolderToFileModificationDataReferenceHolderTransformerServiceImpl;
 import com.translator.service.codactor.transformer.HistoricalContextObjectDataHolderToHistoricalContextObjectHolderTransformer;
@@ -200,6 +200,8 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(UnitTestListGeneratorService.class).to(UnitTestListGeneratorServiceImpl.class);
         bind(CodeImplementationGeneratorService.class).to(CodeImplementationGeneratorServiceImpl.class);
         bind(CompileAndRunTestsService.class).to(CompileAndRunTestsServiceImpl.class);
+        bind(FindTestsInDirectoryService.class).to(FindTestsInDirectoryServiceImpl.class);
+        bind(PackageFromFilePathRetrievalService.class).to(PackageFromFilePathRetrievalServiceImpl.class);
     }
 
     @Singleton
@@ -219,8 +221,9 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
     public FileModificationTrackerService getFileModificationTrackerService(Project project,
                                                                             FileModificationService fileModificationService,
                                                                             FileModificationSuggestionModificationTrackerService fileModificationSuggestionModificationTrackerService,
-                                                                            EditorClickHandlerService editorClickHandlerService) {
-        return new FileModificationTrackerServiceImpl(project, fileModificationService, fileModificationSuggestionModificationTrackerService, editorClickHandlerService);
+                                                                            EditorClickHandlerService editorClickHandlerService,
+                                                                            CodeHighlighterService codeHighlighterService) {
+        return new FileModificationTrackerServiceImpl(project, fileModificationService, fileModificationSuggestionModificationTrackerService, editorClickHandlerService, codeHighlighterService);
     }
 
     @Provides

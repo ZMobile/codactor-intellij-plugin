@@ -53,6 +53,7 @@ public class DynamicClassLoaderServiceImpl implements DynamicClassLoaderService 
         File buildOutputRootDir = new File(buildOutputRootDirPath);
         System.out.println("Build output root dir path: " + buildOutputRootDirPath);
         URL[] urls = { buildOutputRootDir.toURI().toURL() };
+
         return new CustomURLClassLoader(urls, getClass().getClassLoader(), targetClassNames);
     }
 }

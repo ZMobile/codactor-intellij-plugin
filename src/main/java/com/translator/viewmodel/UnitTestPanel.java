@@ -20,6 +20,7 @@ public class UnitTestPanel extends JPanel {
     private JTextArea testDescriptionArea;
     private JPanel leftContentPane;
 
+
     public UnitTestPanel(JPanel leftContentPane, ActionListener removeActionListener) {
         this.leftContentPane = leftContentPane;
         setLayout(new BorderLayout());

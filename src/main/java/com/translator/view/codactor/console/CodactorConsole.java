@@ -2,14 +2,10 @@ package com.translator.view.codactor.console;
 
 import com.google.gson.Gson;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ModalityState;
-import com.intellij.openapi.compiler.CompileStatusNotification;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.fileEditor.*;
-import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -20,11 +16,8 @@ import com.translator.model.codactor.ide.file.FileItem;
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.service.codactor.ai.chat.context.PromptContextService;
 import com.translator.service.codactor.ai.chat.functions.InquiryFunctionCallProcessorService;
-import com.translator.service.codactor.ai.chat.functions.directives.test.RunTestAndGetOutputService;
-import com.translator.service.codactor.ai.chat.functions.directives.test.RunTestAndGetOutputServiceImpl;
+import com.translator.service.codactor.ai.chat.functions.directives.test.CompileAndRunTestsService;
 import com.translator.service.codactor.ai.modification.AiCodeModificationService;
-import com.translator.service.codactor.ai.modification.authorization.VerifyIsTestFileService;
-import com.translator.service.codactor.ai.modification.authorization.VerifyIsTestFileServiceImpl;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ide.editor.RangeReplaceService;
@@ -58,8 +51,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class CodactorConsole extends JBPanel<CodactorConsole> {
     private Project project;
@@ -89,6 +80,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private FindUsagesService findUsagesService;
     private CodeHighlighterService codeHighlighterService;
     private RangeReplaceService rangeReplaceService;
+    private CompileAndRunTestsService compileAndRunTestsService;
     // For testing purposes
     private CodactorUmlBuilderApplication codactorUmlBuilderApplication;
     private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
@@ -112,6 +104,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            FindUsagesService findUsagesService,
                            CodeHighlighterService codeHighlighterService,
                            RangeReplaceService rangeReplaceService,
+                           CompileAndRunTestsService compileAndRunTestsService,
                            //CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
@@ -133,6 +126,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.findUsagesService = findUsagesService;
         this.codeHighlighterService = codeHighlighterService;
         this.rangeReplaceService = rangeReplaceService;
+        this.compileAndRunTestsService = compileAndRunTestsService;
         //this.codactorUmlBuilderApplication = codactorUmlBuilderApplication;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
@@ -268,10 +262,11 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    ApplicationManager.getApplication().invokeLater(() -> {
-                        String code = codeSnippetExtractorService.getAllText("/Users/zantehays/IdeaProjects/code-translator-dev/code-translator-service/src/main/java/com/translator/service/string/line/LineCounterServiceImpl.java");
-                        System.out.println("Syntax good: " + syntaxCheckerService.checkSyntax(code));
-                        //dynamicClassCompilerService.dynamicallyCompileClass("/Users/zantehays/IdeaProjects/code-translator-dev/code-translator-service/src/main/java/com/translator/service/string/line/LineCounterServiceImpl.java");
+                    ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                        java.util.List<String> responses = compileAndRunTestsService.compileAndRunUnitTests("/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/ai/chat/functions/directives/test/matrix/TwoDimensionalMatrixRotatorServiceImpl.java", "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/ai/chat/functions/directives/test/matrix");
+                        for (String response : responses) {
+                            System.out.println("Response: " + response);
+                        }
                     });
                 } catch (Exception exception) {
                     exception.printStackTrace();
