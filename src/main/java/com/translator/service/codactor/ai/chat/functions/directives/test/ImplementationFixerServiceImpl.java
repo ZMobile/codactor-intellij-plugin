@@ -101,7 +101,7 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
     public ReplacedClassInfoResource fixUnitTest(String implementationFilePath, List<ResultsResource> resultsResources) {
         String code = codeSnippetExtractorService.getAllText(implementationFilePath);
         StringBuilder failureString = assembleFailureString(code, resultsResources);
-        failureString.append("\nIn this case, the unit test was determined to be culpable. Can you fix the unit test to have this test pass? Your code provided here will replace the unit test code. Do not change the file name.");
+        failureString.append("\nIn this case, the unit test was determined to be culpable. Can you fix the unit test to not have the errors or test failures? Your code provided here will replace the unit test code. Do not change the file name, DO NOT USE JUNIT 5 DO NOT USE JUPITER or it wont work. Only use JUNIT 4 (org.junit.test for example)");
         Inquiry inquiry = inquiryService.createHeadlessInquiry(failureString.toString(), "gpt-4o", false);
         InquiryChat inquiryChat = inquiry.getChats().get(inquiry.getChats().size() - 1);
         //Code is surrounded by "```" to indicate a code block. Isolate this code:
@@ -118,6 +118,7 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
             if (resultsResource.getResult() == null || !resultsResource.getResult().wasSuccessful()) {
                 failedResults.add(resultsResource);
             }
+
         }
         String unitTestFilePath = failedResults.get(0).getFilePath();
         System.out.println("Replacing unit test");
@@ -190,6 +191,18 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
             Result result = resultsResource.getResult();
             for (Failure failure : result.getFailures()) {
                 failureString.append(failure.getMessage());
+                Throwable exception = failure.getException();
+                if (exception != null) {
+                    failureString.append("\nException: ")
+                            .append(exception.getClass().getName())
+                            .append(": ")
+                            .append(exception.getMessage())
+                            .append("\nStack Trace:\n");
+
+                    for (StackTraceElement element : exception.getStackTrace()) {
+                        failureString.append(element.toString()).append("\n");
+                    }
+                }
             }
         } else {
             failureString.append(resultsResource.getError());
@@ -229,6 +242,18 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
             Result failedResult = failedResultResource.getResult();
             for (Failure failure : failedResult.getFailures()) {
                 failureString.append(failure.getMessage());
+                Throwable exception = failure.getException();
+                if (exception != null) {
+                    failureString.append("\nException: ")
+                            .append(exception.getClass().getName())
+                            .append(": ")
+                            .append(exception.getMessage())
+                            .append("\nStack Trace:\n");
+
+                    for (StackTraceElement element : exception.getStackTrace()) {
+                        failureString.append(element.toString()).append("\n");
+                    }
+                }
             }
         } else {
             failureString.append(failedResultResource.getError());

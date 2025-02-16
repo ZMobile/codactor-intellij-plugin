@@ -818,6 +818,18 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
                 }
                 for (Failure failure : resultsResource.getResult().getFailures()) {
                     failedUnitTestsText.append(failure.toString()).append("\n");
+                    Throwable exception = failure.getException();
+                    if (exception != null) {
+                        failedUnitTestsText.append("\nException: ")
+                                .append(exception.getClass().getName())
+                                .append(": ")
+                                .append(exception.getMessage())
+                                .append("\nStack Trace:\n");
+
+                        for (StackTraceElement element : exception.getStackTrace()) {
+                            failedUnitTestsText.append(element.toString()).append("\n");
+                        }
+                    }
                 }
                 failedUnitTestsText.append("\n");
             }

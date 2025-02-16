@@ -85,6 +85,18 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
 
             for (Failure failure : result.getFailures()) {
                 resultString.append("\n").append(failure.toString());
+                Throwable exception = failure.getException();
+                if (exception != null) {
+                    resultString.append("\nException: ")
+                            .append(exception.getClass().getName())
+                            .append(": ")
+                            .append(exception.getMessage())
+                            .append("\nStack Trace:\n");
+
+                    for (StackTraceElement element : exception.getStackTrace()) {
+                        resultString.append(element.toString()).append("\n");
+                    }
+                }
             }
             resultString.append("\nSuccess: ").append(result.wasSuccessful());
         } catch (Exception e) {
@@ -149,6 +161,18 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
 
                     for (Failure failure : result.getFailures()) {
                         resultString.append("\n").append(failure.toString());
+                        Throwable exception = failure.getException();
+                        if (exception != null) {
+                            resultString.append("\nException: ")
+                                    .append(exception.getClass().getName())
+                                    .append(": ")
+                                    .append(exception.getMessage())
+                                    .append("\nStack Trace:\n");
+
+                            for (StackTraceElement element : exception.getStackTrace()) {
+                                resultString.append(element.toString()).append("\n");
+                            }
+                        }
                     }
                     resultString.append("\nSuccess: ").append(result.wasSuccessful());
                     ResultsResource resultResource = new ResultsResource.Builder()
