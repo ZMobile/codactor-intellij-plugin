@@ -2,8 +2,10 @@ package com.translator.service.codactor.ai.chat.functions.directives.test;
 
 import com.intellij.openapi.project.Project;
 import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirectiveSession;
+import com.translator.model.codactor.ai.chat.function.directive.test.ResultsResource;
 import com.translator.model.codactor.ai.chat.function.directive.test.TestClassInfoResource;
 import com.translator.service.codactor.ai.modification.authorization.VerifyIsTestFileService;
+import com.translator.service.codactor.ide.editor.psi.FindErrorService;
 import com.translator.service.codactor.io.CustomURLClassLoader;
 import com.translator.service.codactor.io.DynamicClassLoaderService;
 import com.translator.service.codactor.io.DynamicClassLoaderServiceImpl;
@@ -28,16 +30,19 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
     private final VerifyIsTestFileService verifyIsTestFileService;
     private final RelevantBuildOutputLocatorService relevantBuildOutputLocatorService;
     private final DynamicClassLoaderService dynamicClassLoaderService;
+    private final FindErrorService findErrorService;
 
     @Inject
     public RunTestAndGetOutputServiceImpl(Project project,
                                           VerifyIsTestFileService verifyIsTestFileService,
                                           RelevantBuildOutputLocatorService relevantBuildOutputLocatorService,
-                                          DynamicClassLoaderService dynamicClassLoaderService) {
+                                          DynamicClassLoaderService dynamicClassLoaderService,
+                                          FindErrorService findErrorService) {
         this.project = project;
         this.verifyIsTestFileService = verifyIsTestFileService;
         this.relevantBuildOutputLocatorService = relevantBuildOutputLocatorService;
         this.dynamicClassLoaderService = dynamicClassLoaderService;
+        this.findErrorService = findErrorService;
     }
 
     public String runTestAndGetOutput(CreateAndRunUnitTestDirectiveSession createAndRunUnitTestDirectiveSession) throws Exception {
@@ -97,8 +102,8 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
         return resultString.toString();
     }
 
-    public Map<String, Result> runTestsAndGetOutputs(String implementationFilePath, List<String> unitTestFilePaths) throws Exception {
-        Map<String, Result> filePathToResultsMap = new HashMap<>();
+    public List<ResultsResource> runTestsAndGetOutputs(String implementationFilePath, List<String> unitTestFilePaths) throws Exception {
+        List<ResultsResource> results = new ArrayList<>();
 
         // Normalize file paths and validate the existence of build output files
         List<TestClassInfoResource> testClassInfoResources = new ArrayList<>();
@@ -109,7 +114,7 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
             String buildOutputParentDirectoryPath = relevantBuildOutputLocatorService.locateRelevantBuildOutput(testFilePath);
             String buildOutputPath = buildOutputParentDirectoryPath + "/" + isolatedClassName + ".class";
             if (buildOutputParentDirectoryPath == null) {
-                throw new Exception("Build output path could not be located for " + testFilePath);
+               // throw new Exception("Build output path could not be located for " + testFilePath);
             }
             TestClassInfoResource testClassInfoResource = new TestClassInfoResource.Builder()
                     .withClassName(testFileClassName)
@@ -146,7 +151,12 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
                         resultString.append("\n").append(failure.toString());
                     }
                     resultString.append("\nSuccess: ").append(result.wasSuccessful());
-                    filePathToResultsMap.put(testClassInfoResource.getPath(), result);
+                    ResultsResource resultResource = new ResultsResource.Builder()
+                            .withFilePath(testClassInfoResource.getPath())
+                            .withBuildOutputPath(testClassInfoResource.getBuildOutputPath())
+                            .withResult(result)
+                            .build();
+                    results.add(resultResource);
                 } catch (Exception e) {
                     e.printStackTrace();
                     resultString.append("\nError: ").append(e.getMessage());
@@ -166,6 +176,6 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
             System.setOut(originalOut);
         }
 
-        return filePathToResultsMap;
+        return results;
     }
 }

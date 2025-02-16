@@ -11,6 +11,7 @@ import com.translator.dao.history.CodeModificationHistoryDao;
 import com.translator.dao.inquiry.InquiryDao;
 import com.translator.service.CodeTranslatorServiceConfig;
 import com.translator.service.codactor.ai.chat.functions.directives.test.CompileAndRunTestsService;
+import com.translator.service.codactor.ai.chat.functions.directives.test.TestRunnerLoopService;
 import com.translator.service.codactor.ai.modification.queued.QueuedFileModificationObjectHolderQueryService;
 import com.translator.service.codactor.ai.modification.tracking.FileModificationTrackerService;
 import com.translator.service.codactor.ai.modification.tracking.multi.MultiFileModificationTrackerService;
@@ -19,6 +20,7 @@ import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ide.editor.RangeReplaceService;
 import com.translator.service.codactor.ide.editor.diff.DiffEditorGeneratorService;
+import com.translator.service.codactor.ide.editor.psi.FindErrorService;
 import com.translator.service.codactor.ide.editor.psi.FindImplementationsService;
 import com.translator.service.codactor.ide.editor.psi.FindUsagesService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
@@ -162,13 +164,15 @@ public class CodeTranslatorViewConfig extends AbstractModule {
                                            CodeHighlighterService codeHighlighterService,
                                            RangeReplaceService rangeReplaceService,
                                            CompileAndRunTestsService compileAndRunTestsService,
+                                           FindErrorService findErrorService,
+                                           TestRunnerLoopService testRunnerLoopService,
                                            //CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
                                            InquiryViewerFactory inquiryViewerFactory,
                                            InquiryFunctionCallProcessorService inquiryFunctionCallProcessorService,
                                            DiffEditorGeneratorService diffEditorGeneratorService) {
-        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, modificationTypeComboBoxService, aiCodeModificationService, gson, findImplementationsService, findUsagesService, codeHighlighterService, rangeReplaceService, compileAndRunTestsService, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory, inquiryFunctionCallProcessorService, diffEditorGeneratorService);
+        return new CodactorConsole(project, promptContextServiceFactory, codactorToolWindowService, selectedFileFetcherService, codeSnippetExtractorService, inquiryService, openAiModelService, modificationTypeComboBoxService, aiCodeModificationService, gson, findImplementationsService, findUsagesService, codeHighlighterService, rangeReplaceService, compileAndRunTestsService, findErrorService, testRunnerLoopService, multiFileCreateDialogFactory, promptContextBuilderDialogFactory, inquiryViewerFactory, inquiryFunctionCallProcessorService, diffEditorGeneratorService);
     }
 
     @Singleton

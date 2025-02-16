@@ -203,6 +203,7 @@ public class CodeTranslatorServiceConfig extends AbstractModule {
         bind(FindTestsInDirectoryService.class).to(FindTestsInDirectoryServiceImpl.class);
         bind(PackageFromFilePathRetrievalService.class).to(PackageFromFilePathRetrievalServiceImpl.class);
         bind(ImplementationFixerService.class).to(ImplementationFixerServiceImpl.class);
+        bind(TestRunnerLoopService.class).to(TestRunnerLoopServiceImpl.class);
     }
 
     @Singleton

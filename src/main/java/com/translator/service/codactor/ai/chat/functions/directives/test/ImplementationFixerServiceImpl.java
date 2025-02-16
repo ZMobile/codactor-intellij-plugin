@@ -7,6 +7,7 @@ import com.translator.model.codactor.ai.chat.function.GptFunctionCall;
 import com.translator.model.codactor.ai.chat.function.Parameters;
 import com.translator.model.codactor.ai.chat.function.Property;
 import com.translator.model.codactor.ai.chat.function.directive.test.ReplacedClassInfoResource;
+import com.translator.model.codactor.ai.chat.function.directive.test.ResultsResource;
 import com.translator.service.codactor.ai.chat.inquiry.InquiryService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ide.editor.RangeReplaceService;
@@ -32,18 +33,18 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
     }
 
     @Override
-    public ReplacedClassInfoResource startFixing(String implementationFilePath, Map<String, Result> filePathToResultMap) {
+    public ReplacedClassInfoResource startFixing(String implementationFilePath, List<ResultsResource> resultsResources) {
         String code = codeSnippetExtractorService.getAllText(implementationFilePath);
-        if (isUnitTestCulpable(code, filePathToResultMap)) {
-            return fixUnitTest(implementationFilePath, filePathToResultMap);
+        if (isUnitTestCulpable(code, resultsResources)) {
+            return fixUnitTest(implementationFilePath, resultsResources);
         } else {
-            return fixImplementation(implementationFilePath, filePathToResultMap);
+            return fixImplementation(implementationFilePath, resultsResources);
         }
     }
 
-    public ReplacedClassInfoResource fixImplementation(String implementationFilePath, Map<String, Result> filePathToResultMap) {
+    public ReplacedClassInfoResource fixImplementation(String implementationFilePath, List<ResultsResource> resultsResources) {
         String code = codeSnippetExtractorService.getAllText(implementationFilePath);
-        StringBuilder failureString = assembleFailureString(code, filePathToResultMap);
+        StringBuilder failureString = assembleFailureString(code, resultsResources);
         failureString.append("\nCan you fix the code to also pass this test?");
         try {
             Thread.sleep(1000);
@@ -61,6 +62,18 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
         if (newImplementationCode.startsWith("\n")) {
             newImplementationCode = newImplementationCode.substring(1);
         }
+        if (newImplementationCode.contains("public interface")) {
+            String followUp = "The code provided is an interface. Please provide an implementation.";
+            inquiryChat = inquiryService.continueHeadlessInquiry(inquiry, inquiryChat.getId(), followUp, "gpt-4o", false);
+            startOfCode = inquiryChat.getMessage().substring(inquiryChat.getMessage().indexOf("```") + 3);
+            newImplementationCode = startOfCode.substring(0, startOfCode.indexOf("```"));
+            if (newImplementationCode.startsWith("java")) {
+                newImplementationCode = newImplementationCode.substring(4);
+            }
+            if (newImplementationCode.startsWith("\n")) {
+                newImplementationCode = newImplementationCode.substring(1);
+            }
+        }
         System.out.println("Replacing implementation...");
         System.out.println("Implementation file path: " + implementationFilePath);
         System.out.println("Old code: " + code);
@@ -70,14 +83,14 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
                 .withFilePath(implementationFilePath)
                 .withOldCode(code)
                 .withNewCode(newImplementationCode)
-                .withFormerResults(filePathToResultMap)
+                .withFormerResults(resultsResources)
                 .build();
     }
 
-    public ReplacedClassInfoResource fixUnitTest(String implementationFilePath, Map<String, Result> filePathToResultMap) {
+    public ReplacedClassInfoResource fixUnitTest(String implementationFilePath, List<ResultsResource> resultsResources) {
         String code = codeSnippetExtractorService.getAllText(implementationFilePath);
-        StringBuilder failureString = assembleFailureString(code, filePathToResultMap);
-        failureString.append("\nIn this case, the unit test was determined to be culpable. Can you fix the unit test to have this test pass?");
+        StringBuilder failureString = assembleFailureString(code, resultsResources);
+        failureString.append("\nIn this case, the unit test was determined to be culpable. Can you fix the unit test to have this test pass? Your code provided here will replace the unit test code.");
         Inquiry inquiry = inquiryService.createHeadlessInquiry(failureString.toString(), "gpt-4o", false);
         InquiryChat inquiryChat = inquiry.getChats().get(inquiry.getChats().size() - 1);
         //Code is surrounded by "```" to indicate a code block. Isolate this code:
@@ -89,7 +102,7 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
         if (newUnitTestCode.startsWith("\n")) {
             newUnitTestCode = newUnitTestCode.substring(1);
         }
-        String unitTestFilePath = filePathToResultMap.keySet().toArray()[0].toString();
+        String unitTestFilePath = resultsResources.get(0).getFilePath();
         System.out.println("Replacing unit test");
         System.out.println("Unit test file path: " + unitTestFilePath);
         String unitTestCode = codeSnippetExtractorService.getAllText(unitTestFilePath);
@@ -100,12 +113,12 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
                 .withFilePath(unitTestFilePath)
                 .withOldCode(unitTestCode)
                 .withNewCode(newUnitTestCode)
-                .withFormerResults(filePathToResultMap)
+                .withFormerResults(resultsResources)
                 .build();
     }
 
-    public boolean isUnitTestCulpable(String implementationCode, Map<String, Result> filePathToResultMap) {
-        StringBuilder failureString = assembleFailureString(implementationCode, filePathToResultMap);
+    public boolean isUnitTestCulpable(String implementationCode, List<ResultsResource> resultsResources) {
+        StringBuilder failureString = assembleFailureString(implementationCode, resultsResources);
         failureString.append("What needs to be changed? A. The Unit Test, or B. The Implementation");
 
         // Create ChatGptFunction for "choose_between_a_or_b"
@@ -153,31 +166,35 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
         return choice.equals("A");
     }
 
-    private StringBuilder assembleFailureString(String implementationCode, Map<String, Result> filePathToResultMap) {
-        Map<String, Result> failedResults = new HashMap<>();
-        Map<String, Result> passedResults = new HashMap<>();
-        for (String filePath : filePathToResultMap.keySet()) {
-            Result result = filePathToResultMap.get(filePath);
-            if (result.wasSuccessful()) {
-                passedResults.put(filePath, result);
+    private StringBuilder assembleFailureString(String implementationCode, List<ResultsResource> resultsResources) {
+        List<ResultsResource> failedResults = new ArrayList<>();
+        List<ResultsResource> passedResults = new ArrayList<>();
+        for (ResultsResource resultsResource : resultsResources) {
+            if (resultsResource.getResult().wasSuccessful()) {
+                passedResults.add(resultsResource);
             } else {
-                failedResults.put(filePath, result);
+                failedResults.add(resultsResource);
             }
         }
         StringBuilder failureString = new StringBuilder();
-        String failedResultPath = failedResults.keySet().toArray()[0].toString();
-        Result failedResult = failedResults.get(failedResultPath);
+        ResultsResource failedResultResource = failedResults.get(0);
+
         failureString.append("This code: ").append(implementationCode).append(" passed (")
                 .append(passedResults.size())
                 .append("/")
-                .append(filePathToResultMap.size())
+                .append(resultsResources.size())
                 .append(") tests. The following is a test that failed: \n")
                 .append("Test code:\n")
-                .append(codeSnippetExtractorService.getAllText(failedResultPath))
+                .append(codeSnippetExtractorService.getAllText(failedResultResource.getFilePath()))
                 .append("\n")
                 .append("Failures:\n");
-        for (Failure failure: failedResult.getFailures()) {
-            failureString.append(failure.getMessage());
+        if (failedResultResource.getResult() != null) {
+            Result failedResult = failedResultResource.getResult();
+            for (Failure failure : failedResult.getFailures()) {
+                failureString.append(failure.getMessage());
+            }
+        } else {
+            failureString.append(failedResultResource.getError());
         }
         return failureString;
     }

@@ -36,6 +36,32 @@ public class FindErrorServiceImpl implements FindErrorService {
         this.psiElementCollectorService = psiElementCollectorService;
     }
 
+    @Override
+    public List<ErrorResult> getAllErrors(String filePaths, boolean includeWarnings) {
+        List<ErrorResult> results = new ArrayList<>();
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            AtomicReference<PsiFile> psiFile = new AtomicReference<>(psiFileService.getPsiFileFromPath(filePaths));
+            ApplicationManager.getApplication().invokeAndWait(() -> psiFile.set(psiFileService.getPsiFileFromPath(filePaths)));
+
+            Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile.get());
+            if (document != null) {
+                MarkupModel markupModel = DocumentMarkupModel.forDocument(document, project, true);
+                for (RangeHighlighter highlighter : markupModel.getAllHighlighters()) {
+                    Object tooltip = highlighter.getErrorStripeTooltip();
+                    if (tooltip instanceof HighlightInfo) {
+                        HighlightInfo info = (HighlightInfo) tooltip;
+                        if (info.getSeverity() == HighlightSeverity.ERROR ||
+                                (includeWarnings && info.getSeverity() == HighlightSeverity.WARNING)) {
+                            results.add(new ErrorResult(info.getDescription(), info.getDescription()));
+                        }
+                    }
+                }
+            }
+        });
+
+        return results;
+    }
+
     public List<ErrorResult> getErrorsWithinRange(String filePath, int startOffset, int endOffset, boolean includeWarnings) {
         List<ErrorResult> results = new ArrayList<>();
         ApplicationManager.getApplication().invokeAndWait(() -> {

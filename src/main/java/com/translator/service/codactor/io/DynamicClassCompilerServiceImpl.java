@@ -41,6 +41,25 @@ public class DynamicClassCompilerServiceImpl implements DynamicClassCompilerServ
     }
 
     @Override
+    public void dynamicallyCompileFiles(List<String> filePaths, CompileStatusNotification compileStatusNotification) {
+        List<VirtualFile> virtualFiles = filePaths.stream()
+                .map(path -> LocalFileSystem.getInstance().findFileByIoFile(new File(path)))
+                .filter(file -> file != null && file.getName().endsWith(".java"))
+                .collect(Collectors.toList());
+
+        if (virtualFiles.isEmpty()) {
+            System.out.println("No valid Java files found for compilation.");
+            return;
+        }
+
+        CompilerManager compilerManager = CompilerManager.getInstance(project);
+        ApplicationManager.getApplication().invokeLater(() ->
+                compilerManager.compile(virtualFiles.toArray(new VirtualFile[0]), compileStatusNotification)
+        );
+        System.out.println("Compilation request for files sent.");
+    }
+
+    @Override
     public void dynamicallyCompileDirectory(String directoryPath, CompileStatusNotification compileStatusNotification) {
         VirtualFile directory = LocalFileSystem.getInstance().findFileByIoFile(new File(directoryPath));
 

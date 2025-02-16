@@ -14,6 +14,7 @@ import com.intellij.ui.JBSplitter;
 import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.codactor.ai.chat.InquiryChat;
 import com.translator.model.codactor.ai.chat.function.directive.test.ReplacedClassInfoResource;
+import com.translator.model.codactor.ai.chat.function.directive.test.ResultsResource;
 import com.translator.model.codactor.ai.modification.test.UnitTestData;
 import com.translator.service.codactor.ai.chat.functions.directives.test.CompileAndRunTestsService;
 import com.translator.service.codactor.ai.chat.functions.directives.test.ImplementationFixerService;
@@ -794,20 +795,24 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         String finalImplementationFilePath = implementationFilePath;
         String finalInterfaceFilePath = interfaceFilePath;
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            Map<String, Result> results = compileAndRunTestsService.compileAndRunUnitTests(finalInterfaceFilePath, finalImplementationFilePath, directoryPath);
-            List<Result> failedResults = new ArrayList<>();
-            List<Result> passedResults = new ArrayList<>();
-            for (Result result : results.values()) {
-                if (result.wasSuccessful()) {
-                    passedResults.add(result);
+            List<ResultsResource> results = compileAndRunTestsService.compileAndRunUnitTests(finalInterfaceFilePath, finalImplementationFilePath, directoryPath);
+            List<ResultsResource> failedResults = new ArrayList<>();
+            List<ResultsResource> passedResults = new ArrayList<>();
+            for (ResultsResource resultsResource : results) {
+                if (resultsResource.getResult() == null || !resultsResource.getResult().wasSuccessful()) {
+                    failedResults.add(resultsResource);
                 } else {
-                    failedResults.add(result);
+                    passedResults.add(resultsResource);
                 }
             }
             this.unitTestStatusLabel.setText("Unit Test Status: (" + passedResults.size() + "/" + results.size() + ") passed");
             StringBuilder failedUnitTestsText = new StringBuilder("Failed Unit Tests: \n\n");
-            for (Result result : failedResults) {
-                for (Failure failure : result.getFailures()) {
+            for (ResultsResource resultsResource : failedResults) {
+                if (resultsResource.getResult() == null) {
+                    failedUnitTestsText.append(resultsResource.getError());
+                    continue;
+                }
+                for (Failure failure : resultsResource.getResult().getFailures()) {
                     failedUnitTestsText.append(failure.toString()).append("\n");
                 }
                 failedUnitTestsText.append("\n");
@@ -818,7 +823,8 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
                 this.failedUnitTestsTextArea.setText("All unit tests passed!");
             } else {
                 this.failedUnitTestsTextArea.setText(failedUnitTestsText.toString());
-                boolean areNewResultsBetter = areNewResultsBetter(replacedClassInfoResource.getFormerResults(), results);
+                boolean areNewResultsBetter = areNewResultsBetter(replacedClassInfoResource, results);
+                System.out.println("Are new results better? " + areNewResultsBetter);
 
                 if (areNewResultsBetter) {
                     ReplacedClassInfoResource newReplacedClassInfoResource = implementationFixerService.startFixing(finalImplementationFilePath, results);
@@ -826,32 +832,25 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
                     runUnitTestsAndGetFeedback(newReplacedClassInfoResource);
                 } else {
                     System.out.println("The new results are not better than the old results");
+                    unitTestStatusLabel.setText("Reverting unhelpful changes...");
                     rangeReplaceService.replaceRange(replacedClassInfoResource.getFilePath(), 0, replacedClassInfoResource.getNewCode().length(), replacedClassInfoResource.getOldCode(), true);
 
-                    Map<String, Result> formerResults = replacedClassInfoResource.getFormerResults();
-
-                    if (!formerResults.isEmpty()) {
-                        // Use LinkedHashMap to maintain order
-                        LinkedHashMap<String, Result> reordered = new LinkedHashMap<>();
-
-                        // Store the first entry separately
-                        Iterator<Map.Entry<String, Result>> iterator = formerResults.entrySet().iterator();
-                        Map.Entry<String, Result> firstEntry = iterator.next();
-
-                        // Add the remaining entries
-                        while (iterator.hasNext()) {
-                            Map.Entry<String, Result> entry = iterator.next();
-                            reordered.put(entry.getKey(), entry.getValue());
+                    List<ResultsResource> formerResults = replacedClassInfoResource.getFormerResults();
+                    List<ResultsResource> failedFormerResults = new ArrayList<>();
+                    for (ResultsResource resultsResource : formerResults) {
+                        if (resultsResource.getResult() == null || !resultsResource.getResult().wasSuccessful()) {
+                            failedFormerResults.add(resultsResource);
                         }
-
-                        // Add the first entry to the end
-                        reordered.put(firstEntry.getKey(), firstEntry.getValue());
-
-                        // Assign to the field*/
-                        replacedClassInfoResource.setFormerResults(reordered);
                     }
 
-                    runUnitTestsAndGetFeedback(replacedClassInfoResource);
+                    if (!failedFormerResults.isEmpty()) {
+                        ResultsResource firstResultsResource = formerResults.remove(formerResults.indexOf(failedFormerResults.get(0)));
+                        formerResults.add(firstResultsResource);
+                    }
+                    replacedClassInfoResource.setFormerResults(formerResults);
+                    //ReplacedClassInfoResource newReplacedClassInfoResource = implementationFixerService.startFixing(finalImplementationFilePath, formerResults);
+
+                    runUnitTestsAndGetFeedback(null);
                 }
             }
             /*StringBuilder passedUnitTestsText = new StringBuilder("Passed Unit Tests: \n\n");
@@ -873,17 +872,24 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
 
     //
 
-    private boolean areNewResultsBetter(Map<String, Result> oldResults, Map<String, Result> newResults) {
+    private boolean areNewResultsBetter(ReplacedClassInfoResource replacedClassInfoResource, List<ResultsResource> newResults) {
+        if (replacedClassInfoResource == null) {
+            return true;
+        }
+        List<ResultsResource> oldResults = replacedClassInfoResource.getFormerResults();
+        if (oldResults == null || oldResults.isEmpty()) {
+            return true;
+        }
         //Measurement: less failures OR, more total tests passed
         int oldFailures = 0;
         int newFailures = 0;
-        for (Result result : oldResults.values()) {
-            if (!result.wasSuccessful()) {
+        for (ResultsResource resultsResource : oldResults) {
+            if (resultsResource.getResult() == null || !resultsResource.getResult().wasSuccessful()) {
                 oldFailures++;
             }
         }
-        for (Result result : newResults.values()) {
-            if (!result.wasSuccessful()) {
+        for (ResultsResource resultsResource : newResults) {
+            if (resultsResource.getResult() == null || !resultsResource.getResult().wasSuccessful()) {
                 newFailures++;
             }
         }

@@ -38,7 +38,8 @@ public class CustomURLClassLoader extends URLClassLoader {
                 byte[] classData = Files.readAllBytes(path);
                 return defineClass(name, classData, 0, classData.length);
             } else {
-                throw new ClassNotFoundException("Class not found on path: " + path);
+                return null;
+                //throw new ClassNotFoundException("Class not found on path: " + path);
             }
         } catch (IOException e) {
             throw new ClassNotFoundException("Error loading class from file system", e);

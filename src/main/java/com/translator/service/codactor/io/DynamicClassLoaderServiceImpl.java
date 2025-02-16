@@ -34,10 +34,11 @@ public class DynamicClassLoaderServiceImpl implements DynamicClassLoaderService 
         String isolatedSampleClassName = filePath.substring(filePath.lastIndexOf("/") + 1, filePath.lastIndexOf("."));
         String buildOutputPath = buildOutputParentDirectoryPath + "/" + isolatedSampleClassName + ".class";
 
-        File buildOutputFile = new File(buildOutputPath);
+        /*File buildOutputFile = new File(buildOutputPath);
         if (!buildOutputFile.exists()) {
+            return null;
             throw new FileNotFoundException("Error: build output file not found at: " + buildOutputPath);
-        }
+        }*/
 
         String buildOutputRootDirPath;
         if (buildOutputPath.contains("/main/")) {
@@ -47,7 +48,9 @@ public class DynamicClassLoaderServiceImpl implements DynamicClassLoaderService 
             buildOutputRootDirPath = buildOutputPath.substring(0,
                     buildOutputPath.indexOf("build/classes/java/test/") + "build/classes/java/test/".length());
         } else {
-            throw new FileNotFoundException("Error: Could not determine build output root directory");
+            buildOutputRootDirPath = buildOutputPath.substring(0,
+                    buildOutputPath.indexOf("build/classes/java/test/") + "build/classes/java/test/".length());
+            //throw new FileNotFoundException("Error: Could not determine build output root directory");
         }
 
         File buildOutputRootDir = new File(buildOutputRootDirPath);

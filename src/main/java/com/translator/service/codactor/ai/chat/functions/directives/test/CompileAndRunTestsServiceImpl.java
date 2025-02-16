@@ -15,6 +15,9 @@ import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.translator.model.codactor.ai.chat.function.directive.test.ResultsResource;
+import com.translator.model.codactor.ide.psi.error.ErrorResult;
+import com.translator.service.codactor.ide.editor.psi.FindErrorService;
 import com.translator.service.codactor.io.DynamicClassCompilerService;
 import com.translator.service.codactor.io.DynamicClassLoaderService;
 import org.junit.runner.Result;
@@ -32,18 +35,21 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
     private final RunTestAndGetOutputService runTestAndGetOutputService;
     private final FindTestsInDirectoryService findTestsInDirectoryService;
     private final PackageFromFilePathRetrievalService packageFromFilePathRetrievalService;
+    private final FindErrorService findErrorService;
 
     @Inject
     public CompileAndRunTestsServiceImpl(Project project,
                                          DynamicClassCompilerService dynamicClassCompilerService,
                                          RunTestAndGetOutputService runTestAndGetOutputService,
                                          FindTestsInDirectoryService findTestsInDirectoryService,
-                                         PackageFromFilePathRetrievalService packageFromFilePathRetrievalService) {
+                                         PackageFromFilePathRetrievalService packageFromFilePathRetrievalService,
+                                         FindErrorService findErrorService) {
         this.project = project;
         this.dynamicClassCompilerService = dynamicClassCompilerService;
         this.runTestAndGetOutputService = runTestAndGetOutputService;
         this.findTestsInDirectoryService = findTestsInDirectoryService;
         this.packageFromFilePathRetrievalService = packageFromFilePathRetrievalService;
+        this.findErrorService = findErrorService;
     }
 
     /*@Override
@@ -123,14 +129,14 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
     }*/
 
     /*@Override
-    public Map<String, Result> compileAndRunUnitTests(String interfaceFilePath, String implementationFilePath, String directoryPath) {
+    public List<ResultsResource> compileAndRunUnitTests(String interfaceFilePath, String implementationFilePath, String directoryPath) {
         List<String> testFilePaths = findTestsInDirectoryService.findTestsInDirectory(directoryPath);
         System.out.println("This gets called 1");
         CompilerManager compilerManager = CompilerManager.getInstance(project);
         CountDownLatch latch1 = new CountDownLatch(1);
         CountDownLatch latch2 = new CountDownLatch(1);
         CountDownLatch latch = new CountDownLatch(/*testFilePaths.size()* 1); // +1 for the implementation file +1 for the interface file
-        AtomicReference<Map<String, Result>> resultsRef = new AtomicReference<>();
+        AtomicReference<List<ResultsResource>> resultsRef = new AtomicReference<>();
         AtomicReference<Exception> compilationException = new AtomicReference<>();
 
         ApplicationManager.getApplication().invokeAndWait(
@@ -299,14 +305,14 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
     }*/
 
     @Override
-    public Map<String, Result> compileAndRunUnitTests(String interfaceFilePath, String implementationFilePath, String directoryPath) {
+    public List<ResultsResource> compileAndRunUnitTests(String interfaceFilePath, String implementationFilePath, String directoryPath) {
         List<String> testFilePaths = findTestsInDirectoryService.findTestsInDirectory(directoryPath);
         System.out.println("This gets called 1");
         CompilerManager compilerManager = CompilerManager.getInstance(project);
         CountDownLatch latch1 = new CountDownLatch(1);
         CountDownLatch latch2 = new CountDownLatch(1);
-        CountDownLatch latch = new CountDownLatch(1); // +1 for the implementation file +1 for the interface file
-        AtomicReference<Map<String, Result>> resultsRef = new AtomicReference<>();
+        //CountDownLatch latch = new CountDownLatch(1); // +1 for the implementation file +1 for the interface file
+        AtomicReference<List<ResultsResource>> resultsRef = new AtomicReference<>();
         AtomicReference<Exception> compilationException = new AtomicReference<>();
 
         ApplicationManager.getApplication().invokeAndWait(
@@ -314,7 +320,7 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
                 ModalityState.defaultModalityState()
         );
 
-        CompileStatusNotification compileCallback = (aborted, errors, warnings, compileContext) -> {
+        /*CompileStatusNotification compileCallback = (aborted, errors, warnings, compileContext) -> {
             try {
                 if (aborted) {
                     System.err.println("Compilation aborted.");
@@ -332,24 +338,91 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
                     ));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
-                }*/
+                }*
 
                 System.out.println("Full project rebuild completed successfully.");
                 latch.countDown();
             }
+        };*/
+
+        CompileStatusNotification compileCallback1 = (aborted, errors, warnings, compileContext) -> {
+            try {
+                if (aborted) {
+                    System.out.println("Compilation aborted.");
+                    compilationException.set(new Exception("Compilation aborted."));
+                } else if (errors > 0) {
+                    System.out.println("Compilation finished with errors.");
+                    compilationException.set(new Exception("Compilation finished with errors."));
+                } else {
+                    System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                }
+            } catch (Exception e) {
+                compilationException.set(e);
+            } finally {
+                System.out.println("Compilation completed.");
+                latch1.countDown(); // Signal that this compilation is complete
+            }
         };
-        System.out.println("This gets called 2");
-        dynamicClassCompilerService.dynamicallyCompileDirectory(directoryPath, compileCallback);
+        CompileStatusNotification compileCallback2 = (aborted, errors, warnings, compileContext) -> {
+            try {
+                if (aborted) {
+                    System.out.println("Compilation aborted.");
+                    compilationException.set(new Exception("Compilation aborted."));
+                } else if (errors > 0) {
+                    System.out.println("Compilation finished with errors.");
+                    compilationException.set(new Exception("Compilation finished with errors."));
+                } else {
+                    System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                }
+            } catch (Exception e) {
+                compilationException.set(e);
+            } finally {
+                System.out.println("Compilation completed.");
+                latch2.countDown(); // Signal that this compilation is complete
+            }
+        };
+        List<String> filePaths = new ArrayList<>();
+        filePaths.add(interfaceFilePath);
+        filePaths.add(implementationFilePath);
+        dynamicClassCompilerService.dynamicallyCompileFiles(filePaths, compileCallback1);
+        try {
+            latch1.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        List<String> nonErrorTestFilePaths = new ArrayList<>();
+        List<ResultsResource> resultsResources = new ArrayList<>();
+        for (String testFilePath : testFilePaths) {
+            List<ErrorResult> errorResults = findErrorService.getAllErrors(testFilePath, false);
+            if(errorResults.isEmpty()) {
+                nonErrorTestFilePaths.add(testFilePath);
+            } else {
+                StringBuilder errorString = new StringBuilder();
+                for (ErrorResult errorResult : errorResults) {
+                    errorString.append(errorResult.description).append("\n")
+                            .append(errorResult.offendingSnippet).append("\n\n");
+                }
+                ResultsResource resultsResource = new ResultsResource.Builder()
+                        .withFilePath(testFilePath)
+                        .withError(errorString.toString())
+                        .build();
+                resultsResources.add(resultsResource);
+            }
+        }
+
+        dynamicClassCompilerService.dynamicallyCompileFiles(nonErrorTestFilePaths, compileCallback2);
+
         try {
             // Wait for all compilations to complete
-            latch.await();
-            ApplicationManager.getApplication().invokeAndWait(() -> {
+            latch2.await();
+            /*ApplicationManager.getApplication().invokeAndWait(() -> {
                 System.out.println("Starting FULL project rebuild...");
                 compilerManager.rebuild(compileCallback);
-            });
-            resultsRef.set(runTestAndGetOutputService.runTestsAndGetOutputs(
-                    implementationFilePath, testFilePaths
+            });*/
+            resultsResources.addAll(runTestAndGetOutputService.runTestsAndGetOutputs(
+                    implementationFilePath, nonErrorTestFilePaths
             ));
+            resultsRef.set(resultsResources);
             return resultsRef.get();
         } catch (Exception e) {
             e.printStackTrace();
@@ -358,14 +431,14 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
     }
 
     /*@Override
-    public Map<String, Result> compileAndRunUnitTests(String interfaceFilePath, String implementationFilePath, String directoryPath) {
+    public List<ResultsResource> compileAndRunUnitTests(String interfaceFilePath, String implementationFilePath, String directoryPath) {
         List<String> testFilePaths = findTestsInDirectoryService.findTestsInDirectory(directoryPath);
         System.out.println("This gets called 1");
         CompilerManager compilerManager = CompilerManager.getInstance(project);
         CountDownLatch latch1 = new CountDownLatch(1);
         CountDownLatch latch2 = new CountDownLatch(1);
         CountDownLatch latch = new CountDownLatch(testFilePaths.size()); // +1 for the implementation file +1 for the interface file
-        AtomicReference<Map<String, Result>> resultsRef = new AtomicReference<>();
+        AtomicReference<List<ResultsResource>> resultsRef = new AtomicReference<>();
         AtomicReference<Exception> compilationException = new AtomicReference<>();
 
         ApplicationManager.getApplication().invokeAndWait(

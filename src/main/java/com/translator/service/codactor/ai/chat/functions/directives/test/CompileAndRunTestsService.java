@@ -1,6 +1,7 @@
 package com.translator.service.codactor.ai.chat.functions.directives.test;
 
 import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirectiveSession;
+import com.translator.model.codactor.ai.chat.function.directive.test.ResultsResource;
 import org.junit.runner.Result;
 
 import java.util.List;
@@ -11,5 +12,5 @@ public interface CompileAndRunTestsService {
 
     //List<Result> compileAndRunUnitTests(String implementationFilePath, String directoryPath);
 
-    Map<String, Result> compileAndRunUnitTests(String interfaceFilePath, String implementationFilePath, String directoryPath);
+    List<ResultsResource> compileAndRunUnitTests(String interfaceFilePath, String implementationFilePath, String directoryPath);
 }

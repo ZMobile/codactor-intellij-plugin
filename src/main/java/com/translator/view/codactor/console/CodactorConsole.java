@@ -14,14 +14,17 @@ import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import com.translator.model.codactor.ai.modification.ModificationType;
 import com.translator.model.codactor.ide.file.FileItem;
+import com.translator.model.codactor.ide.psi.error.ErrorResult;
 import com.translator.service.codactor.ai.chat.context.PromptContextService;
 import com.translator.service.codactor.ai.chat.functions.InquiryFunctionCallProcessorService;
 import com.translator.service.codactor.ai.chat.functions.directives.test.CompileAndRunTestsService;
+import com.translator.service.codactor.ai.chat.functions.directives.test.TestRunnerLoopService;
 import com.translator.service.codactor.ai.modification.AiCodeModificationService;
 import com.translator.service.codactor.ide.editor.CodeHighlighterService;
 import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ide.editor.RangeReplaceService;
 import com.translator.service.codactor.ide.editor.diff.DiffEditorGeneratorService;
+import com.translator.service.codactor.ide.editor.psi.FindErrorService;
 import com.translator.service.codactor.ide.editor.psi.FindImplementationsService;
 import com.translator.service.codactor.ide.editor.psi.FindUsagesService;
 import com.translator.service.codactor.factory.PromptContextServiceFactory;
@@ -81,6 +84,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
     private CodeHighlighterService codeHighlighterService;
     private RangeReplaceService rangeReplaceService;
     private CompileAndRunTestsService compileAndRunTestsService;
+    private FindErrorService findErrorService;
+    private TestRunnerLoopService testRunnerLoopService;
     // For testing purposes
     private CodactorUmlBuilderApplication codactorUmlBuilderApplication;
     private MultiFileCreateDialogFactory multiFileCreateDialogFactory;
@@ -105,6 +110,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
                            CodeHighlighterService codeHighlighterService,
                            RangeReplaceService rangeReplaceService,
                            CompileAndRunTestsService compileAndRunTestsService,
+                           FindErrorService findErrorService,
+                           TestRunnerLoopService testRunnerLoopService,
                            //CodactorUmlBuilderApplication codactorUmlBuilderApplication,
                            MultiFileCreateDialogFactory multiFileCreateDialogFactory,
                            PromptContextBuilderDialogFactory promptContextBuilderDialogFactory,
@@ -127,6 +134,8 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
         this.codeHighlighterService = codeHighlighterService;
         this.rangeReplaceService = rangeReplaceService;
         this.compileAndRunTestsService = compileAndRunTestsService;
+        this.findErrorService = findErrorService;
+        this.testRunnerLoopService = testRunnerLoopService;
         //this.codactorUmlBuilderApplication = codactorUmlBuilderApplication;
         this.multiFileCreateDialogFactory = multiFileCreateDialogFactory;
         this.promptContextBuilderDialogFactory = promptContextBuilderDialogFactory;
@@ -262,9 +271,12 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                    /*ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                        compileAndRunTestsService.compileAndRunUnitTests("/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/ai/chat/functions/directives/test/matrix/TwoDimensionalMatrixRotatorService.java", "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/ai/chat/functions/directives/test/matrix/TwoDimensionalMatrixRotatorServiceImpl.java", "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/ai/chat/functions/directives/test/matrix");
+                    });*.
 
-                    });
+                     */
+                    testRunnerLoopService.runUnitTestsAndGetFeedback("/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/ai/chat/functions/directives/test/matrix", "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/ai/chat/functions/directives/test/matrix/TwoDimensionalMatrixRotatorServiceImpl.java", "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/ai/chat/functions/directives/test/matrix/TwoDimensionalMatrixRotatorService.java", null);
                 } catch (Exception exception) {
                     exception.printStackTrace();
                 }

@@ -4,6 +4,7 @@ import org.junit.runner.Result;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ReplacedClassInfoResource {
@@ -11,7 +12,7 @@ public class ReplacedClassInfoResource {
         private String filePath;
         private String oldCode;
         private String newCode;
-        private Map<String, Result> formerResults;
+        private List<ResultsResource> formerResults;
 
         public Builder withFilePath(String filePath) {
             this.filePath = filePath;
@@ -29,14 +30,14 @@ public class ReplacedClassInfoResource {
         }
 
 
-        public Builder withFormerResults(Map<String, Result> formerResults) {
+        public Builder withFormerResults(List<ResultsResource> formerResults) {
             /*if (formerResults.isEmpty()) {
                 this.formerResults = formerResults;
                 return this;
             }
 
             // Use LinkedHashMap to maintain order
-            LinkedHashMap<String, Result> reordered = new LinkedHashMap<>();
+            LinkedHashList<ResultsResource reordered = new LinkedHashMap<>();
 
             // Store the first entry separately
             Iterator<Map.Entry<String, Result>> iterator = formerResults.entrySet().iterator();
@@ -65,9 +66,9 @@ public class ReplacedClassInfoResource {
     private String filePath;
     private String oldCode;
     private String newCode;
-    private Map<String, Result> formerResults;
+    private List<ResultsResource> formerResults;
 
-    public ReplacedClassInfoResource(String filePath, String oldCode, String newCode, Map<String, Result> formerResults) {
+    public ReplacedClassInfoResource(String filePath, String oldCode, String newCode, List<ResultsResource> formerResults) {
         this.filePath = filePath;
         this.oldCode = oldCode;
         this.newCode = newCode;
@@ -98,11 +99,11 @@ public class ReplacedClassInfoResource {
         this.newCode = newCode;
     }
 
-    public Map<String, Result> getFormerResults() {
+    public List<ResultsResource> getFormerResults() {
         return formerResults;
     }
 
-    public void setFormerResults(Map<String, Result> formerResults) {
+    public void setFormerResults(List<ResultsResource> formerResults) {
         this.formerResults = formerResults;
     }
 }
