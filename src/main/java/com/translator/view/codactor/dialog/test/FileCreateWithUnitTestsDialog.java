@@ -11,6 +11,7 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.ui.JBSplitter;
+import com.intellij.ui.components.JBScrollPane;
 import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.codactor.ai.chat.InquiryChat;
 import com.translator.model.codactor.ai.chat.function.directive.test.ReplacedClassInfoResource;
@@ -99,6 +100,8 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         this.compileAndRunTestsService = compileAndRunTestsService;
         this.implementationFixerService = implementationFixerService;
         this.rangeReplaceService = rangeReplaceService;
+
+        setTitle("Create File with Unit Tests");
         // Set up the main split pane
         mainSplitPane = new JBSplitter(false);
         /*mainSplitPane.setResizeWeight(0.5); // Distribute space evenly initially
@@ -866,7 +869,8 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         this.unitTestStatusLabel = new JLabel("Unit Test Status: Not Started");
         unitTestsPanel.add(this.unitTestStatusLabel, BorderLayout.NORTH);
         this.failedUnitTestsTextArea = new JTextArea("Failed Unit Tests: ");
-        unitTestsPanel.add(this.failedUnitTestsTextArea, BorderLayout.CENTER);
+        JBScrollPane unitTestsScrollPane = new JBScrollPane(failedUnitTestsTextArea);
+        unitTestsPanel.add(unitTestsScrollPane, BorderLayout.CENTER);
         /*this.passedUnitTestsTextArea = new JTextArea("Passed Unit Tests: ");
         unitTestsPanel.add(this.passedUnitTestsTextArea, BorderLayout.SOUTH);*/
     }
