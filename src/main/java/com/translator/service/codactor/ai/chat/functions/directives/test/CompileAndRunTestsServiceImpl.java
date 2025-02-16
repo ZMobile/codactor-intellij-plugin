@@ -381,9 +381,25 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
                 latch2.countDown(); // Signal that this compilation is complete
             }
         };
+        List<ResultsResource> resultsResources = new ArrayList<>();
         List<String> filePaths = new ArrayList<>();
         filePaths.add(interfaceFilePath);
-        filePaths.add(implementationFilePath);
+        List<ErrorResult> implementationErrorResults = findErrorService.getAllErrors(interfaceFilePath, false);
+        if (implementationErrorResults.isEmpty()) {
+            filePaths.add(implementationFilePath);
+        } else {
+            StringBuilder errorString = new StringBuilder();
+            for (ErrorResult errorResult : implementationErrorResults) {
+                errorString.append(errorResult.description).append("\n")
+                        .append(errorResult.offendingSnippet).append("\n\n");
+            }
+            ResultsResource resultsResource = new ResultsResource.Builder()
+                    .withFilePath(implementationFilePath)
+                    .withError(errorString.toString())
+                    .build();
+            resultsResources.add(resultsResource);
+        }
+        //filePaths.add(implementationFilePath);
         dynamicClassCompilerService.dynamicallyCompileFiles(filePaths, compileCallback1);
         try {
             latch1.await();
@@ -391,7 +407,6 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
             throw new RuntimeException(e);
         }
         List<String> nonErrorTestFilePaths = new ArrayList<>();
-        List<ResultsResource> resultsResources = new ArrayList<>();
         for (String testFilePath : testFilePaths) {
             List<ErrorResult> errorResults = findErrorService.getAllErrors(testFilePath, false);
             if(errorResults.isEmpty()) {

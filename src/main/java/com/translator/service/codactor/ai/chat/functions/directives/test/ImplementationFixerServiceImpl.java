@@ -35,6 +35,9 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
     @Override
     public ReplacedClassInfoResource startFixing(String implementationFilePath, String interfaceFilePath, List<ResultsResource> resultsResources) {
         String code = codeSnippetExtractorService.getAllText(implementationFilePath);
+        if (resultsResources.get(0).getFilePath().equals(implementationFilePath)) {
+            return fixImplementation(implementationFilePath, interfaceFilePath, resultsResources);
+        }
         if (isUnitTestCulpable(code, resultsResources)) {
             return fixUnitTest(implementationFilePath, resultsResources);
         } else {
@@ -44,8 +47,14 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
 
     public ReplacedClassInfoResource fixImplementation(String implementationFilePath, String interfaceFilePath, List<ResultsResource> resultsResources) {
         String code = codeSnippetExtractorService.getAllText(implementationFilePath);
-        StringBuilder failureString = assembleFailureString(code, resultsResources);
-        failureString.append("\nCan you fix the code to also pass this test?");
+        StringBuilder failureString;
+        if (resultsResources.get(0).getFilePath().equals(implementationFilePath)) {
+            failureString = assembleImplementationFailureString(code, resultsResources.get(0));
+            failureString.append("\nCan you fix the code?");
+        } else {
+            failureString = assembleFailureString(code, resultsResources);
+            failureString.append("\nCan you fix the code to also pass this test?");
+        }
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -172,6 +181,20 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
         String choice = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "choice");
         assert choice != null;
         return choice.equals("A");
+    }
+
+    private StringBuilder assembleImplementationFailureString(String implementationCode, ResultsResource resultsResource) {
+        StringBuilder failureString = new StringBuilder();
+        failureString.append("This code: ").append(implementationCode).append(" has the following errors: \n");
+        if (resultsResource.getResult() != null) {
+            Result result = resultsResource.getResult();
+            for (Failure failure : result.getFailures()) {
+                failureString.append(failure.getMessage());
+            }
+        } else {
+            failureString.append(resultsResource.getError());
+        }
+        return failureString;
     }
 
     private StringBuilder assembleFailureString(String implementationCode, List<ResultsResource> resultsResources) {
