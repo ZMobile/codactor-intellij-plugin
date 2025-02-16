@@ -13,9 +13,13 @@ import com.intellij.psi.PsiDirectory;
 import com.intellij.ui.JBSplitter;
 import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.codactor.ai.chat.InquiryChat;
+import com.translator.model.codactor.ai.chat.function.directive.test.ReplacedClassInfoResource;
 import com.translator.model.codactor.ai.modification.test.UnitTestData;
+import com.translator.service.codactor.ai.chat.functions.directives.test.CompileAndRunTestsService;
+import com.translator.service.codactor.ai.chat.functions.directives.test.ImplementationFixerService;
 import com.translator.service.codactor.ai.modification.test.junit.CodeImplementationGeneratorService;
 import com.translator.service.codactor.ide.editor.EditorService;
+import com.translator.service.codactor.ide.editor.RangeReplaceService;
 import com.translator.service.codactor.ide.file.FileCreatorService;
 import com.translator.service.codactor.ide.file.FileRemoverService;
 import com.translator.service.codactor.ai.modification.test.junit.InterfaceTemplateGeneratorService;
@@ -23,6 +27,8 @@ import com.translator.service.codactor.ai.modification.test.junit.UnitTestGenera
 import com.translator.service.codactor.ai.modification.test.junit.UnitTestListGeneratorService;
 import com.translator.viewmodel.UnitTestPanel;
 import org.jetbrains.annotations.NotNull;
+import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -32,7 +38,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -57,6 +63,9 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
     private JPanel unitTestsPanel;
     private JPanel leftContentPane;
     private JPanel rightContentPane;
+    private JLabel unitTestStatusLabel;
+    private JTextArea failedUnitTestsTextArea;
+    //private JTextArea passedUnitTestsTextArea;
 
     private InterfaceTemplateGeneratorService interfaceTemplateGeneratorService;
     private UnitTestListGeneratorService unitTestListGeneratorService;
@@ -65,6 +74,9 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
     private FileCreatorService fileCreatorService;
     private FileRemoverService fileRemoverService;
     private EditorService editorService;
+    private CompileAndRunTestsService compileAndRunTestsService;
+    private ImplementationFixerService implementationFixerService;
+    private RangeReplaceService rangeReplaceService;
 
     @Inject
     public FileCreateWithUnitTestsDialog(@Assisted PsiDirectory directory,
@@ -73,13 +85,19 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
                                          UnitTestGeneratorService unitTestGeneratorService,
                                          CodeImplementationGeneratorService codeImplementationGeneratorService,
                                          FileCreatorService fileCreatorService,
-                                         EditorService editorService) {
+                                         EditorService editorService,
+                                         CompileAndRunTestsService compileAndRunTestsService,
+                                         ImplementationFixerService implementationFixerService,
+                                         RangeReplaceService rangeReplaceService) {
         this.interfaceTemplateGeneratorService = interfaceTemplateGeneratorService;
         this.unitTestListGeneratorService = unitTestListGeneratorService;
         this.unitTestGeneratorService = unitTestGeneratorService;
         this.codeImplementationGeneratorService = codeImplementationGeneratorService;
         this.fileCreatorService = fileCreatorService;
         this.editorService = editorService;
+        this.compileAndRunTestsService = compileAndRunTestsService;
+        this.implementationFixerService = implementationFixerService;
+        this.rangeReplaceService = rangeReplaceService;
         // Set up the main split pane
         mainSplitPane = new JBSplitter(false);
         /*mainSplitPane.setResizeWeight(0.5); // Distribute space evenly initially
@@ -138,11 +156,12 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         // Create the bottom panel (unit test runner)
         JPanel unitTestPanel = new JPanel(new BorderLayout());
         unitTestPanel.setBorder(BorderFactory.createTitledBorder("Unit Test Runner"));
-        JTextArea unitTestOutputArea = new JTextArea("Unit test output will appear here...");
+        /*JTextArea unitTestOutputArea = new JTextArea("Unit test output will appear here...");
         unitTestOutputArea.setEditable(false);
         unitTestOutputArea.setBackground(new Color(60, 63, 65)); // Match IntelliJ theme
-        unitTestOutputArea.setForeground(Color.WHITE);
-        unitTestPanel.add(new JScrollPane(unitTestOutputArea), BorderLayout.CENTER);
+        unitTestOutputArea.setForeground(Color.WHITE);*/
+        //unitTestPanel.add(new JScrollPane(unitTestOutputArea), BorderLayout.CENTER);
+        populateUnitTestsPanel(unitTestPanel);
 
         // Create a vertical split pane
         JBSplitter splitPane = new JBSplitter(true);
@@ -211,7 +230,8 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
                     throw new RuntimeException("Interface test generation interrupted", e2);
                 }
 */
-                regenerateUnitTestList(interfaceInquiryChat);
+                //regenerateUnitTestList(interfaceInquiryChat);
+                //runUnitTestsAndGetFeedback();
             //}).start();
             //More will be added here
         });
@@ -483,7 +503,7 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         String className = extractClassNameFromCode(code);
 
         // Use class name as the file name
-        String implementationFileName = className + ".java";
+        implementationFileName = className + ".java";
 
         if (!implementationFileName.endsWith(".java")) {
             implementationFileName += ".java";
@@ -493,6 +513,7 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
+        runUnitTestsAndGetFeedback(null);
         implementationEditor = editorService.getEditorHeadless(directoryPath + "/" + implementationFileName);
         // Refresh the UI
         ApplicationManager.getApplication().invokeLater(() -> {
@@ -500,10 +521,6 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
             implementationPanel.revalidate();
             implementationPanel.repaint();
                 });
-    }
-
-    private void runUnitTestsOnTheImplementation() {
-
     }
 
     // Helper method to extract class name
@@ -697,15 +714,6 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         }
     }
 
-
-
-    private void populateUnitTestsPanel() {
-        for (int i = 0; i < 10; i++) {
-            addUnitTest();
-        }
-    }
-
-
     private JPanel makeResizable(Editor editor) {
         JPanel resizablePanel = new JPanel(new BorderLayout());
         ApplicationManager.getApplication().invokeAndWait(() -> {
@@ -770,5 +778,118 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         //Editor editor = editorService.getEditorHeadless("/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/view/codactor/dialog/LoginDialog.java");
         System.out.println("Editor: " + editor);
         return editor;
+    }
+
+    public void runUnitTestsAndGetFeedback(ReplacedClassInfoResource replacedClassInfoResource) {
+        String directoryPath = directory.getVirtualFile().getPath();
+        String implementationFilePath = directoryPath + "/" + implementationFileName;
+        String interfaceFilePath = directoryPath + "/" + interfaceFileName;
+        if (!implementationFileName.endsWith(".java")) {
+            implementationFilePath += ".java";
+        }
+        if (!interfaceFileName.endsWith(".java")) {
+            interfaceFilePath += ".java";
+        }
+        this.unitTestStatusLabel.setText("Compiling and running...");
+        String finalImplementationFilePath = implementationFilePath;
+        String finalInterfaceFilePath = interfaceFilePath;
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            Map<String, Result> results = compileAndRunTestsService.compileAndRunUnitTests(finalInterfaceFilePath, finalImplementationFilePath, directoryPath);
+            List<Result> failedResults = new ArrayList<>();
+            List<Result> passedResults = new ArrayList<>();
+            for (Result result : results.values()) {
+                if (result.wasSuccessful()) {
+                    passedResults.add(result);
+                } else {
+                    failedResults.add(result);
+                }
+            }
+            this.unitTestStatusLabel.setText("Unit Test Status: (" + passedResults.size() + "/" + results.size() + ") passed");
+            StringBuilder failedUnitTestsText = new StringBuilder("Failed Unit Tests: \n\n");
+            for (Result result : failedResults) {
+                for (Failure failure : result.getFailures()) {
+                    failedUnitTestsText.append(failure.toString()).append("\n");
+                }
+                failedUnitTestsText.append("\n");
+            }
+            this.failedUnitTestsTextArea.setText(failedUnitTestsText.toString());
+
+            if (failedResults.isEmpty()) {
+                this.failedUnitTestsTextArea.setText("All unit tests passed!");
+            } else {
+                this.failedUnitTestsTextArea.setText(failedUnitTestsText.toString());
+                boolean areNewResultsBetter = areNewResultsBetter(replacedClassInfoResource.getFormerResults(), results);
+
+                if (areNewResultsBetter) {
+                    ReplacedClassInfoResource newReplacedClassInfoResource = implementationFixerService.startFixing(finalImplementationFilePath, results);
+
+                    runUnitTestsAndGetFeedback(newReplacedClassInfoResource);
+                } else {
+                    System.out.println("The new results are not better than the old results");
+                    rangeReplaceService.replaceRange(replacedClassInfoResource.getFilePath(), 0, replacedClassInfoResource.getNewCode().length(), replacedClassInfoResource.getOldCode(), true);
+
+                    Map<String, Result> formerResults = replacedClassInfoResource.getFormerResults();
+
+                    if (!formerResults.isEmpty()) {
+                        // Use LinkedHashMap to maintain order
+                        LinkedHashMap<String, Result> reordered = new LinkedHashMap<>();
+
+                        // Store the first entry separately
+                        Iterator<Map.Entry<String, Result>> iterator = formerResults.entrySet().iterator();
+                        Map.Entry<String, Result> firstEntry = iterator.next();
+
+                        // Add the remaining entries
+                        while (iterator.hasNext()) {
+                            Map.Entry<String, Result> entry = iterator.next();
+                            reordered.put(entry.getKey(), entry.getValue());
+                        }
+
+                        // Add the first entry to the end
+                        reordered.put(firstEntry.getKey(), firstEntry.getValue());
+
+                        // Assign to the field*/
+                        replacedClassInfoResource.setFormerResults(reordered);
+                    }
+
+                    runUnitTestsAndGetFeedback(replacedClassInfoResource);
+                }
+            }
+            /*StringBuilder passedUnitTestsText = new StringBuilder("Passed Unit Tests: \n\n");
+            for (Result result : passedResults) {
+                passedUnitTestsText.append(result).append(" tests passed\n");
+            }
+            this.passedUnitTestsTextArea.setText(passedUnitTestsText.toString());*/
+        });
+    }
+
+    public void populateUnitTestsPanel(JPanel unitTestsPanel) {
+        this.unitTestStatusLabel = new JLabel("Unit Test Status: Not Started");
+        unitTestsPanel.add(this.unitTestStatusLabel, BorderLayout.NORTH);
+        this.failedUnitTestsTextArea = new JTextArea("Failed Unit Tests: ");
+        unitTestsPanel.add(this.failedUnitTestsTextArea, BorderLayout.CENTER);
+        /*this.passedUnitTestsTextArea = new JTextArea("Passed Unit Tests: ");
+        unitTestsPanel.add(this.passedUnitTestsTextArea, BorderLayout.SOUTH);*/
+    }
+
+    //
+
+    private boolean areNewResultsBetter(Map<String, Result> oldResults, Map<String, Result> newResults) {
+        //Measurement: less failures OR, more total tests passed
+        int oldFailures = 0;
+        int newFailures = 0;
+        for (Result result : oldResults.values()) {
+            if (!result.wasSuccessful()) {
+                oldFailures++;
+            }
+        }
+        for (Result result : newResults.values()) {
+            if (!result.wasSuccessful()) {
+                newFailures++;
+            }
+        }
+        if (newFailures == oldFailures) {
+            return newResults.size() > oldResults.size();
+        }
+        return newFailures < oldFailures;
     }
 }

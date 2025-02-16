@@ -9,6 +9,10 @@ import com.intellij.openapi.vfs.VirtualFile;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DynamicClassCompilerServiceImpl implements DynamicClassCompilerService {
     private final Project project;
@@ -35,6 +39,34 @@ public class DynamicClassCompilerServiceImpl implements DynamicClassCompilerServ
         };
         dynamicallyCompileClass(filePath, callback);
     }
+
+    @Override
+    public void dynamicallyCompileDirectory(String directoryPath, CompileStatusNotification compileStatusNotification) {
+        VirtualFile directory = LocalFileSystem.getInstance().findFileByIoFile(new File(directoryPath));
+
+        if (directory == null || !directory.isDirectory()) {
+            System.out.println("Error: Directory not found: " + directoryPath);
+            return;
+        }
+
+        List<VirtualFile> javaFiles = Arrays.stream(directory.getChildren())
+                .filter(file -> file.getName().endsWith(".java"))
+                .collect(Collectors.toList());
+
+
+        if (javaFiles.isEmpty()) {
+            System.out.println("No Java files found in directory: " + directoryPath);
+            return;
+        }
+        //String buildOutputParentDirectoryPath = relevantBuildOutputLocatorService.locateRelevantBuildOutput(javaFiles.get(0).getPath());
+
+        CompilerManager compilerManager = CompilerManager.getInstance(project);
+        ApplicationManager.getApplication().invokeLater(() ->
+                compilerManager.compile(javaFiles.toArray(new VirtualFile[0]), compileStatusNotification)
+        );
+        System.out.println("Compilation request for directory sent.");
+    }
+
 
     @Override
     public void dynamicallyCompileClass(String filePath, CompileStatusNotification compileStatusNotification) {

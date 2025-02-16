@@ -2,6 +2,7 @@ package com.translator.service.codactor.ai.chat.inquiry;
 
 import com.translator.model.codactor.ai.chat.Inquiry;
 import com.translator.model.codactor.ai.chat.InquiryChat;
+import com.translator.model.codactor.ai.chat.function.GptFunction;
 import com.translator.model.codactor.ai.history.HistoricalContextObjectHolder;
 import com.translator.model.codactor.ai.modification.RecordType;
 import com.translator.view.codactor.viewer.inquiry.InquiryViewer;
@@ -10,6 +11,8 @@ import java.util.List;
 
 public interface InquiryService {
     Inquiry createHeadlessInquiry(String question, String model, boolean functionsEnabled);
+
+    Inquiry createHeadlessInquiry(String question, String model, List<GptFunction> functions);
 
     InquiryViewer createInquiry(InquiryViewer inquiryViewer, String subjectRecordId, RecordType recordType, String question, String filePath, String model);
 

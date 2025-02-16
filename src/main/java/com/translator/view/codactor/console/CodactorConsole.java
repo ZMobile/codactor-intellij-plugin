@@ -12,8 +12,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.*;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
-import com.translator.model.codactor.ide.file.FileItem;
 import com.translator.model.codactor.ai.modification.ModificationType;
+import com.translator.model.codactor.ide.file.FileItem;
 import com.translator.service.codactor.ai.chat.context.PromptContextService;
 import com.translator.service.codactor.ai.chat.functions.InquiryFunctionCallProcessorService;
 import com.translator.service.codactor.ai.chat.functions.directives.test.CompileAndRunTestsService;
@@ -263,10 +263,7 @@ public class CodactorConsole extends JBPanel<CodactorConsole> {
             public void actionPerformed(ActionEvent e) {
                 try {
                     ApplicationManager.getApplication().executeOnPooledThread(() -> {
-                        java.util.List<String> responses = compileAndRunTestsService.compileAndRunUnitTests("/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/ai/chat/functions/directives/test/matrix/TwoDimensionalMatrixRotatorServiceImpl.java", "/Users/zantehays/IdeaProjects/codactor-intellij-plugin/src/main/java/com/translator/service/codactor/ai/chat/functions/directives/test/matrix");
-                        for (String response : responses) {
-                            System.out.println("Response: " + response);
-                        }
+
                     });
                 } catch (Exception exception) {
                     exception.printStackTrace();

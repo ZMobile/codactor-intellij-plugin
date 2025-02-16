@@ -15,13 +15,14 @@ import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirectiveSession;
 import com.translator.service.codactor.io.DynamicClassCompilerService;
 import com.translator.service.codactor.io.DynamicClassLoaderService;
+import org.junit.runner.Result;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -121,20 +122,21 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
         //return new ArrayList<>();
     }*/
 
-    @Override
-    public List<String> compileAndRunUnitTests(String implementationFilePath, String directoryPath) {
+    /*@Override
+    public Map<String, Result> compileAndRunUnitTests(String interfaceFilePath, String implementationFilePath, String directoryPath) {
         List<String> testFilePaths = findTestsInDirectoryService.findTestsInDirectory(directoryPath);
         System.out.println("This gets called 1");
         CompilerManager compilerManager = CompilerManager.getInstance(project);
-        CountDownLatch latch = new CountDownLatch(1);
-        AtomicReference<List<String>> resultsRef = new AtomicReference<>();
+        CountDownLatch latch1 = new CountDownLatch(1);
+        CountDownLatch latch2 = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(/*testFilePaths.size()* 1); // +1 for the implementation file +1 for the interface file
+        AtomicReference<Map<String, Result>> resultsRef = new AtomicReference<>();
         AtomicReference<Exception> compilationException = new AtomicReference<>();
 
-        /* Save documents before compilation
         ApplicationManager.getApplication().invokeAndWait(
                 () -> FileDocumentManager.getInstance().saveAllDocuments(),
                 ModalityState.defaultModalityState()
-        );*/
+        );
 
         CompileStatusNotification compileCallback = (aborted, errors, warnings, compileContext) -> {
             try {
@@ -157,22 +159,116 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
                 }
                 /*for (String result : resultsRef.get()) {
                     System.out.println(result);
-                }*/
+                }**
                 System.out.println("Full project rebuild completed successfully.");
                 latch.countDown();
             }
         };
         System.out.println("This gets called 2");
-        // Call rebuild on the EDT (required by IntelliJ)
+        // Perform a FULL REBUILD
+
+        /*CompileStatusNotification compileCallback1 = (aborted, errors, warnings, compileContext) -> {
+            try {
+                if (aborted) {
+                    System.out.println("Compilation aborted.");
+                    compilationException.set(new Exception("Compilation aborted."));
+                } else if (errors > 0) {
+                    System.out.println("Compilation finished with errors.");
+                    compilationException.set(new Exception("Compilation finished with errors."));
+                } else {
+                    System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                }
+            } catch (Exception e) {
+                compilationException.set(e);
+            } finally {
+                System.out.println("Compilation completed.");
+                latch1.countDown(); // Signal that this compilation is complete
+            }
+        };
+        CompileStatusNotification compileCallback2 = (aborted, errors, warnings, compileContext) -> {
+            try {
+                if (aborted) {
+                    System.out.println("Compilation aborted.");
+                    compilationException.set(new Exception("Compilation aborted."));
+                } else if (errors > 0) {
+                    System.out.println("Compilation finished with errors.");
+                    compilationException.set(new Exception("Compilation finished with errors."));
+                } else {
+                    System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                }
+            } catch (Exception e) {
+                compilationException.set(e);
+            } finally {
+                System.out.println("Compilation completed.");
+                latch2.countDown(); // Signal that this compilation is complete
+            }
+        };
+
+        CompileStatusNotification compileCallback = (aborted, errors, warnings, compileContext) -> {
+            try {
+                if (aborted) {
+                    System.out.println("Compilation aborted.");
+                    compilationException.set(new Exception("Compilation aborted."));
+                } else if (errors > 0) {
+                    System.out.println("Compilation finished with errors.");
+                    compilationException.set(new Exception("Compilation finished with errors."));
+                } else {
+                    System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                }
+            } catch (Exception e) {
+                compilationException.set(e);
+            } finally {
+                System.out.println("Compilation completed.");
+                latch.countDown(); // Signal that this compilation is complete
+            }
+        };
+
+        // Save all open documents before starting the compilation
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            FileDocumentManager.getInstance().saveAllDocuments();
+        }, ModalityState.defaultModalityState());
+
+        // Compile the implementation file
+        System.out.println("Interface file path: " + interfaceFilePath);
+        dynamicClassCompilerService.dynamicallyCompileClass(interfaceFilePath, compileCallback1);
+
+        try {
+            latch1.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        // Compile the implementation file
+        System.out.println("Implementation file path: " + implementationFilePath);
+        dynamicClassCompilerService.dynamicallyCompileClass(implementationFilePath, compileCallback2);
+
+        try {
+            latch2.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        // Compile all unit test files
+        for (String testFilePath : testFilePaths) {
+            dynamicClassCompilerService.dynamicallyCompileClass(testFilePath, compileCallback);
+        }*/
+
+
+        /*// Call rebuild on the EDT (required by IntelliJ)
         ApplicationManager.getApplication().invokeLater(() -> {
             System.out.println("Starting incremental project compile on EDT...");
             compilerManager.compile(compilerManager.createProjectCompileScope(project), compileCallback);
-        });
+        });*
 
+        dynamicClassCompilerService.dynamicallyCompileDirectory(directoryPath, compileCallback);
         try {
             // Wait for all compilations to complete
             latch.await();
-
+            ApplicationManager.getApplication().invokeAndWait(() -> {
+                System.out.println("Starting FULL project rebuild...");
+                compilerManager.rebuild(compileCallback);
+            });
+            resultsRef.set(runTestAndGetOutputService.runTestsAndGetOutputs(
+                    implementationFilePath, testFilePaths
+            ));
             return resultsRef.get();
         } catch (Exception e) {
             e.printStackTrace();
@@ -198,8 +294,191 @@ public class CompileAndRunTestsServiceImpl implements CompileAndRunTestsService 
         }*
 
         return resultsRef.get();*
-    }*/
+    }*
         //return new ArrayList<>();
+    }*/
+
+    @Override
+    public Map<String, Result> compileAndRunUnitTests(String interfaceFilePath, String implementationFilePath, String directoryPath) {
+        List<String> testFilePaths = findTestsInDirectoryService.findTestsInDirectory(directoryPath);
+        System.out.println("This gets called 1");
+        CompilerManager compilerManager = CompilerManager.getInstance(project);
+        CountDownLatch latch1 = new CountDownLatch(1);
+        CountDownLatch latch2 = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(1); // +1 for the implementation file +1 for the interface file
+        AtomicReference<Map<String, Result>> resultsRef = new AtomicReference<>();
+        AtomicReference<Exception> compilationException = new AtomicReference<>();
+
+        ApplicationManager.getApplication().invokeAndWait(
+                () -> FileDocumentManager.getInstance().saveAllDocuments(),
+                ModalityState.defaultModalityState()
+        );
+
+        CompileStatusNotification compileCallback = (aborted, errors, warnings, compileContext) -> {
+            try {
+                if (aborted) {
+                    System.err.println("Compilation aborted.");
+                    compilationException.set(new Exception("Compilation aborted."));
+                } else if (errors > 0) {
+                    System.err.println("Compilation finished with errors.");
+                    compilationException.set(new Exception("Compilation finished with errors."));
+                } else {
+                    System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                }
+            } finally {
+                /*try {
+                    resultsRef.set(runTestAndGetOutputService.runTestsAndGetOutputs(
+                            implementationFilePath, testFilePaths
+                    ));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }*/
+
+                System.out.println("Full project rebuild completed successfully.");
+                latch.countDown();
+            }
+        };
+        System.out.println("This gets called 2");
+        dynamicClassCompilerService.dynamicallyCompileDirectory(directoryPath, compileCallback);
+        try {
+            // Wait for all compilations to complete
+            latch.await();
+            ApplicationManager.getApplication().invokeAndWait(() -> {
+                System.out.println("Starting FULL project rebuild...");
+                compilerManager.rebuild(compileCallback);
+            });
+            resultsRef.set(runTestAndGetOutputService.runTestsAndGetOutputs(
+                    implementationFilePath, testFilePaths
+            ));
+            return resultsRef.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to compile and run unit tests: " + e.getMessage(), e);
+        }
     }
 
+    /*@Override
+    public Map<String, Result> compileAndRunUnitTests(String interfaceFilePath, String implementationFilePath, String directoryPath) {
+        List<String> testFilePaths = findTestsInDirectoryService.findTestsInDirectory(directoryPath);
+        System.out.println("This gets called 1");
+        CompilerManager compilerManager = CompilerManager.getInstance(project);
+        CountDownLatch latch1 = new CountDownLatch(1);
+        CountDownLatch latch2 = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(testFilePaths.size()); // +1 for the implementation file +1 for the interface file
+        AtomicReference<Map<String, Result>> resultsRef = new AtomicReference<>();
+        AtomicReference<Exception> compilationException = new AtomicReference<>();
+
+        ApplicationManager.getApplication().invokeAndWait(
+                () -> FileDocumentManager.getInstance().saveAllDocuments(),
+                ModalityState.defaultModalityState()
+        );
+
+        CompileStatusNotification compileCallback = (aborted, errors, warnings, compileContext) -> {
+            try {
+                if (aborted) {
+                    System.err.println("Compilation aborted.");
+                    compilationException.set(new Exception("Compilation aborted."));
+                } else if (errors > 0) {
+                    System.err.println("Compilation finished with errors.");
+                    compilationException.set(new Exception("Compilation finished with errors."));
+                } else {
+                    System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                }
+            } finally {
+                try {
+                    resultsRef.set(runTestAndGetOutputService.runTestsAndGetOutputs(
+                            implementationFilePath, testFilePaths
+                    ));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                System.out.println("Full project rebuild completed successfully.");
+                latch.countDown();
+            }
+        };
+        System.out.println("This gets called 2");
+        // Perform a FULL REBUILD
+
+        CompileStatusNotification compileCallback1 = (aborted, errors, warnings, compileContext) -> {
+            try {
+                if (aborted) {
+                    System.out.println("Compilation aborted.");
+                    compilationException.set(new Exception("Compilation aborted."));
+                } else if (errors > 0) {
+                    System.out.println("Compilation finished with errors.");
+                    compilationException.set(new Exception("Compilation finished with errors."));
+                } else {
+                    System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                }
+            } catch (Exception e) {
+                compilationException.set(e);
+            } finally {
+                System.out.println("Compilation completed.");
+                latch1.countDown(); // Signal that this compilation is complete
+            }
+        };
+        CompileStatusNotification compileCallback2 = (aborted, errors, warnings, compileContext) -> {
+            try {
+                if (aborted) {
+                    System.out.println("Compilation aborted.");
+                    compilationException.set(new Exception("Compilation aborted."));
+                } else if (errors > 0) {
+                    System.out.println("Compilation finished with errors.");
+                    compilationException.set(new Exception("Compilation finished with errors."));
+                } else {
+                    System.out.println("Compilation completed successfully with " + warnings + " warnings.");
+                }
+            } catch (Exception e) {
+                compilationException.set(e);
+            } finally {
+                System.out.println("Compilation completed.");
+                latch2.countDown(); // Signal that this compilation is complete
+            }
+        };
+
+        // Save all open documents before starting the compilation
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            FileDocumentManager.getInstance().saveAllDocuments();
+        }, ModalityState.defaultModalityState());
+
+        // Compile the implementation file
+        System.out.println("Interface file path: " + interfaceFilePath);
+        dynamicClassCompilerService.dynamicallyCompileClass(interfaceFilePath, compileCallback1);
+
+        try {
+            latch1.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        // Compile the implementation file
+        System.out.println("Implementation file path: " + implementationFilePath);
+        dynamicClassCompilerService.dynamicallyCompileClass(implementationFilePath, compileCallback2);
+
+        try {
+            latch2.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        // Compile all unit test files
+        for (String testFilePath : testFilePaths) {
+            dynamicClassCompilerService.dynamicallyCompileClass(testFilePath, compileCallback);
+        }
+
+
+        try {
+            // Wait for all compilations to complete
+            latch.await();
+            ApplicationManager.getApplication().invokeAndWait(() -> {
+                System.out.println("Starting FULL project rebuild...");
+                compilerManager.rebuild(compileCallback);
+            });
+            resultsRef.set(runTestAndGetOutputService.runTestsAndGetOutputs(
+                    implementationFilePath, testFilePaths
+            ));
+            return resultsRef.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to compile and run unit tests: " + e.getMessage(), e);
+        }
+    }*/
 }

@@ -2,6 +2,7 @@ package com.translator.service.codactor.ai.chat.functions.directives.test;
 
 import com.intellij.openapi.project.Project;
 import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirectiveSession;
+import com.translator.model.codactor.ai.chat.function.directive.test.TestClassInfoResource;
 import com.translator.service.codactor.ai.modification.authorization.VerifyIsTestFileService;
 import com.translator.service.codactor.io.CustomURLClassLoader;
 import com.translator.service.codactor.io.DynamicClassLoaderService;
@@ -20,6 +21,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputService {
     private final Project project;
@@ -95,24 +97,28 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
         return resultString.toString();
     }
 
-    public List<String> runTestsAndGetOutputs(String implementationFilePath, List<String> unitTestFilePaths) throws Exception {
-        List<String> results = new ArrayList<>();
+    public Map<String, Result> runTestsAndGetOutputs(String implementationFilePath, List<String> unitTestFilePaths) throws Exception {
+        Map<String, Result> filePathToResultsMap = new HashMap<>();
 
         // Normalize file paths and validate the existence of build output files
-        HashMap<String, String> classToBuildOutputPath = new HashMap<>();
+        List<TestClassInfoResource> testClassInfoResources = new ArrayList<>();
         for (String testFilePath : unitTestFilePaths) {
             String isolatedClassName = testFilePath.substring(testFilePath.lastIndexOf("/") + 1, testFilePath.lastIndexOf("."));
             String testFilePackagePath = testFilePath.substring(testFilePath.indexOf("java/") + 5, testFilePath.lastIndexOf("/")).replace("/", ".");
             String testFileClassName = testFilePackagePath + "." + isolatedClassName;
             String buildOutputParentDirectoryPath = relevantBuildOutputLocatorService.locateRelevantBuildOutput(testFilePath);
             String buildOutputPath = buildOutputParentDirectoryPath + "/" + isolatedClassName + ".class";
-
-            classToBuildOutputPath.put(testFileClassName, buildOutputPath);
+            if (buildOutputParentDirectoryPath == null) {
+                throw new Exception("Build output path could not be located for " + testFilePath);
+            }
+            TestClassInfoResource testClassInfoResource = new TestClassInfoResource.Builder()
+                    .withClassName(testFileClassName)
+                    .withPath(testFilePath)
+                    .withBuildOutputPath(buildOutputPath)
+                    .build();
+            testClassInfoResources.add(testClassInfoResource);
             File buildOutputFile = new File(buildOutputPath);
             System.out.println("Build output file exists for " + testFileClassName + ": " + buildOutputFile.exists());
-            if (!buildOutputFile.exists()) {
-                throw new Exception("Build output file does not exist: " + buildOutputPath + ". Please try again in a few moments after the compilation has completed.");
-            }
         }
 
         // Redirect System.out to capture output
@@ -128,18 +134,19 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
             CustomURLClassLoader classLoader = dynamicClassLoaderService.dynamicallyLoadClass(targetFilePaths);
 
             // Run each test class
-            for (String testFileClassName : classToBuildOutputPath.keySet()) {
+            for (TestClassInfoResource testClassInfoResource : testClassInfoResources) {
                 StringBuilder resultString = new StringBuilder();
                 try {
                     // Dynamically load and run the test class
                     Result result = (Result) classLoader.loadClass(JUnitCore.class.getName())
                             .getMethod("runClasses", Class[].class)
-                            .invoke(null, (Object) new Class[]{classLoader.loadClass(testFileClassName)});
+                            .invoke(null, (Object) new Class[]{classLoader.loadClass(testClassInfoResource.getClassName())});
 
                     for (Failure failure : result.getFailures()) {
                         resultString.append("\n").append(failure.toString());
                     }
                     resultString.append("\nSuccess: ").append(result.wasSuccessful());
+                    filePathToResultsMap.put(testClassInfoResource.getPath(), result);
                 } catch (Exception e) {
                     e.printStackTrace();
                     resultString.append("\nError: ").append(e.getMessage());
@@ -149,7 +156,8 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
                     if (!systemOutOutput.isEmpty()) {
                         resultString.append("\nSystem.out output:\n").append(systemOutOutput);
                     }
-                    results.add(resultString.toString());
+                    //results.add(resultString.toString());
+                    System.out.println(resultString);
                     outputStream.reset(); // Clear the output stream for the next test
                 }
             }
@@ -158,6 +166,6 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
             System.setOut(originalOut);
         }
 
-        return results;
+        return filePathToResultsMap;
     }
 }

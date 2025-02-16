@@ -9,5 +9,7 @@ public interface DynamicClassCompilerService {
 
     void dynamicallyRebuildAllClasses();
 
+    void dynamicallyCompileDirectory(String directoryPath, CompileStatusNotification compileStatusNotification);
+
     void dynamicallyRebuildAllClasses(CompileStatusNotification compileStatusNotification);
 }

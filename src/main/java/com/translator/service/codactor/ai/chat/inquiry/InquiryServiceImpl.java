@@ -96,6 +96,18 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     @Override
+    public Inquiry createHeadlessInquiry(String question, String model, List<GptFunction> functions) {
+        String openAiApiKey;
+        if (azureConnectionService.isAzureConnected()) {
+            openAiApiKey = azureConnectionService.getKey();
+        } else {
+            openAiApiKey = defaultConnectionService.getOpenAiApiKey();
+        }
+        String systemMessage = inquirySystemMessageGeneratorService.generateDefaultSystemMessage();
+        return inquiryDao.createGeneralInquiry(question, openAiApiKey, model, azureConnectionService.isAzureConnected(), azureConnectionService.getResource(), azureConnectionService.getDeploymentForModel(model), new ArrayList<>(), functions, systemMessage);
+    }
+
+    @Override
     public InquiryViewer createInquiry(InquiryViewer inquiryViewer, String subjectRecordId, RecordType recordType, String question, String filePath, String model) {
         String likelyCodeLanguage = gptToLanguageTransformerService.getFromFilePath(filePath);
         Inquiry inquiry = new Inquiry.Builder()

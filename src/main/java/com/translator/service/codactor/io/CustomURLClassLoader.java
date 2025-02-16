@@ -17,7 +17,7 @@ public class CustomURLClassLoader extends URLClassLoader {
         this.targetClassNames = targetClassNames;
     }
 
-    /*@Override
+    @Override
     public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         // If it's the class we want to reload, force reloading from file
         for (String targetClassName : targetClassNames) {
@@ -26,33 +26,6 @@ public class CustomURLClassLoader extends URLClassLoader {
             }
         }
         // Delegate to parent for other classes
-        return super.loadClass(name, resolve);
-    }*/
-    /*@Override
-    public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        // Delegate common libraries (like JUnit) to the parent
-        if (name.startsWith("org.junit.")) {
-            return super.loadClass(name, resolve);
-        }
-        // For the classes we want to reload
-        for (String targetClassName : targetClassNames) {
-            if (name.equals(targetClassName)) {
-                return loadTestedClassFromFile(name);
-            }
-        }
-        // Otherwise, delegate normally
-        return super.loadClass(name, resolve);
-    }*/
-    @Override
-    public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        if (name.startsWith("org.junit.") || name.startsWith("org.hamcrest.")) {
-            return super.loadClass(name, resolve);
-        }
-        for (String targetClassName : targetClassNames) {
-            if (name.equals(targetClassName)) {
-                return loadTestedClassFromFile(name);
-            }
-        }
         return super.loadClass(name, resolve);
     }
 
