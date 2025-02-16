@@ -33,16 +33,16 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
     }
 
     @Override
-    public ReplacedClassInfoResource startFixing(String implementationFilePath, List<ResultsResource> resultsResources) {
+    public ReplacedClassInfoResource startFixing(String implementationFilePath, String interfaceFilePath, List<ResultsResource> resultsResources) {
         String code = codeSnippetExtractorService.getAllText(implementationFilePath);
         if (isUnitTestCulpable(code, resultsResources)) {
             return fixUnitTest(implementationFilePath, resultsResources);
         } else {
-            return fixImplementation(implementationFilePath, resultsResources);
+            return fixImplementation(implementationFilePath, interfaceFilePath, resultsResources);
         }
     }
 
-    public ReplacedClassInfoResource fixImplementation(String implementationFilePath, List<ResultsResource> resultsResources) {
+    public ReplacedClassInfoResource fixImplementation(String implementationFilePath, String interfaceFilePath, List<ResultsResource> resultsResources) {
         String code = codeSnippetExtractorService.getAllText(implementationFilePath);
         StringBuilder failureString = assembleFailureString(code, resultsResources);
         failureString.append("\nCan you fix the code to also pass this test?");
@@ -63,7 +63,9 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
             newImplementationCode = newImplementationCode.substring(1);
         }
         if (newImplementationCode.contains("public interface")) {
-            String followUp = "The code provided is an interface. Please provide an implementation.";
+            String followUp = "The code provided is an interface. This code already has the following interface: " +
+                    codeSnippetExtractorService.getAllText(interfaceFilePath) +
+                    ". Please provide an implementation for this interface.";
             inquiryChat = inquiryService.continueHeadlessInquiry(inquiry, inquiryChat.getId(), followUp, "gpt-4o", false);
             startOfCode = inquiryChat.getMessage().substring(inquiryChat.getMessage().indexOf("```") + 3);
             newImplementationCode = startOfCode.substring(0, startOfCode.indexOf("```"));
@@ -90,7 +92,7 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
     public ReplacedClassInfoResource fixUnitTest(String implementationFilePath, List<ResultsResource> resultsResources) {
         String code = codeSnippetExtractorService.getAllText(implementationFilePath);
         StringBuilder failureString = assembleFailureString(code, resultsResources);
-        failureString.append("\nIn this case, the unit test was determined to be culpable. Can you fix the unit test to have this test pass? Your code provided here will replace the unit test code.");
+        failureString.append("\nIn this case, the unit test was determined to be culpable. Can you fix the unit test to have this test pass? Your code provided here will replace the unit test code. Do not change the file name.");
         Inquiry inquiry = inquiryService.createHeadlessInquiry(failureString.toString(), "gpt-4o", false);
         InquiryChat inquiryChat = inquiry.getChats().get(inquiry.getChats().size() - 1);
         //Code is surrounded by "```" to indicate a code block. Isolate this code:
@@ -102,7 +104,13 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
         if (newUnitTestCode.startsWith("\n")) {
             newUnitTestCode = newUnitTestCode.substring(1);
         }
-        String unitTestFilePath = resultsResources.get(0).getFilePath();
+        List<ResultsResource> failedResults = new ArrayList<>();
+        for (ResultsResource resultsResource : resultsResources) {
+            if (resultsResource.getResult() == null || !resultsResource.getResult().wasSuccessful()) {
+                failedResults.add(resultsResource);
+            }
+        }
+        String unitTestFilePath = failedResults.get(0).getFilePath();
         System.out.println("Replacing unit test");
         System.out.println("Unit test file path: " + unitTestFilePath);
         String unitTestCode = codeSnippetExtractorService.getAllText(unitTestFilePath);
@@ -170,6 +178,10 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
         List<ResultsResource> failedResults = new ArrayList<>();
         List<ResultsResource> passedResults = new ArrayList<>();
         for (ResultsResource resultsResource : resultsResources) {
+            if (resultsResource.getResult() == null) {
+                failedResults.add(resultsResource);
+                continue;
+            }
             if (resultsResource.getResult().wasSuccessful()) {
                 passedResults.add(resultsResource);
             } else {
@@ -184,6 +196,8 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
                 .append("/")
                 .append(resultsResources.size())
                 .append(") tests. The following is a test that failed: \n")
+                .append("Test file path: ")
+                .append(failedResultResource.getFilePath())
                 .append("Test code:\n")
                 .append(codeSnippetExtractorService.getAllText(failedResultResource.getFilePath()))
                 .append("\n")

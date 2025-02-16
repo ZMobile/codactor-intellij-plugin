@@ -794,6 +794,7 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         this.unitTestStatusLabel.setText("Compiling and running...");
         String finalImplementationFilePath = implementationFilePath;
         String finalInterfaceFilePath = interfaceFilePath;
+        String finalInterfaceFilePath1 = interfaceFilePath;
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             List<ResultsResource> results = compileAndRunTestsService.compileAndRunUnitTests(finalInterfaceFilePath, finalImplementationFilePath, directoryPath);
             List<ResultsResource> failedResults = new ArrayList<>();
@@ -827,7 +828,7 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
                 System.out.println("Are new results better? " + areNewResultsBetter);
 
                 if (areNewResultsBetter) {
-                    ReplacedClassInfoResource newReplacedClassInfoResource = implementationFixerService.startFixing(finalImplementationFilePath, results);
+                    ReplacedClassInfoResource newReplacedClassInfoResource = implementationFixerService.startFixing(finalImplementationFilePath, finalInterfaceFilePath1, results);
 
                     runUnitTestsAndGetFeedback(newReplacedClassInfoResource);
                 } else {

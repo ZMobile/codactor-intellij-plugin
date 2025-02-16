@@ -8,5 +8,5 @@ import java.util.List;
 import java.util.Map;
 
 public interface ImplementationFixerService {
-    ReplacedClassInfoResource startFixing(String implementationFilePath, List<ResultsResource> resultsResources);
+    ReplacedClassInfoResource startFixing(String implementationFilePath, String interfaceFilePath, List<ResultsResource> resultsResources);
 }

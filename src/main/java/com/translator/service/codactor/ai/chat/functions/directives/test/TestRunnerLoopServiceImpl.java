@@ -60,7 +60,7 @@ public class TestRunnerLoopServiceImpl implements TestRunnerLoopService {
                 System.out.println("Are new results better? " + areNewResultsBetter);
 
                 if (areNewResultsBetter) {
-                    ReplacedClassInfoResource newReplacedClassInfoResource = implementationFixerService.startFixing(finalImplementationFilePath, results);
+                    ReplacedClassInfoResource newReplacedClassInfoResource = implementationFixerService.startFixing(finalImplementationFilePath, interfaceFilePath, results);
 
                     runUnitTestsAndGetFeedback(directoryPath, implementationFilePath, interfaceFilePath, newReplacedClassInfoResource);
                 } else {
