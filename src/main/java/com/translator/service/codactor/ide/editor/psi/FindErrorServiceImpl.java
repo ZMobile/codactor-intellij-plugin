@@ -11,6 +11,7 @@ import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.translator.model.codactor.ide.psi.error.ErrorResult;
+import com.translator.service.codactor.ide.editor.CodeSnippetExtractorService;
 import com.translator.service.codactor.ide.editor.CodeSnippetIndexGetterService;
 
 import java.util.ArrayList;
@@ -24,24 +25,27 @@ public class FindErrorServiceImpl implements FindErrorService {
     private final PsiFileService psiFileService;
     private final CodeSnippetIndexGetterService codeSnippetIndexGetterService;
     private final PsiElementCollectorService psiElementCollectorService;
+    private final CodeSnippetExtractorService codeSnippetExtractorService;
 
     @Inject
     public FindErrorServiceImpl(Project project,
                                 PsiFileService psiFileService,
                                 CodeSnippetIndexGetterService codeSnippetIndexGetterService,
-                                PsiElementCollectorService psiElementCollectorService) {
+                                PsiElementCollectorService psiElementCollectorService,
+                                CodeSnippetExtractorService codeSnippetExtractorService) {
         this.project = project;
         this.psiFileService = psiFileService;
         this.codeSnippetIndexGetterService = codeSnippetIndexGetterService;
         this.psiElementCollectorService = psiElementCollectorService;
+        this.codeSnippetExtractorService = codeSnippetExtractorService;
     }
 
     @Override
-    public List<ErrorResult> getAllErrors(String filePaths, boolean includeWarnings) {
+    public List<ErrorResult> getAllErrors(String filePath, boolean includeWarnings) {
         List<ErrorResult> results = new ArrayList<>();
         ApplicationManager.getApplication().invokeAndWait(() -> {
-            AtomicReference<PsiFile> psiFile = new AtomicReference<>(psiFileService.getPsiFileFromPath(filePaths));
-            ApplicationManager.getApplication().invokeAndWait(() -> psiFile.set(psiFileService.getPsiFileFromPath(filePaths)));
+            AtomicReference<PsiFile> psiFile = new AtomicReference<>(psiFileService.getPsiFileFromPath(filePath));
+            ApplicationManager.getApplication().invokeAndWait(() -> psiFile.set(psiFileService.getPsiFileFromPath(filePath)));
 
             Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile.get());
             if (document != null) {
@@ -52,7 +56,8 @@ public class FindErrorServiceImpl implements FindErrorService {
                         HighlightInfo info = (HighlightInfo) tooltip;
                         if (info.getSeverity() == HighlightSeverity.ERROR ||
                                 (includeWarnings && info.getSeverity() == HighlightSeverity.WARNING)) {
-                            results.add(new ErrorResult(info.getDescription(), info.getDescription()));
+                            String offendingCode = codeSnippetExtractorService.getCurrentAndNextLineCodeAfterIndex(filePath, highlighter.getStartOffset());
+                            results.add(new ErrorResult(info.getDescription(), offendingCode));
                         }
                     }
                 }

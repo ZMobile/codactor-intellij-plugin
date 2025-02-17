@@ -96,18 +96,29 @@ public class TestRunnerLoopServiceImpl implements TestRunnerLoopService {
         //Measurement: less failures OR, more total tests passed
         int oldFailures = 0;
         int newFailures = 0;
+        int oldCompErrors = 0;
+        int newCompErrors = 0;
         for (ResultsResource resultsResource : oldResults) {
             if (resultsResource.getResult() == null || !resultsResource.getResult().wasSuccessful()) {
                 oldFailures++;
+                if (resultsResource.getResult() == null) {
+                    oldCompErrors++;
+                }
             }
         }
         for (ResultsResource resultsResource : newResults) {
             if (resultsResource.getResult() == null || !resultsResource.getResult().wasSuccessful()) {
                 newFailures++;
+                if (resultsResource.getResult() == null) {
+                    newCompErrors++;
+                }
             }
         }
         if (newFailures == oldFailures) {
-            return newResults.size() > oldResults.size();
+            if (oldCompErrors == newCompErrors) {
+                return newResults.size() > oldResults.size();
+            }
+            return newCompErrors < oldCompErrors;
         }
         return newFailures < oldFailures;
     }
