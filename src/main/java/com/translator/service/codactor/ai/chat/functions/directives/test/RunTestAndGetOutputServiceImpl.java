@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.translator.model.codactor.ai.chat.function.directive.CreateAndRunUnitTestDirectiveSession;
 import com.translator.model.codactor.ai.chat.function.directive.test.ResultsResource;
 import com.translator.model.codactor.ai.chat.function.directive.test.TestClassInfoResource;
+import com.translator.model.codactor.ide.psi.error.ErrorResult;
 import com.translator.service.codactor.ai.modification.authorization.VerifyIsTestFileService;
 import com.translator.service.codactor.ide.editor.psi.FindErrorService;
 import com.translator.service.codactor.io.CustomURLClassLoader;
@@ -154,33 +155,50 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
             for (TestClassInfoResource testClassInfoResource : testClassInfoResources) {
                 StringBuilder resultString = new StringBuilder();
                 try {
-                    // Dynamically load and run the test class
-                    Result result = (Result) classLoader.loadClass(JUnitCore.class.getName())
-                            .getMethod("runClasses", Class[].class)
-                            .invoke(null, (Object) new Class[]{classLoader.loadClass(testClassInfoResource.getClassName())});
+                    try {
+                        // Dynamically load and run the test class
+                        Result result = (Result) classLoader.loadClass(JUnitCore.class.getName())
+                                .getMethod("runClasses", Class[].class)
+                                .invoke(null, (Object) new Class[]{classLoader.loadClass(testClassInfoResource.getClassName())});
+                        for (Failure failure : result.getFailures()) {
+                            resultString.append("\n").append(failure.toString());
+                            Throwable exception = failure.getException();
+                            if (exception != null) {
+                                resultString.append("\nException: ")
+                                        .append(exception.getClass().getName())
+                                        .append(": ")
+                                        .append(exception.getMessage())
+                                        .append("\nStack Trace:\n");
 
-                    for (Failure failure : result.getFailures()) {
-                        resultString.append("\n").append(failure.toString());
-                        Throwable exception = failure.getException();
-                        if (exception != null) {
-                            resultString.append("\nException: ")
-                                    .append(exception.getClass().getName())
-                                    .append(": ")
-                                    .append(exception.getMessage())
-                                    .append("\nStack Trace:\n");
-
-                            for (StackTraceElement element : exception.getStackTrace()) {
-                                resultString.append(element.toString()).append("\n");
+                                for (StackTraceElement element : exception.getStackTrace()) {
+                                    resultString.append(element.toString()).append("\n");
+                                }
                             }
                         }
+                        resultString.append("\nSuccess: ").append(result.wasSuccessful());
+                        ResultsResource resultResource = new ResultsResource.Builder()
+                                .withFilePath(testClassInfoResource.getPath())
+                                .withBuildOutputPath(testClassInfoResource.getBuildOutputPath())
+                                .withResult(result)
+                                .build();
+                        results.add(resultResource);
+                    } catch (NullPointerException e) {
+                        List<ErrorResult> errorResults = findErrorService.getAllErrors(testClassInfoResource.getPath(), false);
+                        if(!errorResults.isEmpty()) {
+                            StringBuilder errorString = new StringBuilder();
+                            for (ErrorResult errorResult : errorResults) {
+                                errorString.append(errorResult.description).append("\n")
+                                        .append(errorResult.offendingSnippet).append("\n\n");
+                            }
+                            ResultsResource resultsResource = new ResultsResource.Builder()
+                                    .withFilePath(testClassInfoResource.getPath())
+                                    .withError(errorString.toString())
+                                    .build();
+                            results.add(resultsResource);
+                        }
+                        e.printStackTrace();
+                        resultString.append("\nError: ").append(e.getMessage());
                     }
-                    resultString.append("\nSuccess: ").append(result.wasSuccessful());
-                    ResultsResource resultResource = new ResultsResource.Builder()
-                            .withFilePath(testClassInfoResource.getPath())
-                            .withBuildOutputPath(testClassInfoResource.getBuildOutputPath())
-                            .withResult(result)
-                            .build();
-                    results.add(resultResource);
                 } catch (Exception e) {
                     e.printStackTrace();
                     resultString.append("\nError: ").append(e.getMessage());
