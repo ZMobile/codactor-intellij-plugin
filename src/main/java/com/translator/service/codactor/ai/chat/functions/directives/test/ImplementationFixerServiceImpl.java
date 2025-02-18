@@ -6,6 +6,7 @@ import com.translator.model.codactor.ai.chat.function.GptFunction;
 import com.translator.model.codactor.ai.chat.function.GptFunctionCall;
 import com.translator.model.codactor.ai.chat.function.Parameters;
 import com.translator.model.codactor.ai.chat.function.Property;
+import com.translator.model.codactor.ai.chat.function.directive.test.ErrorCulpabilityResultResource;
 import com.translator.model.codactor.ai.chat.function.directive.test.ReplacedClassInfoResource;
 import com.translator.model.codactor.ai.chat.function.directive.test.ResultsResource;
 import com.translator.service.codactor.ai.chat.inquiry.InquiryService;
@@ -38,10 +39,11 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
         if (resultsResources.get(0).getFilePath().equals(implementationFilePath)) {
             return fixImplementation(implementationFilePath, interfaceFilePath, resultsResources);
         }
-        if (isUnitTestCulpable(code, resultsResources)) {
-            return fixUnitTest(implementationFilePath, resultsResources);
+        ErrorCulpabilityResultResource errorCulpabilityResultResource = isUnitTestCulpable(code, resultsResources);
+        if (errorCulpabilityResultResource.isUnitTestCulpable()) {
+            return fixUnitTest(errorCulpabilityResultResource.getInquiry(), implementationFilePath, resultsResources);
         } else {
-            return fixImplementation(implementationFilePath, interfaceFilePath, resultsResources);
+            return fixImplementation(errorCulpabilityResultResource.getInquiry(), implementationFilePath, interfaceFilePath, resultsResources);
         }
     }
 
@@ -98,12 +100,74 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
                 .build();
     }
 
-    public ReplacedClassInfoResource fixUnitTest(String implementationFilePath, List<ResultsResource> resultsResources) {
+    public ReplacedClassInfoResource fixImplementation(Inquiry inquiry, String implementationFilePath, String interfaceFilePath, List<ResultsResource> resultsResources) {
         String code = codeSnippetExtractorService.getAllText(implementationFilePath);
-        StringBuilder failureString = assembleFailureString(code, resultsResources);
-        failureString.append("\nIn this case, the unit test was determined to be culpable. Can you fix the unit test to not have the errors or test failures? Your code provided here will replace the unit test code. Do not change the file name, DO NOT USE JUNIT 5 DO NOT USE JUPITER or it wont work. Only use JUNIT 4 (org.junit.test for example)");
-        Inquiry inquiry = inquiryService.createHeadlessInquiry(failureString.toString(), "gpt-4o", false);
-        InquiryChat inquiryChat = inquiry.getChats().get(inquiry.getChats().size() - 1);
+        StringBuilder failureString = new StringBuilder();
+        failureString.append("The code you provide will now replace the implementation code. Please maintain a class name that's consistent with the file path: " + implementationFilePath);
+        if (resultsResources.get(0).getFilePath().equals(implementationFilePath)) {
+            //failureString = assembleImplementationFailureString(code, resultsResources.get(0));
+            failureString.append("\nCan you fix the code?");
+        } else {
+            //failureString = assembleFailureString(code, resultsResources);
+            failureString.append("\nCan you fix the code to also pass this test?");
+        }
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        //inquiry = inquiryService.continueHeadlessInquiry(, failureString.toString(), "gpt-4o", false);
+        String previousInquiryChatId = inquiry.getChats().get(inquiry.getChats().size() - 1).getId();
+        InquiryChat inquiryChat = inquiryService.continueHeadlessInquiry(inquiry, previousInquiryChatId, failureString.toString(), "gpt-4o", false);
+        //Code is surrounded by "```" to indicate a code block. Isolate this code:
+        String startOfCode = inquiryChat.getMessage().substring(inquiryChat.getMessage().indexOf("```") + 3);
+        String newImplementationCode = startOfCode.substring(0, startOfCode.indexOf("```"));
+        if (newImplementationCode.startsWith("java")) {
+            newImplementationCode = newImplementationCode.substring(4);
+        }
+        if (newImplementationCode.startsWith("\n")) {
+            newImplementationCode = newImplementationCode.substring(1);
+        }
+        if (newImplementationCode.contains("public interface")) {
+            String followUp = "The code provided is an interface. This code already has the following interface: " +
+                    codeSnippetExtractorService.getAllText(interfaceFilePath) +
+                    ". Please provide an implementation for this interface.";
+            inquiryChat = inquiryService.continueHeadlessInquiry(inquiry, inquiryChat.getId(), followUp, "gpt-4o", false);
+            startOfCode = inquiryChat.getMessage().substring(inquiryChat.getMessage().indexOf("```") + 3);
+            newImplementationCode = startOfCode.substring(0, startOfCode.indexOf("```"));
+            if (newImplementationCode.startsWith("java")) {
+                newImplementationCode = newImplementationCode.substring(4);
+            }
+            if (newImplementationCode.startsWith("\n")) {
+                newImplementationCode = newImplementationCode.substring(1);
+            }
+        }
+        System.out.println("Replacing implementation...");
+        System.out.println("Implementation file path: " + implementationFilePath);
+        System.out.println("Old code: " + code);
+        System.out.println("New code: " + newImplementationCode);
+        rangeReplaceService.replaceRange(implementationFilePath,0, code.length(), newImplementationCode, true);
+        return new ReplacedClassInfoResource.Builder()
+                .withFilePath(implementationFilePath)
+                .withOldCode(code)
+                .withNewCode(newImplementationCode)
+                .withFormerResults(resultsResources)
+                .build();
+    }
+
+    public ReplacedClassInfoResource fixUnitTest(Inquiry inquiry, String implementationFilePath, List<ResultsResource> resultsResources) {
+        String code = codeSnippetExtractorService.getAllText(implementationFilePath);
+        //StringBuilder failureString = assembleFailureString(code, resultsResources);
+        StringBuilder failureString = new StringBuilder("\nIn this case, the unit test was determined to be culpable.");
+        if (resultsResources.get(0).getResult() == null) {
+            failureString.append("Can you modify the unit test to not throw this error:").append(resultsResources.get(0).getError());
+        } else {
+            failureString.append(" Can you fix the unit test to not have the test failures?");
+        }
+        failureString.append("Your code provided here will replace the unit test code. Do not change the file name, DO NOT USE JUNIT 5 DO NOT USE JUPITER or it wont work. Only use JUNIT 4 (org.junit.test for example)");
+        //inquiry = inquiryService.continueHeadlessInquiry(inquiry, previousInquiryChatId, failureString.toString(), "gpt-4o", false);
+        String previousInquiryChatId = inquiry.getChats().get(inquiry.getChats().size() - 1).getId();
+        InquiryChat inquiryChat = inquiryService.continueHeadlessInquiry(inquiry, previousInquiryChatId, failureString.toString(), "gpt-4o", false);
         //Code is surrounded by "```" to indicate a code block. Isolate this code:
         String startOfCode = inquiryChat.getMessage().substring(inquiryChat.getMessage().indexOf("```") + 3);
         String newUnitTestCode = startOfCode.substring(0, startOfCode.indexOf("```"));
@@ -135,7 +199,7 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
                 .build();
     }
 
-    public boolean isUnitTestCulpable(String implementationCode, List<ResultsResource> resultsResources) {
+    public ErrorCulpabilityResultResource isUnitTestCulpable(String implementationCode, List<ResultsResource> resultsResources) {
         StringBuilder failureString = assembleFailureString(implementationCode, resultsResources);
         failureString.append("What needs to be changed? A. The Unit Test, or B. The Implementation");
 
@@ -181,7 +245,8 @@ public class ImplementationFixerServiceImpl implements ImplementationFixerServic
         GptFunctionCall gptFunctionCall = inquiryChat.getFunctionCall();
         String choice = JsonExtractorService.extractField(gptFunctionCall.getArguments(), "choice");
         assert choice != null;
-        return choice.equals("A");
+        boolean isUnitTestCulpable = choice.equals("A");
+        return new ErrorCulpabilityResultResource(inquiry, isUnitTestCulpable);
     }
 
     private StringBuilder assembleImplementationFailureString(String implementationCode, ResultsResource resultsResource) {

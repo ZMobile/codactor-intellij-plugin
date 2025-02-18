@@ -19,6 +19,7 @@ import javax.inject.Inject;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -182,7 +183,7 @@ public class RunTestAndGetOutputServiceImpl implements RunTestAndGetOutputServic
                                 .withResult(result)
                                 .build();
                         results.add(resultResource);
-                    } catch (NullPointerException e) {
+                    } catch (InvocationTargetException e) {
                         List<ErrorResult> errorResults = findErrorService.getAllErrors(testClassInfoResource.getPath(), false);
                         if(!errorResults.isEmpty()) {
                             StringBuilder errorString = new StringBuilder();

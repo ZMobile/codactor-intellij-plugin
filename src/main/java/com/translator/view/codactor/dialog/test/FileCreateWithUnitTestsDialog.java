@@ -504,14 +504,12 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         }
         //Get the code from the interface:
         // Extract the class name from the generated code
-        String className = extractClassNameFromCode(code);
-
-        // Use class name as the file name
-        implementationFileName = className + ".java";
-
-        if (!implementationFileName.endsWith(".java")) {
-            implementationFileName += ".java";
+        String className = interfaceFileName.trim();
+        if (className.endsWith(".java")) {
+            className = className.substring(0, className.length() - 5);
         }
+
+        implementationFileName = className + "Impl.java";
         try {
             fileCreatorService.createFile(directoryPath, implementationFileName, code);
         } catch (IOException ex) {
@@ -899,20 +897,39 @@ public class FileCreateWithUnitTestsDialog extends JDialog {
         }
         //Measurement: less failures OR, more total tests passed
         int oldFailures = 0;
+        int oldCompileErrors = 0;
         int newFailures = 0;
+        int newCompileErrors = 0;
         for (ResultsResource resultsResource : oldResults) {
             if (resultsResource.getResult() == null || !resultsResource.getResult().wasSuccessful()) {
-                oldFailures++;
+                oldFailures += resultsResource.getResult().getFailureCount();
+                if (resultsResource.getResult() == null) {
+                    oldCompileErrors++;
+                }
             }
         }
         for (ResultsResource resultsResource : newResults) {
             if (resultsResource.getResult() == null || !resultsResource.getResult().wasSuccessful()) {
-                newFailures++;
+                newFailures += resultsResource.getResult().getFailureCount();
+                if (resultsResource.getResult() == null) {
+                    newCompileErrors++;
+                }
             }
         }
-        if (newFailures == oldFailures) {
-            return newResults.size() > oldResults.size();
+        System.out.println("Comparing scores");
+        if (newCompileErrors < oldCompileErrors) {
+            System.out.println("Less compile errors than previously");
+            return true;
         }
-        return newFailures < oldFailures;
+
+        if (newFailures == oldFailures) {
+            System.out.println("Same amount of new failures as old failures");
+            boolean moreResultsLately = newResults.size() >= oldResults.size();
+            System.out.println("More results lately? " + moreResultsLately);
+            return moreResultsLately;
+        }
+        boolean lessNewFailures =  newFailures < oldFailures;
+        System.out.println("Less new failures? " + lessNewFailures);
+        return lessNewFailures;
     }
 }

@@ -115,11 +115,19 @@ public class TestRunnerLoopServiceImpl implements TestRunnerLoopService {
             }
         }
         if (newFailures == oldFailures) {
+            System.out.println("Same amount of failures");
             if (oldCompErrors == newCompErrors) {
-                return newResults.size() > oldResults.size();
+                System.out.println("Same amount of compilation errors");
+                boolean betterResultCount = newResults.size() >= oldResults.size();
+                System.out.println("Better result count? " + betterResultCount);
+                return betterResultCount;
             }
-            return newCompErrors < oldCompErrors;
+            boolean lessCompilationErrors = newCompErrors < oldCompErrors;
+            System.out.println("Less compilation errors? " + lessCompilationErrors);
+            return lessCompilationErrors;
         }
-        return newFailures < oldFailures;
+        boolean lessNewFailures = newFailures < oldFailures;
+        System.out.println("Less new failures?");
+        return lessNewFailures;
     }
 }
